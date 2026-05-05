@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "baseGrid": 16,
+  "spriteSheets": [
+    {
+      "id":"moss_badger",
+      "file":"assets/sprites/moss_badger.png",
+      "frameSize":[48,48],
+      "animations": {
+        "idle":{"frames":6,"fps":8},
+        "run":{"frames":8,"fps":14},
+        "skid":{"frames":3,"fps":12},
+        "jump_up":{"frames":3,"fps":10},
+        "fall":{"frames":3,"fps":10},
+        "land":{"frames":2,"fps":14},
+        "melee_claws":{"frames":5,"fps":22},
+        "melee_katana":{"frames":7,"fps":18},
+        "shoot_railgun":{"frames":5,"fps":16},
+        "rocket_boost":{"frames":6,"fps":18},
+        "hit":{"frames":3,"fps":12},
+        "hack":{"frames":4,"fps":8},
+        "victory":{"frames":8,"fps":10}
+      }
+    },
+    {
+      "id":"lower_sprawl_tiles",
+      "file":"assets/sprites/lower_sprawl_tiles.png",
+      "frameSize":[32,32],
+      "animations": {
+        "brick_tile":{"frames":1,"fps":1},
+        "wet_asphalt":{"frames":1,"fps":1},
+        "neon_sign":{"frames":4,"fps":6},
+        "cable_bundle":{"frames":1,"fps":1},
+        "drain_pipe":{"frames":1,"fps":1},
+        "market_awning":{"frames":2,"fps":4}
+      }
+    },
+    {
+      "id":"items_core",
+      "file":"assets/sprites/items_core.png",
+      "frameSize":[32,32],
+      "animations": {
+        "rocket_backpack_pickup":{"frames":4,"fps":8},
+        "railgun_pickup":{"frames":4,"fps":8},
+        "stim_pack_pickup":{"frames":4,"fps":8},
+        "katana_pickup":{"frames":4,"fps":8},
+        "signal_jammer_pickup":{"frames":4,"fps":8},
+        "dub_shield_pickup":{"frames":4,"fps":8}
+      }
+    },
+    {
+      "id":"vfx_combat",
+      "file":"assets/sprites/vfx_combat.png",
+      "frameSize":[32,32],
+      "animations": {
+        "claw_arc":{"frames":4,"fps":24},
+        "katana_smear":{"frames":6,"fps":22},
+        "rail_muzzle":{"frames":4,"fps":20},
+        "rail_trail":{"frames":3,"fps":20},
+        "emp_spark":{"frames":6,"fps":18},
+        "rocket_flame":{"frames":6,"fps":18},
+        "landing_dust":{"frames":5,"fps":16},
+        "parry_flash":{"frames":3,"fps":20},
+        "code_gate_unlock":{"frames":8,"fps":12}
+      }
+    }
+  ]
+}

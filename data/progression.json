@@ -1,0 +1,23 @@
+{
+  "currencies": [
+    {"id":"credchips","scope":"run","use":"buy temporary items and repairs"},
+    {"id":"blueprint_shards","scope":"meta","use":"unlock item into future drop pool"},
+    {"id":"dub_favor","scope":"meta","use":"unlock colony shops, discounts, safehouses"},
+    {"id":"orbit_heat","scope":"campaign","use":"risk meter that unlocks harder heists and patrols"}
+  ],
+  "boons": [
+    {"id":"start_stim_plus","name":"Emergency Ampoule","effect":"start each run with +1 stim"},
+    {"id":"fuel_cell_plus","name":"Extra Fuel Cell","effect":"rocket backpack max fuel +1"},
+    {"id":"first_hack_mistake_ignored","name":"Patient Terminal","effect":"first typo in a code gate is forgiven"},
+    {"id":"no_hit_discount","name":"Clean Fur Discount","effect":"shops are cheaper after no-hit sector"},
+    {"id":"rebel_rumor","name":"Rebel Rumor Net","effect":"reveal one secret route objective"}
+  ],
+  "shopActions": [
+    "reroll_item_pool",
+    "buy_emergency_stim",
+    "install_railgun_mod",
+    "repair_rocket_backpack",
+    "buy_faction_rumor",
+    "bank_one_boon_for_next_run"
+  ]
+}

@@ -1,0 +1,18 @@
+name: badger-sprawl-runner
+description: Sprite-first cyber-badger 2D platformer prototype and design artifact.
+defaultTrack: dev
+commands:
+  test:
+    run: npm test
+  serve:
+    run: python3 -m http.server 8042
+agent:
+  notes:
+    - Keep this original; avoid direct use of protected cyberpunk novel canon.
+    - The prototype is dependency-free browser canvas JS.
+    - Data manifests are intended to survive extraction into a standalone library.
+  tasks:
+    - Replace placeholder vector drawing with real sprite-sheet loader.
+    - Split minigame engine into its own package when API stabilizes.
+  changelog:
+    - 2026-05-05: Initial design artifact and playable prototype scaffold.

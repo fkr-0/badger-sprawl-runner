@@ -1,0 +1,299 @@
+# roadmap-modes.yml
+# Badger Sprawl Runner — Mode Roadmap Specs
+# Purpose: define requirements for VS, horde, CPU duel, and training/debug modes.
+
+schema_version: 1
+project: badger-sprawl-runner
+status: design-roadmap
+
+mode_goals:
+  - make the core movement/combat/hacking loop testable outside campaign
+  - support human-vs-computer and human-vs-many-enemies skirmishes
+  - provide a debug-safe training arena with invincible stationary targets
+  - reuse campaign actors, items, hitboxes, code gates, and environment hazards
+  - keep modes data-driven so they can become automated balance tests later
+
+shared_requirements:
+  input:
+    player_1:
+      keyboard:
+        [
+          move_left,
+          move_right,
+          jump,
+          fast_fall,
+          melee,
+          shoot,
+          item,
+          hack,
+          pause,
+        ]
+      gamepad: planned
+    player_2:
+      local_keyboard_split: optional
+      cpu_controller: required
+  runtime:
+    deterministic_seed: required
+    replay_recording: planned
+    fixed_timestep_option: required_for_debug
+    hitbox_overlay: required_for_training
+    hurtbox_overlay: required_for_training
+    frame_step: planned_for_debug
+  scoring:
+    damage_dealt: required
+    damage_taken: required
+    successful_parries: required
+    perfect_reloads: required
+    successful_hacks: required
+    combo_chain: required
+    time_alive: required
+    enemy_clear_count: required
+  balancing_metrics:
+    time_to_kill: required
+    damage_per_second: required
+    average_combo_length: required
+    railgun_accuracy: required
+    code_gate_accuracy: required
+
+modes:
+  vs_cpu:
+    title: Human vs Computer Fighter
+    priority: high
+    summary: >
+      A duel mode where Moss fights a CPU-controlled fighter using the same
+      combat verbs, items, movement, and hacking rules as the player.
+    purpose:
+      - test one-on-one combat readability
+      - tune parry windows, rail reloads, dodge recovery, melee reach
+      - prepare later local or network VS without committing to network code yet
+    participants:
+      human:
+        actor: moss_badger
+        loadout_options:
+          - claws_only
+          - claws_railgun
+          - rocket_railgun
+          - full_campaign_kit
+          - custom_debug_loadout
+      computer:
+        actor_types:
+          - mirror_badger
+          - rail_duelist
+          - katana_lancer
+          - black_ice_fox_light
+          - drone_swarm_captain
+        ai_difficulties:
+          easy:
+            reaction_delay_ms: 420
+            parry_skill: low
+            hack_skill: low
+            rail_accuracy: low
+          normal:
+            reaction_delay_ms: 260
+            parry_skill: medium
+            hack_skill: medium
+            rail_accuracy: medium
+          hard:
+            reaction_delay_ms: 150
+            parry_skill: high
+            hack_skill: high
+            rail_accuracy: high
+          unfair_debug:
+            reaction_delay_ms: 30
+            parry_skill: perfect
+            hack_skill: perfect
+            rail_accuracy: perfect
+    arenas:
+      - lower_sprawl_rooftop_flat
+      - dub_colony_speaker_ring
+      - mirror_palace_short_platforms
+      - asteroid_low_grav_duel
+    win_conditions:
+      default: first_to_3_rounds
+      alternatives:
+        - one_life
+        - timed_score
+        - first_to_1000_damage
+    required_systems:
+      - ai_controller_duelist
+      - arena_select
+      - loadout_select
+      - round_reset
+      - score_panel
+      - pause_restart
+    acceptance_criteria:
+      - CPU can navigate small platforms without falling constantly
+      - CPU can attack, dodge, shoot, and use at least one active item
+      - round resets preserve selected loadouts
+      - scoring displays damage, parries, reloads, and hack events
+
+  horde:
+    title: Human vs Bunch of Enemies
+    priority: high
+    summary: >
+      A survival/combat-room mode where Moss fights waves of enemies, testing
+      crowd control, item synergies, hack-slay interactions, and environmental hacks.
+    purpose:
+      - tune enemy readability in groups
+      - test item synergies and area effects
+      - validate matrix/environment manipulation powers against weak enemies
+    wave_model:
+      wave_count: configurable
+      spawn_budget:
+        base_points: 10
+        growth_per_wave: 4
+        elite_every_n_waves: 3
+      enemy_costs:
+        crawler: 1
+        drone_wasp: 2
+        bass_turret: 3
+        black_ice_fox_light: 4
+        orbital_lancer_light: 5
+      spawn_rules:
+        - never_spawn_inside_player
+        - warn_with_telegraph_marker
+        - keep_minimum_escape_lane
+        - cap_airborne_enemies_until_player_has_railgun
+    arenas:
+      - lower_sprawl_market_box
+      - chrome_arcology_elevator_pit
+      - dub_colony_greenhouse_train
+      - uplink_barrens_antenna_ring
+    reward_loop:
+      between_waves_shop: optional
+      temporary_boons: required
+      healing_choices: required
+      heat_risk_modifier: planned
+    required_systems:
+      - wave_director
+      - spawn_telegraph
+      - enemy_budget_table
+      - arena_bounds
+      - between_wave_reward_ui
+    acceptance_criteria:
+      - wave director can spawn at least 5 enemy archetypes
+      - horde mode can run 10 waves without softlocking
+      - weaker enemies can be killed by direct combat or environment hacks
+      - performance remains stable with 25 active enemies/projectiles combined
+
+  training_dummy:
+    title: Invincible Stationary Enemy Training + Debug Mode
+    priority: highest
+    summary: >
+      A safe arena with a non-moving invincible target for learning timing,
+      measuring damage, and debugging hitboxes.
+    purpose:
+      - test melee reach, railgun recoil, reload timing, rocket cancel, and hack effects
+      - debug hitboxes/hurtboxes and animation timing
+      - give players a no-pressure training room
+    dummy_behavior:
+      movement: none
+      damage_response: flinch_visual_only
+      hp: infinite
+      death: disabled
+      knockback: configurable
+      status_effects: visible_but_nonlethal
+      ai: disabled
+    toggles:
+      invincible_player: true
+      invincible_dummy: true
+      infinite_fuel: optional
+      infinite_stims: optional
+      infinite_rail_ammo: true
+      show_hitboxes: true
+      show_hurtboxes: true
+      show_frame_data: true
+      show_damage_numbers: true
+      show_input_buffer: planned
+      reset_positions_hotkey: required
+    measurements:
+      last_hit_damage: required
+      combo_damage: required
+      hits_per_second: required
+      rail_reload_delta_ms: required
+      parry_window_delta_ms: required
+      melee_active_frames: required
+      recovery_frames: required
+      hack_cast_time_ms: required
+    arena:
+      name: debug_dojo_under_speakerstack
+      platforms:
+        - flat_ground
+        - one_low_platform
+        - one_wall_for_recoil_tests
+      terminals:
+        - fasttype_gate
+        - syntax_parry_gate
+        - environment_hack_console
+    acceptance_criteria:
+      - dummy never dies or exits arena
+      - player can toggle overlays live
+      - every attack reports damage and frame/timing info
+      - rocket, railgun, melee, katana, and hack powers can be tested without resource starvation
+
+  cpu_squad_test:
+    title: Human with Computer-Controlled Allies vs Enemies
+    priority: medium
+    summary: >
+      A companion-AI test mode for story-relevant fighters joining Moss in
+      specific areas.
+    purpose:
+      - validate companion follow, guard, flank, hack, and setpiece behaviors
+      - tune friendly collision and rescue logic
+      - test trust/command-meter mechanics outside campaign
+    companions:
+      selectable:
+        - rook_null_hack_support
+        - naya_root_guard
+        - sister_version_repair_rocket
+        - lio_courier_unstable_trust
+      max_active: 2
+    enemy_setup:
+      presets:
+        - drone_pack
+        - mixed_sprawl_patrol
+        - black_ice_terminal_room
+        - boss_adds_simulation
+    acceptance_criteria:
+      - companion can follow player through a basic platform route
+      - companion can attack or guard without blocking player movement
+      - companion hack mode can hold terminal channel during enemy pressure
+      - companion down/rescue state is visible and recoverable
+
+implementation_order:
+  phase_1:
+    name: training_debug_first
+    deliverables:
+      - training_dummy mode
+      - debug overlay
+      - damage/frame readout
+      - reset hotkeys
+  phase_2:
+    name: horde_vertical_slice
+    deliverables:
+      - wave director
+      - three enemy types
+      - one arena
+      - between-wave boon choice
+  phase_3:
+    name: vs_cpu_duel
+    deliverables:
+      - duelist CPU controller
+      - arena select
+      - loadout select
+      - round scoring
+  phase_4:
+    name: companion_squad_test
+    deliverables:
+      - companion AI presets
+      - command meter
+      - terminal hold behavior
+      - trust/debug flags
+
+engineering_notes:
+  - all modes should load actor/item/enemy definitions from data manifests where possible
+  - training mode should become the main balancing laboratory
+  - horde mode should reuse campaign enemy spawn data but override story flags
+  - vs mode should not require network play initially
+  - CPU fighters should use the same input abstraction as the player so replays and AI tests are possible
+  - debug-only cheats must be isolated from campaign saves

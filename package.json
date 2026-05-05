@@ -1,0 +1,11 @@
+{
+  "name": "badger-sprawl-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sprite-first cyber-badger 2D platformer prototype with clean physics, items, combat, and coding minigames.",
+  "scripts": {
+    "test": "node tests/validate-data.mjs",
+    "serve": "python3 -m http.server 8042"
+  }
+}
