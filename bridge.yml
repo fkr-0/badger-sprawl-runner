@@ -3,7 +3,7 @@ description: Sprite-first cyber-badger 2D platformer prototype and design artifa
 defaultTrack: dev
 commands:
   test:
-    run: npm test
+    run: pnpm run test
   serve:
     run: python3 -m http.server 8042
 agent:

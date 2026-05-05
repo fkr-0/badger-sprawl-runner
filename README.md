@@ -72,3 +72,9 @@ npm test
 ```
 
 The test validates JSON structure and cross-references. The prototype itself has no build step.
+
+## Expanded design docs
+
+- `STORY.md` — five-act Brechtian drama, cast, heist payloads, dialogue promise.
+- `CAMPAIGN.md` — expanded worlds, stages, sub-bosses, endbosses, placards, level descriptions.
+- `ENEMY_BIBLE.md` — enemy classes, world rosters, counters, hack/trap interactions.
