@@ -1,0 +1,8731 @@
+{
+  "source": "generated/sprites/02_environment_lower_sprawl.png",
+  "component_count": 512,
+  "params": {
+    "white_threshold": 242,
+    "alpha_threshold": 8,
+    "min_pixels": 50,
+    "padding": 2,
+    "columns": 0,
+    "cell_width": 32,
+    "cell_height": 32,
+    "bg_mode": "border",
+    "bg_tolerance": 18,
+    "bg_reference_rgb": [
+      241,
+      246,
+      244
+    ]
+  },
+  "atlas": {
+    "path": "generated/extracted/02_environment_lower_sprawl_atlas.png",
+    "width": 784,
+    "height": 784
+  },
+  "components": [
+    {
+      "id": 33,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0033.png"
+    },
+    {
+      "id": 35,
+      "area": 1024,
+      "source_bbox": {
+        "x": 96,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0035.png"
+    },
+    {
+      "id": 36,
+      "area": 1024,
+      "source_bbox": {
+        "x": 128,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0036.png"
+    },
+    {
+      "id": 37,
+      "area": 1024,
+      "source_bbox": {
+        "x": 160,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0037.png"
+    },
+    {
+      "id": 61,
+      "area": 1024,
+      "source_bbox": {
+        "x": 928,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0061.png"
+    },
+    {
+      "id": 62,
+      "area": 1024,
+      "source_bbox": {
+        "x": 960,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0062.png"
+    },
+    {
+      "id": 67,
+      "area": 1024,
+      "source_bbox": {
+        "x": 96,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0067.png"
+    },
+    {
+      "id": 73,
+      "area": 1024,
+      "source_bbox": {
+        "x": 288,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0073.png"
+    },
+    {
+      "id": 92,
+      "area": 1024,
+      "source_bbox": {
+        "x": 896,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0092.png"
+    },
+    {
+      "id": 93,
+      "area": 1024,
+      "source_bbox": {
+        "x": 928,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0093.png"
+    },
+    {
+      "id": 100,
+      "area": 1024,
+      "source_bbox": {
+        "x": 128,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0100.png"
+    },
+    {
+      "id": 101,
+      "area": 1024,
+      "source_bbox": {
+        "x": 160,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0101.png"
+    },
+    {
+      "id": 116,
+      "area": 1024,
+      "source_bbox": {
+        "x": 640,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0116.png"
+    },
+    {
+      "id": 119,
+      "area": 1024,
+      "source_bbox": {
+        "x": 736,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0119.png"
+    },
+    {
+      "id": 161,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0161.png"
+    },
+    {
+      "id": 167,
+      "area": 1024,
+      "source_bbox": {
+        "x": 224,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0167.png"
+    },
+    {
+      "id": 169,
+      "area": 1024,
+      "source_bbox": {
+        "x": 288,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0169.png"
+    },
+    {
+      "id": 170,
+      "area": 1024,
+      "source_bbox": {
+        "x": 320,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0170.png"
+    },
+    {
+      "id": 171,
+      "area": 1024,
+      "source_bbox": {
+        "x": 352,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0171.png"
+    },
+    {
+      "id": 172,
+      "area": 1024,
+      "source_bbox": {
+        "x": 384,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0172.png"
+    },
+    {
+      "id": 185,
+      "area": 1024,
+      "source_bbox": {
+        "x": 800,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0185.png"
+    },
+    {
+      "id": 188,
+      "area": 1024,
+      "source_bbox": {
+        "x": 896,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0188.png"
+    },
+    {
+      "id": 192,
+      "area": 1024,
+      "source_bbox": {
+        "x": 0,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0192.png"
+    },
+    {
+      "id": 202,
+      "area": 1024,
+      "source_bbox": {
+        "x": 320,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0202.png"
+    },
+    {
+      "id": 217,
+      "area": 1024,
+      "source_bbox": {
+        "x": 800,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0217.png"
+    },
+    {
+      "id": 221,
+      "area": 1024,
+      "source_bbox": {
+        "x": 928,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0221.png"
+    },
+    {
+      "id": 227,
+      "area": 1024,
+      "source_bbox": {
+        "x": 96,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0227.png"
+    },
+    {
+      "id": 232,
+      "area": 1024,
+      "source_bbox": {
+        "x": 256,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0232.png"
+    },
+    {
+      "id": 233,
+      "area": 1024,
+      "source_bbox": {
+        "x": 288,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0233.png"
+    },
+    {
+      "id": 234,
+      "area": 1024,
+      "source_bbox": {
+        "x": 320,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0234.png"
+    },
+    {
+      "id": 235,
+      "area": 1024,
+      "source_bbox": {
+        "x": 352,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0235.png"
+    },
+    {
+      "id": 242,
+      "area": 1024,
+      "source_bbox": {
+        "x": 576,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0242.png"
+    },
+    {
+      "id": 244,
+      "area": 1024,
+      "source_bbox": {
+        "x": 640,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0244.png"
+    },
+    {
+      "id": 249,
+      "area": 1024,
+      "source_bbox": {
+        "x": 800,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0249.png"
+    },
+    {
+      "id": 250,
+      "area": 1024,
+      "source_bbox": {
+        "x": 832,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0250.png"
+    },
+    {
+      "id": 289,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0289.png"
+    },
+    {
+      "id": 291,
+      "area": 1024,
+      "source_bbox": {
+        "x": 96,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0291.png"
+    },
+    {
+      "id": 295,
+      "area": 1024,
+      "source_bbox": {
+        "x": 224,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0295.png"
+    },
+    {
+      "id": 297,
+      "area": 1024,
+      "source_bbox": {
+        "x": 288,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0297.png"
+    },
+    {
+      "id": 298,
+      "area": 1024,
+      "source_bbox": {
+        "x": 320,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0298.png"
+    },
+    {
+      "id": 306,
+      "area": 1024,
+      "source_bbox": {
+        "x": 576,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0306.png"
+    },
+    {
+      "id": 312,
+      "area": 1024,
+      "source_bbox": {
+        "x": 768,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0312.png"
+    },
+    {
+      "id": 314,
+      "area": 1024,
+      "source_bbox": {
+        "x": 832,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0314.png"
+    },
+    {
+      "id": 321,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0321.png"
+    },
+    {
+      "id": 323,
+      "area": 1024,
+      "source_bbox": {
+        "x": 96,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0323.png"
+    },
+    {
+      "id": 330,
+      "area": 1024,
+      "source_bbox": {
+        "x": 320,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 36,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0330.png"
+    },
+    {
+      "id": 339,
+      "area": 1024,
+      "source_bbox": {
+        "x": 608,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0339.png"
+    },
+    {
+      "id": 341,
+      "area": 1024,
+      "source_bbox": {
+        "x": 672,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0341.png"
+    },
+    {
+      "id": 342,
+      "area": 1024,
+      "source_bbox": {
+        "x": 704,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0342.png"
+    },
+    {
+      "id": 353,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0353.png"
+    },
+    {
+      "id": 378,
+      "area": 1024,
+      "source_bbox": {
+        "x": 832,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0378.png"
+    },
+    {
+      "id": 417,
+      "area": 1024,
+      "source_bbox": {
+        "x": 32,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0417.png"
+    },
+    {
+      "id": 420,
+      "area": 1024,
+      "source_bbox": {
+        "x": 128,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0420.png"
+    },
+    {
+      "id": 430,
+      "area": 1024,
+      "source_bbox": {
+        "x": 448,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0430.png"
+    },
+    {
+      "id": 438,
+      "area": 1024,
+      "source_bbox": {
+        "x": 704,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0438.png"
+    },
+    {
+      "id": 441,
+      "area": 1024,
+      "source_bbox": {
+        "x": 800,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0441.png"
+    },
+    {
+      "id": 442,
+      "area": 1024,
+      "source_bbox": {
+        "x": 832,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0442.png"
+    },
+    {
+      "id": 446,
+      "area": 1024,
+      "source_bbox": {
+        "x": 960,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0446.png"
+    },
+    {
+      "id": 450,
+      "area": 1024,
+      "source_bbox": {
+        "x": 64,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0450.png"
+    },
+    {
+      "id": 456,
+      "area": 1024,
+      "source_bbox": {
+        "x": 256,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0456.png"
+    },
+    {
+      "id": 461,
+      "area": 1024,
+      "source_bbox": {
+        "x": 416,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0461.png"
+    },
+    {
+      "id": 462,
+      "area": 1024,
+      "source_bbox": {
+        "x": 448,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0462.png"
+    },
+    {
+      "id": 469,
+      "area": 1024,
+      "source_bbox": {
+        "x": 672,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0469.png"
+    },
+    {
+      "id": 482,
+      "area": 1024,
+      "source_bbox": {
+        "x": 64,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0482.png"
+    },
+    {
+      "id": 496,
+      "area": 1024,
+      "source_bbox": {
+        "x": 512,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0496.png"
+    },
+    {
+      "id": 501,
+      "area": 1024,
+      "source_bbox": {
+        "x": 672,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0501.png"
+    },
+    {
+      "id": 506,
+      "area": 1024,
+      "source_bbox": {
+        "x": 832,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0506.png"
+    },
+    {
+      "id": 68,
+      "area": 1023,
+      "source_bbox": {
+        "x": 128,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0068.png"
+    },
+    {
+      "id": 99,
+      "area": 1023,
+      "source_bbox": {
+        "x": 96,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 70,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0099.png"
+    },
+    {
+      "id": 117,
+      "area": 1023,
+      "source_bbox": {
+        "x": 672,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0117.png"
+    },
+    {
+      "id": 165,
+      "area": 1023,
+      "source_bbox": {
+        "x": 160,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0165.png"
+    },
+    {
+      "id": 182,
+      "area": 1023,
+      "source_bbox": {
+        "x": 704,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0182.png"
+    },
+    {
+      "id": 236,
+      "area": 1023,
+      "source_bbox": {
+        "x": 384,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0236.png"
+    },
+    {
+      "id": 237,
+      "area": 1023,
+      "source_bbox": {
+        "x": 416,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0237.png"
+    },
+    {
+      "id": 248,
+      "area": 1023,
+      "source_bbox": {
+        "x": 768,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0248.png"
+    },
+    {
+      "id": 329,
+      "area": 1023,
+      "source_bbox": {
+        "x": 288,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0329.png"
+    },
+    {
+      "id": 338,
+      "area": 1023,
+      "source_bbox": {
+        "x": 576,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0338.png"
+    },
+    {
+      "id": 373,
+      "area": 1023,
+      "source_bbox": {
+        "x": 672,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0373.png"
+    },
+    {
+      "id": 444,
+      "area": 1023,
+      "source_bbox": {
+        "x": 896,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0444.png"
+    },
+    {
+      "id": 466,
+      "area": 1023,
+      "source_bbox": {
+        "x": 576,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0466.png"
+    },
+    {
+      "id": 493,
+      "area": 1023,
+      "source_bbox": {
+        "x": 416,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0493.png"
+    },
+    {
+      "id": 49,
+      "area": 1022,
+      "source_bbox": {
+        "x": 544,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0049.png"
+    },
+    {
+      "id": 122,
+      "area": 1022,
+      "source_bbox": {
+        "x": 832,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0122.png"
+    },
+    {
+      "id": 324,
+      "area": 1022,
+      "source_bbox": {
+        "x": 128,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0324.png"
+    },
+    {
+      "id": 334,
+      "area": 1022,
+      "source_bbox": {
+        "x": 448,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0334.png"
+    },
+    {
+      "id": 344,
+      "area": 1022,
+      "source_bbox": {
+        "x": 768,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0344.png"
+    },
+    {
+      "id": 345,
+      "area": 1022,
+      "source_bbox": {
+        "x": 800,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0345.png"
+    },
+    {
+      "id": 355,
+      "area": 1022,
+      "source_bbox": {
+        "x": 96,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0355.png"
+    },
+    {
+      "id": 366,
+      "area": 1022,
+      "source_bbox": {
+        "x": 448,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0366.png"
+    },
+    {
+      "id": 429,
+      "area": 1022,
+      "source_bbox": {
+        "x": 416,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0429.png"
+    },
+    {
+      "id": 434,
+      "area": 1022,
+      "source_bbox": {
+        "x": 576,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0434.png"
+    },
+    {
+      "id": 484,
+      "area": 1022,
+      "source_bbox": {
+        "x": 128,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0484.png"
+    },
+    {
+      "id": 56,
+      "area": 1021,
+      "source_bbox": {
+        "x": 768,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0056.png"
+    },
+    {
+      "id": 57,
+      "area": 1021,
+      "source_bbox": {
+        "x": 800,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0057.png"
+    },
+    {
+      "id": 189,
+      "area": 1021,
+      "source_bbox": {
+        "x": 928,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0189.png"
+    },
+    {
+      "id": 193,
+      "area": 1021,
+      "source_bbox": {
+        "x": 32,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0193.png"
+    },
+    {
+      "id": 307,
+      "area": 1021,
+      "source_bbox": {
+        "x": 608,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0307.png"
+    },
+    {
+      "id": 310,
+      "area": 1021,
+      "source_bbox": {
+        "x": 704,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0310.png"
+    },
+    {
+      "id": 336,
+      "area": 1021,
+      "source_bbox": {
+        "x": 512,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0336.png"
+    },
+    {
+      "id": 362,
+      "area": 1021,
+      "source_bbox": {
+        "x": 320,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0362.png"
+    },
+    {
+      "id": 474,
+      "area": 1021,
+      "source_bbox": {
+        "x": 832,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0474.png"
+    },
+    {
+      "id": 476,
+      "area": 1021,
+      "source_bbox": {
+        "x": 896,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0476.png"
+    },
+    {
+      "id": 494,
+      "area": 1021,
+      "source_bbox": {
+        "x": 448,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0494.png"
+    },
+    {
+      "id": 120,
+      "area": 1020,
+      "source_bbox": {
+        "x": 768,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0120.png"
+    },
+    {
+      "id": 225,
+      "area": 1020,
+      "source_bbox": {
+        "x": 32,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0225.png"
+    },
+    {
+      "id": 239,
+      "area": 1020,
+      "source_bbox": {
+        "x": 480,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0239.png"
+    },
+    {
+      "id": 309,
+      "area": 1020,
+      "source_bbox": {
+        "x": 672,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0309.png"
+    },
+    {
+      "id": 437,
+      "area": 1020,
+      "source_bbox": {
+        "x": 672,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0437.png"
+    },
+    {
+      "id": 481,
+      "area": 1020,
+      "source_bbox": {
+        "x": 32,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0481.png"
+    },
+    {
+      "id": 502,
+      "area": 1020,
+      "source_bbox": {
+        "x": 704,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0502.png"
+    },
+    {
+      "id": 48,
+      "area": 1019,
+      "source_bbox": {
+        "x": 512,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0048.png"
+    },
+    {
+      "id": 80,
+      "area": 1019,
+      "source_bbox": {
+        "x": 512,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0080.png"
+    },
+    {
+      "id": 124,
+      "area": 1019,
+      "source_bbox": {
+        "x": 896,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0124.png"
+    },
+    {
+      "id": 200,
+      "area": 1019,
+      "source_bbox": {
+        "x": 256,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0200.png"
+    },
+    {
+      "id": 231,
+      "area": 1019,
+      "source_bbox": {
+        "x": 224,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 138,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0231.png"
+    },
+    {
+      "id": 296,
+      "area": 1019,
+      "source_bbox": {
+        "x": 256,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0296.png"
+    },
+    {
+      "id": 357,
+      "area": 1019,
+      "source_bbox": {
+        "x": 160,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0357.png"
+    },
+    {
+      "id": 374,
+      "area": 1019,
+      "source_bbox": {
+        "x": 704,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0374.png"
+    },
+    {
+      "id": 421,
+      "area": 1019,
+      "source_bbox": {
+        "x": 160,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0421.png"
+    },
+    {
+      "id": 464,
+      "area": 1019,
+      "source_bbox": {
+        "x": 512,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0464.png"
+    },
+    {
+      "id": 470,
+      "area": 1019,
+      "source_bbox": {
+        "x": 704,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0470.png"
+    },
+    {
+      "id": 497,
+      "area": 1019,
+      "source_bbox": {
+        "x": 544,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0497.png"
+    },
+    {
+      "id": 498,
+      "area": 1019,
+      "source_bbox": {
+        "x": 576,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0498.png"
+    },
+    {
+      "id": 363,
+      "area": 1018,
+      "source_bbox": {
+        "x": 352,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0363.png"
+    },
+    {
+      "id": 382,
+      "area": 1018,
+      "source_bbox": {
+        "x": 960,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0382.png"
+    },
+    {
+      "id": 32,
+      "area": 1017,
+      "source_bbox": {
+        "x": 0,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0032.png"
+    },
+    {
+      "id": 60,
+      "area": 1017,
+      "source_bbox": {
+        "x": 896,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0060.png"
+    },
+    {
+      "id": 106,
+      "area": 1017,
+      "source_bbox": {
+        "x": 320,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0106.png"
+    },
+    {
+      "id": 125,
+      "area": 1017,
+      "source_bbox": {
+        "x": 928,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0125.png"
+    },
+    {
+      "id": 190,
+      "area": 1017,
+      "source_bbox": {
+        "x": 960,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0190.png"
+    },
+    {
+      "id": 246,
+      "area": 1017,
+      "source_bbox": {
+        "x": 704,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0246.png"
+    },
+    {
+      "id": 313,
+      "area": 1017,
+      "source_bbox": {
+        "x": 800,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0313.png"
+    },
+    {
+      "id": 452,
+      "area": 1017,
+      "source_bbox": {
+        "x": 128,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0452.png"
+    },
+    {
+      "id": 508,
+      "area": 1017,
+      "source_bbox": {
+        "x": 896,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0508.png"
+    },
+    {
+      "id": 196,
+      "area": 1016,
+      "source_bbox": {
+        "x": 128,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0196.png"
+    },
+    {
+      "id": 449,
+      "area": 1016,
+      "source_bbox": {
+        "x": 32,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0449.png"
+    },
+    {
+      "id": 197,
+      "area": 1015,
+      "source_bbox": {
+        "x": 160,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0197.png"
+    },
+    {
+      "id": 164,
+      "area": 1014,
+      "source_bbox": {
+        "x": 128,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 172,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0164.png"
+    },
+    {
+      "id": 370,
+      "area": 1014,
+      "source_bbox": {
+        "x": 576,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0370.png"
+    },
+    {
+      "id": 381,
+      "area": 1014,
+      "source_bbox": {
+        "x": 928,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0381.png"
+    },
+    {
+      "id": 58,
+      "area": 1013,
+      "source_bbox": {
+        "x": 832,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0058.png"
+    },
+    {
+      "id": 337,
+      "area": 1013,
+      "source_bbox": {
+        "x": 544,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0337.png"
+    },
+    {
+      "id": 361,
+      "area": 1013,
+      "source_bbox": {
+        "x": 288,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0361.png"
+    },
+    {
+      "id": 364,
+      "area": 1013,
+      "source_bbox": {
+        "x": 384,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0364.png"
+    },
+    {
+      "id": 433,
+      "area": 1013,
+      "source_bbox": {
+        "x": 544,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0433.png"
+    },
+    {
+      "id": 473,
+      "area": 1013,
+      "source_bbox": {
+        "x": 800,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0473.png"
+    },
+    {
+      "id": 204,
+      "area": 1012,
+      "source_bbox": {
+        "x": 384,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0204.png"
+    },
+    {
+      "id": 292,
+      "area": 1012,
+      "source_bbox": {
+        "x": 128,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0292.png"
+    },
+    {
+      "id": 299,
+      "area": 1012,
+      "source_bbox": {
+        "x": 352,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0299.png"
+    },
+    {
+      "id": 87,
+      "area": 1011,
+      "source_bbox": {
+        "x": 736,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0087.png"
+    },
+    {
+      "id": 181,
+      "area": 1011,
+      "source_bbox": {
+        "x": 672,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0181.png"
+    },
+    {
+      "id": 300,
+      "area": 1011,
+      "source_bbox": {
+        "x": 384,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0300.png"
+    },
+    {
+      "id": 186,
+      "area": 1010,
+      "source_bbox": {
+        "x": 832,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0186.png"
+    },
+    {
+      "id": 331,
+      "area": 1010,
+      "source_bbox": {
+        "x": 352,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0331.png"
+    },
+    {
+      "id": 356,
+      "area": 1010,
+      "source_bbox": {
+        "x": 128,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0356.png"
+    },
+    {
+      "id": 359,
+      "area": 1010,
+      "source_bbox": {
+        "x": 224,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0359.png"
+    },
+    {
+      "id": 85,
+      "area": 1009,
+      "source_bbox": {
+        "x": 672,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0085.png"
+    },
+    {
+      "id": 218,
+      "area": 1009,
+      "source_bbox": {
+        "x": 832,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0218.png"
+    },
+    {
+      "id": 252,
+      "area": 1009,
+      "source_bbox": {
+        "x": 896,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0252.png"
+    },
+    {
+      "id": 504,
+      "area": 1009,
+      "source_bbox": {
+        "x": 768,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0504.png"
+    },
+    {
+      "id": 332,
+      "area": 1008,
+      "source_bbox": {
+        "x": 384,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 206,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0332.png"
+    },
+    {
+      "id": 509,
+      "area": 1008,
+      "source_bbox": {
+        "x": 928,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0509.png"
+    },
+    {
+      "id": 253,
+      "area": 1007,
+      "source_bbox": {
+        "x": 928,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0253.png"
+    },
+    {
+      "id": 369,
+      "area": 1007,
+      "source_bbox": {
+        "x": 544,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0369.png"
+    },
+    {
+      "id": 495,
+      "area": 1007,
+      "source_bbox": {
+        "x": 480,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0495.png"
+    },
+    {
+      "id": 510,
+      "area": 1007,
+      "source_bbox": {
+        "x": 960,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0510.png"
+    },
+    {
+      "id": 328,
+      "area": 1006,
+      "source_bbox": {
+        "x": 256,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0328.png"
+    },
+    {
+      "id": 445,
+      "area": 1006,
+      "source_bbox": {
+        "x": 928,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0445.png"
+    },
+    {
+      "id": 224,
+      "area": 1005,
+      "source_bbox": {
+        "x": 0,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0224.png"
+    },
+    {
+      "id": 325,
+      "area": 1005,
+      "source_bbox": {
+        "x": 160,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0325.png"
+    },
+    {
+      "id": 84,
+      "area": 1004,
+      "source_bbox": {
+        "x": 640,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0084.png"
+    },
+    {
+      "id": 346,
+      "area": 1003,
+      "source_bbox": {
+        "x": 832,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0346.png"
+    },
+    {
+      "id": 352,
+      "area": 1003,
+      "source_bbox": {
+        "x": 0,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0352.png"
+    },
+    {
+      "id": 229,
+      "area": 1002,
+      "source_bbox": {
+        "x": 160,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0229.png"
+    },
+    {
+      "id": 302,
+      "area": 1002,
+      "source_bbox": {
+        "x": 448,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0302.png"
+    },
+    {
+      "id": 350,
+      "area": 1002,
+      "source_bbox": {
+        "x": 960,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0350.png"
+    },
+    {
+      "id": 245,
+      "area": 999,
+      "source_bbox": {
+        "x": 672,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0245.png"
+    },
+    {
+      "id": 335,
+      "area": 999,
+      "source_bbox": {
+        "x": 480,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0335.png"
+    },
+    {
+      "id": 365,
+      "area": 999,
+      "source_bbox": {
+        "x": 416,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0365.png"
+    },
+    {
+      "id": 505,
+      "area": 999,
+      "source_bbox": {
+        "x": 800,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0505.png"
+    },
+    {
+      "id": 453,
+      "area": 998,
+      "source_bbox": {
+        "x": 160,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0453.png"
+    },
+    {
+      "id": 480,
+      "area": 998,
+      "source_bbox": {
+        "x": 0,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0480.png"
+    },
+    {
+      "id": 293,
+      "area": 997,
+      "source_bbox": {
+        "x": 160,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0293.png"
+    },
+    {
+      "id": 105,
+      "area": 996,
+      "source_bbox": {
+        "x": 288,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 240,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0105.png"
+    },
+    {
+      "id": 303,
+      "area": 995,
+      "source_bbox": {
+        "x": 480,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0303.png"
+    },
+    {
+      "id": 327,
+      "area": 995,
+      "source_bbox": {
+        "x": 224,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0327.png"
+    },
+    {
+      "id": 76,
+      "area": 994,
+      "source_bbox": {
+        "x": 384,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0076.png"
+    },
+    {
+      "id": 121,
+      "area": 994,
+      "source_bbox": {
+        "x": 800,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0121.png"
+    },
+    {
+      "id": 457,
+      "area": 994,
+      "source_bbox": {
+        "x": 288,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0457.png"
+    },
+    {
+      "id": 485,
+      "area": 993,
+      "source_bbox": {
+        "x": 160,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0485.png"
+    },
+    {
+      "id": 488,
+      "area": 993,
+      "source_bbox": {
+        "x": 256,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0488.png"
+    },
+    {
+      "id": 254,
+      "area": 992,
+      "source_bbox": {
+        "x": 960,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0254.png"
+    },
+    {
+      "id": 419,
+      "area": 991,
+      "source_bbox": {
+        "x": 96,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0419.png"
+    },
+    {
+      "id": 65,
+      "area": 990,
+      "source_bbox": {
+        "x": 32,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0065.png"
+    },
+    {
+      "id": 90,
+      "area": 989,
+      "source_bbox": {
+        "x": 832,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0090.png"
+    },
+    {
+      "id": 201,
+      "area": 989,
+      "source_bbox": {
+        "x": 288,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0201.png"
+    },
+    {
+      "id": 103,
+      "area": 987,
+      "source_bbox": {
+        "x": 224,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0103.png"
+    },
+    {
+      "id": 173,
+      "area": 986,
+      "source_bbox": {
+        "x": 416,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0173.png"
+    },
+    {
+      "id": 207,
+      "area": 986,
+      "source_bbox": {
+        "x": 480,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0207.png"
+    },
+    {
+      "id": 216,
+      "area": 986,
+      "source_bbox": {
+        "x": 768,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0216.png"
+    },
+    {
+      "id": 222,
+      "area": 986,
+      "source_bbox": {
+        "x": 960,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0222.png"
+    },
+    {
+      "id": 440,
+      "area": 986,
+      "source_bbox": {
+        "x": 768,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0440.png"
+    },
+    {
+      "id": 486,
+      "area": 983,
+      "source_bbox": {
+        "x": 192,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0486.png"
+    },
+    {
+      "id": 376,
+      "area": 982,
+      "source_bbox": {
+        "x": 768,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0376.png"
+    },
+    {
+      "id": 203,
+      "area": 981,
+      "source_bbox": {
+        "x": 352,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0203.png"
+    },
+    {
+      "id": 195,
+      "area": 980,
+      "source_bbox": {
+        "x": 96,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0195.png"
+    },
+    {
+      "id": 368,
+      "area": 980,
+      "source_bbox": {
+        "x": 512,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 274,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0368.png"
+    },
+    {
+      "id": 69,
+      "area": 975,
+      "source_bbox": {
+        "x": 160,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0069.png"
+    },
+    {
+      "id": 304,
+      "area": 972,
+      "source_bbox": {
+        "x": 512,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0304.png"
+    },
+    {
+      "id": 380,
+      "area": 972,
+      "source_bbox": {
+        "x": 896,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0380.png"
+    },
+    {
+      "id": 477,
+      "area": 972,
+      "source_bbox": {
+        "x": 928,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0477.png"
+    },
+    {
+      "id": 465,
+      "area": 971,
+      "source_bbox": {
+        "x": 544,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0465.png"
+    },
+    {
+      "id": 88,
+      "area": 970,
+      "source_bbox": {
+        "x": 768,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0088.png"
+    },
+    {
+      "id": 108,
+      "area": 970,
+      "source_bbox": {
+        "x": 384,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0108.png"
+    },
+    {
+      "id": 238,
+      "area": 970,
+      "source_bbox": {
+        "x": 448,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0238.png"
+    },
+    {
+      "id": 220,
+      "area": 968,
+      "source_bbox": {
+        "x": 896,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0220.png"
+    },
+    {
+      "id": 112,
+      "area": 967,
+      "source_bbox": {
+        "x": 512,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0112.png"
+    },
+    {
+      "id": 371,
+      "area": 967,
+      "source_bbox": {
+        "x": 608,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0371.png"
+    },
+    {
+      "id": 348,
+      "area": 966,
+      "source_bbox": {
+        "x": 896,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0348.png"
+    },
+    {
+      "id": 268,
+      "area": 965,
+      "source_bbox": {
+        "x": 384,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0268.png"
+    },
+    {
+      "id": 320,
+      "area": 965,
+      "source_bbox": {
+        "x": 0,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0320.png"
+    },
+    {
+      "id": 472,
+      "area": 965,
+      "source_bbox": {
+        "x": 768,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0472.png"
+    },
+    {
+      "id": 478,
+      "area": 965,
+      "source_bbox": {
+        "x": 960,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0478.png"
+    },
+    {
+      "id": 55,
+      "area": 964,
+      "source_bbox": {
+        "x": 736,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0055.png"
+    },
+    {
+      "id": 110,
+      "area": 964,
+      "source_bbox": {
+        "x": 448,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0110.png"
+    },
+    {
+      "id": 177,
+      "area": 962,
+      "source_bbox": {
+        "x": 544,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0177.png"
+    },
+    {
+      "id": 64,
+      "area": 961,
+      "source_bbox": {
+        "x": 0,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0064.png"
+    },
+    {
+      "id": 71,
+      "area": 960,
+      "source_bbox": {
+        "x": 224,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0071.png"
+    },
+    {
+      "id": 89,
+      "area": 960,
+      "source_bbox": {
+        "x": 800,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0089.png"
+    },
+    {
+      "id": 489,
+      "area": 960,
+      "source_bbox": {
+        "x": 288,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 308,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0489.png"
+    },
+    {
+      "id": 78,
+      "area": 957,
+      "source_bbox": {
+        "x": 448,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0078.png"
+    },
+    {
+      "id": 241,
+      "area": 957,
+      "source_bbox": {
+        "x": 544,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0241.png"
+    },
+    {
+      "id": 490,
+      "area": 956,
+      "source_bbox": {
+        "x": 320,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0490.png"
+    },
+    {
+      "id": 184,
+      "area": 955,
+      "source_bbox": {
+        "x": 768,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0184.png"
+    },
+    {
+      "id": 228,
+      "area": 955,
+      "source_bbox": {
+        "x": 128,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0228.png"
+    },
+    {
+      "id": 271,
+      "area": 955,
+      "source_bbox": {
+        "x": 480,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0271.png"
+    },
+    {
+      "id": 367,
+      "area": 955,
+      "source_bbox": {
+        "x": 480,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0367.png"
+    },
+    {
+      "id": 113,
+      "area": 954,
+      "source_bbox": {
+        "x": 544,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0113.png"
+    },
+    {
+      "id": 72,
+      "area": 953,
+      "source_bbox": {
+        "x": 256,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0072.png"
+    },
+    {
+      "id": 81,
+      "area": 952,
+      "source_bbox": {
+        "x": 544,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0081.png"
+    },
+    {
+      "id": 199,
+      "area": 950,
+      "source_bbox": {
+        "x": 224,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0199.png"
+    },
+    {
+      "id": 451,
+      "area": 949,
+      "source_bbox": {
+        "x": 96,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0451.png"
+    },
+    {
+      "id": 175,
+      "area": 948,
+      "source_bbox": {
+        "x": 480,
+        "y": 160,
+        "w": 31,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 342,
+        "w": 31,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0175.png"
+    },
+    {
+      "id": 288,
+      "area": 947,
+      "source_bbox": {
+        "x": 0,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 443,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0288.png"
+    },
+    {
+      "id": 349,
+      "area": 947,
+      "source_bbox": {
+        "x": 928,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 477,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0349.png"
+    },
+    {
+      "id": 463,
+      "area": 947,
+      "source_bbox": {
+        "x": 480,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 511,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0463.png"
+    },
+    {
+      "id": 118,
+      "area": 946,
+      "source_bbox": {
+        "x": 704,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 545,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0118.png"
+    },
+    {
+      "id": 500,
+      "area": 946,
+      "source_bbox": {
+        "x": 640,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 579,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0500.png"
+    },
+    {
+      "id": 104,
+      "area": 945,
+      "source_bbox": {
+        "x": 256,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 613,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0104.png"
+    },
+    {
+      "id": 50,
+      "area": 944,
+      "source_bbox": {
+        "x": 576,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 647,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0050.png"
+    },
+    {
+      "id": 114,
+      "area": 944,
+      "source_bbox": {
+        "x": 576,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 681,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0114.png"
+    },
+    {
+      "id": 174,
+      "area": 944,
+      "source_bbox": {
+        "x": 448,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 715,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0174.png"
+    },
+    {
+      "id": 180,
+      "area": 944,
+      "source_bbox": {
+        "x": 640,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 749,
+        "y": 342,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0180.png"
+    },
+    {
+      "id": 163,
+      "area": 942,
+      "source_bbox": {
+        "x": 96,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0163.png"
+    },
+    {
+      "id": 44,
+      "area": 940,
+      "source_bbox": {
+        "x": 384,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0044.png"
+    },
+    {
+      "id": 168,
+      "area": 939,
+      "source_bbox": {
+        "x": 256,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0168.png"
+    },
+    {
+      "id": 74,
+      "area": 935,
+      "source_bbox": {
+        "x": 320,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0074.png"
+    },
+    {
+      "id": 41,
+      "area": 929,
+      "source_bbox": {
+        "x": 288,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0041.png"
+    },
+    {
+      "id": 77,
+      "area": 929,
+      "source_bbox": {
+        "x": 416,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0077.png"
+    },
+    {
+      "id": 109,
+      "area": 929,
+      "source_bbox": {
+        "x": 416,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0109.png"
+    },
+    {
+      "id": 333,
+      "area": 929,
+      "source_bbox": {
+        "x": 416,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0333.png"
+    },
+    {
+      "id": 126,
+      "area": 926,
+      "source_bbox": {
+        "x": 960,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0126.png"
+    },
+    {
+      "id": 39,
+      "area": 925,
+      "source_bbox": {
+        "x": 224,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0039.png"
+    },
+    {
+      "id": 205,
+      "area": 921,
+      "source_bbox": {
+        "x": 416,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0205.png"
+    },
+    {
+      "id": 240,
+      "area": 920,
+      "source_bbox": {
+        "x": 512,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0240.png"
+    },
+    {
+      "id": 53,
+      "area": 917,
+      "source_bbox": {
+        "x": 672,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0053.png"
+    },
+    {
+      "id": 301,
+      "area": 917,
+      "source_bbox": {
+        "x": 416,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0301.png"
+    },
+    {
+      "id": 360,
+      "area": 917,
+      "source_bbox": {
+        "x": 256,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0360.png"
+    },
+    {
+      "id": 40,
+      "area": 916,
+      "source_bbox": {
+        "x": 256,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0040.png"
+    },
+    {
+      "id": 448,
+      "area": 915,
+      "source_bbox": {
+        "x": 0,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0448.png"
+    },
+    {
+      "id": 401,
+      "area": 914,
+      "source_bbox": {
+        "x": 544,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0401.png"
+    },
+    {
+      "id": 406,
+      "area": 913,
+      "source_bbox": {
+        "x": 704,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0406.png"
+    },
+    {
+      "id": 52,
+      "area": 911,
+      "source_bbox": {
+        "x": 640,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0052.png"
+    },
+    {
+      "id": 308,
+      "area": 911,
+      "source_bbox": {
+        "x": 640,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0308.png"
+    },
+    {
+      "id": 377,
+      "area": 911,
+      "source_bbox": {
+        "x": 800,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0377.png"
+    },
+    {
+      "id": 416,
+      "area": 911,
+      "source_bbox": {
+        "x": 0,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 376,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0416.png"
+    },
+    {
+      "id": 424,
+      "area": 910,
+      "source_bbox": {
+        "x": 256,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0424.png"
+    },
+    {
+      "id": 82,
+      "area": 909,
+      "source_bbox": {
+        "x": 576,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0082.png"
+    },
+    {
+      "id": 86,
+      "area": 908,
+      "source_bbox": {
+        "x": 704,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0086.png"
+    },
+    {
+      "id": 212,
+      "area": 904,
+      "source_bbox": {
+        "x": 640,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0212.png"
+    },
+    {
+      "id": 97,
+      "area": 903,
+      "source_bbox": {
+        "x": 32,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0097.png"
+    },
+    {
+      "id": 210,
+      "area": 901,
+      "source_bbox": {
+        "x": 576,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0210.png"
+    },
+    {
+      "id": 145,
+      "area": 900,
+      "source_bbox": {
+        "x": 544,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0145.png"
+    },
+    {
+      "id": 402,
+      "area": 900,
+      "source_bbox": {
+        "x": 576,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0402.png"
+    },
+    {
+      "id": 483,
+      "area": 900,
+      "source_bbox": {
+        "x": 96,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0483.png"
+    },
+    {
+      "id": 284,
+      "area": 899,
+      "source_bbox": {
+        "x": 896,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0284.png"
+    },
+    {
+      "id": 209,
+      "area": 898,
+      "source_bbox": {
+        "x": 544,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0209.png"
+    },
+    {
+      "id": 318,
+      "area": 897,
+      "source_bbox": {
+        "x": 960,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0318.png"
+    },
+    {
+      "id": 42,
+      "area": 896,
+      "source_bbox": {
+        "x": 320,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0042.png"
+    },
+    {
+      "id": 405,
+      "area": 895,
+      "source_bbox": {
+        "x": 672,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0405.png"
+    },
+    {
+      "id": 425,
+      "area": 895,
+      "source_bbox": {
+        "x": 288,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0425.png"
+    },
+    {
+      "id": 285,
+      "area": 894,
+      "source_bbox": {
+        "x": 928,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0285.png"
+    },
+    {
+      "id": 340,
+      "area": 894,
+      "source_bbox": {
+        "x": 641,
+        "y": 320,
+        "w": 31,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 410,
+        "w": 31,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0340.png"
+    },
+    {
+      "id": 94,
+      "area": 892,
+      "source_bbox": {
+        "x": 960,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 579,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0094.png"
+    },
+    {
+      "id": 214,
+      "area": 890,
+      "source_bbox": {
+        "x": 704,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 613,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0214.png"
+    },
+    {
+      "id": 265,
+      "area": 887,
+      "source_bbox": {
+        "x": 288,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 647,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0265.png"
+    },
+    {
+      "id": 286,
+      "area": 886,
+      "source_bbox": {
+        "x": 960,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 681,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0286.png"
+    },
+    {
+      "id": 305,
+      "area": 878,
+      "source_bbox": {
+        "x": 544,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 715,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0305.png"
+    },
+    {
+      "id": 511,
+      "area": 873,
+      "source_bbox": {
+        "x": 992,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 749,
+        "y": 410,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0511.png"
+    },
+    {
+      "id": 499,
+      "area": 871,
+      "source_bbox": {
+        "x": 608,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0499.png"
+    },
+    {
+      "id": 404,
+      "area": 870,
+      "source_bbox": {
+        "x": 640,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0404.png"
+    },
+    {
+      "id": 54,
+      "area": 869,
+      "source_bbox": {
+        "x": 704,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0054.png"
+    },
+    {
+      "id": 316,
+      "area": 869,
+      "source_bbox": {
+        "x": 896,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0316.png"
+    },
+    {
+      "id": 257,
+      "area": 868,
+      "source_bbox": {
+        "x": 32,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0257.png"
+    },
+    {
+      "id": 372,
+      "area": 868,
+      "source_bbox": {
+        "x": 641,
+        "y": 352,
+        "w": 31,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 444,
+        "w": 31,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0372.png"
+    },
+    {
+      "id": 46,
+      "area": 865,
+      "source_bbox": {
+        "x": 448,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 205,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0046.png"
+    },
+    {
+      "id": 8,
+      "area": 864,
+      "source_bbox": {
+        "x": 256,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 239,
+        "y": 444,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0008.png"
+    },
+    {
+      "id": 272,
+      "area": 860,
+      "source_bbox": {
+        "x": 512,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 273,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0272.png"
+    },
+    {
+      "id": 22,
+      "area": 859,
+      "source_bbox": {
+        "x": 704,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 307,
+        "y": 444,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0022.png"
+    },
+    {
+      "id": 10,
+      "area": 858,
+      "source_bbox": {
+        "x": 320,
+        "y": 3,
+        "w": 32,
+        "h": 29
+      },
+      "atlas_bbox": {
+        "x": 341,
+        "y": 444,
+        "w": 32,
+        "h": 29
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0010.png"
+    },
+    {
+      "id": 21,
+      "area": 856,
+      "source_bbox": {
+        "x": 672,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 375,
+        "y": 444,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0021.png"
+    },
+    {
+      "id": 468,
+      "area": 856,
+      "source_bbox": {
+        "x": 640,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 409,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0468.png"
+    },
+    {
+      "id": 9,
+      "area": 855,
+      "source_bbox": {
+        "x": 288,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 443,
+        "y": 444,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0009.png"
+    },
+    {
+      "id": 96,
+      "area": 855,
+      "source_bbox": {
+        "x": 0,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 477,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0096.png"
+    },
+    {
+      "id": 141,
+      "area": 855,
+      "source_bbox": {
+        "x": 416,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 511,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0141.png"
+    },
+    {
+      "id": 436,
+      "area": 855,
+      "source_bbox": {
+        "x": 643,
+        "y": 416,
+        "w": 29,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 545,
+        "y": 444,
+        "w": 29,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0436.png"
+    },
+    {
+      "id": 7,
+      "area": 854,
+      "source_bbox": {
+        "x": 224,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 576,
+        "y": 444,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0007.png"
+    },
+    {
+      "id": 455,
+      "area": 851,
+      "source_bbox": {
+        "x": 224,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 610,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0455.png"
+    },
+    {
+      "id": 150,
+      "area": 850,
+      "source_bbox": {
+        "x": 704,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 644,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0150.png"
+    },
+    {
+      "id": 266,
+      "area": 850,
+      "source_bbox": {
+        "x": 320,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 678,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0266.png"
+    },
+    {
+      "id": 385,
+      "area": 848,
+      "source_bbox": {
+        "x": 32,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 712,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0385.png"
+    },
+    {
+      "id": 127,
+      "area": 847,
+      "source_bbox": {
+        "x": 992,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 746,
+        "y": 444,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0127.png"
+    },
+    {
+      "id": 149,
+      "area": 844,
+      "source_bbox": {
+        "x": 672,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0149.png"
+    },
+    {
+      "id": 281,
+      "area": 844,
+      "source_bbox": {
+        "x": 800,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0281.png"
+    },
+    {
+      "id": 487,
+      "area": 844,
+      "source_bbox": {
+        "x": 224,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0487.png"
+    },
+    {
+      "id": 148,
+      "area": 843,
+      "source_bbox": {
+        "x": 640,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0148.png"
+    },
+    {
+      "id": 154,
+      "area": 843,
+      "source_bbox": {
+        "x": 832,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0154.png"
+    },
+    {
+      "id": 178,
+      "area": 841,
+      "source_bbox": {
+        "x": 576,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0178.png"
+    },
+    {
+      "id": 432,
+      "area": 841,
+      "source_bbox": {
+        "x": 512,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0432.png"
+    },
+    {
+      "id": 282,
+      "area": 840,
+      "source_bbox": {
+        "x": 832,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0282.png"
+    },
+    {
+      "id": 143,
+      "area": 838,
+      "source_bbox": {
+        "x": 480,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0143.png"
+    },
+    {
+      "id": 142,
+      "area": 835,
+      "source_bbox": {
+        "x": 448,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0142.png"
+    },
+    {
+      "id": 153,
+      "area": 835,
+      "source_bbox": {
+        "x": 800,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0153.png"
+    },
+    {
+      "id": 95,
+      "area": 833,
+      "source_bbox": {
+        "x": 992,
+        "y": 64,
+        "w": 27,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 478,
+        "w": 27,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0095.png"
+    },
+    {
+      "id": 388,
+      "area": 833,
+      "source_bbox": {
+        "x": 128,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 405,
+        "y": 478,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0388.png"
+    },
+    {
+      "id": 3,
+      "area": 832,
+      "source_bbox": {
+        "x": 96,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 439,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0003.png"
+    },
+    {
+      "id": 4,
+      "area": 832,
+      "source_bbox": {
+        "x": 128,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 473,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0004.png"
+    },
+    {
+      "id": 5,
+      "area": 832,
+      "source_bbox": {
+        "x": 160,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 507,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0005.png"
+    },
+    {
+      "id": 12,
+      "area": 832,
+      "source_bbox": {
+        "x": 384,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 541,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0012.png"
+    },
+    {
+      "id": 13,
+      "area": 832,
+      "source_bbox": {
+        "x": 416,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 575,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0013.png"
+    },
+    {
+      "id": 14,
+      "area": 832,
+      "source_bbox": {
+        "x": 448,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 609,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0014.png"
+    },
+    {
+      "id": 16,
+      "area": 832,
+      "source_bbox": {
+        "x": 512,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 643,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0016.png"
+    },
+    {
+      "id": 17,
+      "area": 832,
+      "source_bbox": {
+        "x": 544,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 677,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0017.png"
+    },
+    {
+      "id": 29,
+      "area": 832,
+      "source_bbox": {
+        "x": 928,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 711,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0029.png"
+    },
+    {
+      "id": 30,
+      "area": 832,
+      "source_bbox": {
+        "x": 960,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 745,
+        "y": 478,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0030.png"
+    },
+    {
+      "id": 63,
+      "area": 832,
+      "source_bbox": {
+        "x": 992,
+        "y": 32,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 512,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0063.png"
+    },
+    {
+      "id": 152,
+      "area": 832,
+      "source_bbox": {
+        "x": 768,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 30,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0152.png"
+    },
+    {
+      "id": 156,
+      "area": 832,
+      "source_bbox": {
+        "x": 896,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 64,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0156.png"
+    },
+    {
+      "id": 157,
+      "area": 832,
+      "source_bbox": {
+        "x": 928,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 98,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0157.png"
+    },
+    {
+      "id": 158,
+      "area": 832,
+      "source_bbox": {
+        "x": 960,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 132,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0158.png"
+    },
+    {
+      "id": 191,
+      "area": 832,
+      "source_bbox": {
+        "x": 992,
+        "y": 160,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 166,
+        "y": 512,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0191.png"
+    },
+    {
+      "id": 260,
+      "area": 832,
+      "source_bbox": {
+        "x": 128,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 194,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0260.png"
+    },
+    {
+      "id": 261,
+      "area": 832,
+      "source_bbox": {
+        "x": 160,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 228,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0261.png"
+    },
+    {
+      "id": 447,
+      "area": 832,
+      "source_bbox": {
+        "x": 992,
+        "y": 416,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 262,
+        "y": 512,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0447.png"
+    },
+    {
+      "id": 18,
+      "area": 831,
+      "source_bbox": {
+        "x": 576,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 290,
+        "y": 512,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0018.png"
+    },
+    {
+      "id": 146,
+      "area": 831,
+      "source_bbox": {
+        "x": 576,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 324,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0146.png"
+    },
+    {
+      "id": 133,
+      "area": 830,
+      "source_bbox": {
+        "x": 160,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 358,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0133.png"
+    },
+    {
+      "id": 140,
+      "area": 829,
+      "source_bbox": {
+        "x": 384,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 392,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0140.png"
+    },
+    {
+      "id": 317,
+      "area": 829,
+      "source_bbox": {
+        "x": 928,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 426,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0317.png"
+    },
+    {
+      "id": 383,
+      "area": 829,
+      "source_bbox": {
+        "x": 992,
+        "y": 352,
+        "w": 27,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 460,
+        "y": 512,
+        "w": 27,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0383.png"
+    },
+    {
+      "id": 274,
+      "area": 828,
+      "source_bbox": {
+        "x": 576,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 489,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0274.png"
+    },
+    {
+      "id": 259,
+      "area": 827,
+      "source_bbox": {
+        "x": 96,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 523,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0259.png"
+    },
+    {
+      "id": 20,
+      "area": 826,
+      "source_bbox": {
+        "x": 640,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 557,
+        "y": 512,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0020.png"
+    },
+    {
+      "id": 255,
+      "area": 824,
+      "source_bbox": {
+        "x": 992,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 591,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0255.png"
+    },
+    {
+      "id": 59,
+      "area": 823,
+      "source_bbox": {
+        "x": 864,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 625,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0059.png"
+    },
+    {
+      "id": 102,
+      "area": 823,
+      "source_bbox": {
+        "x": 192,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 659,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0102.png"
+    },
+    {
+      "id": 412,
+      "area": 823,
+      "source_bbox": {
+        "x": 896,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 693,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0412.png"
+    },
+    {
+      "id": 137,
+      "area": 821,
+      "source_bbox": {
+        "x": 288,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 727,
+        "y": 512,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0137.png"
+    },
+    {
+      "id": 414,
+      "area": 820,
+      "source_bbox": {
+        "x": 960,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0414.png"
+    },
+    {
+      "id": 479,
+      "area": 819,
+      "source_bbox": {
+        "x": 992,
+        "y": 448,
+        "w": 27,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 546,
+        "w": 27,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0479.png"
+    },
+    {
+      "id": 28,
+      "area": 818,
+      "source_bbox": {
+        "x": 896,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 65,
+        "y": 546,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0028.png"
+    },
+    {
+      "id": 139,
+      "area": 817,
+      "source_bbox": {
+        "x": 352,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 99,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0139.png"
+    },
+    {
+      "id": 273,
+      "area": 817,
+      "source_bbox": {
+        "x": 544,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 133,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0273.png"
+    },
+    {
+      "id": 413,
+      "area": 817,
+      "source_bbox": {
+        "x": 928,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 167,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0413.png"
+    },
+    {
+      "id": 45,
+      "area": 816,
+      "source_bbox": {
+        "x": 416,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 201,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0045.png"
+    },
+    {
+      "id": 280,
+      "area": 814,
+      "source_bbox": {
+        "x": 768,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 235,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0280.png"
+    },
+    {
+      "id": 51,
+      "area": 812,
+      "source_bbox": {
+        "x": 608,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 269,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0051.png"
+    },
+    {
+      "id": 269,
+      "area": 812,
+      "source_bbox": {
+        "x": 416,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 303,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0269.png"
+    },
+    {
+      "id": 206,
+      "area": 811,
+      "source_bbox": {
+        "x": 448,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 337,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0206.png"
+    },
+    {
+      "id": 136,
+      "area": 810,
+      "source_bbox": {
+        "x": 256,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 371,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0136.png"
+    },
+    {
+      "id": 223,
+      "area": 810,
+      "source_bbox": {
+        "x": 992,
+        "y": 192,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 405,
+        "y": 546,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0223.png"
+    },
+    {
+      "id": 226,
+      "area": 810,
+      "source_bbox": {
+        "x": 64,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 433,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0226.png"
+    },
+    {
+      "id": 107,
+      "area": 809,
+      "source_bbox": {
+        "x": 352,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 467,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0107.png"
+    },
+    {
+      "id": 507,
+      "area": 808,
+      "source_bbox": {
+        "x": 864,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 501,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0507.png"
+    },
+    {
+      "id": 270,
+      "area": 807,
+      "source_bbox": {
+        "x": 448,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 535,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0270.png"
+    },
+    {
+      "id": 264,
+      "area": 805,
+      "source_bbox": {
+        "x": 256,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 569,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0264.png"
+    },
+    {
+      "id": 1,
+      "area": 804,
+      "source_bbox": {
+        "x": 32,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 603,
+        "y": 546,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0001.png"
+    },
+    {
+      "id": 176,
+      "area": 804,
+      "source_bbox": {
+        "x": 518,
+        "y": 160,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 637,
+        "y": 546,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0176.png"
+    },
+    {
+      "id": 410,
+      "area": 801,
+      "source_bbox": {
+        "x": 832,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 665,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0410.png"
+    },
+    {
+      "id": 47,
+      "area": 800,
+      "source_bbox": {
+        "x": 480,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 699,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0047.png"
+    },
+    {
+      "id": 75,
+      "area": 800,
+      "source_bbox": {
+        "x": 352,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 733,
+        "y": 546,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0075.png"
+    },
+    {
+      "id": 135,
+      "area": 800,
+      "source_bbox": {
+        "x": 224,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0135.png"
+    },
+    {
+      "id": 138,
+      "area": 800,
+      "source_bbox": {
+        "x": 320,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0138.png"
+    },
+    {
+      "id": 275,
+      "area": 800,
+      "source_bbox": {
+        "x": 608,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0275.png"
+    },
+    {
+      "id": 277,
+      "area": 799,
+      "source_bbox": {
+        "x": 672,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0277.png"
+    },
+    {
+      "id": 70,
+      "area": 798,
+      "source_bbox": {
+        "x": 192,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0070.png"
+    },
+    {
+      "id": 278,
+      "area": 798,
+      "source_bbox": {
+        "x": 704,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0278.png"
+    },
+    {
+      "id": 263,
+      "area": 797,
+      "source_bbox": {
+        "x": 224,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0263.png"
+    },
+    {
+      "id": 418,
+      "area": 797,
+      "source_bbox": {
+        "x": 64,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0418.png"
+    },
+    {
+      "id": 243,
+      "area": 795,
+      "source_bbox": {
+        "x": 608,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0243.png"
+    },
+    {
+      "id": 38,
+      "area": 793,
+      "source_bbox": {
+        "x": 192,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0038.png"
+    },
+    {
+      "id": 115,
+      "area": 793,
+      "source_bbox": {
+        "x": 608,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0115.png"
+    },
+    {
+      "id": 132,
+      "area": 793,
+      "source_bbox": {
+        "x": 128,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0132.png"
+    },
+    {
+      "id": 375,
+      "area": 790,
+      "source_bbox": {
+        "x": 736,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0375.png"
+    },
+    {
+      "id": 276,
+      "area": 789,
+      "source_bbox": {
+        "x": 640,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0276.png"
+    },
+    {
+      "id": 503,
+      "area": 787,
+      "source_bbox": {
+        "x": 736,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0503.png"
+    },
+    {
+      "id": 129,
+      "area": 781,
+      "source_bbox": {
+        "x": 32,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0129.png"
+    },
+    {
+      "id": 98,
+      "area": 780,
+      "source_bbox": {
+        "x": 64,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0098.png"
+    },
+    {
+      "id": 230,
+      "area": 780,
+      "source_bbox": {
+        "x": 192,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0230.png"
+    },
+    {
+      "id": 79,
+      "area": 778,
+      "source_bbox": {
+        "x": 480,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0079.png"
+    },
+    {
+      "id": 458,
+      "area": 777,
+      "source_bbox": {
+        "x": 320,
+        "y": 448,
+        "w": 31,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 580,
+        "w": 31,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0458.png"
+    },
+    {
+      "id": 0,
+      "area": 776,
+      "source_bbox": {
+        "x": 0,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 681,
+        "y": 580,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0000.png"
+    },
+    {
+      "id": 123,
+      "area": 776,
+      "source_bbox": {
+        "x": 864,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 715,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0123.png"
+    },
+    {
+      "id": 354,
+      "area": 776,
+      "source_bbox": {
+        "x": 64,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 749,
+        "y": 580,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0354.png"
+    },
+    {
+      "id": 43,
+      "area": 775,
+      "source_bbox": {
+        "x": 352,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0043.png"
+    },
+    {
+      "id": 251,
+      "area": 774,
+      "source_bbox": {
+        "x": 864,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0251.png"
+    },
+    {
+      "id": 311,
+      "area": 774,
+      "source_bbox": {
+        "x": 736,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0311.png"
+    },
+    {
+      "id": 160,
+      "area": 773,
+      "source_bbox": {
+        "x": 0,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0160.png"
+    },
+    {
+      "id": 319,
+      "area": 773,
+      "source_bbox": {
+        "x": 992,
+        "y": 288,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 614,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0319.png"
+    },
+    {
+      "id": 290,
+      "area": 772,
+      "source_bbox": {
+        "x": 64,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 166,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0290.png"
+    },
+    {
+      "id": 91,
+      "area": 769,
+      "source_bbox": {
+        "x": 864,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 200,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0091.png"
+    },
+    {
+      "id": 322,
+      "area": 769,
+      "source_bbox": {
+        "x": 64,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 234,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0322.png"
+    },
+    {
+      "id": 34,
+      "area": 768,
+      "source_bbox": {
+        "x": 64,
+        "y": 32,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 268,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0034.png"
+    },
+    {
+      "id": 66,
+      "area": 768,
+      "source_bbox": {
+        "x": 64,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 302,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0066.png"
+    },
+    {
+      "id": 183,
+      "area": 768,
+      "source_bbox": {
+        "x": 736,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 336,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0183.png"
+    },
+    {
+      "id": 187,
+      "area": 768,
+      "source_bbox": {
+        "x": 864,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 370,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0187.png"
+    },
+    {
+      "id": 347,
+      "area": 768,
+      "source_bbox": {
+        "x": 864,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 404,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0347.png"
+    },
+    {
+      "id": 443,
+      "area": 768,
+      "source_bbox": {
+        "x": 864,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 438,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0443.png"
+    },
+    {
+      "id": 475,
+      "area": 768,
+      "source_bbox": {
+        "x": 864,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 472,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0475.png"
+    },
+    {
+      "id": 213,
+      "area": 767,
+      "source_bbox": {
+        "x": 672,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 506,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0213.png"
+    },
+    {
+      "id": 379,
+      "area": 767,
+      "source_bbox": {
+        "x": 864,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 540,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0379.png"
+    },
+    {
+      "id": 162,
+      "area": 766,
+      "source_bbox": {
+        "x": 64,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 574,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0162.png"
+    },
+    {
+      "id": 194,
+      "area": 766,
+      "source_bbox": {
+        "x": 64,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 608,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0194.png"
+    },
+    {
+      "id": 219,
+      "area": 765,
+      "source_bbox": {
+        "x": 864,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 642,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0219.png"
+    },
+    {
+      "id": 343,
+      "area": 765,
+      "source_bbox": {
+        "x": 736,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 676,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0343.png"
+    },
+    {
+      "id": 358,
+      "area": 764,
+      "source_bbox": {
+        "x": 192,
+        "y": 352,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 710,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0358.png"
+    },
+    {
+      "id": 389,
+      "area": 764,
+      "source_bbox": {
+        "x": 160,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 744,
+        "y": 614,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0389.png"
+    },
+    {
+      "id": 247,
+      "area": 758,
+      "source_bbox": {
+        "x": 736,
+        "y": 224,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0247.png"
+    },
+    {
+      "id": 27,
+      "area": 756,
+      "source_bbox": {
+        "x": 864,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0027.png"
+    },
+    {
+      "id": 315,
+      "area": 756,
+      "source_bbox": {
+        "x": 864,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0315.png"
+    },
+    {
+      "id": 408,
+      "area": 756,
+      "source_bbox": {
+        "x": 768,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0408.png"
+    },
+    {
+      "id": 423,
+      "area": 755,
+      "source_bbox": {
+        "x": 224,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0423.png"
+    },
+    {
+      "id": 131,
+      "area": 754,
+      "source_bbox": {
+        "x": 96,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0131.png"
+    },
+    {
+      "id": 439,
+      "area": 753,
+      "source_bbox": {
+        "x": 736,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0439.png"
+    },
+    {
+      "id": 397,
+      "area": 751,
+      "source_bbox": {
+        "x": 416,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0397.png"
+    },
+    {
+      "id": 460,
+      "area": 750,
+      "source_bbox": {
+        "x": 384,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0460.png"
+    },
+    {
+      "id": 144,
+      "area": 749,
+      "source_bbox": {
+        "x": 512,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0144.png"
+    },
+    {
+      "id": 215,
+      "area": 749,
+      "source_bbox": {
+        "x": 736,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0215.png"
+    },
+    {
+      "id": 384,
+      "area": 748,
+      "source_bbox": {
+        "x": 0,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0384.png"
+    },
+    {
+      "id": 398,
+      "area": 746,
+      "source_bbox": {
+        "x": 448,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0398.png"
+    },
+    {
+      "id": 351,
+      "area": 744,
+      "source_bbox": {
+        "x": 992,
+        "y": 320,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 648,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0351.png"
+    },
+    {
+      "id": 166,
+      "area": 742,
+      "source_bbox": {
+        "x": 192,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 472,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0166.png"
+    },
+    {
+      "id": 294,
+      "area": 742,
+      "source_bbox": {
+        "x": 192,
+        "y": 288,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 506,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0294.png"
+    },
+    {
+      "id": 198,
+      "area": 741,
+      "source_bbox": {
+        "x": 192,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 540,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0198.png"
+    },
+    {
+      "id": 471,
+      "area": 739,
+      "source_bbox": {
+        "x": 736,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 574,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0471.png"
+    },
+    {
+      "id": 267,
+      "area": 738,
+      "source_bbox": {
+        "x": 352,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 608,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0267.png"
+    },
+    {
+      "id": 326,
+      "area": 738,
+      "source_bbox": {
+        "x": 192,
+        "y": 320,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 642,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0326.png"
+    },
+    {
+      "id": 208,
+      "area": 727,
+      "source_bbox": {
+        "x": 512,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 676,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0208.png"
+    },
+    {
+      "id": 111,
+      "area": 725,
+      "source_bbox": {
+        "x": 480,
+        "y": 96,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 710,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0111.png"
+    },
+    {
+      "id": 211,
+      "area": 722,
+      "source_bbox": {
+        "x": 608,
+        "y": 192,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 744,
+        "y": 648,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0211.png"
+    },
+    {
+      "id": 179,
+      "area": 721,
+      "source_bbox": {
+        "x": 608,
+        "y": 160,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0179.png"
+    },
+    {
+      "id": 409,
+      "area": 702,
+      "source_bbox": {
+        "x": 800,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0409.png"
+    },
+    {
+      "id": 387,
+      "area": 701,
+      "source_bbox": {
+        "x": 96,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0387.png"
+    },
+    {
+      "id": 23,
+      "area": 699,
+      "source_bbox": {
+        "x": 736,
+        "y": 5,
+        "w": 32,
+        "h": 27
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 682,
+        "w": 32,
+        "h": 27
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0023.png"
+    },
+    {
+      "id": 24,
+      "area": 699,
+      "source_bbox": {
+        "x": 768,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 682,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0024.png"
+    },
+    {
+      "id": 159,
+      "area": 698,
+      "source_bbox": {
+        "x": 992,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0159.png"
+    },
+    {
+      "id": 26,
+      "area": 696,
+      "source_bbox": {
+        "x": 832,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 682,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0026.png"
+    },
+    {
+      "id": 415,
+      "area": 691,
+      "source_bbox": {
+        "x": 992,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0415.png"
+    },
+    {
+      "id": 454,
+      "area": 691,
+      "source_bbox": {
+        "x": 192,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0454.png"
+    },
+    {
+      "id": 428,
+      "area": 686,
+      "source_bbox": {
+        "x": 386,
+        "y": 416,
+        "w": 30,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 682,
+        "w": 30,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0428.png"
+    },
+    {
+      "id": 25,
+      "area": 684,
+      "source_bbox": {
+        "x": 800,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 340,
+        "y": 682,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0025.png"
+    },
+    {
+      "id": 258,
+      "area": 681,
+      "source_bbox": {
+        "x": 64,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 374,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0258.png"
+    },
+    {
+      "id": 407,
+      "area": 679,
+      "source_bbox": {
+        "x": 736,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 408,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0407.png"
+    },
+    {
+      "id": 411,
+      "area": 678,
+      "source_bbox": {
+        "x": 864,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 442,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0411.png"
+    },
+    {
+      "id": 31,
+      "area": 676,
+      "source_bbox": {
+        "x": 992,
+        "y": 0,
+        "w": 26,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 476,
+        "y": 682,
+        "w": 26,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0031.png"
+    },
+    {
+      "id": 83,
+      "area": 673,
+      "source_bbox": {
+        "x": 608,
+        "y": 64,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 504,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0083.png"
+    },
+    {
+      "id": 287,
+      "area": 672,
+      "source_bbox": {
+        "x": 992,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 538,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0287.png"
+    },
+    {
+      "id": 6,
+      "area": 664,
+      "source_bbox": {
+        "x": 192,
+        "y": 1,
+        "w": 32,
+        "h": 31
+      },
+      "atlas_bbox": {
+        "x": 572,
+        "y": 682,
+        "w": 32,
+        "h": 31
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0006.png"
+    },
+    {
+      "id": 256,
+      "area": 664,
+      "source_bbox": {
+        "x": 0,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 606,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0256.png"
+    },
+    {
+      "id": 392,
+      "area": 658,
+      "source_bbox": {
+        "x": 256,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 640,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0392.png"
+    },
+    {
+      "id": 393,
+      "area": 657,
+      "source_bbox": {
+        "x": 288,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 674,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0393.png"
+    },
+    {
+      "id": 151,
+      "area": 655,
+      "source_bbox": {
+        "x": 736,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 708,
+        "y": 682,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0151.png"
+    },
+    {
+      "id": 426,
+      "area": 650,
+      "source_bbox": {
+        "x": 320,
+        "y": 416,
+        "w": 31,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 742,
+        "y": 682,
+        "w": 31,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0426.png"
+    },
+    {
+      "id": 15,
+      "area": 649,
+      "source_bbox": {
+        "x": 480,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 716,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0015.png"
+    },
+    {
+      "id": 147,
+      "area": 647,
+      "source_bbox": {
+        "x": 608,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0147.png"
+    },
+    {
+      "id": 11,
+      "area": 644,
+      "source_bbox": {
+        "x": 352,
+        "y": 6,
+        "w": 32,
+        "h": 26
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 716,
+        "w": 32,
+        "h": 26
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0011.png"
+    },
+    {
+      "id": 155,
+      "area": 643,
+      "source_bbox": {
+        "x": 864,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 104,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0155.png"
+    },
+    {
+      "id": 492,
+      "area": 643,
+      "source_bbox": {
+        "x": 384,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 138,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0492.png"
+    },
+    {
+      "id": 279,
+      "area": 641,
+      "source_bbox": {
+        "x": 736,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 172,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0279.png"
+    },
+    {
+      "id": 134,
+      "area": 634,
+      "source_bbox": {
+        "x": 192,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 206,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0134.png"
+    },
+    {
+      "id": 422,
+      "area": 633,
+      "source_bbox": {
+        "x": 192,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 240,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0422.png"
+    },
+    {
+      "id": 262,
+      "area": 632,
+      "source_bbox": {
+        "x": 192,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 274,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0262.png"
+    },
+    {
+      "id": 394,
+      "area": 631,
+      "source_bbox": {
+        "x": 320,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 308,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0394.png"
+    },
+    {
+      "id": 130,
+      "area": 629,
+      "source_bbox": {
+        "x": 64,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 342,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0130.png"
+    },
+    {
+      "id": 283,
+      "area": 629,
+      "source_bbox": {
+        "x": 864,
+        "y": 256,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 376,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0283.png"
+    },
+    {
+      "id": 2,
+      "area": 626,
+      "source_bbox": {
+        "x": 64,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 410,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0002.png"
+    },
+    {
+      "id": 391,
+      "area": 617,
+      "source_bbox": {
+        "x": 224,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 444,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0391.png"
+    },
+    {
+      "id": 128,
+      "area": 613,
+      "source_bbox": {
+        "x": 0,
+        "y": 128,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 478,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0128.png"
+    },
+    {
+      "id": 395,
+      "area": 608,
+      "source_bbox": {
+        "x": 352,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 512,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0395.png"
+    },
+    {
+      "id": 19,
+      "area": 592,
+      "source_bbox": {
+        "x": 608,
+        "y": 3,
+        "w": 32,
+        "h": 29
+      },
+      "atlas_bbox": {
+        "x": 546,
+        "y": 716,
+        "w": 32,
+        "h": 29
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0019.png"
+    },
+    {
+      "id": 386,
+      "area": 552,
+      "source_bbox": {
+        "x": 64,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 580,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0386.png"
+    },
+    {
+      "id": 491,
+      "area": 548,
+      "source_bbox": {
+        "x": 352,
+        "y": 480,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 614,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0491.png"
+    },
+    {
+      "id": 403,
+      "area": 508,
+      "source_bbox": {
+        "x": 608,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 648,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0403.png"
+    },
+    {
+      "id": 467,
+      "area": 483,
+      "source_bbox": {
+        "x": 608,
+        "y": 448,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 682,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0467.png"
+    },
+    {
+      "id": 390,
+      "area": 481,
+      "source_bbox": {
+        "x": 192,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 716,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0390.png"
+    },
+    {
+      "id": 400,
+      "area": 474,
+      "source_bbox": {
+        "x": 512,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 750,
+        "y": 716,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0400.png"
+    },
+    {
+      "id": 431,
+      "area": 468,
+      "source_bbox": {
+        "x": 480,
+        "y": 416,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 2,
+        "y": 750,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0431.png"
+    },
+    {
+      "id": 396,
+      "area": 462,
+      "source_bbox": {
+        "x": 384,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 36,
+        "y": 750,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0396.png"
+    },
+    {
+      "id": 459,
+      "area": 459,
+      "source_bbox": {
+        "x": 359,
+        "y": 448,
+        "w": 25,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 70,
+        "y": 750,
+        "w": 25,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0459.png"
+    },
+    {
+      "id": 427,
+      "area": 408,
+      "source_bbox": {
+        "x": 352,
+        "y": 416,
+        "w": 20,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 97,
+        "y": 750,
+        "w": 20,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0427.png"
+    },
+    {
+      "id": 399,
+      "area": 338,
+      "source_bbox": {
+        "x": 480,
+        "y": 384,
+        "w": 32,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 119,
+        "y": 750,
+        "w": 32,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0399.png"
+    },
+    {
+      "id": 435,
+      "area": 337,
+      "source_bbox": {
+        "x": 608,
+        "y": 416,
+        "w": 22,
+        "h": 32
+      },
+      "atlas_bbox": {
+        "x": 153,
+        "y": 750,
+        "w": 22,
+        "h": 32
+      },
+      "file": "generated/extracted/02_environment_lower_sprawl_sprites/02_environment_lower_sprawl_c0435.png"
+    }
+  ]
+}

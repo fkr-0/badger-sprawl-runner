@@ -1,6 +1,3 @@
-import { createMetaState, type MetaState } from '../../../../packages/progression/src/MetaProgression';
-import { hydrateSkillTree, purchaseSkillWithMeta, type SkillPurchaseResult, type SkillTree } from '../../../../packages/progression/src/SkillTree';
-
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
 
 export interface MenuOption {
@@ -22,6 +19,29 @@ export interface DialogueSpec {
   lines: string[];
   next: { mode: 'stage'; stageIndex: number };
 }
+
+export interface MetaState {
+  credchips: number;
+  blueprintShards: number;
+  dubFavor: number;
+  orbitHeat: number;
+  unlockedBoons: string[];
+  purchasedSkills: string[];
+}
+
+export interface SkillNode {
+  id: string;
+  name: string;
+  cost: number;
+  prereqs: string[];
+  unlocked: boolean;
+}
+
+export type SkillPurchaseFailure = 'unknown-skill' | 'already-unlocked' | 'missing-prerequisite' | 'insufficient-shards';
+
+export type SkillPurchaseResult =
+  | { ok: true; state: MetaState; node: SkillNode }
+  | { ok: false; state: MetaState; reason: SkillPurchaseFailure };
 
 export type GameFlowState =
   | { mode: 'menu' }
@@ -71,22 +91,77 @@ const DIALOGUES: Record<string, DialogueSpec> = {
   },
 };
 
+const SKILLS: SkillNode[] = [
+  { id: 'double_swipe', name: 'Double Swipe', cost: 1, prereqs: [], unlocked: false },
+  { id: 'parry_tooth', name: 'Parry Tooth', cost: 2, prereqs: ['double_swipe'], unlocked: false },
+  { id: 'claw_rush', name: 'Claw Rush', cost: 2, prereqs: ['parry_tooth'], unlocked: false },
+  { id: 'rail_mastery', name: 'Rail Mastery', cost: 2, prereqs: [], unlocked: false },
+  { id: 'piercing_shot', name: 'Piercing Shot', cost: 2, prereqs: ['rail_mastery'], unlocked: false },
+  { id: 'emp_blast', name: 'EMP Blast', cost: 3, prereqs: ['piercing_shot'], unlocked: false },
+];
+
+function createDefaultMetaState(): MetaState {
+  return {
+    credchips: 0,
+    blueprintShards: 0,
+    dubFavor: 0,
+    orbitHeat: 0,
+    unlockedBoons: [],
+    purchasedSkills: [],
+  };
+}
+
+function createSkillMap(purchasedSkills: readonly string[]): Map<string, SkillNode> {
+  const nodes = new Map(SKILLS.map((skill) => [skill.id, { ...skill }]));
+  for (const skillId of purchasedSkills) {
+    const node = nodes.get(skillId);
+    if (node) node.unlocked = true;
+  }
+  return nodes;
+}
+
+function purchaseSkill(nodes: Map<string, SkillNode>, state: MetaState, nodeId: string): SkillPurchaseResult {
+  const node = nodes.get(nodeId);
+  if (!node) return { ok: false, state, reason: 'unknown-skill' };
+  if (node.unlocked || state.purchasedSkills.includes(nodeId)) {
+    return { ok: false, state, reason: 'already-unlocked' };
+  }
+
+  const hasPrerequisites = node.prereqs.every((prereqId) =>
+    Boolean(nodes.get(prereqId)?.unlocked || state.purchasedSkills.includes(prereqId))
+  );
+  if (!hasPrerequisites) return { ok: false, state, reason: 'missing-prerequisite' };
+  if (state.blueprintShards < node.cost) return { ok: false, state, reason: 'insufficient-shards' };
+
+  node.unlocked = true;
+  const nextState = {
+    ...state,
+    blueprintShards: state.blueprintShards - node.cost,
+    purchasedSkills: [...state.purchasedSkills, nodeId],
+  };
+  return { ok: true, state: nextState, node: { ...node } };
+}
+
+function cloneState<T>(value: T): T {
+  return structuredClone(value) as T;
+}
+
 export class GameFlow {
   private state: GameFlowState = { mode: 'menu' };
   private meta: MetaState;
-  private skillTree: SkillTree;
+  private skills: Map<string, SkillNode>;
 
   constructor(meta: Partial<MetaState> = {}) {
-    this.meta = { ...createMetaState(), ...meta };
-    this.skillTree = hydrateSkillTree(this.meta.purchasedSkills);
+    this.meta = { ...createDefaultMetaState(), ...meta };
+    this.skills = createSkillMap(this.meta.purchasedSkills);
   }
 
   getState(): GameFlowState {
-    return structuredClone(this.state) as GameFlowState;
+    return cloneState(this.state);
   }
 
   getMeta(): MetaState {
-    return structuredClone(this.meta) as MetaState;
+    return cloneState(this.meta);
   }
 
   getMenuOptions(): MenuOption[] {
@@ -156,7 +231,6 @@ export class GameFlow {
     this.returnToMenu();
   }
 
-
   scoreVersusTag(side: 'player' | 'rival'): { winner?: 'player' | 'rival'; playerScore: number; rivalScore: number } {
     if (this.state.mode !== 'versus') return { playerScore: 0, rivalScore: 0 };
 
@@ -172,7 +246,7 @@ export class GameFlow {
   }
 
   purchaseSkill(skillId: string): SkillPurchaseResult {
-    const result = purchaseSkillWithMeta(this.skillTree, this.meta, skillId);
+    const result = purchaseSkill(this.skills, this.meta, skillId);
     this.meta = result.state;
     return result;
   }
