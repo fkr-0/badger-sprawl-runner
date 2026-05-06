@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "rootDir": "."
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/platformer-core" },
+    { "path": "../../packages/codegate" },
+    { "path": "../../packages/sprite-contracts" },
+    { "path": "../../packages/progression" }
+  ]
+}

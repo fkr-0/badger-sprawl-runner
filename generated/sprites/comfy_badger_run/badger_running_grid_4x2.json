@@ -1,0 +1,13 @@
+{
+  "name": "badger_running_grid_4x2",
+  "source": "../badger_running_grid_00001_.png",
+  "sheet": "badger_running_grid_4x2_1024x512.png",
+  "frameWidth": 256,
+  "frameHeight": 256,
+  "columns": 4,
+  "rows": 2,
+  "frames": 8,
+  "fps": 12,
+  "order": [0,1,2,3,4,5,6,7],
+  "notes": "Generated via ComfyUI API, then normalized to exact 4x2 grid and exported into per-frame crops."
+}
