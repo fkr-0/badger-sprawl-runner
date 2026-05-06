@@ -11,3 +11,11 @@ yarn-error.log*
 *.tsbuildinfo
 .npm
 .eslintcache
+
+# Generated local tool/artifact scratch
+.serena/
+generated/
+llm-sprite-generation/
+spriteSheetMaker_vH42/
+spriteSheetMaker_vH42.zip
+workflow.json

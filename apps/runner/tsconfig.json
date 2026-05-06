@@ -5,11 +5,21 @@
     "baseUrl": ".",
     "rootDir": "."
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../../packages/platformer-core" },
-    { "path": "../../packages/codegate" },
-    { "path": "../../packages/sprite-contracts" },
-    { "path": "../../packages/progression" }
+  "include": [
+    "src/main.ts",
+    "src/game/**/*.ts",
+    "src/architecture/**/*.ts",
+    "src/storage/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/actors",
+    "src/audio",
+    "src/engine",
+    "src/renderer",
+    "src/scenes",
+    "src/systems",
+    "src/world",
+    "src/main.js"
   ]
 }

@@ -1,4 +1,5 @@
-import { createGameFlow, type MenuOptionId } from './game/GameFlow';
+import { type MenuOptionId } from './game/GameFlow';
+import { createLocalStorageSaveDriver, loadGameFlow, saveGameFlow } from './storage/SaveStore';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
 const statusEl = document.querySelector<HTMLElement>('#status');
@@ -14,7 +15,8 @@ const maybeCtx = canvas.getContext('2d');
 if (!maybeCtx) throw new Error('2D context not available');
 const ctx: CanvasRenderingContext2D = maybeCtx;
 
-const flow = createGameFlow({ blueprintShards: 1 });
+const saveDriver = createLocalStorageSaveDriver(window.localStorage);
+const flow = loadGameFlow(saveDriver);
 const skillIds = ['double_swipe', 'parry_tooth', 'rail_mastery'] as const;
 
 let selectedMenuIndex = 0;
@@ -69,6 +71,7 @@ window.addEventListener('keydown', (event) => {
     case 'stage':
       if (event.code === 'Enter' || event.code === 'Space') {
         flow.completeStage();
+        saveGameFlow(saveDriver, flow);
         banner = flow.getState().mode === 'dialogue' ? 'Briefing unlocked.' : 'Two-stage slice complete.';
         event.preventDefault();
       }
@@ -109,6 +112,7 @@ window.addEventListener('keydown', (event) => {
       if (event.code === 'Enter' || event.code === 'Space') {
         const skillId = skillIds[selectedSkillIndex] ?? 'double_swipe';
         const result = flow.purchaseSkill(skillId);
+        if (result.ok) saveGameFlow(saveDriver, flow);
         banner = result.ok ? `Unlocked ${skillId}.` : `Cannot unlock ${skillId}: ${result.reason}.`;
         event.preventDefault();
       }

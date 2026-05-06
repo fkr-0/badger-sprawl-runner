@@ -5,14 +5,20 @@
   "type": "module",
   "description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
   "packageManager": "pnpm@9.0.0",
-  "keywords": ["platformer", "game", "canvas", "2d"],
+  "keywords": [
+    "platformer",
+    "game",
+    "canvas",
+    "2d"
+  ],
   "scripts": {
     "dev": "pnpm -F @badger/runner dev",
     "build": "pnpm -r build",
     "test": "node tests/validate-data.mjs && pnpm -r test",
     "lint": "biome lint .",
     "format": "biome format . --write",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "smoke:runner": "node tests/smoke-runner.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
