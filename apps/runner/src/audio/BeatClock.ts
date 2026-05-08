@@ -4,11 +4,11 @@
 
 export class BeatClock {
   private bpm: number;
-  private startTime: number = 0;
+  private startTime = 0;
   private audioCtx: AudioContext | null = null;
   private subscribers: Array<(beatNumber: number) => void> = [];
 
-  constructor(bpm: number = 140) {
+  constructor(bpm = 140) {
     this.bpm = bpm;
   }
 
@@ -42,7 +42,7 @@ export class BeatClock {
     return (nextBeat - beat) / (this.bpm / 60);
   }
 
-  isInDownbeatWindow(windowMs: number = 80): boolean {
+  isInDownbeatWindow(windowMs = 80): boolean {
     const nextDownbeat = this.nextDownbeatTime();
     const nextDownbeatMs = nextDownbeat * 1000;
 

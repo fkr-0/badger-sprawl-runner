@@ -4,7 +4,7 @@
  */
 
 import type { Entity } from '../systems/PhysicsSystem';
-import type { CombatEntity } from '../systems/CombatSystem';
+import type { CombatEntity, CombatSystem } from '../systems/CombatSystem';
 import type { ActionMap } from '../systems/InputSystem';
 
 export interface Player extends Entity, CombatEntity {
@@ -69,7 +69,7 @@ export function processMossInput(
   player: Player,
   actionMap: ActionMap,
   dt: number,
-  combatSystem: any
+  combatSystem: Pick<CombatSystem, 'melee'>
 ): void {
   // Melee
   if (actionMap.meleePressed && player.meleeTimer <= 0) {

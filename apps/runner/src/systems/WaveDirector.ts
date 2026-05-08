@@ -3,7 +3,7 @@
  */
 
 import type { EnemyEntity } from './EnemySystem';
-import { EnemySystem } from './EnemySystem';
+import type { EnemySystem } from './EnemySystem';
 import { getRandomEnemyForWave, getEnemySpawnPoints, getEnemyCost } from '../actors/EnemyFactory';
 
 export interface WaveConfig {
@@ -36,7 +36,7 @@ export class WaveDirector {
     this.waveTimer = 0;
 
     // Build spawn queue based on wave budget
-    const budget = this.waveBudgets[Math.min(waveNumber - 1, this.waveBudgets.length - 1)];
+    let budget = this.waveBudgets[Math.min(waveNumber - 1, this.waveBudgets.length - 1)];
     const spawnPoints = getEnemySpawnPoints(Math.ceil(budget / 2), this.arenaWidth);
     let pointIndex = 0;
 
@@ -83,7 +83,8 @@ export class WaveDirector {
 
     // Spawn enemies from queue
     while (this.spawnQueue.length > 0 && this.spawnTimer >= this.spawnQueue[0].delay) {
-      const spawn = this.spawnQueue.shift()!;
+      const spawn = this.spawnQueue.shift();
+      if (!spawn) break;
       const enemy = this.enemySystem.spawnEnemy(
         {
           id: spawn.enemyId,

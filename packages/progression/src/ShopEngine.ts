@@ -15,8 +15,15 @@ export interface ShopOffer {
   heat: number;
 }
 
+export interface ShopCatalogItem {
+  id: string;
+  name: string;
+  rarity: string;
+  tags: string[];
+}
+
 export class ShopEngine {
-  generateOffer(world: string, heat: number, dubFavor: number, guile: number, items: any[]): ShopOffer {
+  generateOffer(world: string, heat: number, dubFavor: number, guile: number, items: ShopCatalogItem[]): ShopOffer {
     const discount = Math.min(0.3, guile * 0.02);
     const shopItems: ShopItem[] = [];
 

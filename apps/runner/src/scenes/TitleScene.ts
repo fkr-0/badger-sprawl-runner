@@ -10,6 +10,7 @@ export class TitleScene implements Scene {
   readonly name = 'TitleScene';
 
   private renderer: Renderer | null = null;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private selectedOption = 0;
   private menuOptions = [
     { id: 'start', name: 'Start Game' },
@@ -38,12 +39,13 @@ export class TitleScene implements Scene {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    (this as any)._keyHandler = handleKeyDown;
+    this.keyHandler = handleKeyDown;
   }
 
   onExit(): void {
-    if ((this as any)._keyHandler) {
-      window.removeEventListener('keydown', (this as any)._keyHandler);
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
     }
     console.log('TitleScene exited');
   }
@@ -87,7 +89,7 @@ export class TitleScene implements Scene {
 
       if (isSelected) {
         ctx.fillStyle = '#ffb35e';
-        ctx.fillText('> ' + option.name, W / 2, y);
+        ctx.fillText(`> ${option.name}`, W / 2, y);
       } else {
         ctx.fillStyle = '#92a4be';
         ctx.fillText('  ' + option.name, W / 2, y);

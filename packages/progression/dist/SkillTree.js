@@ -163,5 +163,41 @@ export class SkillTree {
 export function createSkillTree() {
     return new SkillTree();
 }
+export function hydrateSkillTree(purchasedSkills) {
+    const tree = createSkillTree();
+    for (const skillId of purchasedSkills) {
+        const node = tree.getNode(skillId);
+        if (!node)
+            continue;
+        tree.addSkillPoints(node.cost);
+        tree.unlockNode(skillId);
+    }
+    return tree;
+}
+export function purchaseSkillWithMeta(tree, state, nodeId) {
+    const node = tree.getNode(nodeId);
+    if (!node)
+        return { ok: false, state, reason: 'unknown-skill' };
+    if (node.unlocked || state.purchasedSkills.includes(nodeId)) {
+        return { ok: false, state, reason: 'already-unlocked' };
+    }
+    const hasPrerequisites = node.prereqs.every((prereqId) => tree.getNode(prereqId)?.unlocked || state.purchasedSkills.includes(prereqId));
+    if (!hasPrerequisites)
+        return { ok: false, state, reason: 'missing-prerequisite' };
+    if (state.blueprintShards < node.cost)
+        return { ok: false, state, reason: 'insufficient-shards' };
+    tree.addSkillPoints(node.cost);
+    if (!tree.unlockNode(nodeId))
+        return { ok: false, state, reason: 'missing-prerequisite' };
+    return {
+        ok: true,
+        node,
+        state: {
+            ...state,
+            blueprintShards: state.blueprintShards - node.cost,
+            purchasedSkills: [...state.purchasedSkills, nodeId],
+        },
+    };
+}
 export { computeDerivedStats } from './derivedStats';
 //# sourceMappingURL=SkillTree.js.map

@@ -2,6 +2,8 @@
  * AudioManager - Web Audio API context and sound management
  */
 
+type WindowWithWebkitAudio = Window & { webkitAudioContext?: typeof AudioContext };
+
 export class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -11,14 +13,15 @@ export class AudioManager {
   private musicSource: AudioBufferSourceNode | null = null;
   private isPlaying = false;
 
-  constructor() {
-    // Initialize on first user interaction
-  }
-
   async init(): Promise<void> {
     if (this.ctx) return;
 
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error('Web Audio API is not available in this browser.');
+    }
+
+    this.ctx = new AudioContextCtor();
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.value = 0.8;
     this.masterGain.connect(this.ctx.destination);
@@ -54,22 +57,25 @@ export class AudioManager {
     }
   }
 
-  async playMusic(url: string, loop: boolean = true): Promise<void> {
+  async playMusic(url: string, loop = true): Promise<void> {
     if (!this.ctx) await this.init();
+    const ctx = this.ctx;
+    const musicGain = this.musicGain;
+    if (!ctx || !musicGain) return;
 
     try {
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
-      this.musicBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
+      this.musicBuffer = await ctx.decodeAudioData(arrayBuffer);
 
       if (this.musicSource) {
         this.musicSource.stop();
       }
 
-      this.musicSource = this.ctx!.createBufferSource();
+      this.musicSource = ctx.createBufferSource();
       this.musicSource.buffer = this.musicBuffer;
       this.musicSource.loop = loop;
-      this.musicSource.connect(this.musicGain!);
+      this.musicSource.connect(musicGain);
       this.musicSource.start();
       this.isPlaying = true;
     } catch (e) {
@@ -86,15 +92,17 @@ export class AudioManager {
   }
 
   playSFX(url: string): void {
-    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const sfxGain = this.sfxGain;
+    if (!ctx || !sfxGain) return;
 
     fetch(url)
       .then(response => response.arrayBuffer())
-      .then(arrayBuffer => this.ctx!.decodeAudioData(arrayBuffer))
+      .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
       .then(audioBuffer => {
-        const source = this.ctx!.createBufferSource();
+        const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(this.sfxGain!);
+        source.connect(sfxGain);
         source.start();
       })
       .catch(e => console.error('Failed to play SFX:', e));

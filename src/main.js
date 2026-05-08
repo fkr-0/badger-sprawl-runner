@@ -300,7 +300,7 @@ function updateHud(){
 
 let last = performance.now();
 function loop(now){
-  let dt = Math.min(.033, (now-last)/1000); last = now;
+  const dt = Math.min(.033, (now-last)/1000); last = now;
   const simDt = player.focus > 0 ? dt * .62 : dt;
   world.time += dt;
   control(simDt); physics(simDt); updateWorld(simDt); draw(); updateHud(); pressed.clear();

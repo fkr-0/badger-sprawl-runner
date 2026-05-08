@@ -4,6 +4,17 @@
 
 import { loadSpriteSheet, type SpriteManifest, type LoadedSheet } from '@badger/sprite-contracts';
 
+interface FallbackEntity {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  dir: number;
+  onGround: boolean;
+  scaleX?: number;
+  scaleY?: number;
+}
+
 export class SpriteRenderer {
   private sheets = new Map<string, LoadedSheet>();
   private manifest: SpriteManifest | null = null;
@@ -71,7 +82,7 @@ export class SpriteRenderer {
     return this.ctx;
   }
 
-  getFallbackDraw(): (ctx: CanvasRenderingContext2D, entity: any, x: number, y: number) => void {
+  getFallbackDraw(): (ctx: CanvasRenderingContext2D, entity: FallbackEntity, x: number, y: number) => void {
     return (ctx, entity, x, y) => {
       const scaleX = entity.scaleX ?? 1;
       const scaleY = entity.scaleY ?? 1;

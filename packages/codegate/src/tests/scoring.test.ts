@@ -60,3 +60,22 @@ describe('CodeGate scoring', () => {
     }
   });
 });
+
+import { createMicroCodeGate } from '../gates/MicroCodeGate';
+
+describe('MicroCodeGate safe evaluation', () => {
+  const spec = {
+    id: 'safe-arithmetic',
+    kind: 'microcode' as const,
+    prompt: 'produce 4',
+    rewardTags: ['logic'],
+    heatDelta: -1,
+  };
+
+  it('accepts arithmetic expressions without evaluating arbitrary JavaScript', () => {
+    const gate = createMicroCodeGate(spec, { expectedExpression: '2 + 2', input: 2, output: 4 });
+
+    expect(gate.validate('2 + 2')?.outcome).toBe('clean');
+    expect(gate.validate('globalThis.process.exit()')).toBeNull();
+  });
+});

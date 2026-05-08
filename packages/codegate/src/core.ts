@@ -7,8 +7,8 @@ import type { MiniGameSpec, CodeGateInstance, MiniGameEvent, MiniGameResult, Gat
 export function createCodeGate(spec: MiniGameSpec): CodeGateInstance {
   let phase: 'active' | 'succeeded' | 'failed' = 'active';
   let timeRemaining = spec.timeLimitMs / 1000;
-  let inputSoFar = '';
-  let attemptsLeft = spec.attempts;
+  const inputSoFar = '';
+  const attemptsLeft = spec.attempts;
 
   return {
     update(dt: number): MiniGameEvent | null {

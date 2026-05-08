@@ -7,6 +7,9 @@ import { VFXPool } from './VFXPool';
 import { ParallaxRenderer } from './ParallaxLayer';
 import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
+import type { Player } from '../actors/MossBadger';
+import type { Camera } from '../systems/CameraSystem';
+import type { EnemyEntity } from '../systems/EnemySystem';
 
 export class Renderer {
   private spriteRenderer: SpriteRenderer;
@@ -69,7 +72,7 @@ export class Renderer {
     }
   }
 
-  renderPlayer(player: any, cameraX: number): void {
+  renderPlayer(player: Player & { animState?: { currentAnim: string; frame: number }; scaleX?: number; scaleY?: number }, cameraX: number): void {
     const x = player.x - cameraX;
     const y = player.y;
     const scaleX = player.scaleX ?? 1;
@@ -77,7 +80,9 @@ export class Renderer {
 
     if (this.spriteRenderer.hasSheet('moss_badger')) {
       // Use sprite rendering with squash/stretch
-      this.spriteRenderer.drawEntity('moss_badger', player.animState, x, y, player.dir < 0, scaleX, scaleY);
+      if (player.animState) {
+        this.spriteRenderer.drawEntity('moss_badger', player.animState, x, y, player.dir < 0, scaleX, scaleY);
+      }
     } else {
       // Fallback vector rendering with squash/stretch
       const fallback = this.spriteRenderer.getFallbackDraw();
@@ -85,7 +90,7 @@ export class Renderer {
     }
   }
 
-  renderEnemies(enemies: any[], cameraX: number): void {
+  renderEnemies(enemies: EnemyEntity[], cameraX: number): void {
     for (const enemy of enemies) {
       const x = enemy.x - cameraX;
 
@@ -128,7 +133,7 @@ export class Renderer {
     this.vfxPool.render(this.ctx, cameraX);
   }
 
-  renderUI(player: any, camera: any): void {
+  renderUI(player: Player, camera: Camera): void {
     this.uiRenderer.render(this.ctx, player, camera);
   }
 

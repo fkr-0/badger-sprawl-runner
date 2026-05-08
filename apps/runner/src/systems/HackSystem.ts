@@ -96,7 +96,7 @@ export class HackSystem {
 
   private findNearestHackable(player: Entity): Hackable | null {
     let nearest: Hackable | null = null;
-    let nearestDist = Infinity;
+    let nearestDist = Number.POSITIVE_INFINITY;
 
     for (const hackable of this.hackables) {
       const dx = hackable.x - player.x;

@@ -1,4 +1,4 @@
-import { type MenuOptionId } from './game/GameFlow';
+import type { MenuOptionId } from './game/GameFlow';
 import { createLocalStorageSaveDriver, loadGameFlow, saveGameFlow } from './storage/SaveStore';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');

@@ -2,7 +2,7 @@
  * BeatSystem - fires downbeat events and syncs mechanics to the beat
  */
 
-import { BeatClock } from './BeatClock';
+import type { BeatClock } from './BeatClock';
 import type { EventBus } from '../engine/EventBus';
 
 export class BeatSystem {

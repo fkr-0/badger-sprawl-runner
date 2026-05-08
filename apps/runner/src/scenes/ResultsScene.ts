@@ -11,6 +11,7 @@ export class ResultsScene implements Scene {
   readonly name = 'ResultsScene';
 
   private results: RunResult | null = null;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private renderer: Renderer | null = null;
 
   onEnter(ctx: SceneContext): void {
@@ -24,12 +25,13 @@ export class ResultsScene implements Scene {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    (this as any)._keyHandler = handleKeyDown;
+    this.keyHandler = handleKeyDown;
   }
 
   onExit(): void {
-    if ((this as any)._keyHandler) {
-      window.removeEventListener('keydown', (this as any)._keyHandler);
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
     }
     console.log('ResultsScene exited');
   }

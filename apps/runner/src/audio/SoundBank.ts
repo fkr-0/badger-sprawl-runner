@@ -42,7 +42,7 @@ export class SoundBank {
     return this.sounds.has(id);
   }
 
-  play(id: string, volume: number = 1, destination?: AudioNode): void {
+  play(id: string, volume = 1, destination?: AudioNode): void {
     const buffer = this.sounds.get(id);
     if (!buffer || !this.ctx) return;
 

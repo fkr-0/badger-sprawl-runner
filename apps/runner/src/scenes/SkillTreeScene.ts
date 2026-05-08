@@ -4,7 +4,7 @@
 
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
-import { SkillTree, createSkillTree } from '@badger/progression';
+import { type SkillTree, createSkillTree } from '@badger/progression';
 import { loadMeta, persistMeta, type MetaState } from '@badger/progression';
 import type { Renderer } from '../renderer/Renderer';
 
@@ -35,6 +35,7 @@ export class SkillTreeScene implements Scene {
   readonly name = 'SkillTreeScene';
 
   private skillTree: SkillTree;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private metaState: MetaState | null = null;
   private renderer: Renderer | null = null;
   private selectedSkill = 'double_swipe';
@@ -85,12 +86,13 @@ export class SkillTreeScene implements Scene {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    (this as any)._keyHandler = handleKeyDown;
+    this.keyHandler = handleKeyDown;
   }
 
   onExit(): void {
-    if ((this as any)._keyHandler) {
-      window.removeEventListener('keydown', (this as any)._keyHandler);
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
     }
     console.log('SkillTree exited');
   }

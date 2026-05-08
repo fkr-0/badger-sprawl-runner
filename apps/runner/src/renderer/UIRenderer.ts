@@ -3,9 +3,10 @@
  */
 
 import type { Camera } from '../systems/CameraSystem';
+import type { Player } from '../actors/MossBadger';
 
 export class UIRenderer {
-  render(ctx: CanvasRenderingContext2D, player: any, camera: Camera): void {
+  render(ctx: CanvasRenderingContext2D, player: Player, camera: Camera): void {
     // HUD background
     ctx.fillStyle = 'rgba(4, 6, 12, 0.72)';
     ctx.fillRect(16, 16, 450, 74);
@@ -16,6 +17,6 @@ export class UIRenderer {
     ctx.fillText(`HP ${'♥'.repeat(player.hp)}${'·'.repeat(player.maxHp - player.hp)}`, 30, 42);
 
     // Fuel
-    ctx.fillText(`Fuel ${player.hasRocket ? player.fuel.toFixed(1) + '/' + player.maxFuel : 'no pack'}`, 30, 67);
+    ctx.fillText(`Fuel ${player.hasRocket ? `${player.fuel.toFixed(1)}/${player.maxFuel}` : 'no pack'}`, 30, 67);
   }
 }

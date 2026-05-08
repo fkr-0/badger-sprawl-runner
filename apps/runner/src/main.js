@@ -537,7 +537,7 @@ function updateHud() {
 
 let last = performance.now();
 function loop(now) {
-  let dt = Math.min(0.033, (now - last) / 1000);
+  const dt = Math.min(0.033, (now - last) / 1000);
   last = now;
   const simDt = player.focus > 0 ? dt * 0.62 : dt;
   world.time += dt;

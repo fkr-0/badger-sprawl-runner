@@ -25,8 +25,8 @@ export function createTrainingDummy(x: number, y: number): TrainingDummy {
     jumpBuffered: 0,
 
     // Combat properties
-    hp: Infinity,
-    maxHp: Infinity,
+    hp: Number.POSITIVE_INFINITY,
+    maxHp: Number.POSITIVE_INFINITY,
     invuln: 0,
     stun: 0,
 

@@ -77,7 +77,7 @@ export class BeatSystem {
     this.bassPlatforms.push({ x, y, baseY, pulseAmp, activated: false });
   }
 
-  isInDownbeatWindow(windowMs: number = 80): boolean {
+  isInDownbeatWindow(windowMs = 80): boolean {
     return this.beatClock.isInDownbeatWindow(windowMs);
   }
 

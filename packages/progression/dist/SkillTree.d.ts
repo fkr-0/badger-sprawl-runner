@@ -31,5 +31,17 @@ export declare class SkillTree {
     private applySkillBonus;
 }
 export declare function createSkillTree(): SkillTree;
+export type SkillPurchaseFailure = 'unknown-skill' | 'already-unlocked' | 'missing-prerequisite' | 'insufficient-shards';
+export type SkillPurchaseResult = {
+    ok: true;
+    state: import('./types').MetaState;
+    node: SkillNode;
+} | {
+    ok: false;
+    state: import('./types').MetaState;
+    reason: SkillPurchaseFailure;
+};
+export declare function hydrateSkillTree(purchasedSkills: readonly string[]): SkillTree;
+export declare function purchaseSkillWithMeta(tree: SkillTree, state: import('./types').MetaState, nodeId: string): SkillPurchaseResult;
 export { computeDerivedStats } from './derivedStats';
 //# sourceMappingURL=SkillTree.d.ts.map

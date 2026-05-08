@@ -5,8 +5,8 @@
 export function createCodeGate(spec) {
     let phase = 'active';
     let timeRemaining = spec.timeLimitMs / 1000;
-    let inputSoFar = '';
-    let attemptsLeft = spec.attempts;
+    const inputSoFar = '';
+    const attemptsLeft = spec.attempts;
     return {
         update(dt) {
             timeRemaining -= dt;
