@@ -18,10 +18,14 @@ export class ShopEngine {
     }
     getBasePrice(rarity) {
         switch (rarity) {
-            case 'common': return 50;
-            case 'rare': return 150;
-            case 'epic': return 400;
-            default: return 100;
+            case 'common':
+                return 50;
+            case 'rare':
+                return 150;
+            case 'epic':
+                return 400;
+            default:
+                return 100;
         }
     }
 }

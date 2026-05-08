@@ -8,6 +8,6 @@ export { SkillTree, createSkillTree, hydrateSkillTree, purchaseSkillWithMeta } f
 export { BoonPool, createBoonPool, PREDEFINED_BOONS } from './BoonPool';
 export { computeDerivedStats } from './derivedStats';
 export type { SkillPurchaseFailure, SkillPurchaseResult } from './SkillTree';
-export type { RunState, MetaState, Currency, Boon, ShopItem, DerivedStats, SkillNode, RunResult } from './types';
+export type { RunState, MetaState, Currency, Boon, ShopItem, DerivedStats, SkillNode, RunResult, } from './types';
 export type { ShopOffer } from './ShopEngine';
 //# sourceMappingURL=index.d.ts.map

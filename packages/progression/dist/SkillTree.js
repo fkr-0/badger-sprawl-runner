@@ -61,9 +61,9 @@ export class SkillTree {
             skillPoints: 0,
         };
         // Initialize nodes
-        [...CLAWLINE_NODES, ...RAIL_NODES].forEach(node => {
+        for (const node of [...CLAWLINE_NODES, ...RAIL_NODES]) {
             this.graph.nodes.set(node.id, { ...node, unlocked: false });
-        });
+        }
     }
     unlockNode(nodeId) {
         const node = this.graph.nodes.get(nodeId);
@@ -72,7 +72,7 @@ export class SkillTree {
         if (node.unlocked)
             return false; // Already unlocked
         // Check prerequisites
-        const hasPrereqs = node.prereqs.every(prereqId => {
+        const hasPrereqs = node.prereqs.every((prereqId) => {
             const prereq = this.graph.nodes.get(prereqId);
             return prereq?.unlocked ?? false;
         });
@@ -92,7 +92,7 @@ export class SkillTree {
         const node = this.graph.nodes.get(nodeId);
         if (!node || node.unlocked)
             return false;
-        const hasPrereqs = node.prereqs.every(prereqId => {
+        const hasPrereqs = node.prereqs.every((prereqId) => {
             const prereq = this.graph.nodes.get(prereqId);
             return prereq?.unlocked ?? false;
         });

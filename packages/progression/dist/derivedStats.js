@@ -2,7 +2,7 @@
  * Helper function for computing derived stats from attributes
  */
 export function computeDerivedStats(attrs) {
-    const { vigor = 0, sinew = 0, voltage = 0, velocity: vel = 0, cortex = 0, bass = 0, guile = 0 } = attrs;
+    const { vigor = 0, sinew = 0, voltage = 0, velocity: vel = 0, cortex = 0, bass = 0, guile = 0, } = attrs;
     return {
         hp: 5 + vigor * 2,
         rallyWindow: 1.2,

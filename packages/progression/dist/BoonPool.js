@@ -5,24 +5,24 @@ export class BoonPool {
     active = [];
     add(boon) {
         // Don't add duplicates
-        if (!this.active.some(b => b.id === boon.id)) {
+        if (!this.active.some((b) => b.id === boon.id)) {
             this.active.push(boon);
         }
     }
     remove(boonId) {
-        this.active = this.active.filter(b => b.id !== boonId);
+        this.active = this.active.filter((b) => b.id !== boonId);
     }
     has(boonId) {
-        return this.active.some(b => b.id === boonId);
+        return this.active.some((b) => b.id === boonId);
     }
     hasTag(tag) {
-        return this.active.some(b => b.tags.includes(tag));
+        return this.active.some((b) => b.tags.includes(tag));
     }
     query(tag) {
-        return this.active.filter(b => b.tags.includes(tag));
+        return this.active.filter((b) => b.tags.includes(tag));
     }
     queryMultiple(tags) {
-        return this.active.filter(b => tags.every(tag => b.tags.includes(tag)));
+        return this.active.filter((b) => tags.every((tag) => b.tags.includes(tag)));
     }
     getAll() {
         return [...this.active];

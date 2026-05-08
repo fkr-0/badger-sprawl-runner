@@ -12,8 +12,14 @@ export interface ShopOffer {
     world: string;
     heat: number;
 }
+export interface ShopCatalogItem {
+    id: string;
+    name: string;
+    rarity: string;
+    tags: string[];
+}
 export declare class ShopEngine {
-    generateOffer(world: string, heat: number, dubFavor: number, guile: number, items: any[]): ShopOffer;
+    generateOffer(world: string, heat: number, dubFavor: number, guile: number, items: ShopCatalogItem[]): ShopOffer;
     private getBasePrice;
 }
 //# sourceMappingURL=ShopEngine.d.ts.map

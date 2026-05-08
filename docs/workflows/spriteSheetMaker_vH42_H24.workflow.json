@@ -1,115 +1,82 @@
 {
-  "1": {
-    "class_type": "CheckpointLoaderSimple",
-    "inputs": {
-      "ckpt_name": "v1-5-pruned-emaonly.safetensors"
-    }
-  },
-  "2": {
-    "class_type": "CLIPTextEncode",
-    "inputs": {
-      "text": "pixel art sprite sheet, 8 columns by 8 rows, cyberpunk badger character animation frames, each frame isolated, plain white background, no gradients, no text, game sprite atlas",
-      "clip": [
-        "1",
-        1
-      ]
-    }
-  },
-  "3": {
-    "class_type": "CLIPTextEncode",
-    "inputs": {
-      "text": "photorealistic, anti-aliased, blurry, watercolor, text, logo, watermark, dark background, busy background",
-      "clip": [
-        "1",
-        1
-      ]
-    }
-  },
-  "4": {
-    "class_type": "EmptyLatentImage",
-    "inputs": {
-      "width": 1024,
-      "height": 1024,
-      "batch_size": 1
-    }
-  },
-  "5": {
-    "class_type": "KSampler",
-    "inputs": {
-      "model": [
-        "1",
-        0
-      ],
-      "seed": 420024,
-      "steps": 28,
-      "cfg": 7.0,
-      "sampler_name": "dpmpp_2m",
-      "scheduler": "karras",
-      "positive": [
-        "2",
-        0
-      ],
-      "negative": [
-        "3",
-        0
-      ],
-      "latent_image": [
-        "4",
-        0
-      ],
-      "denoise": 1.0
-    }
-  },
-  "6": {
-    "class_type": "VAEDecode",
-    "inputs": {
-      "samples": [
-        "5",
-        0
-      ],
-      "vae": [
-        "1",
-        2
-      ]
-    }
-  },
-  "7": {
-    "class_type": "SaveImage",
-    "inputs": {
-      "filename_prefix": "spriteSheetMaker_vH42_H24/grid",
-      "images": [
-        "6",
-        0
-      ]
-    }
-  },
-  "8": {
-    "class_type": "BadgerGridCut",
-    "inputs": {
-      "image": [
-        "6",
-        0
-      ],
-      "columns": 8,
-      "rows": 8,
-      "index_start": 0,
-      "index_count": 64,
-      "trim_bg": true,
-      "bg_r": 255,
-      "bg_g": 255,
-      "bg_b": 255,
-      "bg_tol": 18,
-      "pad": 1
-    }
-  },
-  "9": {
-    "class_type": "SaveImage",
-    "inputs": {
-      "filename_prefix": "spriteSheetMaker_vH42_H24/frames",
-      "images": [
-        "8",
-        0
-      ]
-    }
-  }
+	"1": {
+		"class_type": "CheckpointLoaderSimple",
+		"inputs": {
+			"ckpt_name": "v1-5-pruned-emaonly.safetensors"
+		}
+	},
+	"2": {
+		"class_type": "CLIPTextEncode",
+		"inputs": {
+			"text": "pixel art sprite sheet, 8 columns by 8 rows, cyberpunk badger character animation frames, each frame isolated, plain white background, no gradients, no text, game sprite atlas",
+			"clip": ["1", 1]
+		}
+	},
+	"3": {
+		"class_type": "CLIPTextEncode",
+		"inputs": {
+			"text": "photorealistic, anti-aliased, blurry, watercolor, text, logo, watermark, dark background, busy background",
+			"clip": ["1", 1]
+		}
+	},
+	"4": {
+		"class_type": "EmptyLatentImage",
+		"inputs": {
+			"width": 1024,
+			"height": 1024,
+			"batch_size": 1
+		}
+	},
+	"5": {
+		"class_type": "KSampler",
+		"inputs": {
+			"model": ["1", 0],
+			"seed": 420024,
+			"steps": 28,
+			"cfg": 7.0,
+			"sampler_name": "dpmpp_2m",
+			"scheduler": "karras",
+			"positive": ["2", 0],
+			"negative": ["3", 0],
+			"latent_image": ["4", 0],
+			"denoise": 1.0
+		}
+	},
+	"6": {
+		"class_type": "VAEDecode",
+		"inputs": {
+			"samples": ["5", 0],
+			"vae": ["1", 2]
+		}
+	},
+	"7": {
+		"class_type": "SaveImage",
+		"inputs": {
+			"filename_prefix": "spriteSheetMaker_vH42_H24/grid",
+			"images": ["6", 0]
+		}
+	},
+	"8": {
+		"class_type": "BadgerGridCut",
+		"inputs": {
+			"image": ["6", 0],
+			"columns": 8,
+			"rows": 8,
+			"index_start": 0,
+			"index_count": 64,
+			"trim_bg": true,
+			"bg_r": 255,
+			"bg_g": 255,
+			"bg_b": 255,
+			"bg_tol": 18,
+			"pad": 1
+		}
+	},
+	"9": {
+		"class_type": "SaveImage",
+		"inputs": {
+			"filename_prefix": "spriteSheetMaker_vH42_H24/frames",
+			"images": ["8", 0]
+		}
+	}
 }

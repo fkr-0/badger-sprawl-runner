@@ -6,11 +6,11 @@ import type { Velocity, PhysicsParams } from '../PhysicsParams';
  * Output: new vy (capped at maxFallSpeed)
  */
 export function gravityStep(
-  vy: number,
-  params: Pick<PhysicsParams, 'gravity' | 'maxFallSpeed'>,
-  dt: number
+	vy: number,
+	params: Pick<PhysicsParams, 'gravity' | 'maxFallSpeed'>,
+	dt: number
 ): number {
-  return Math.min(params.maxFallSpeed, vy + params.gravity * dt);
+	return Math.min(params.maxFallSpeed, vy + params.gravity * dt);
 }
 
 /**

@@ -3,7 +3,7 @@
  * Exports: core game factory, types, all gate kinds, renderers
  */
 export { createCodeGate } from './core';
-export type { MiniGameSpec, MiniGameResult, MiniGameEvent, GateState, CodeGateInstance, GateKind } from './types';
+export type { MiniGameSpec, MiniGameResult, MiniGameEvent, GateState, CodeGateInstance, GateKind, } from './types';
 export { createFastTypeGate } from './gates/FastTypeGate';
 export { createCommandRepairGate } from './gates/CommandRepairGate';
 export { createRegexMatchGate } from './gates/RegexMatchGate';

@@ -4,8 +4,8 @@
  */
 export { defaultParams } from './PhysicsParams';
 export { gravityStep } from './systems/gravityStep';
-export { movementStep } from './systems/movementStep';
-export { platformStep } from './systems/platformStep';
+export { movementStep, } from './systems/movementStep';
+export { platformStep, } from './systems/platformStep';
 export { coyoteStep } from './systems/coyoteStep';
 export { aabb } from './systems/aabb';
 //# sourceMappingURL=index.js.map

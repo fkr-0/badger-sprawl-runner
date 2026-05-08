@@ -1,23 +1,23 @@
 {
-  "name": "@badger/progression",
-  "version": "0.1.0",
-  "type": "module",
-  "description": "Meta-progression, run aggregation, shop engine, and skill tree.",
-  "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
-    }
-  },
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "devDependencies": {
-    "@vitest/ui": "^1.0.0",
-    "typescript": "^5.3.3",
-    "vitest": "^1.0.0"
-  }
+	"name": "@badger/progression",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Meta-progression, run aggregation, shop engine, and skill tree.",
+	"exports": {
+		".": {
+			"import": "./src/index.ts",
+			"types": "./src/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"@vitest/ui": "^1.0.0",
+		"typescript": "^5.3.3",
+		"vitest": "^1.0.0"
+	}
 }

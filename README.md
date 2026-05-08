@@ -1,12 +1,40 @@
 # Badger Sprawl Runner
 
-A clean, classic side-scrolling jump-and-run prototype about a cyber-badger moving left-to-right through neon undercities, orbital resorts, dub colonies, and a rebel asteroid. The feel target is simple, readable, arcade-fast platforming with responsive physics, sprite-driven animation, modular items, and run-to-run progression.
+Badger Sprawl Runner v1.0 is a sprite-first cyber-badger side-scrolling platformer prototype with a pnpm/Vite runner app and extractable gameplay packages for physics, code gates, sprite contracts, and progression.
 
-This project is deliberately original. It uses cyberpunk-sprawl vocabulary and orbital-heist themes as genre inspiration, but keeps names, factions, locations, characters, and plotlines owned by this project.
+The project is deliberately original. It uses cyberpunk-sprawl vocabulary and orbital-heist themes as genre inspiration, but keeps names, factions, locations, characters, and plotlines owned by this project.
 
-## Playable prototype
+## v1.0 release scope
 
-Open `index.html` in a browser, or serve the folder:
+```text
+v1.0 contains:
+- apps/runner: Vite-powered playable vertical-slice runner app.
+- src/main.js + root index.html: legacy static prototype kept for direct browser play.
+- packages/platformer-core: pure physics/collision helpers.
+- packages/codegate: extractable minigame gate engine.
+- packages/sprite-contracts: sprite manifest schema, validation, and loading.
+- packages/progression: run aggregation, shop, meta-progression, and skill tree logic.
+- tests: data validation, package tests, runner smoke checks, and runtime contracts.
+```
+
+Deferred after v1.0: final production art/audio, browser-driven end-to-end gameplay tests, CI-hosted artifacts, and an npm publishing decision for workspace packages.
+
+## Requirements
+
+```sh
+pnpm --version   # project declares pnpm@9.0.0
+node --version   # tested with modern Node 20+
+```
+
+## Play the app
+
+```sh
+pnpm install
+pnpm dev
+# opens the Vite runner at the printed local URL
+```
+
+For the legacy static prototype:
 
 ```sh
 python3 -m http.server 8042
@@ -28,53 +56,40 @@ python3 -m http.server 8042
 | In code gate | type the shown command, Enter to submit |
 | Restart prototype | R |
 
-## Contents
+## Release commands
+
+```sh
+pnpm run test          # data validation + runtime contracts + package tests
+pnpm run typecheck     # TypeScript typecheck across workspace packages/apps
+pnpm run build         # package builds + Vite production build
+pnpm run smoke:runner  # verifies runner dist entry and bundled app contract
+pnpm run lint          # Biome release lint gate
+```
+
+A v1 release is ready only when all commands above exit 0 and `todo.md` has no unchecked release-critical items.
+
+## Repository map
 
 ```text
 badger-sprawl-runner/
-├── index.html
-├── bridge.yml
-├── package.json
-├── README.md
-├── DESIGN.md
-├── STORY.md
-├── SPRITES.md
-├── MINIGAMES.md
-├── ROADMAP.md
-├── data/
-│   ├── game-manifest.json
-│   ├── items.json
-│   ├── progression.json
-│   └── sprites.json
-├── docs/
-│   └── own-project-extraction.md
-├── src/
-│   ├── game.css
-│   └── main.js
-└── tests/
-    └── validate-data.mjs
+├── apps/runner/                 # Vite runner app
+├── packages/codegate/           # code gate minigame engine
+├── packages/platformer-core/    # physics and platforming core
+├── packages/progression/        # run/meta progression systems
+├── packages/sprite-contracts/   # sprite schemas and loader
+├── data/                        # manifest, item, progression, sprite data
+├── docs/                        # implementation plans and workflows
+├── src/                         # legacy static prototype source
+├── tests/                       # workspace-level validation and smoke tests
+├── todo.md                      # v1 release checklist
+└── package.json                 # workspace scripts
 ```
-
-## Design pillars
-
-- **Clean fun physics:** coyote time, input buffering, variable jump height, air control, fast fall, forgiving ledge feel.
-- **Sprites first:** all environment, actor, item, attack, VFX, and UI assets are listed in `data/sprites.json` and described in `SPRITES.md`.
-- **Combat without clutter:** railgun timing, claw/katana melee windows, enemy stun, risk-reward reload cadence.
-- **Item usage:** rocket backpack, railgun, stim packs, phase picks, signal jammers, dub shield, gravity talisman.
-- **Run aggregation:** shops, meta-boni, blueprint unlocks, faction favors, and dead-cell-like timing/risk mechanics.
-- **Coding minigames:** gates and heists can enforce fast typing, command repair, regex matching, routing puzzles, bytecode ordering, or small live-coding tasks.
-- **Extraction-ready:** minigames and progression are data-driven enough to become a semi-independent library later.
-
-## Quick smoke test
-
-```sh
-npm test
-```
-
-The test validates JSON structure and cross-references. The prototype itself has no build step.
 
 ## Expanded design docs
 
 - `STORY.md` — five-act Brechtian drama, cast, heist payloads, dialogue promise.
 - `CAMPAIGN.md` — expanded worlds, stages, sub-bosses, endbosses, placards, level descriptions.
 - `ENEMY_BIBLE.md` — enemy classes, world rosters, counters, hack/trap interactions.
+- `SPRITES.md` — sprite requirements and asset direction.
+- `MINIGAMES.md` — code gate and heist minigame design.
+- `ROADMAP.md` — broader post-v1 project roadmap.

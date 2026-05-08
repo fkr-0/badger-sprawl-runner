@@ -6,17 +6,20 @@ import type { BeatClock } from './BeatClock';
 import type { EventBus } from '../engine/EventBus';
 
 export class BeatSystem {
-  private lastBeat = 0;
+	private lastBeat = 0;
 
-  constructor(private beatClock: BeatClock, private eventBus: EventBus) {}
+	constructor(
+		private beatClock: BeatClock,
+		private eventBus: EventBus
+	) {}
 
-  step(dt: number): void {
-    const currentBeat = this.beatClock.currentBeat();
-    const beat = Math.floor(currentBeat);
+	step(dt: number): void {
+		const currentBeat = this.beatClock.currentBeat();
+		const beat = Math.floor(currentBeat);
 
-    if (beat > this.lastBeat) {
-      this.lastBeat = beat;
-      this.eventBus.emit('downbeat' as never, { beat });
-    }
-  }
+		if (beat > this.lastBeat) {
+			this.lastBeat = beat;
+			this.eventBus.emit('downbeat' as never, { beat });
+		}
+	}
 }

@@ -1,10 +1,24 @@
 {
-  "title":"Badger Sprawl Runner",
-  "slug":"badger-sprawl-runner",
-  "version":"0.1.0",
-  "protagonist":"Moss the Badger",
-  "genre":"2D sprite platformer / heist roguelite-lite",
-  "worlds":["Lower Sprawl","Chrome Arcology","Straylight Mirage","Dub Colony","Uplink Barrens","Asteroid Redoubt"],
-  "coreItems":["rocket_backpack","railgun","stim_pack","claws","katana"],
-  "minigameKinds":["fasttype","command-repair","regex-match","routing","bytecode-order","micro-code"]
+	"title": "Badger Sprawl Runner",
+	"slug": "badger-sprawl-runner",
+	"version": "0.1.0",
+	"protagonist": "Moss the Badger",
+	"genre": "2D sprite platformer / heist roguelite-lite",
+	"worlds": [
+		"Lower Sprawl",
+		"Chrome Arcology",
+		"Straylight Mirage",
+		"Dub Colony",
+		"Uplink Barrens",
+		"Asteroid Redoubt"
+	],
+	"coreItems": ["rocket_backpack", "railgun", "stim_pack", "claws", "katana"],
+	"minigameKinds": [
+		"fasttype",
+		"command-repair",
+		"regex-match",
+		"routing",
+		"bytecode-order",
+		"micro-code"
+	]
 }

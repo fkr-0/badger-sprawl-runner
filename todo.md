@@ -9,18 +9,18 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Verify TypeScript typechecking passes.
 - [x] Verify production build passes.
 - [x] Verify runner smoke test passes.
-- [ ] Make `pnpm run lint` pass with zero Biome errors.
-- [ ] Replace deprecated Biome config keys so lint output is clean enough for release automation.
-- [ ] Add a runtime contract test to lock v1-visible app surface: Vite runner entrypoint, generated bundle, controls, and release docs.
-- [ ] Run final release verification: `pnpm run test`, `pnpm run typecheck`, `pnpm run build`, `pnpm run smoke:runner`, `pnpm run lint`.
+- [x] Make `pnpm run lint` pass with zero Biome errors.
+- [x] Replace deprecated Biome config keys so lint output is clean enough for release automation.
+- [x] Add a runtime contract test to lock v1-visible app surface: Vite runner entrypoint, generated bundle, controls, and release docs.
+- [x] Run final release verification: `pnpm run test`, `pnpm run typecheck`, `pnpm run build`, `pnpm run smoke:runner`, `pnpm run lint`.
 
 ## v1 product readiness
 
-- [ ] Promote package/app versions from `0.1.0` to `1.0.0` consistently.
-- [ ] Update README so it describes the current pnpm/Vite workspace, not only the old static prototype.
-- [ ] Document the exact v1 play/build/test/release commands.
-- [ ] Document the v1 content scope: playable runner app, static legacy prototype, reusable packages, data validation, and smoke tests.
-- [ ] Add a concise release checklist for future patch/minor/major releases.
+- [x] Promote package/app versions from `0.1.0` to `1.0.0` consistently.
+- [x] Update README so it describes the current pnpm/Vite workspace, not only the old static prototype.
+- [x] Document the exact v1 play/build/test/release commands.
+- [x] Document the v1 content scope: playable runner app, static legacy prototype, reusable packages, data validation, and smoke tests.
+- [x] Add a concise release checklist for future patch/minor/major releases.
 
 ## Implementation quality
 

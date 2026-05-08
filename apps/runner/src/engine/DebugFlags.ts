@@ -3,9 +3,9 @@
  */
 
 export const DebugFlags = {
-  showHitboxes: false,
-  showHurtboxes: false,
-  showFrameData: false,
-  invinciblePlayer: false,
-  infiniteFuel: false,
+	showHitboxes: false,
+	showHurtboxes: false,
+	showFrameData: false,
+	invinciblePlayer: false,
+	infiniteFuel: false,
 };
