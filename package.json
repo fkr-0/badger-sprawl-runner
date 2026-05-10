@@ -1,25 +1,25 @@
 {
-	"name": "badger-sprawl-runner-workspace",
-	"version": "1.0.0",
-	"private": true,
-	"type": "module",
-	"description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
-	"packageManager": "pnpm@9.0.0",
-	"keywords": ["platformer", "game", "canvas", "2d"],
-	"scripts": {
-		"dev": "pnpm -F @badger/runner dev",
-		"build": "pnpm -r build",
-		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && pnpm -r test",
-		"lint": "biome lint .",
-		"format": "biome format . --write",
-		"typecheck": "pnpm -r typecheck",
-		"smoke:runner": "node tests/smoke-runner.mjs"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.8.3",
-		"@vitest/ui": "^1.0.0",
-		"typescript": "^5.3.3",
-		"vite": "^5.1.0",
-		"vitest": "^1.0.0"
-	}
+  "name": "badger-sprawl-runner-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
+  "packageManager": "pnpm@9.0.0",
+  "keywords": ["platformer", "game", "canvas", "2d"],
+  "scripts": {
+    "dev": "pnpm -F @badger/runner dev",
+    "build": "pnpm -r build",
+    "test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && pnpm -r test",
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "typecheck": "pnpm -r typecheck",
+    "smoke:runner": "node tests/smoke-runner.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@vitest/ui": "^1.0.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.0",
+    "vitest": "^1.0.0"
+  }
 }
