@@ -1,3 +1,5 @@
+import { CAMPAIGN, type CampaignStage } from './Campaign';
+import { MODE_OPTIONS } from './ModeMenu';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
 
 export interface MenuOption {
@@ -11,13 +13,77 @@ export interface StageSpec {
 	name: string;
 	objective: string;
 	rewardBlueprintShards: number;
+	actId?: string;
+	place?: string;
+	heistPayloadId?: string;
+	placard?: string;
+	boss?: BossContract;
+	resultFlag?: string;
+	tutorialBeats?: TutorialBeat[];
+	choiceOutcomes?: ChoiceOutcome[];
+	traversalHazards?: TraversalHazard[];
 }
 
 export interface DialogueSpec {
 	id: string;
 	speaker: string;
 	lines: string[];
-	next: { mode: 'stage'; stageIndex: number };
+	next: { mode: 'stage'; stageId: string };
+}
+
+export interface DebriefSpec {
+	id: string;
+	stageId: string;
+	speaker: string;
+	lines: string[];
+}
+
+export interface TutorialBeat {
+	id: string;
+	label: string;
+	trigger: string;
+	teaches: string;
+}
+
+export type LioTrustBranch = 'exposed' | 'protected' | 'baited';
+export type ColonyAlignmentBranch = 'chorus' | 'army' | 'supplier';
+export type LedgerReleaseBranch = 'public-dump' | 'targeted-burn' | 'prisoner-trade';
+export type CargoReversalBranch = 'safe-partial' | 'full-release' | 'decoy-reversal';
+export type FinalBroadcastBranch = 'abolish-skylock' | 'chorus-control' | 'publish-tools';
+export type StoryChoiceBranch =
+	| LioTrustBranch
+	| ColonyAlignmentBranch
+	| LedgerReleaseBranch
+	| CargoReversalBranch
+	| FinalBroadcastBranch;
+
+export interface ChoiceOutcome {
+	id: string;
+	prompt: string;
+	branch: StoryChoiceBranch;
+	resultFlag: string;
+	consequence: string;
+	metaDelta?: { dubFavor?: number; orbitHeat?: number };
+}
+
+export interface TraversalHazard {
+	id: string;
+	label: string;
+	teaches: string;
+}
+
+export interface BossLesson {
+	id: string;
+	cue: string;
+	response: string;
+}
+
+export interface BossContract {
+	id: string;
+	name: string;
+	phaseCount: number;
+	argument: string;
+	lessons?: BossLesson[];
 }
 
 export interface MetaState {
@@ -27,6 +93,17 @@ export interface MetaState {
 	orbitHeat: number;
 	unlockedBoons: string[];
 	purchasedSkills: string[];
+}
+
+export interface StoryProgress {
+	currentStageId: string;
+	completedStageIds: string[];
+	acquiredPayloads: string[];
+	resultFlags: string[];
+	lioTrust?: LioTrustBranch;
+	colonyAlignment?: ColonyAlignmentBranch;
+	finalBroadcastDoctrine?: FinalBroadcastBranch;
+	campaignComplete: boolean;
 }
 
 export interface SkillNode {
@@ -49,61 +126,59 @@ export type SkillPurchaseResult =
 
 export type GameFlowState =
 	| { mode: 'menu' }
+	| { mode: 'title-card'; stageId: string; stageIndex: number; placard: string }
 	| { mode: 'dialogue'; dialogueId: string; lineIndex: number }
 	| { mode: 'stage'; stageId: string; stageIndex: number }
+	| { mode: 'debrief'; stageId: string; stageIndex: number; debriefId: string; lineIndex: number }
 	| { mode: 'versus'; arenaId: string; winScore: number; playerScore: number; rivalScore: number }
 	| { mode: 'training'; dummy: { label: string; invincible: true; hp: 'infinite' } }
 	| { mode: 'skills'; selectedSkillId: string };
 
-const MENU_OPTIONS: MenuOption[] = [
-	{ id: 'story', label: 'Story Run', description: 'Play the first two sprawl stages.' },
-	{ id: 'versus', label: 'VS Mode', description: 'Local duel prototype: first to 3 tags.' },
-	{
-		id: 'training',
-		label: 'Dummy Training',
-		description: 'Practice movement and combat on an invincible target.',
-	},
-	{
-		id: 'skills',
-		label: 'Skill Tree',
-		description: 'Spend blueprint shards on persistent upgrades.',
-	},
-];
+const MENU_OPTIONS: MenuOption[] = MODE_OPTIONS;
 
-const STAGES: StageSpec[] = [
-	{
-		id: 'rootway-market',
-		name: 'Rootway Market Sprint',
-		objective: 'Cross the neon market and recover the railgun cache.',
-		rewardBlueprintShards: 1,
-	},
-	{
-		id: 'antenna-rooftops',
-		name: 'Antenna Rooftops',
-		objective: 'Climb the broadcast stacks and shut down the drone repeater.',
-		rewardBlueprintShards: 2,
-	},
-];
+function stageRewardShards(stage: CampaignStage): number {
+	return stage.rewards.includes('two_blueprint_shards') ? 2 : stage.rewards.includes('blueprint_shard') ? 1 : 0;
+}
 
-const DIALOGUES: Record<string, DialogueSpec> = {
-	prologue: {
-		id: 'prologue',
-		speaker: 'Moss',
-		lines: [
-			'Sprawl lights are flickering. That means drones are awake.',
-			'Two clean runs, no hero speeches. Snatch the cache, then cut the repeater.',
-		],
-		next: { mode: 'stage', stageIndex: 0 },
-	},
-	'antenna-briefing': {
-		id: 'antenna-briefing',
-		speaker: 'Patch',
-		lines: [
-			'Market cache is live. Rooftop repeater is next; keep your claws low and your rail hot.',
-		],
-		next: { mode: 'stage', stageIndex: 1 },
-	},
-};
+const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
+	id: stage.id,
+	name: stage.name,
+	objective: `${stage.primaryVerb}: ${stage.dramaticQuestion}`,
+	rewardBlueprintShards: stageRewardShards(stage),
+	actId: stage.actId,
+	place: stage.place,
+	heistPayloadId: stage.heistPayload.id,
+	placard: stage.placard,
+	boss: { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) },
+	resultFlag: stage.resultFlag,
+	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
+	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+}));
+
+const DIALOGUES: Record<string, DialogueSpec> = Object.fromEntries(
+	CAMPAIGN.stages.map((stage) => [
+		`${stage.id}-briefing`,
+		{
+			id: `${stage.id}-briefing`,
+			speaker: stage.briefing.speaker,
+			lines: [...stage.briefing.lines],
+			next: { mode: 'stage', stageId: stage.id },
+		},
+	])
+);
+
+const DEBRIEFS: Record<string, DebriefSpec> = Object.fromEntries(
+	CAMPAIGN.stages.map((stage) => [
+		`${stage.id}-debrief`,
+		{
+			id: `${stage.id}-debrief`,
+			stageId: stage.id,
+			speaker: stage.debrief.speaker,
+			lines: [...stage.debrief.lines],
+		},
+	])
+);
 
 const SKILLS: SkillNode[] = [
 	{ id: 'double_swipe', name: 'Double Swipe', cost: 1, prereqs: [], unlocked: false },
@@ -128,6 +203,16 @@ function createDefaultMetaState(): MetaState {
 		orbitHeat: 0,
 		unlockedBoons: [],
 		purchasedSkills: [],
+	};
+}
+
+function createDefaultStoryProgress(): StoryProgress {
+	return {
+		currentStageId: STAGES[0]?.id ?? '',
+		completedStageIds: [],
+		acquiredPayloads: [],
+		resultFlags: [],
+		campaignComplete: false,
 	};
 }
 
@@ -170,13 +255,19 @@ function cloneState<T>(value: T): T {
 	return structuredClone(value) as T;
 }
 
+export type StageChoiceResult =
+	| { ok: true; stageId: string; branch: StoryChoiceBranch; resultFlag: string }
+	| { ok: false; reason: 'not-in-stage' | 'choice-unavailable' | 'choice-out-of-range' };
+
 export class GameFlow {
 	private state: GameFlowState = { mode: 'menu' };
 	private meta: MetaState;
+	private storyProgress: StoryProgress;
 	private skills: Map<string, SkillNode>;
 
-	constructor(meta: Partial<MetaState> = {}) {
+	constructor(meta: Partial<MetaState> = {}, storyProgress: Partial<StoryProgress> = {}) {
 		this.meta = { ...createDefaultMetaState(), ...meta };
+		this.storyProgress = { ...createDefaultStoryProgress(), ...storyProgress };
 		this.skills = createSkillMap(this.meta.purchasedSkills);
 	}
 
@@ -188,12 +279,22 @@ export class GameFlow {
 		return cloneState(this.meta);
 	}
 
+	getStoryProgress(): StoryProgress {
+		return cloneState(this.storyProgress);
+	}
+
 	getMenuOptions(): MenuOption[] {
 		return MENU_OPTIONS.map((option) => ({ ...option }));
 	}
 
 	getStages(): StageSpec[] {
-		return STAGES.map((stage) => ({ ...stage }));
+		return STAGES.map((stage) => ({
+			...stage,
+			boss: stage.boss ? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) } : undefined,
+			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
+			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+		}));
 	}
 
 	getCurrentDialogue(): DialogueSpec | undefined {
@@ -204,11 +305,43 @@ export class GameFlow {
 			: undefined;
 	}
 
+	getCurrentDebrief(): DebriefSpec | undefined {
+		if (this.state.mode !== 'debrief') return undefined;
+		const debrief = DEBRIEFS[this.state.debriefId];
+		return debrief ? { ...debrief, lines: [...debrief.lines] } : undefined;
+	}
+
+	getCurrentBossContract(): BossContract | undefined {
+		const state = this.state;
+		if (state.mode === 'menu' || state.mode === 'versus' || state.mode === 'training' || state.mode === 'skills') {
+			return undefined;
+		}
+		const stage = state.mode === 'dialogue'
+			? STAGES.find((candidate) => `${candidate.id}-briefing` === state.dialogueId)
+			: STAGES[state.stageIndex];
+		return stage?.boss ? { ...stage.boss } : undefined;
+	}
+
 	selectMenu(id: MenuOptionId): void {
 		switch (id) {
-			case 'story':
-				this.state = { mode: 'dialogue', dialogueId: 'prologue', lineIndex: 0 };
+			case 'story': {
+				const stageId = this.storyProgress.campaignComplete
+					? STAGES[0]?.id
+					: this.storyProgress.currentStageId;
+				const stageIndex = STAGES.findIndex((stage) => stage.id === stageId);
+				const stage = STAGES[stageIndex] ?? STAGES[0];
+				if (!stage) {
+					this.returnToMenu();
+					break;
+				}
+				this.state = {
+					mode: 'title-card',
+					stageId: stage.id,
+					stageIndex: Math.max(0, stageIndex),
+					placard: stage.placard ?? stage.name,
+				};
 				break;
+			}
 			case 'versus':
 				this.state = {
 					mode: 'versus',
@@ -230,6 +363,15 @@ export class GameFlow {
 		}
 	}
 
+	advanceTitleCard(): void {
+		if (this.state.mode !== 'title-card') return;
+		this.state = {
+			mode: 'dialogue',
+			dialogueId: `${this.state.stageId}-briefing`,
+			lineIndex: 0,
+		};
+	}
+
 	advanceDialogue(): void {
 		if (this.state.mode !== 'dialogue') return;
 		const dialogue = DIALOGUES[this.state.dialogueId];
@@ -243,12 +385,46 @@ export class GameFlow {
 			return;
 		}
 
-		const stage = STAGES[dialogue.next.stageIndex];
+		const stageIndex = STAGES.findIndex((stage) => stage.id === dialogue.next.stageId);
+		const stage = STAGES[stageIndex];
 		if (!stage) {
 			this.returnToMenu();
 			return;
 		}
-		this.state = { mode: 'stage', stageId: stage.id, stageIndex: dialogue.next.stageIndex };
+		this.state = { mode: 'stage', stageId: stage.id, stageIndex };
+	}
+
+
+	chooseStageChoice(choiceIndex: number): StageChoiceResult {
+		if (this.state.mode !== 'stage') return { ok: false, reason: 'not-in-stage' };
+		const stage = STAGES[this.state.stageIndex];
+		if (!stage?.choiceOutcomes?.length) return { ok: false, reason: 'choice-unavailable' };
+		const outcome = stage.choiceOutcomes[choiceIndex];
+		if (!outcome) return { ok: false, reason: 'choice-out-of-range' };
+
+		const branchProgress =
+			stage.id === 'mirror-palace'
+				? { lioTrust: outcome.branch as LioTrustBranch }
+				: stage.id === 'dub-colony'
+					? { colonyAlignment: outcome.branch as ColonyAlignmentBranch }
+					: stage.id === 'asteroid-redoubt'
+						? { finalBroadcastDoctrine: outcome.branch as FinalBroadcastBranch }
+						: {};
+
+		this.storyProgress = {
+			...this.storyProgress,
+			...branchProgress,
+			resultFlags: Array.from(new Set([...this.storyProgress.resultFlags, outcome.resultFlag])),
+		};
+		if (outcome.metaDelta) {
+			this.meta = {
+				...this.meta,
+				dubFavor: this.meta.dubFavor + (outcome.metaDelta.dubFavor ?? 0),
+				orbitHeat: this.meta.orbitHeat + (outcome.metaDelta.orbitHeat ?? 0),
+			};
+		}
+
+		return { ok: true, stageId: stage.id, branch: outcome.branch, resultFlag: outcome.resultFlag };
 	}
 
 	completeStage(): void {
@@ -259,13 +435,53 @@ export class GameFlow {
 				...this.meta,
 				blueprintShards: this.meta.blueprintShards + stage.rewardBlueprintShards,
 			};
+			this.storyProgress = {
+				...this.storyProgress,
+				completedStageIds: Array.from(new Set([...this.storyProgress.completedStageIds, stage.id])),
+				acquiredPayloads: stage.heistPayloadId
+					? Array.from(new Set([...this.storyProgress.acquiredPayloads, stage.heistPayloadId]))
+					: this.storyProgress.acquiredPayloads,
+				resultFlags: stage.resultFlag
+					? Array.from(new Set([...this.storyProgress.resultFlags, stage.resultFlag]))
+					: this.storyProgress.resultFlags,
+			};
 		}
 
-		if (this.state.stageIndex === 0) {
-			this.state = { mode: 'dialogue', dialogueId: 'antenna-briefing', lineIndex: 0 };
+		if (stage) {
+			this.state = {
+				mode: 'debrief',
+				stageId: stage.id,
+				stageIndex: this.state.stageIndex,
+				debriefId: `${stage.id}-debrief`,
+				lineIndex: 0,
+			};
 			return;
 		}
 
+		this.returnToMenu();
+	}
+
+	advanceDebrief(): void {
+		if (this.state.mode !== 'debrief') return;
+		const debrief = DEBRIEFS[this.state.debriefId];
+		if (debrief && this.state.lineIndex < debrief.lines.length - 1) {
+			this.state = { ...this.state, lineIndex: this.state.lineIndex + 1 };
+			return;
+		}
+
+		const nextStage = STAGES[this.state.stageIndex + 1];
+		if (nextStage) {
+			this.storyProgress = { ...this.storyProgress, currentStageId: nextStage.id };
+			this.state = {
+				mode: 'title-card',
+				stageId: nextStage.id,
+				stageIndex: this.state.stageIndex + 1,
+				placard: nextStage.placard ?? nextStage.name,
+			};
+			return;
+		}
+
+		this.storyProgress = { ...this.storyProgress, campaignComplete: true };
 		this.returnToMenu();
 	}
 
@@ -303,6 +519,9 @@ export class GameFlow {
 	}
 }
 
-export function createGameFlow(meta?: Partial<MetaState>): GameFlow {
-	return new GameFlow(meta);
+export function createGameFlow(
+	meta?: Partial<MetaState>,
+	storyProgress?: Partial<StoryProgress>
+): GameFlow {
+	return new GameFlow(meta, storyProgress);
 }

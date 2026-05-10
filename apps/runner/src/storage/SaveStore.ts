@@ -1,4 +1,4 @@
-import { createGameFlow, type GameFlow, type MetaState } from '../game/GameFlow';
+import { createGameFlow, type GameFlow, type MetaState, type StoryProgress } from '../game/GameFlow';
 
 export const SAVE_KEY = 'badger-sprawl-runner.save.v1';
 
@@ -10,12 +10,14 @@ export interface SaveDriver {
 interface SavePayloadV1 {
 	version: 1;
 	meta: Partial<MetaState>;
+	storyProgress?: Partial<StoryProgress>;
 }
 
 export function saveGameFlow(driver: SaveDriver, flow: GameFlow): void {
 	const payload: SavePayloadV1 = {
 		version: 1,
 		meta: flow.getMeta(),
+		storyProgress: flow.getStoryProgress(),
 	};
 	driver.setItem(SAVE_KEY, JSON.stringify(payload));
 }
@@ -29,7 +31,7 @@ export function loadGameFlow(driver: SaveDriver): GameFlow {
 		if (payload.version !== 1 || !payload.meta || typeof payload.meta !== 'object') {
 			return createGameFlow();
 		}
-		return createGameFlow(sanitizeMeta(payload.meta));
+		return createGameFlow(sanitizeMeta(payload.meta), sanitizeStoryProgress(payload.storyProgress));
 	} catch {
 		return createGameFlow();
 	}
@@ -50,6 +52,35 @@ export function createMemorySaveDriver(seed: Record<string, string> = {}): SaveD
 			data.set(key, value);
 		},
 	};
+}
+
+function sanitizeStoryProgress(progress: unknown): Partial<StoryProgress> {
+	if (!progress || typeof progress !== 'object') return {};
+	const value = progress as Partial<StoryProgress>;
+	return {
+		currentStageId: typeof value.currentStageId === 'string' ? value.currentStageId : undefined,
+		completedStageIds: stringArray(value.completedStageIds),
+		acquiredPayloads: stringArray(value.acquiredPayloads),
+		resultFlags: stringArray(value.resultFlags),
+		lioTrust: lioTrustBranch(value.lioTrust),
+		colonyAlignment: colonyAlignmentBranch(value.colonyAlignment),
+		finalBroadcastDoctrine: finalBroadcastBranch(value.finalBroadcastDoctrine),
+		campaignComplete: value.campaignComplete === true,
+	};
+}
+
+function lioTrustBranch(value: unknown): StoryProgress['lioTrust'] {
+	return value === 'exposed' || value === 'protected' || value === 'baited' ? value : undefined;
+}
+
+function colonyAlignmentBranch(value: unknown): StoryProgress['colonyAlignment'] {
+	return value === 'chorus' || value === 'army' || value === 'supplier' ? value : undefined;
+}
+
+function finalBroadcastBranch(value: unknown): StoryProgress['finalBroadcastDoctrine'] {
+	return value === 'abolish-skylock' || value === 'chorus-control' || value === 'publish-tools'
+		? value
+		: undefined;
 }
 
 function sanitizeMeta(meta: Partial<MetaState>): Partial<MetaState> {

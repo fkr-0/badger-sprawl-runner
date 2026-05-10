@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
 		"build": "pnpm -r build",
-		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && pnpm -r test",
+		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && pnpm -r test",
 		"lint": "biome lint .",
 		"format": "biome format . --write",
 		"typecheck": "pnpm -r typecheck",

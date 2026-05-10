@@ -7,6 +7,10 @@
 - Bassline Badger and the Asteroid Revolt
 - Clawline Protocol
 
+## Long-form story book
+
+For scene-by-scene expansion material, episodic play structure, casual world facts, and spinoff hooks, see [`docs/story-book.md`](docs/story-book.md).
+
 ## Premise
 
 Moss, a tunnel-born badger courier with illegal wetware whiskers, runs contraband data through layered city sprawl. A dub-infused free colony hijacks pirate radio channels and recruits Moss for a chain of heists. Each heist exposes a corporation's orbital control network. By the end, Moss helps convert a captured satellite asteroid into a rebel broadcast fortress.

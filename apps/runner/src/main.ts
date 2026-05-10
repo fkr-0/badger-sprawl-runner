@@ -1,4 +1,5 @@
 import type { MenuOptionId } from './game/GameFlow';
+import { TitleCardRenderer } from './renderer/TitleCardRenderer';
 import { createLocalStorageSaveDriver, loadGameFlow, saveGameFlow } from './storage/SaveStore';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -17,6 +18,7 @@ const ctx: CanvasRenderingContext2D = maybeCtx;
 
 const saveDriver = createLocalStorageSaveDriver(window.localStorage);
 const flow = loadGameFlow(saveDriver);
+const titleCardRenderer = new TitleCardRenderer();
 const skillIds = ['double_swipe', 'parry_tooth', 'rail_mastery'] as const;
 
 let selectedMenuIndex = 0;
@@ -61,6 +63,13 @@ window.addEventListener('keydown', (event) => {
 				event.preventDefault();
 			}
 			break;
+		case 'title-card':
+			if (event.code === 'Enter' || event.code === 'Space') {
+				flow.advanceTitleCard();
+				banner = 'Briefing opened.';
+				event.preventDefault();
+			}
+			break;
 		case 'dialogue':
 			if (event.code === 'Enter' || event.code === 'Space') {
 				flow.advanceDialogue();
@@ -72,8 +81,15 @@ window.addEventListener('keydown', (event) => {
 			if (event.code === 'Enter' || event.code === 'Space') {
 				flow.completeStage();
 				saveGameFlow(saveDriver, flow);
-				banner =
-					flow.getState().mode === 'dialogue' ? 'Briefing unlocked.' : 'Two-stage slice complete.';
+				banner = 'Colony debrief opened.';
+				event.preventDefault();
+			}
+			break;
+		case 'debrief':
+			if (event.code === 'Enter' || event.code === 'Space') {
+				flow.advanceDebrief();
+				saveGameFlow(saveDriver, flow);
+				banner = flow.getState().mode === 'title-card' ? 'Next placard raised.' : 'Debrief advanced.';
 				event.preventDefault();
 			}
 			break;
@@ -176,6 +192,32 @@ function drawMenu(): void {
 	});
 }
 
+function drawTitleCard(): void {
+	const state = flow.getState();
+	const stageTitle = state.mode === 'title-card' ? state.stageId.toUpperCase().replaceAll('-', ' ') : 'STAGE';
+	const placard = state.mode === 'title-card' ? state.placard : '';
+
+	titleCardRenderer.render(ctx, placard, stageTitle, state.mode === 'title-card' ? (state.stageIndex + 1) / flow.getStages().length : 0);
+	footer('Space/Enter: open briefing • Escape: menu');
+}
+
+function drawDebrief(): void {
+	const state = flow.getState();
+	const debrief = flow.getCurrentDebrief();
+	title('COLONY DEBRIEF', debrief?.speaker ?? 'Signal Lost');
+	panel(80, 220, 800, 190);
+	if (state.mode === 'debrief' && debrief) {
+		ctx.fillStyle = '#ffb35e';
+		ctx.font = '700 18px ui-monospace, monospace';
+		ctx.textAlign = 'left';
+		ctx.fillText(debrief.speaker, 112, 260);
+		ctx.fillStyle = '#eaf2ff';
+		ctx.font = '19px ui-monospace, monospace';
+		wrapText(debrief.lines[state.lineIndex] ?? '', 112, 300, 740, 28);
+	}
+	footer('Space/Enter: advance debrief');
+}
+
 function drawDialogue(): void {
 	const state = flow.getState();
 	const dialogue = flow.getCurrentDialogue();
@@ -198,7 +240,7 @@ function drawStage(): void {
 	const stage = state.mode === 'stage' ? flow.getStages()[state.stageIndex] : undefined;
 	title(
 		stage?.name ?? 'STAGE',
-		`stage ${(state.mode === 'stage' ? state.stageIndex : 0) + 1} of 2`
+		`stage ${(state.mode === 'stage' ? state.stageIndex : 0) + 1} of ${flow.getStages().length}`
 	);
 	panel(90, 150, 780, 300);
 	ctx.fillStyle = '#67f3c4';
@@ -312,7 +354,7 @@ function updatePanels(): void {
 	const meta = flow.getMeta();
 	statusPanel.innerHTML = `<strong>Mode:</strong> ${state.mode}<br/><strong>Blueprint shards:</strong> ${meta.blueprintShards}<br/><strong>Banner:</strong> ${banner}`;
 	miniPanel.innerHTML =
-		'<strong>Controls:</strong> Arrow keys navigate. Enter/Space confirms. Escape returns to menu.<br/><strong>Implemented slice:</strong> two stages, dialogue, VS shell, dummy training, skill tree.';
+		'<strong>Controls:</strong> Arrow keys navigate. Enter/Space confirms. Escape returns to menu.<br/><strong>Implemented slice:</strong> eight-stage story spine, placards, debriefs, VS shell, dummy training, skill tree.';
 }
 
 function draw(): void {
@@ -321,11 +363,17 @@ function draw(): void {
 		case 'menu':
 			drawMenu();
 			break;
+		case 'title-card':
+			drawTitleCard();
+			break;
 		case 'dialogue':
 			drawDialogue();
 			break;
 		case 'stage':
 			drawStage();
+			break;
+		case 'debrief':
+			drawDebrief();
 			break;
 		case 'versus':
 			drawVersus();

@@ -8,7 +8,7 @@
 	"2": {
 		"class_type": "CLIPTextEncode",
 		"inputs": {
-			"text": "pixel art sprite sheet, 8 columns by 8 rows, cyberpunk badger character animation frames, each frame isolated, plain white background, no gradients, no text, game sprite atlas",
+			"text": "pixel art sprite sheet, 4 columns by 4 rows, cyberpunk badger character animation frames, each frame isolated, plain white background, no gradients, no text, game sprite atlas",
 			"clip": ["1", 1]
 		}
 	},

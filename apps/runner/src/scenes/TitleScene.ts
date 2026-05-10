@@ -4,7 +4,16 @@
 
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
+import type { MenuOption, MenuOptionId } from '../game/GameFlow';
+import { MODE_OPTIONS } from '../game/ModeMenu';
 import type { Renderer } from '../renderer/Renderer';
+
+export type MenuCommand = 'up' | 'down' | 'confirm' | 'cancel';
+
+export interface TitleSceneOptions {
+	onSelectMode?: (modeId: MenuOptionId) => void;
+	onCancel?: () => void;
+}
 
 export class TitleScene implements Scene {
 	readonly name = 'TitleScene';
@@ -12,12 +21,42 @@ export class TitleScene implements Scene {
 	private renderer: Renderer | null = null;
 	private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 	private selectedOption = 0;
-	private menuOptions = [
-		{ id: 'start', name: 'Start Game' },
-		{ id: 'profile', name: 'Select Profile' },
-		{ id: 'training', name: 'Training Mode' },
-		{ id: 'horde', name: 'Horde Mode' },
-	];
+	private readonly menuOptions = MODE_OPTIONS;
+
+	constructor(private readonly options: TitleSceneOptions = {}) {}
+
+	static getMenuOptions(): MenuOption[] {
+		return MODE_OPTIONS.map((option) => ({ ...option }));
+	}
+
+	getSelectedOption(): MenuOption {
+		return { ...this.menuOptions[this.selectedOption] };
+	}
+
+	moveSelection(delta: number): void {
+		this.selectedOption = (this.selectedOption + delta + this.menuOptions.length) % this.menuOptions.length;
+	}
+
+	confirmSelection(): void {
+		this.options.onSelectMode?.(this.menuOptions[this.selectedOption].id);
+	}
+
+	handleMenuCommand(command: MenuCommand): void {
+		switch (command) {
+			case 'up':
+				this.moveSelection(-1);
+				break;
+			case 'down':
+				this.moveSelection(1);
+				break;
+			case 'confirm':
+				this.confirmSelection();
+				break;
+			case 'cancel':
+				this.options.onCancel?.();
+				break;
+		}
+	}
 
 	onEnter(ctx: SceneContext): void {
 		console.log('TitleScene entered');
@@ -26,14 +65,14 @@ export class TitleScene implements Scene {
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			switch (e.code) {
 				case 'ArrowUp':
-					this.selectedOption = Math.max(0, this.selectedOption - 1);
+					this.moveSelection(-1);
 					break;
 				case 'ArrowDown':
-					this.selectedOption = Math.min(this.menuOptions.length - 1, this.selectedOption + 1);
+					this.moveSelection(1);
 					break;
 				case 'Enter':
 				case 'Space':
-					this.selectOption();
+					this.confirmSelection();
 					break;
 			}
 		};
@@ -89,10 +128,10 @@ export class TitleScene implements Scene {
 
 			if (isSelected) {
 				ctx.fillStyle = '#ffb35e';
-				ctx.fillText(`> ${option.name}`, W / 2, y);
+				ctx.fillText(`> ${option.label}`, W / 2, y);
 			} else {
 				ctx.fillStyle = '#92a4be';
-				ctx.fillText(`  ${option.name}`, W / 2, y);
+				ctx.fillText(`  ${option.label}`, W / 2, y);
 			}
 
 			y += 40;
@@ -102,11 +141,5 @@ export class TitleScene implements Scene {
 		ctx.fillStyle = '#4a4a4a';
 		ctx.font = '14px ui-monospace, monospace';
 		ctx.fillText('Arrow keys to navigate | Enter to select', W / 2, H - 50);
-	}
-
-	private selectOption(): void {
-		const option = this.menuOptions[this.selectedOption];
-		console.log('Selected:', option.id);
-		// Would use SceneManager to navigate
 	}
 }
