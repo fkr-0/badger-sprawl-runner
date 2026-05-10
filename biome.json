@@ -1,6 +1,7 @@
 {
 	"files": {
-		"ignore": ["apps/runner/dist/**", "**/dist/**", "workflow.json"]
+		"ignore": ["apps/runner/dist/**", "**/dist/**", "workflow.json"],
+		"maxSize": 2097152
 	},
 	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
 	"organizeImports": {

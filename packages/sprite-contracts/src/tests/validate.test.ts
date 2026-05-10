@@ -27,7 +27,7 @@ describe('validateSpriteManifest', () => {
 		const invalidManifest = {
 			version: '1.0',
 		};
-		expect(validateSpriteManifest(invalidManifest)).toBe(false);
+		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
 	});
 
 	it('rejects manifest with invalid frame size', () => {
@@ -42,7 +42,7 @@ describe('validateSpriteManifest', () => {
 				},
 			],
 		};
-		expect(validateSpriteManifest(invalidManifest)).toBe(false);
+		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
 	});
 
 	it('rejects sheet with zero animation frames', () => {
@@ -59,7 +59,7 @@ describe('validateSpriteManifest', () => {
 				},
 			],
 		};
-		expect(validateSpriteManifest(invalidManifest)).toBe(false);
+		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
 	});
 
 	it('rejects manifest with negative fps', () => {
@@ -76,7 +76,7 @@ describe('validateSpriteManifest', () => {
 				},
 			],
 		};
-		expect(validateSpriteManifest(invalidManifest)).toBe(false);
+		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
 	});
 
 	it('validates multiple sheets in manifest', () => {
@@ -118,7 +118,7 @@ describe('validateSpriteManifest', () => {
 				},
 			],
 		};
-		expect(validateSpriteManifest(duplicateIdManifest)).toBe(false);
+		expect(validateSpriteManifest(duplicateIdManifest as SpriteManifest)).toBe(false);
 	});
 
 	it('validates animations with multiple frame sequences', () => {
