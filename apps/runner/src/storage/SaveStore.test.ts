@@ -17,8 +17,6 @@ describe('save store', () => {
 		});
 	});
 
-
-
 	it('round-trips story progress through a storage driver', () => {
 		const driver = createMemorySaveDriver();
 		const flow = createGameFlow();
@@ -38,8 +36,6 @@ describe('save store', () => {
 		});
 	});
 
-
-
 	it('persists the Lio trust branch through save/load', () => {
 		const driver = createMemorySaveDriver();
 		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
@@ -58,8 +54,6 @@ describe('save store', () => {
 		});
 	});
 
-
-
 	it('persists the colony alignment branch through save/load', () => {
 		const driver = createMemorySaveDriver();
 		const flow = createGameFlow(undefined, { currentStageId: 'dub-colony' });
@@ -77,8 +71,6 @@ describe('save store', () => {
 			resultFlags: ['colony_alignment_supplier'],
 		});
 	});
-
-
 
 	it('persists final broadcast doctrine and campaign completion', () => {
 		const driver = createMemorySaveDriver();

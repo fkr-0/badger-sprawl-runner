@@ -89,7 +89,8 @@ window.addEventListener('keydown', (event) => {
 			if (event.code === 'Enter' || event.code === 'Space') {
 				flow.advanceDebrief();
 				saveGameFlow(saveDriver, flow);
-				banner = flow.getState().mode === 'title-card' ? 'Next placard raised.' : 'Debrief advanced.';
+				banner =
+					flow.getState().mode === 'title-card' ? 'Next placard raised.' : 'Debrief advanced.';
 				event.preventDefault();
 			}
 			break;
@@ -194,10 +195,16 @@ function drawMenu(): void {
 
 function drawTitleCard(): void {
 	const state = flow.getState();
-	const stageTitle = state.mode === 'title-card' ? state.stageId.toUpperCase().replaceAll('-', ' ') : 'STAGE';
+	const stageTitle =
+		state.mode === 'title-card' ? state.stageId.toUpperCase().replaceAll('-', ' ') : 'STAGE';
 	const placard = state.mode === 'title-card' ? state.placard : '';
 
-	titleCardRenderer.render(ctx, placard, stageTitle, state.mode === 'title-card' ? (state.stageIndex + 1) / flow.getStages().length : 0);
+	titleCardRenderer.render(
+		ctx,
+		placard,
+		stageTitle,
+		state.mode === 'title-card' ? (state.stageIndex + 1) / flow.getStages().length : 0
+	);
 	footer('Space/Enter: open briefing • Escape: menu');
 }
 

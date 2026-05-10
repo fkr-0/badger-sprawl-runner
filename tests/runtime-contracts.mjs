@@ -44,20 +44,37 @@ for (const phrase of ['v1.0 release scope', 'apps/runner', 'legacy static protot
 }
 
 for (const required of ['createRunnerApp', 'app.start()', 'SceneManager shell']) {
-	assert(runnerMain.includes(required), `runner entrypoint missing SceneManager shell surface: ${required}`);
+	assert(
+		runnerMain.includes(required),
+		`runner entrypoint missing SceneManager shell surface: ${required}`
+	);
 }
 
-for (const required of ['new SceneManager', 'routeModeSelection', 'createDefaultModeSceneFactories', 'new TitleScene']) {
+for (const required of [
+	'new SceneManager',
+	'routeModeSelection',
+	'createDefaultModeSceneFactories',
+	'new TitleScene',
+]) {
 	assert(runnerApp.includes(required), `RunnerApp missing scene shell wiring: ${required}`);
 }
 
-assert(!modeRouter.includes('RoutedModeScene'), 'ModeRouter must not use placeholder RoutedModeScene');
+assert(
+	!modeRouter.includes('RoutedModeScene'),
+	'ModeRouter must not use placeholder RoutedModeScene'
+);
 for (const required of ['StoryFlowScene', 'TrainingScene', 'VersusScene', 'SkillTreeScene']) {
-	assert(modeSceneFactories.includes(required), `ModeSceneFactories missing concrete scene: ${required}`);
+	assert(
+		modeSceneFactories.includes(required),
+		`ModeSceneFactories missing concrete scene: ${required}`
+	);
 }
 
 for (const required of ['BADGER SPRAWL RUNNER', 'createLocalStorageSaveDriver', 'loadGameFlow']) {
-	assert(smokeMain.includes(required), `smoke harness missing prototype runtime surface: ${required}`);
+	assert(
+		smokeMain.includes(required),
+		`smoke harness missing prototype runtime surface: ${required}`
+	);
 }
 
 for (const mode of ['story', 'versus', 'training', 'skills']) {

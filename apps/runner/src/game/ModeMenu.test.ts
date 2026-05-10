@@ -23,8 +23,6 @@ describe('mode menu integration', () => {
 		expect(TitleScene.getMenuOptions()).toEqual(MODE_OPTIONS);
 	});
 
-
-
 	it('accepts menu focus, confirm, and cancel commands without DOM events', () => {
 		const selected: string[] = [];
 		const cancelled: string[] = [];
@@ -70,7 +68,6 @@ describe('mode menu integration', () => {
 });
 
 import { createModeScene, routeModeSelection } from './ModeRouter';
-
 
 function installWindowStub(): void {
 	const globalWithWindow = globalThis as typeof globalThis & {
@@ -130,6 +127,9 @@ describe('mode router', () => {
 		expect(story.getFlow().getState()).toEqual({ mode: 'menu' });
 		story.onEnter({ eventBus: {}, canvas: {} } as never);
 
-		expect(story.getFlow().getState()).toMatchObject({ mode: 'title-card', stageId: 'lower-sprawl' });
+		expect(story.getFlow().getState()).toMatchObject({
+			mode: 'title-card',
+			stageId: 'lower-sprawl',
+		});
 	});
 });

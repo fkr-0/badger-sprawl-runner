@@ -1,4 +1,9 @@
-import { createGameFlow, type GameFlow, type MetaState, type StoryProgress } from '../game/GameFlow';
+import {
+	createGameFlow,
+	type GameFlow,
+	type MetaState,
+	type StoryProgress,
+} from '../game/GameFlow';
 
 export const SAVE_KEY = 'badger-sprawl-runner.save.v1';
 

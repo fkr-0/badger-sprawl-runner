@@ -35,6 +35,9 @@ const jsRefs = assetRefs.filter((ref) => ref.endsWith('.js'));
 assert(jsRefs.length === 1, 'dist index should reference exactly one runner js bundle');
 const jsBundle = await readFile(join(distRoot, jsRefs[0]), 'utf8');
 assert(jsBundle.includes('SceneManager shell'), 'runner bundle is missing SceneManager shell text');
-assert(jsBundle.includes('SceneManager routes Story'), 'runner bundle is missing concrete route status text');
+assert(
+	jsBundle.includes('SceneManager routes Story'),
+	'runner bundle is missing concrete route status text'
+);
 
 console.log('badger-sprawl-runner smoke ok');

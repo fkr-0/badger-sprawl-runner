@@ -31,8 +31,6 @@ describe('Badger Sprawl Runner game flow', () => {
 		]);
 	});
 
-
-
 	it('shows a placard title card before briefing and routes stage completion through debrief and boss contract', () => {
 		const flow = createGameFlow();
 
@@ -49,7 +47,10 @@ describe('Badger Sprawl Runner game flow', () => {
 		});
 
 		flow.advanceTitleCard();
-		expect(flow.getState()).toMatchObject({ mode: 'dialogue', dialogueId: 'lower-sprawl-briefing' });
+		expect(flow.getState()).toMatchObject({
+			mode: 'dialogue',
+			dialogueId: 'lower-sprawl-briefing',
+		});
 
 		advanceCurrentDialogue(flow);
 		flow.completeStage();
@@ -99,8 +100,6 @@ describe('Badger Sprawl Runner game flow', () => {
 		});
 	});
 
-
-
 	it('routes story mode through the complete eight-stage Brechtian campaign skeleton', () => {
 		const flow = createGameFlow();
 		const reachedStageIds: string[] = [];
@@ -138,8 +137,6 @@ describe('Badger Sprawl Runner game flow', () => {
 		]);
 	});
 
-
-
 	it('records the Stage 2 stim-cache result flag when Drainmarket is completed', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'drainmarket' });
 
@@ -154,8 +151,6 @@ describe('Badger Sprawl Runner game flow', () => {
 		});
 	});
 
-
-
 	it('stores the Mirror Palace Lio trust branch and result flag from the selected choice', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
 
@@ -163,14 +158,17 @@ describe('Badger Sprawl Runner game flow', () => {
 		enterCurrentStage(flow);
 		const result = flow.chooseStageChoice(1);
 
-		expect(result).toEqual({ ok: true, stageId: 'mirror-palace', branch: 'protected', resultFlag: 'lio_protected' });
+		expect(result).toEqual({
+			ok: true,
+			stageId: 'mirror-palace',
+			branch: 'protected',
+			resultFlag: 'lio_protected',
+		});
 		expect(flow.getStoryProgress()).toMatchObject({
 			lioTrust: 'protected',
 			resultFlags: ['lio_protected'],
 		});
 	});
-
-
 
 	it('stores the Dub Colony colonyAlignment branch and result flag from the selected choice', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'dub-colony' });
@@ -179,14 +177,17 @@ describe('Badger Sprawl Runner game flow', () => {
 		enterCurrentStage(flow);
 		const result = flow.chooseStageChoice(0);
 
-		expect(result).toEqual({ ok: true, stageId: 'dub-colony', branch: 'chorus', resultFlag: 'colony_alignment_chorus' });
+		expect(result).toEqual({
+			ok: true,
+			stageId: 'dub-colony',
+			branch: 'chorus',
+			resultFlag: 'colony_alignment_chorus',
+		});
 		expect(flow.getStoryProgress()).toMatchObject({
 			colonyAlignment: 'chorus',
 			resultFlags: ['colony_alignment_chorus'],
 		});
 	});
-
-
 
 	it('applies ledger release choice flags and heat/favor deltas', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'antenna-barrens' });
@@ -195,12 +196,15 @@ describe('Badger Sprawl Runner game flow', () => {
 		enterCurrentStage(flow);
 		const result = flow.chooseStageChoice(0);
 
-		expect(result).toEqual({ ok: true, stageId: 'antenna-barrens', branch: 'public-dump', resultFlag: 'ledger_public_dump' });
+		expect(result).toEqual({
+			ok: true,
+			stageId: 'antenna-barrens',
+			branch: 'public-dump',
+			resultFlag: 'ledger_public_dump',
+		});
 		expect(flow.getStoryProgress()).toMatchObject({ resultFlags: ['ledger_public_dump'] });
 		expect(flow.getMeta()).toMatchObject({ dubFavor: 2, orbitHeat: 2 });
 	});
-
-
 
 	it('applies cargo reversal choice flags and heat/favor deltas', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'orbital-lift' });
@@ -209,12 +213,15 @@ describe('Badger Sprawl Runner game flow', () => {
 		enterCurrentStage(flow);
 		const result = flow.chooseStageChoice(1);
 
-		expect(result).toEqual({ ok: true, stageId: 'orbital-lift', branch: 'full-release', resultFlag: 'cargo_full_release' });
+		expect(result).toEqual({
+			ok: true,
+			stageId: 'orbital-lift',
+			branch: 'full-release',
+			resultFlag: 'cargo_full_release',
+		});
 		expect(flow.getStoryProgress()).toMatchObject({ resultFlags: ['cargo_full_release'] });
 		expect(flow.getMeta()).toMatchObject({ dubFavor: 3, orbitHeat: 2 });
 	});
-
-
 
 	it('stores the final broadcast doctrine and marks the campaign complete after the ending debrief', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'asteroid-redoubt' });
@@ -222,7 +229,12 @@ describe('Badger Sprawl Runner game flow', () => {
 		flow.selectMenu('story');
 		enterCurrentStage(flow);
 		const result = flow.chooseStageChoice(2);
-		expect(result).toEqual({ ok: true, stageId: 'asteroid-redoubt', branch: 'publish-tools', resultFlag: 'broadcast_publish_tools' });
+		expect(result).toEqual({
+			ok: true,
+			stageId: 'asteroid-redoubt',
+			branch: 'publish-tools',
+			resultFlag: 'broadcast_publish_tools',
+		});
 
 		flow.completeStage();
 		while (flow.getState().mode === 'debrief') flow.advanceDebrief();

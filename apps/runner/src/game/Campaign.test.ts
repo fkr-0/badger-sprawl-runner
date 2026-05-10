@@ -34,8 +34,6 @@ describe('Brechtian story campaign skeleton', () => {
 		]);
 	});
 
-
-
 	it('prints every campaign stage into the global todo checklist', () => {
 		const todo = readFileSync(new URL('../../../../todo.md', import.meta.url), 'utf8');
 
@@ -45,8 +43,6 @@ describe('Brechtian story campaign skeleton', () => {
 			expect(todo).toContain(stage.heistPayload.label);
 		}
 	});
-
-
 
 	it('defines the Drainmarket parry lesson, stim-cache result flag, and knife-drone counter-timing contract', () => {
 		const drainmarket = CAMPAIGN.stages.find((stage) => stage.id === 'drainmarket');
@@ -64,8 +60,6 @@ describe('Brechtian story campaign skeleton', () => {
 			response: 'parry during the flash, then counter while the drone stalls',
 		});
 	});
-
-
 
 	it('defines Chrome Arcology railgun sightline rooms, hidden labor-floor tags, and Madame Vitrine phases', () => {
 		const arcology = CAMPAIGN.stages.find((stage) => stage.id === 'chrome-arcology');
@@ -88,17 +82,35 @@ describe('Brechtian story campaign skeleton', () => {
 			},
 		]);
 		expect(arcology?.backgroundTags).toEqual([
-			{ id: 'labor-floor-b2', label: 'hidden labor floor B2', reveal: 'cargo tag silhouettes behind luxury glass' },
-			{ id: 'labor-floor-b7', label: 'hidden labor floor B7', reveal: 'unpaid maintenance crew elevator shadow' },
+			{
+				id: 'labor-floor-b2',
+				label: 'hidden labor floor B2',
+				reveal: 'cargo tag silhouettes behind luxury glass',
+			},
+			{
+				id: 'labor-floor-b7',
+				label: 'hidden labor floor B7',
+				reveal: 'unpaid maintenance crew elevator shadow',
+			},
 		]);
 		expect(arcology?.boss.phases).toEqual([
-			{ id: 'display-window', label: 'Display Window', mechanic: 'telegraphed glass-lane shots teach railgun dodges' },
-			{ id: 'price-tag-crossfire', label: 'Price-tag Crossfire', mechanic: 'summons cargo-tag drones that must be lined up and pierced' },
-			{ id: 'transparent-justice', label: 'Transparent Justice', mechanic: 'breaks cover and forces charged shots through moving mirrors' },
+			{
+				id: 'display-window',
+				label: 'Display Window',
+				mechanic: 'telegraphed glass-lane shots teach railgun dodges',
+			},
+			{
+				id: 'price-tag-crossfire',
+				label: 'Price-tag Crossfire',
+				mechanic: 'summons cargo-tag drones that must be lined up and pierced',
+			},
+			{
+				id: 'transparent-justice',
+				label: 'Transparent Justice',
+				mechanic: 'breaks cover and forces charged shots through moving mirrors',
+			},
 		]);
 	});
-
-
 
 	it('defines Mirror Palace Lio choice outcomes and mirror-door traversal hazards', () => {
 		const mirrorPalace = CAMPAIGN.stages.find((stage) => stage.id === 'mirror-palace');
@@ -116,7 +128,8 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'protect Lio from the room',
 				branch: 'protected',
 				resultFlag: 'lio_protected',
-				consequence: 'Lio keeps faith with Moss; orbit heat rises because the room sees mercy as weakness.',
+				consequence:
+					'Lio keeps faith with Moss; orbit heat rises because the room sees mercy as weakness.',
 			},
 			{
 				id: 'lio-baited',
@@ -127,13 +140,23 @@ describe('Brechtian story campaign skeleton', () => {
 			},
 		]);
 		expect(mirrorPalace?.traversalHazards).toEqual([
-			{ id: 'debt-contract-door', label: 'Debt-contract Door', teaches: 'read the contract glyph before dashing through the mirror' },
-			{ id: 'reflection-loop', label: 'Reflection Loop', teaches: 'break the false exit by reversing direction on the second shimmer' },
-			{ id: 'banquet-switchback', label: 'Banquet Switchback', teaches: 'rocket across alternating doors while guards applaud the wrong reflection' },
+			{
+				id: 'debt-contract-door',
+				label: 'Debt-contract Door',
+				teaches: 'read the contract glyph before dashing through the mirror',
+			},
+			{
+				id: 'reflection-loop',
+				label: 'Reflection Loop',
+				teaches: 'break the false exit by reversing direction on the second shimmer',
+			},
+			{
+				id: 'banquet-switchback',
+				label: 'Banquet Switchback',
+				teaches: 'rocket across alternating doors while guards applaud the wrong reflection',
+			},
 		]);
 	});
-
-
 
 	it('defines Dub Colony beat-timing modifier, colony alignment outcomes, and Naya companion placeholder', () => {
 		const dubColony = CAMPAIGN.stages.find((stage) => stage.id === 'dub-colony');
@@ -152,21 +175,24 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'chorus',
 				branch: 'chorus',
 				resultFlag: 'colony_alignment_chorus',
-				consequence: 'The colony stays noisy and democratic; support arrives as many small assists.',
+				consequence:
+					'The colony stays noisy and democratic; support arrives as many small assists.',
 			},
 			{
 				id: 'colony-army',
 				prompt: 'army',
 				branch: 'army',
 				resultFlag: 'colony_alignment_army',
-				consequence: 'The colony centralizes command; support arrives faster but dissent gets quieter.',
+				consequence:
+					'The colony centralizes command; support arrives faster but dissent gets quieter.',
 			},
 			{
 				id: 'colony-supplier',
 				prompt: 'supplier',
 				branch: 'supplier',
 				resultFlag: 'colony_alignment_supplier',
-				consequence: 'The colony becomes logistics first; shops improve while public risk is outsourced.',
+				consequence:
+					'The colony becomes logistics first; shops improve while public risk is outsourced.',
 			},
 		]);
 		expect(dubColony?.companion).toEqual({
@@ -177,8 +203,6 @@ describe('Brechtian story campaign skeleton', () => {
 			abilities: ['marks bass pulses', 'calls safe landings', 'amplifies chorus choices'],
 		});
 	});
-
-
 
 	it('defines Antenna Barrens code-gate pressure, Black-Ice Fox hack duel, and ledger release heat/favor outcomes', () => {
 		const barrens = CAMPAIGN.stages.find((stage) => stage.id === 'antenna-barrens');
@@ -212,7 +236,8 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'targeted debt burn',
 				branch: 'targeted-burn',
 				resultFlag: 'ledger_targeted_burn',
-				consequence: 'Selected families are freed quietly; dub favor rises while orbit heat stays controlled.',
+				consequence:
+					'Selected families are freed quietly; dub favor rises while orbit heat stays controlled.',
 				metaDelta: { dubFavor: 1, orbitHeat: 0 },
 			},
 			{
@@ -220,13 +245,12 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'trade for prisoner names',
 				branch: 'prisoner-trade',
 				resultFlag: 'ledger_prisoner_trade',
-				consequence: 'The shard buys names for the lift job; orbit heat rises from the negotiation trail.',
+				consequence:
+					'The shard buys names for the lift job; orbit heat rises from the negotiation trail.',
 				metaDelta: { dubFavor: 0, orbitHeat: 1 },
 			},
 		]);
 	});
-
-
 
 	it('defines Orbital Lift chase template, cargo reversal branches, and Elevator Angel obedience behavior', () => {
 		const lift = CAMPAIGN.stages.find((stage) => stage.id === 'orbital-lift');
@@ -252,7 +276,8 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'full prisoner release',
 				branch: 'full-release',
 				resultFlag: 'cargo_full_release',
-				consequence: 'The lift floods with freed prisoners; the rebellion grows and orbit heat surges.',
+				consequence:
+					'The lift floods with freed prisoners; the rebellion grows and orbit heat surges.',
 				metaDelta: { dubFavor: 3, orbitHeat: 2 },
 			},
 			{
@@ -260,7 +285,8 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'decoy reversal to hide allies',
 				branch: 'decoy-reversal',
 				resultFlag: 'cargo_decoy_reversal',
-				consequence: 'A false cargo trail protects allies; favor rises slowly while Vane chases ghosts.',
+				consequence:
+					'A false cargo trail protects allies; favor rises slowly while Vane chases ghosts.',
 				metaDelta: { dubFavor: 1, orbitHeat: -1 },
 			},
 		]);
@@ -270,13 +296,14 @@ describe('Brechtian story campaign skeleton', () => {
 			placeholder: true,
 			phases: [
 				{ id: 'order-parser', mechanic: 'announces each received order before executing it' },
-				{ id: 'route-optimizer', mechanic: 'redirects cargo lanes unless the player reverses locks on beat' },
+				{
+					id: 'route-optimizer',
+					mechanic: 'redirects cargo lanes unless the player reverses locks on beat',
+				},
 				{ id: 'mercy-exception', mechanic: 'stutters when prisoner names contradict the manifest' },
 			],
 		});
 	});
-
-
 
 	it('defines Asteroid Redoubt final broadcast choices and Director Vane phases', () => {
 		const redoubt = CAMPAIGN.stages.find((stage) => stage.id === 'asteroid-redoubt');
@@ -301,14 +328,31 @@ describe('Brechtian story campaign skeleton', () => {
 				prompt: 'publish the tools and refuse command',
 				branch: 'publish-tools',
 				resultFlag: 'broadcast_publish_tools',
-				consequence: 'The method escapes ownership; freedom becomes reproducible instead of centralized.',
+				consequence:
+					'The method escapes ownership; freedom becomes reproducible instead of centralized.',
 			},
 		]);
 		expect(redoubt?.boss.phases).toEqual([
-			{ id: 'competence-monologue', label: 'Competence Monologue', mechanic: 'Vane narrates why someone efficient must own the sky' },
-			{ id: 'skylock-enforcement', label: 'Sky-lock Enforcement', mechanic: 'satellite locks close routes unless prior payloads are used in sequence' },
-			{ id: 'broadcast-counterclaim', label: 'Broadcast Counterclaim', mechanic: 'Vane corrupts the final message while Moss protects the chosen doctrine' },
-			{ id: 'ownership-collapse', label: 'Ownership Collapse', mechanic: 'all previous witnesses interrupt the command channel' },
+			{
+				id: 'competence-monologue',
+				label: 'Competence Monologue',
+				mechanic: 'Vane narrates why someone efficient must own the sky',
+			},
+			{
+				id: 'skylock-enforcement',
+				label: 'Sky-lock Enforcement',
+				mechanic: 'satellite locks close routes unless prior payloads are used in sequence',
+			},
+			{
+				id: 'broadcast-counterclaim',
+				label: 'Broadcast Counterclaim',
+				mechanic: 'Vane corrupts the final message while Moss protects the chosen doctrine',
+			},
+			{
+				id: 'ownership-collapse',
+				label: 'Ownership Collapse',
+				mechanic: 'all previous witnesses interrupt the command channel',
+			},
 		]);
 	});
 

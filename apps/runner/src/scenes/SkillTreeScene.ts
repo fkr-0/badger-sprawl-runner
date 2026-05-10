@@ -73,7 +73,11 @@ export class SkillTreeScene implements Scene {
 		ctx.fillText('SKILL TREE', ctx.canvas.width / 2, 90);
 		ctx.font = '16px ui-monospace, monospace';
 		ctx.fillText(`selected: ${this.getSelectedSkill()}`, ctx.canvas.width / 2, 135);
-		ctx.fillText(`purchased: ${this.getPurchasedSkills().join(', ') || 'none'}`, ctx.canvas.width / 2, 170);
+		ctx.fillText(
+			`purchased: ${this.getPurchasedSkills().join(', ') || 'none'}`,
+			ctx.canvas.width / 2,
+			170
+		);
 		ctx.restore();
 	}
 }

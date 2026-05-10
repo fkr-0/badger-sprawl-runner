@@ -40,7 +40,8 @@ export class TitleScene implements Scene {
 	}
 
 	moveSelection(delta: number): void {
-		this.selectedOption = (this.selectedOption + delta + this.menuOptions.length) % this.menuOptions.length;
+		this.selectedOption =
+			(this.selectedOption + delta + this.menuOptions.length) % this.menuOptions.length;
 	}
 
 	confirmSelection(): void {
@@ -98,7 +99,10 @@ export class TitleScene implements Scene {
 	}
 
 	render(renderer: unknown, alpha: number): void {
-		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D; drawBackground?: () => void };
+		const maybeRenderer = renderer as {
+			getContext?: () => CanvasRenderingContext2D;
+			drawBackground?: () => void;
+		};
 		const ctx = maybeRenderer.getContext?.();
 		if (!ctx) return;
 

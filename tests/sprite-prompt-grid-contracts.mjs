@@ -16,7 +16,8 @@ const proseGridPatterns = [
 ];
 const outputHintPattern = /(?:^|[_-])(\d+)x(\d+)(?:[_-]|\.)/gi;
 const rowReferencePattern = /\brow[_ ](\d+)\b/gi;
-const sheetDimensionPattern = /\b(\d+)x(\d+)\s+px,\s+(?:exactly\s+)?(\d+)\s*(?:columns?\s+by|x|by)\s*(\d+)\s*(?:rows?|grid)[^\n.]*?(\d+)x\5\s+px/gi;
+const sheetDimensionPattern =
+	/\b(\d+)x(\d+)\s+px,\s+(?:exactly\s+)?(\d+)\s*(?:columns?\s+by|x|by)\s*(\d+)\s*(?:rows?|grid)[^\n.]*?(\d+)x\5\s+px/gi;
 
 async function* walk(dir) {
 	for (const entry of await readdir(dir, { withFileTypes: true })) {

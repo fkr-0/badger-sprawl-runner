@@ -137,7 +137,11 @@ export type GameFlowState =
 const MENU_OPTIONS: MenuOption[] = MODE_OPTIONS;
 
 function stageRewardShards(stage: CampaignStage): number {
-	return stage.rewards.includes('two_blueprint_shards') ? 2 : stage.rewards.includes('blueprint_shard') ? 1 : 0;
+	return stage.rewards.includes('two_blueprint_shards')
+		? 2
+		: stage.rewards.includes('blueprint_shard')
+			? 1
+			: 0;
 }
 
 const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
@@ -290,7 +294,9 @@ export class GameFlow {
 	getStages(): StageSpec[] {
 		return STAGES.map((stage) => ({
 			...stage,
-			boss: stage.boss ? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) } : undefined,
+			boss: stage.boss
+				? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) }
+				: undefined,
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
@@ -313,12 +319,18 @@ export class GameFlow {
 
 	getCurrentBossContract(): BossContract | undefined {
 		const state = this.state;
-		if (state.mode === 'menu' || state.mode === 'versus' || state.mode === 'training' || state.mode === 'skills') {
+		if (
+			state.mode === 'menu' ||
+			state.mode === 'versus' ||
+			state.mode === 'training' ||
+			state.mode === 'skills'
+		) {
 			return undefined;
 		}
-		const stage = state.mode === 'dialogue'
-			? STAGES.find((candidate) => `${candidate.id}-briefing` === state.dialogueId)
-			: STAGES[state.stageIndex];
+		const stage =
+			state.mode === 'dialogue'
+				? STAGES.find((candidate) => `${candidate.id}-briefing` === state.dialogueId)
+				: STAGES[state.stageIndex];
 		return stage?.boss ? { ...stage.boss } : undefined;
 	}
 
@@ -393,7 +405,6 @@ export class GameFlow {
 		}
 		this.state = { mode: 'stage', stageId: stage.id, stageIndex };
 	}
-
 
 	chooseStageChoice(choiceIndex: number): StageChoiceResult {
 		if (this.state.mode !== 'stage') return { ok: false, reason: 'not-in-stage' };
