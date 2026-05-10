@@ -8,7 +8,8 @@ The project is deliberately original. It uses cyberpunk-sprawl vocabulary and or
 
 ```text
 v1.0 contains:
-- apps/runner: Vite-powered playable vertical-slice runner app.
+- apps/runner: Vite-powered playable vertical-slice runner app. Its production entrypoint uses `RunnerApp` + `SceneManager` for mode routing.
+- apps/runner/src/smokeMain.ts: preserved immediate-mode runner prototype used as a reference/smoke harness.
 - src/main.js + root index.html: legacy static prototype kept for direct browser play.
 - packages/platformer-core: pure physics/collision helpers.
 - packages/codegate: extractable minigame gate engine.
@@ -59,7 +60,7 @@ python3 -m http.server 8042
 ## Release commands
 
 ```sh
-pnpm run test          # data validation + runtime contracts + package tests
+pnpm run test          # data validation + runtime contracts + package tests; Vitest timeout is 30s per test
 pnpm run typecheck     # TypeScript typecheck across workspace packages/apps
 pnpm run build         # package builds + Vite production build
 pnpm run smoke:runner  # verifies runner dist entry and bundled app contract

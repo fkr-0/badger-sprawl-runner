@@ -15,6 +15,7 @@ export interface Scene {
 export interface SceneContext {
 	eventBus: EventBus;
 	canvas: HTMLCanvasElement;
+	renderer?: unknown;
 }
 
 export class SceneManager {

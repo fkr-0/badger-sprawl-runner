@@ -16,7 +16,11 @@ const rootPackage = await json('package.json');
 const runnerPackage = await json('apps/runner/package.json');
 const readme = await text('README.md');
 const runnerMain = await text('apps/runner/src/main.ts');
+const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
+const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
+const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
+const smokeMain = await text('apps/runner/src/smokeMain.ts');
 const legacyMain = await text('src/main.js');
 const manifest = await json('data/game-manifest.json');
 const items = await json('data/items.json');
@@ -39,8 +43,21 @@ for (const phrase of ['v1.0 release scope', 'apps/runner', 'legacy static protot
 	assert(readme.includes(phrase), `README missing v1 release phrase: ${phrase}`);
 }
 
+for (const required of ['createRunnerApp', 'app.start()', 'SceneManager shell']) {
+	assert(runnerMain.includes(required), `runner entrypoint missing SceneManager shell surface: ${required}`);
+}
+
+for (const required of ['new SceneManager', 'routeModeSelection', 'createDefaultModeSceneFactories', 'new TitleScene']) {
+	assert(runnerApp.includes(required), `RunnerApp missing scene shell wiring: ${required}`);
+}
+
+assert(!modeRouter.includes('RoutedModeScene'), 'ModeRouter must not use placeholder RoutedModeScene');
+for (const required of ['StoryFlowScene', 'TrainingScene', 'VersusScene', 'SkillTreeScene']) {
+	assert(modeSceneFactories.includes(required), `ModeSceneFactories missing concrete scene: ${required}`);
+}
+
 for (const required of ['BADGER SPRAWL RUNNER', 'createLocalStorageSaveDriver', 'loadGameFlow']) {
-	assert(runnerMain.includes(required), `runner entrypoint missing runtime surface: ${required}`);
+	assert(smokeMain.includes(required), `smoke harness missing prototype runtime surface: ${required}`);
 }
 
 for (const mode of ['story', 'versus', 'training', 'skills']) {

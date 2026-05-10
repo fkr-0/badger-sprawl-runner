@@ -6,7 +6,6 @@ import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
 import type { MenuOption, MenuOptionId } from '../game/GameFlow';
 import { MODE_OPTIONS } from '../game/ModeMenu';
-import type { Renderer } from '../renderer/Renderer';
 
 export type MenuCommand = 'up' | 'down' | 'confirm' | 'cancel';
 
@@ -18,7 +17,6 @@ export interface TitleSceneOptions {
 export class TitleScene implements Scene {
 	readonly name = 'TitleScene';
 
-	private renderer: Renderer | null = null;
 	private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 	private selectedOption = 0;
 	private readonly menuOptions = MODE_OPTIONS;
@@ -29,8 +27,16 @@ export class TitleScene implements Scene {
 		return MODE_OPTIONS.map((option) => ({ ...option }));
 	}
 
+	private getDefaultOption(): MenuOption {
+		return MODE_OPTIONS[0] ?? { id: 'story', label: 'Story Run', description: 'Start story mode.' };
+	}
+
+	private getCurrentOption(): MenuOption {
+		return this.menuOptions[this.selectedOption] ?? this.getDefaultOption();
+	}
+
 	getSelectedOption(): MenuOption {
-		return { ...this.menuOptions[this.selectedOption] };
+		return { ...this.getCurrentOption() };
 	}
 
 	moveSelection(delta: number): void {
@@ -38,7 +44,7 @@ export class TitleScene implements Scene {
 	}
 
 	confirmSelection(): void {
-		this.options.onSelectMode?.(this.menuOptions[this.selectedOption].id);
+		this.options.onSelectMode?.(this.getCurrentOption().id);
 	}
 
 	handleMenuCommand(command: MenuCommand): void {
@@ -60,8 +66,6 @@ export class TitleScene implements Scene {
 
 	onEnter(ctx: SceneContext): void {
 		console.log('TitleScene entered');
-		this.renderer = ctx.renderer as Renderer;
-
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			switch (e.code) {
 				case 'ArrowUp':
@@ -94,13 +98,11 @@ export class TitleScene implements Scene {
 	}
 
 	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
-		const ctx = rend.getContext();
+		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D; drawBackground?: () => void };
+		const ctx = maybeRenderer.getContext?.();
+		if (!ctx) return;
 
-		// Background with parallax
-		rend.drawBackground();
-
-		// Render title
+		maybeRenderer.drawBackground?.();
 		this.renderTitle(ctx);
 	}
 
@@ -124,6 +126,7 @@ export class TitleScene implements Scene {
 		let y = H / 2 + 50;
 		for (let i = 0; i < this.menuOptions.length; i++) {
 			const option = this.menuOptions[i];
+			if (!option) continue;
 			const isSelected = i === this.selectedOption;
 
 			if (isSelected) {

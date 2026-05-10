@@ -334,7 +334,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Mode integration gates
 
 - [x] Make one canonical mode list shared by `GameFlow`, `TitleScene`, smoke tests, and menu copy.
-- [~] Route menu selections through `SceneManager` instead of logging selected ids. Callback/router contract exists; concrete runtime `SceneManager` integration remains.
+- [x] Route menu selections through `SceneManager` instead of logging selected ids.
 - [x] Add runtime/menu contract tests so every advertised menu option opens a real scene or flow state.
 - [x] Keep story, VS, training, skills, and any horde/survival mode names consistent across UI and code.
 - [x] Add keyboard/gamepad navigation acceptance tests for menu focus, confirm, cancel/back, and disabled entries.
@@ -359,7 +359,7 @@ next_steps:
   - [x] Rename "Start Game" to "Story Run" so it maps clearly to story mode.
   - [x] Add "VS Mode" to the rendered menu.
   - [x] Decide whether Horde Mode remains separate, becomes VS-adjacent survival, or is hidden until polished: hidden from canonical menu until polished.
-  - [~] Wire TitleScene selection to SceneManager transitions. `TitleScene` emits canonical ids and `ModeRouter` has a replace contract; runtime scene-factory wiring remains.
+  - [x] Wire TitleScene selection to SceneManager transitions.
   - [ ] Show save-aware story CTA: "Continue" when storyProgress.currentStageId is not the first stage.
   - [x] Show small mode descriptions from GameFlow below the selected option.
   - [x] Add a back/cancel behavior from submenus back to TitleScene.
@@ -461,12 +461,12 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Runtime scene wiring
 
-- [ ] Replace the shell-only `ModeRouter` placeholder scene factory with concrete runtime scene construction.
+- [x] Replace the shell-only `ModeRouter` placeholder scene factory with concrete runtime scene construction.
 - [ ] Wire `TitleScene` into the real app shell or remove duplicate menu rendering from `main.ts` so there is only one main-menu implementation.
-- [ ] Instantiate `TrainingScene`, `VersusScene`, `SkillTreeScene`, and story flow screens through the same `SceneManager` pathway.
-- [ ] Add a route contract test using a fake `SceneManager` plus concrete scene constructors, not only scene-name placeholders.
+- [x] Instantiate `TrainingScene`, `VersusScene`, `SkillTreeScene`, and story flow screens through the same `SceneManager` pathway.
+- [x] Add a route contract test using a fake `SceneManager` plus concrete scene constructors, not only scene-name placeholders.
 - [ ] Add back/cancel behavior from concrete scenes to `TitleScene` through `SceneManager`.
-- [ ] Decide whether the current immediate-mode `main.ts` prototype remains a smoke harness or becomes the production shell.
+- [x] Decide whether the current immediate-mode `main.ts` prototype remains a smoke harness or becomes the production shell: `main.ts` is the SceneManager shell; `smokeMain.ts` preserves the immediate-mode harness.
 
 ## Story gameplay depth
 
@@ -487,7 +487,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Training mode depth
 
-- [ ] Wire canonical training route to the concrete `TrainingScene` runtime.
+- [x] Wire canonical training route to the concrete `TrainingScene` runtime.
 - [ ] Connect pure `TrainingMode` state to visible TrainingScene UI: lesson selector, dummy preset, kit toggle, metrics panel.
 - [ ] Add concrete TrainingScene tests for reset behavior, dummy invincibility, lesson selection, and no story/economy mutation.
 - [ ] Add optional target challenges with pass/fail badges.
@@ -514,6 +514,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Testing and release automation
 
+- [x] Set Vitest test timeout to 30 seconds in shared workspace config.
 - [ ] Add browser-driven E2E tests for menu navigation, story progression, choice selection, save/load, training reset, and VS rematch.
 - [ ] Add CI workflow that runs test, typecheck, build, smoke, lint, and uploads runner build artifacts.
 - [ ] Add a lightweight Playwright smoke that opens the built runner and verifies canvas/menu status text.
