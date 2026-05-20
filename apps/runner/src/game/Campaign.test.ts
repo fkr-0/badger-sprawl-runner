@@ -72,6 +72,70 @@ describe('Brechtian story campaign skeleton', () => {
 		}
 	});
 
+
+	it('backs completed story integration todo items with structured source or e2e evidence', () => {
+		const todo = readFileSync(new URL('../../../../todo.md', import.meta.url), 'utf8');
+		const storyFlowScene = readFileSync(new URL('../scenes/StoryFlowScene.ts', import.meta.url), 'utf8');
+		const titleScene = readFileSync(new URL('../scenes/TitleScene.ts', import.meta.url), 'utf8');
+		const stageRunOptions = readFileSync(new URL('./StageRunOptions.ts', import.meta.url), 'utf8');
+		const storyProgressMigration = readFileSync(
+			new URL('./StoryProgressMigration.ts', import.meta.url),
+			'utf8'
+		);
+		const branchRecapE2e = readFileSync(
+			new URL('../../../../tests/e2e/story-choice-recap.spec.ts', import.meta.url),
+			'utf8'
+		);
+		const titleProgressE2e = readFileSync(
+			new URL('../../../../tests/e2e/title-progress.spec.ts', import.meta.url),
+			'utf8'
+		);
+		const stageDebugE2e = readFileSync(
+			new URL('../../../../tests/e2e/stage-debug-panel.spec.ts', import.meta.url),
+			'utf8'
+		);
+		const legacySaveE2e = readFileSync(
+			new URL('../../../../tests/e2e/legacy-save-migration.spec.ts', import.meta.url),
+			'utf8'
+		);
+
+		const evidenceContracts = [
+			{
+				todo: 'Turn campaign choice data into an in-game choice UI',
+				evidence: [storyFlowScene, 'chooseStageChoice'],
+			},
+			{
+				todo: 'Add a result/branch recap panel after every stage choice',
+				evidence: [storyFlowScene, 'BranchChoiceRecap', branchRecapE2e, 'badger:story-choice-recap'],
+			},
+			{
+				todo: 'Surface story progress in the menu',
+				evidence: [titleScene, 'getStoryProgressSummary', titleProgressE2e, 'badger:title-progress-summary'],
+			},
+			{
+				todo: 'Add stage-detail debug panel',
+				evidence: [storyFlowScene, 'StageDebugDetail', stageDebugE2e, 'badger:stage-debug-detail'],
+			},
+			{
+				todo: 'Add save migration/versioning',
+				evidence: [storyProgressMigration, 'migrateStoryProgress', legacySaveE2e, 'legacy story progress'],
+			},
+			{
+				todo: 'Add contract tests proving every `CampaignStage.todo` item marked done',
+				evidence: [stageRunOptions, 'buildStageRunSceneOptions', storyFlowScene, 'buildStageDebugDetail'],
+			},
+		];
+
+		for (const contract of evidenceContracts) {
+			expect(todo).toContain(`- [x] ${contract.todo}`);
+			for (let index = 0; index < contract.evidence.length; index += 2) {
+				const source = contract.evidence[index] ?? '';
+				const marker = contract.evidence[index + 1] ?? '';
+				expect(source).toContain(marker);
+			}
+		}
+	});
+
 	it('defines the Drainmarket parry lesson, stim-cache result flag, and knife-drone counter-timing contract', () => {
 		const drainmarket = CAMPAIGN.stages.find((stage) => stage.id === 'drainmarket');
 
