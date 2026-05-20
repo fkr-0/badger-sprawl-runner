@@ -122,7 +122,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add docs/story-content-system.md explaining the new content systems.
 - [x] Add docs/PROCEDURAL_GENERATION.md designing optional dungeon/room and Diablo-style enemy generation.
 - [~] Add docs/companion-system.md explaining companion mechanics
-- [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
+- [x] Add docs/dialogue-system.md explaining dialogue choices and consequences
 - [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
 - [ ] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
 

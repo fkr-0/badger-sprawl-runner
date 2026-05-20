@@ -16,6 +16,7 @@ const rootPackage = await json('package.json');
 const runnerPackage = await json('apps/runner/package.json');
 const readme = await text('README.md');
 const storyContentSystemDoc = await text('docs/story-content-system.md');
+const dialogueSystemDoc = await text('docs/dialogue-system.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
@@ -81,6 +82,22 @@ for (const required of [
 	'tests/e2e/story-content.spec.ts',
 ]) {
 	assert(storyContentSystemDoc.includes(required), `story content system doc missing: ${required}`);
+}
+
+
+for (const required of [
+	'Dialogue System',
+	'DialogueSpec',
+	'DebriefSpec',
+	'ChoiceOutcome',
+	'BranchChoiceRecap',
+	'badger:story-choice-recap',
+	'BRANCH_DEBRIEF_LINES',
+	'StoryFlowScene_controls',
+	'StoryProgressMigration',
+	'tests/e2e/story-choice-recap.spec.ts',
+]) {
+	assert(dialogueSystemDoc.includes(required), `dialogue system doc missing: ${required}`);
 }
 
 for (const phrase of ['v1.0 release scope', 'apps/runner', 'legacy static prototype', 'todo.md']) {
