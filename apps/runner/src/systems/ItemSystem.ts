@@ -100,7 +100,7 @@ export class ItemSystem {
 				player.hasKatana = true;
 				break;
 			case 'stim':
-				player.stims++;
+				player.stims = (player.stims ?? 0) + 1;
 				break;
 		}
 	}

@@ -22,6 +22,8 @@ const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
 const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
+const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
+const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const smokeMain = await text('apps/runner/src/smokeMain.ts');
@@ -86,6 +88,38 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 }
 
 
+
+
+for (const required of [
+	'DialoguePortraitRenderer',
+	'getDialoguePortrait',
+	'character_naya_root',
+	'character_rook_null',
+	'character_sister_version',
+	'character_lio',
+	'moss_badger',
+	'spriteRenderer.drawFrame',
+	'fallbackLabel',
+]) {
+	assert(
+		dialoguePortraitRendererSource.includes(required),
+		`DialoguePortraitRenderer missing portrait contract: ${required}`,
+	);
+}
+for (const required of [
+	'renderDialoguePanel',
+	'renderDialoguePortrait',
+	'getCurrentDialogue()',
+	'getCurrentDebrief()',
+	"state.mode === 'dialogue'",
+	"state.mode === 'debrief'",
+]) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing dialogue portrait wiring: ${required}`);
+}
+assert(
+	rendererSource.includes('DialoguePortraitRenderer') && rendererSource.includes('renderDialoguePortrait'),
+	'Renderer must expose DialoguePortraitRenderer through renderDialoguePortrait',
+);
 
 for (const required of [
 	'isStoryPayloadPickup',

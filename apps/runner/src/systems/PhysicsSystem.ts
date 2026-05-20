@@ -23,6 +23,11 @@ export interface Entity {
 	hasRailgun?: boolean;
 	hasKatana?: boolean;
 	stims?: number;
+	comboCount?: number;
+	comboTimer?: number;
+	lastHitTime?: number;
+	parryWindow?: number;
+	isDodging?: boolean;
 
 	// Visual juice properties
 	scaleX?: number;
@@ -88,7 +93,7 @@ export class PhysicsSystem {
 			y: player.y,
 			onGround: player.onGround,
 			axisInput,
-			isFastFall: action.fastFall,
+			isFastFalling: action.fastFall,
 			params: defaultParams,
 			dt,
 		});

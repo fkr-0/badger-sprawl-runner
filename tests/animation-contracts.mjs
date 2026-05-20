@@ -191,6 +191,20 @@ assert(storyPayloadPickup.animation === 'wafer_key_pickup', 'lower sprawl story 
 assert(typedLayout.includes("persistence: 'story_payload'"), 'typed layout must carry story_payload persistence');
 assert(typedLayout.includes("itemId: 'wafer_key'"), 'typed layout must carry wafer_key story payload');
 
+
+const requiredDialoguePortraitSheets = [
+	'character_auntie_subharmonic',
+	'character_lio',
+	'character_murr_murrby',
+	'character_naya_root',
+	'character_rook_null',
+	'character_sister_version',
+	'moss_badger',
+];
+for (const sheetId of requiredDialoguePortraitSheets) {
+	assert(sheetById.get(sheetId), `dialogue portrait sheet missing from sprite manifest: ${sheetId}`);
+}
+
 const characterRequiredAnimations = ['idle', 'talk', 'assist', 'react', 'exit'];
 const characterSheets = sprites.spriteSheets.filter((sheet) =>
 	['companion', 'npc', 'merchant', 'npc_boss_context'].includes(sheet.role),

@@ -56,7 +56,7 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 - [x] Add public sprite asset verification for PNG existence, dimensions, and manifest freshness.
 - [x] Add HUD item icon rendering for rocket pack, railgun, katana, and stims through `item_icons`.
 - [ ] Replace placeholder PNG atlases with final production art while preserving manifest dimensions/names.
-- [ ] Add character/NPC dialogue portrait rendering using the encoded character sheet contracts.
+- [x] Add character/NPC dialogue portrait rendering using the encoded character sheet contracts.
 - [ ] Add runtime animation events for hitboxes, hurtboxes, action windows, cancel windows, footsteps, and attack/VFX triggers.
 - [x] Persist `story_payload` pickups so collected story items are hidden from stage layouts after save/load state is supplied.
 
@@ -86,7 +86,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Integration tasks
 
 - [x] Integrate story-flavour.yml parsing into StoryContentLoader
-- [ ] Connect dialogue system to game scenes and UI rendering
+- [~] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels now render speaker portraits; full choice UI remains.
 - [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
 - [ ] Add trust/heat effects to merchant prices and gameplay
 - [ ] Implement branch consequences from dialogue choices

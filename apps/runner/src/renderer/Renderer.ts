@@ -7,6 +7,7 @@ import { VFXPool } from './VFXPool';
 import { ParallaxRenderer } from './ParallaxLayer';
 import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
+import { DialoguePortraitRenderer } from './DialoguePortraitRenderer';
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
 import type { CombatEntity } from '../systems/CombatSystem';
@@ -18,6 +19,7 @@ export class Renderer {
 	private parallaxRenderer: ParallaxRenderer;
 	private titleCardRenderer: TitleCardRenderer;
 	private uiRenderer: UIRenderer;
+	private dialoguePortraitRenderer: DialoguePortraitRenderer;
 
 	constructor(
 		private ctx: CanvasRenderingContext2D,
@@ -29,6 +31,7 @@ export class Renderer {
 		this.parallaxRenderer = new ParallaxRenderer();
 		this.titleCardRenderer = new TitleCardRenderer();
 		this.uiRenderer = new UIRenderer();
+		this.dialoguePortraitRenderer = new DialoguePortraitRenderer();
 
 		// Initialize default parallax
 		this.parallaxRenderer.initializeDefaultSprawl(height);
@@ -162,6 +165,10 @@ export class Renderer {
 
 	renderUI(player: Player, camera: Camera): void {
 		this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer);
+	}
+
+	renderDialoguePortrait(speaker: string, x: number, y: number, size?: number): void {
+		this.dialoguePortraitRenderer.render(this.ctx, this.spriteRenderer, speaker, x, y, size);
 	}
 
 	renderTitleCard(title: string, subtitle?: string, progress = 0): void {

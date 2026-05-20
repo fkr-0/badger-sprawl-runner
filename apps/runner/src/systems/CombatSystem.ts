@@ -141,7 +141,7 @@ export class CombatSystem {
 				const damage = combo === 'katana' ? 2 : 1;
 
 				// Check enemy parry
-				if (enemy.parryWindow > 0) {
+				if ((enemy.parryWindow ?? 0) > 0) {
 					// Enemy parried - bounce back
 					player.vx = -player.dir * 100;
 					events?.onEvent?.({ kind: 'parry', source: 'enemy' });
@@ -179,7 +179,7 @@ export class CombatSystem {
 
 		// Miss penalty - reduce combo timer slightly
 		if (hitCount === 0 && player.comboCount !== undefined && player.comboCount > 0) {
-			player.comboTimer = Math.max(0, player.comboTimer - 0.2);
+			player.comboTimer = Math.max(0, (player.comboTimer ?? 0) - 0.2);
 		}
 	}
 
