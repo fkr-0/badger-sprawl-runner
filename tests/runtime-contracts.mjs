@@ -142,6 +142,12 @@ for (const required of [
 
 for (const required of [
 	'StoryFlowSceneOptions',
+	'BranchChoiceRecap',
+	'getLastChoiceRecap',
+	'buildChoiceRecap',
+	'badger:story-choice-recap',
+	'Branch recap:',
+	'Heat ${formatSigned',
 	'onStartStage',
 	'buildStageRunSceneOptions(this.flow)',
 	"event.key.toLowerCase() === 'r'",

@@ -1,11 +1,25 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
-import { type GameFlow, createGameFlow } from '../game/GameFlow';
+import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
 import { buildStageRunSceneOptions } from '../game/StageRunOptions';
-import type { StageRunSceneOptions } from './StageRunScene';
 import type { Renderer } from '../renderer/Renderer';
+import type { StageRunSceneOptions } from './StageRunScene';
+
+function formatSigned(value: number): string {
+	return value > 0 ? `+${value}` : `${value}`;
+}
 
 export interface StoryFlowSceneOptions {
 	onStartStage?: (options: StageRunSceneOptions) => void;
+}
+
+export interface BranchChoiceRecap {
+	stageId: string;
+	selectedPrompt: string;
+	branch: string;
+	resultFlag: string;
+	consequence: string;
+	dubFavorDelta: number;
+	orbitHeatDelta: number;
 }
 
 export class StoryFlowScene implements Scene {
@@ -14,6 +28,7 @@ export class StoryFlowScene implements Scene {
 	private selectedChoiceIndex = 0;
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 	private lastChoiceResult = '';
+	private lastChoiceRecap: BranchChoiceRecap | null = null;
 
 	constructor(
 		private readonly flow: GameFlow = createGameFlow(),
@@ -24,7 +39,12 @@ export class StoryFlowScene implements Scene {
 		return this.flow;
 	}
 
+	getLastChoiceRecap(): BranchChoiceRecap | null {
+		return this.lastChoiceRecap ? { ...this.lastChoiceRecap } : null;
+	}
+
 	onEnter(_ctx: SceneContext): void {
+		console.log('StoryFlowScene entered');
 		if (this.flow.getState().mode === 'menu') {
 			this.flow.selectMenu('story');
 		}
@@ -40,6 +60,13 @@ export class StoryFlowScene implements Scene {
 
 	private handleKeyDown(event: KeyboardEvent): void {
 		const state = this.flow.getState();
+		if (state.mode === 'title-card') {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault();
+				this.flow.advanceTitleCard();
+			}
+			return;
+		}
 		if (state.mode === 'dialogue') {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
@@ -83,13 +110,33 @@ export class StoryFlowScene implements Scene {
 	}
 
 	private chooseStageChoice(choiceIndex: number): void {
+		const stage = this.flow.getCurrentStage();
+		const outcome = stage?.choiceOutcomes?.[choiceIndex];
 		const result = this.flow.chooseStageChoice(choiceIndex);
-		if (result.ok) {
-			this.lastChoiceResult = `${result.branch} / ${result.resultFlag}`;
+		if (!result.ok) {
+			this.lastChoiceResult = result.reason;
+			this.lastChoiceRecap = null;
 			return;
 		}
-		this.lastChoiceResult = result.reason;
+		if (stage && outcome) {
+			this.lastChoiceResult = `${result.branch} / ${result.resultFlag}`;
+			this.lastChoiceRecap = this.buildChoiceRecap(stage.id, outcome);
+			window.dispatchEvent(new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap }));
+		}
 	}
+
+	private buildChoiceRecap(stageId: string, outcome: ChoiceOutcome): BranchChoiceRecap {
+		return {
+			stageId,
+			selectedPrompt: outcome.prompt,
+			branch: outcome.branch,
+			resultFlag: outcome.resultFlag,
+			consequence: outcome.consequence,
+			dubFavorDelta: outcome.metaDelta?.dubFavor ?? 0,
+			orbitHeatDelta: outcome.metaDelta?.orbitHeat ?? 0,
+		};
+	}
+
 	update(_dt: number): void {}
 
 	render(renderer: unknown, _alpha: number): void {
@@ -149,12 +196,12 @@ export class StoryFlowScene implements Scene {
 		const stage = this.flow.getCurrentStage();
 		if (!stage?.choiceOutcomes?.length) return;
 		const panelX = 54;
-		const panelY = ctx.canvas.height - 220;
+		const panelY = ctx.canvas.height - 260;
 		const panelW = ctx.canvas.width - 108;
 		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
-		ctx.fillRect(panelX, panelY, panelW, 204);
+		ctx.fillRect(panelX, panelY, panelW, 244);
 		ctx.strokeStyle = '#ffb35e';
-		ctx.strokeRect(panelX, panelY, panelW, 204);
+		ctx.strokeRect(panelX, panelY, panelW, 244);
 		ctx.textAlign = 'left';
 		ctx.fillStyle = '#ffb35e';
 		ctx.font = '700 15px ui-monospace, monospace';
@@ -199,10 +246,22 @@ export class StoryFlowScene implements Scene {
 
 		ctx.fillStyle = '#8d94a7';
 		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • R: run stage', panelX + 22, panelY + 188);
-		if (this.lastChoiceResult) {
-			ctx.fillStyle = '#67f3c4';
-			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 188);
-		}
+		this.renderChoiceRecap(ctx, panelX + 22, panelY + 204, panelW - 44);
 	}
 
+	private renderChoiceRecap(ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number): void {
+		const recap = this.lastChoiceRecap;
+		if (!recap) {
+			if (!this.lastChoiceResult) return;
+			ctx.fillStyle = '#ff5e7a';
+			ctx.fillText(`Choice failed: ${this.lastChoiceResult}`, x, y);
+			return;
+		}
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(`Branch recap: ${recap.selectedPrompt.slice(0, 42)} -> ${recap.resultFlag}`, x, y);
+		ctx.fillStyle = '#cfeee4';
+		ctx.fillText(recap.consequence.slice(0, Math.max(24, Math.floor(maxWidth / 8))), x, y + 16);
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(`Heat ${formatSigned(recap.orbitHeatDelta)} / Favor ${formatSigned(recap.dubFavorDelta)}`, x, y + 32);
+	}
 }

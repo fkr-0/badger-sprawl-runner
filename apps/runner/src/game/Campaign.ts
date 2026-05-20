@@ -292,6 +292,32 @@ export const CAMPAIGN: CampaignDefinition = {
 					'trade it for safer routes',
 				],
 				trackedFlag: 'dubFavor',
+				outcomes: [
+					{
+						id: 'wafer-sold',
+						prompt: 'sell the key quietly',
+						branch: 'supplier',
+						resultFlag: 'wafer_sold',
+						consequence: 'Moss gets paid, but the toll ledger stays private a little longer.',
+						metaDelta: { orbitHeat: -1, dubFavor: -1 },
+					},
+					{
+						id: 'wafer-broadcast',
+						prompt: 'broadcast the ledger excerpt',
+						branch: 'chorus',
+						resultFlag: 'wafer_broadcast',
+						consequence: 'The street learns who owns its crossings; heat rises with public proof.',
+						metaDelta: { orbitHeat: 1, dubFavor: 1 },
+					},
+					{
+						id: 'wafer-routes',
+						prompt: 'trade it for safer routes',
+						branch: 'safe-partial',
+						resultFlag: 'wafer_safe_routes',
+						consequence: 'The colony maps safer crossings but leaves some proof unpublished.',
+						metaDelta: { orbitHeat: 0, dubFavor: 1 },
+					},
+				],
 			},
 			boss: {
 				id: 'tollbooth-captain-grin',
@@ -510,6 +536,7 @@ export const CAMPAIGN: CampaignDefinition = {
 						branch: 'exposed',
 						resultFlag: 'lio_exposed',
 						consequence: 'Lio survives politically wounded; colony heat drops but trust breaks.',
+						metaDelta: { orbitHeat: -1, dubFavor: -1 },
 					},
 					{
 						id: 'lio-protected',
@@ -518,6 +545,7 @@ export const CAMPAIGN: CampaignDefinition = {
 						resultFlag: 'lio_protected',
 						consequence:
 							'Lio keeps faith with Moss; orbit heat rises because the room sees mercy as weakness.',
+						metaDelta: { orbitHeat: 1, dubFavor: 1 },
 					},
 					{
 						id: 'lio-baited',
@@ -526,6 +554,7 @@ export const CAMPAIGN: CampaignDefinition = {
 						resultFlag: 'lio_baited',
 						consequence:
 							'Lio becomes part of the trap; trust becomes tactical instead of intimate.',
+						metaDelta: { orbitHeat: 2, dubFavor: 0 },
 					},
 				],
 			},

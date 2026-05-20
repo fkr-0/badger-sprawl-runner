@@ -542,8 +542,8 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Story-mode integration debt
 
-- [ ] Turn campaign choice data into an in-game choice UI instead of requiring direct `GameFlow.chooseStageChoice()` calls from tests.
-- [ ] Add a result/branch recap panel after every stage choice: selected option, consequence text, result flag, and heat/favor changes.
+- [x] Turn campaign choice data into an in-game choice UI instead of requiring direct `GameFlow.chooseStageChoice()` calls from tests.
+- [x] Add a result/branch recap panel after every stage choice: selected option, consequence text, result flag, and heat/favor changes.
 - [ ] Surface story progress in the menu: current chapter, completed chapters, campaign-complete badge, and final broadcast doctrine.
 - [ ] Add stage-detail debug panel for development builds showing payload, boss contract, tutorial beats, modifiers, branch outcomes, and result flags.
 - [ ] Add save migration/versioning for expanded `StoryProgress` fields: `lioTrust`, `colonyAlignment`, `finalBroadcastDoctrine`, `resultFlags`.
