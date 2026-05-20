@@ -7,6 +7,7 @@ import {
 	normalizeSpriteManifest,
 	type SpriteManifest,
 	type LoadedSheet,
+	type SpriteAnimationEvent,
 } from '@badger/sprite-contracts';
 
 interface FallbackEntity {
@@ -81,6 +82,14 @@ export class SpriteRenderer {
 
 	getSheet(sheetId: string): LoadedSheet | undefined {
 		return this.sheets.get(sheetId);
+	}
+
+	getAnimationEvents(sheetId: string, animName: string, frameIndex: number): SpriteAnimationEvent[] {
+		const sheet = this.sheets.get(sheetId);
+		const animation = sheet?.sheet.animations[animName];
+		if (!animation?.events) return [];
+		const frame = Math.max(0, frameIndex) % animation.frames;
+		return animation.events.filter((event) => event.frame === frame);
 	}
 
 	getContext(): CanvasRenderingContext2D {

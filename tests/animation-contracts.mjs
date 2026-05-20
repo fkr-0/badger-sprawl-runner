@@ -79,6 +79,31 @@ for (const animation of [
 	assert(mossAnimations[animation], `moss_badger manifest missing runtime animation: ${animation}`);
 }
 
+for (const [animationName, requiredKinds] of Object.entries({
+	run: ['footstep'],
+	melee_claws: ['action_window', 'hitbox', 'vfx', 'cancel_window'],
+	melee_katana: ['action_window', 'hitbox', 'vfx', 'cancel_window'],
+	shoot_railgun: ['hitbox', 'vfx'],
+	rocket_boost: ['vfx'],
+	parry: ['action_window', 'vfx', 'cancel_window'],
+})) {
+	const animation = mossAnimations[animationName];
+	assert(animation?.events?.length > 0, `moss_badger.${animationName} must declare animation events`);
+	for (const kind of requiredKinds) {
+		assert(
+			animation.events.some((event) => event.kind === kind),
+			`moss_badger.${animationName} missing animation event kind: ${kind}`,
+		);
+	}
+}
+for (const animationName of ['melee_claws', 'melee_katana', 'shoot_railgun']) {
+	assert(mossAnimations[animationName].hitboxes?.length > 0, `moss_badger.${animationName} must declare hitboxes`);
+}
+for (const [animationName, animation] of Object.entries(mossAnimations)) {
+	assert(animation.anchor?.length === 2, `moss_badger.${animationName} must declare anchor`);
+	assert(animation.hurtboxes?.length > 0, `moss_badger.${animationName} must declare hurtboxes`);
+}
+
 assert(!stageScene.includes("playAnimation(animState, 'jump')"), 'StageRunScene must not reference absent jump animation');
 assert(!stageScene.includes("playAnimation(animState, 'attack'"), 'StageRunScene must not reference absent attack animation');
 for (const runtimeAnimation of ['jump_up', 'melee_katana', 'melee_claws']) {

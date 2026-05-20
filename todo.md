@@ -37,7 +37,7 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 - [x] `pnpm run typecheck` exited 0: all workspace packages and `apps/runner` typechecked.
 - [x] `pnpm run build` exited 0: packages built and Vite produced `apps/runner/dist`.
 - [x] `pnpm run smoke:runner` exited 0: runner bundle smoke contract passed.
-- [x] `pnpm run lint` exited 0: Biome checked 152 files with no fixes applied.
+- [x] `pnpm run lint` exited 0: Biome checked 153 files with no fixes applied.
 - [x] Working tree sprite/animation implementation is ready to commit after this checklist update.
 
 ## Sprite, texture, and animation pipeline
@@ -57,7 +57,7 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 - [x] Add HUD item icon rendering for rocket pack, railgun, katana, and stims through `item_icons`.
 - [ ] Replace placeholder PNG atlases with final production art while preserving manifest dimensions/names.
 - [x] Add character/NPC dialogue portrait rendering using the encoded character sheet contracts.
-- [ ] Add runtime animation events for hitboxes, hurtboxes, action windows, cancel windows, footsteps, and attack/VFX triggers.
+- [x] Add runtime animation events for hitboxes, hurtboxes, action windows, cancel windows, footsteps, and attack/VFX triggers.
 - [x] Persist `story_payload` pickups so collected story items are hidden from stage layouts after save/load state is supplied.
 
 ## Known deferred/non-blocking after v1.0

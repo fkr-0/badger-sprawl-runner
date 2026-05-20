@@ -24,6 +24,7 @@ const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
+const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const smokeMain = await text('apps/runner/src/smokeMain.ts');
@@ -89,6 +90,24 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+
+for (const required of [
+	'getAnimationEvents',
+	'SpriteAnimationEvent',
+	'animation.events.filter',
+]) {
+	assert(spriteRendererSource.includes(required), `SpriteRenderer missing animation event API: ${required}`);
+}
+for (const required of [
+	'advanceAnimationFrames',
+	'emitAnimationEvents',
+	"getAnimationEvents('moss_badger'",
+	"case 'footstep'",
+	"case 'vfx'",
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing animation event dispatch: ${required}`);
+}
 
 for (const required of [
 	'DialoguePortraitRenderer',

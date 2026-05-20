@@ -54,6 +54,7 @@ export class StageRunScene implements Scene {
 	private renderer: Renderer | null = null;
 	private hitstopRemaining = 0;
 	private screenShakeIntensity = 0;
+	private lastAnimationFrame = 0;
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.player = createPlayer();
@@ -121,7 +122,7 @@ export class StageRunScene implements Scene {
 		processMossInput(this.player, action, simDt, this.combat);
 
 		// Update animation state
-		this.updateAnimation();
+		this.updateAnimation(simDt);
 
 		// Update VFX
 		if (this.renderer) {
@@ -161,7 +162,7 @@ export class StageRunScene implements Scene {
 		ctx.restore();
 	}
 
-	private updateAnimation(): void {
+	private updateAnimation(dt: number): void {
 		const animState = this.player.animState as AnimationState;
 		if (!animState) return;
 
@@ -184,7 +185,56 @@ export class StageRunScene implements Scene {
 			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
 		}
 
-		// Animation frame advancement happens during render when sprite sheet is available
+		this.advanceAnimationFrames(animState, dt);
+	}
+
+	private advanceAnimationFrames(animState: AnimationState, dt: number): void {
+		const sheet = this.renderer?.getSpriteRenderer().getSheet('moss_badger');
+		const animation = sheet?.sheet.animations[animState.currentAnim];
+		if (!animation) return;
+
+		animState.timer += dt;
+		const frameTime = 1 / animation.fps;
+		while (animState.timer >= frameTime) {
+			animState.timer -= frameTime;
+			this.lastAnimationFrame = animState.frame;
+			animState.frame++;
+			if (animState.frame >= animation.frames) {
+				if (animState.loop) {
+					animState.frame = 0;
+				} else {
+					animState.frame = animation.frames - 1;
+				}
+			}
+			this.emitAnimationEvents(animState.currentAnim, animState.frame);
+			if (!animState.loop && animState.frame === animation.frames - 1) break;
+		}
+	}
+
+	private emitAnimationEvents(animName: string, frame: number): void {
+		const renderer = this.renderer;
+		if (!renderer) return;
+		for (const event of renderer.getSpriteRenderer().getAnimationEvents('moss_badger', animName, frame)) {
+			switch (event.kind) {
+				case 'footstep':
+					renderer.emitVFX(this.player.x + this.player.w / 2, this.player.y + this.player.h, 'dust', 2, 18);
+					break;
+				case 'vfx': {
+					const payload = event.payload ?? {};
+					const kind = typeof payload.kind === 'string' ? payload.kind : 'muzzle';
+					const count = typeof payload.count === 'number' ? payload.count : 4;
+					const spread = typeof payload.spread === 'number' ? payload.spread : 40;
+					renderer.emitVFX(
+						this.player.x + this.player.w / 2 + this.player.dir * 26,
+						this.player.y + this.player.h / 2,
+						kind,
+						count,
+						spread
+					);
+					break;
+				}
+			}
+		}
 	}
 
 	private emitJumpParticles(): void {
