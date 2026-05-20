@@ -548,7 +548,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add stage-detail debug panel for development builds showing payload, boss contract, tutorial beats, modifiers, branch outcomes, and result flags.
 - [x] Add save migration/versioning for expanded `StoryProgress` fields: `lioTrust`, `colonyAlignment`, `finalBroadcastDoctrine`, `resultFlags`.
 - [x] Add contract tests proving every `CampaignStage.todo` item marked done in `todo.md` has matching structured campaign data or flow behavior.
-- [ ] Split the large campaign data file into smaller content modules once the schema stabilizes.
+- [x] Split the large campaign data file into smaller content modules once the schema stabilizes.
 
 ## Runtime scene wiring
 

@@ -22,6 +22,12 @@ const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
 const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgressMigration.ts');
+const campaignBarrelSource = await text('apps/runner/src/game/Campaign.ts');
+const campaignSchemaSource = await text('apps/runner/src/game/campaign/schema.ts');
+const campaignDataSource = await text('apps/runner/src/game/campaign/campaignData.ts');
+const campaignSideQuestSource = await text('apps/runner/src/game/campaign/sideQuests.ts');
+const campaignMinigameSource = await text('apps/runner/src/game/campaign/minigames.ts');
+const campaignConsequenceSource = await text('apps/runner/src/game/campaign/branchConsequences.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
 const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
@@ -255,6 +261,26 @@ for (const required of [
 ]) {
 	assert(endlessSprawlRunSource.includes(required), `EndlessSprawlRun missing endless mode contract: ${required}`);
 }
+
+for (const required of [
+	"export * from './campaign/schema'",
+	"export { CAMPAIGN } from './campaign/campaignData'",
+	"export { CAMPAIGN_SIDE_QUESTS } from './campaign/sideQuests'",
+	"export { CAMPAIGN_MINIGAMES } from './campaign/minigames'",
+	"export { BRANCH_CONSEQUENCES } from './campaign/branchConsequences'",
+]) {
+	assert(campaignBarrelSource.includes(required), `Campaign barrel missing split export: ${required}`);
+}
+for (const [source, required] of [
+	[campaignSchemaSource, 'export interface CampaignStage'],
+	[campaignDataSource, 'export const CAMPAIGN'],
+	[campaignSideQuestSource, 'export const CAMPAIGN_SIDE_QUESTS'],
+	[campaignMinigameSource, 'export const CAMPAIGN_MINIGAMES'],
+	[campaignConsequenceSource, 'export const BRANCH_CONSEQUENCES'],
+]) {
+	assert(source.includes(required), `campaign content split missing marker: ${required}`);
+}
+
 for (const required of [
 	'STORY_PROGRESS_SCHEMA_VERSION',
 	'createDefaultStoryProgress',
@@ -376,13 +402,13 @@ for (const required of [
 
 
 
-for (const required of [
-	'BranchConsequence',
-	'BRANCH_CONSEQUENCES',
-	'companion_assist_ready',
-	'final_broadcast_toolkit',
+for (const [source, required] of [
+	[campaignSchemaSource, 'BranchConsequence'],
+	[campaignConsequenceSource, 'BRANCH_CONSEQUENCES'],
+	[campaignConsequenceSource, 'companion_assist_ready'],
+	[campaignConsequenceSource, 'final_broadcast_toolkit'],
 ]) {
-	assert(campaignSource.includes(required), `Campaign missing branch consequence contract: ${required}`);
+	assert(source.includes(required), `Campaign split missing branch consequence contract: ${required}`);
 }
 for (const required of [
 	'type BranchConsequence',
@@ -407,13 +433,13 @@ for (const required of ['stage.boss?.phases?.[0]', 'Boss phase:', 'bossPhase.mec
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing boss phase panel rendering: ${required}`);
 }
 
-for (const required of [
-	'StageMinigame',
-	'CAMPAIGN_MINIGAMES',
-	'toll-gate-rhythm',
-	'public-toolkit-broadcast',
+for (const [source, required] of [
+	[campaignSchemaSource, 'StageMinigame'],
+	[campaignMinigameSource, 'CAMPAIGN_MINIGAMES'],
+	[campaignMinigameSource, 'toll-gate-rhythm'],
+	[campaignMinigameSource, 'public-toolkit-broadcast'],
 ]) {
-	assert(campaignSource.includes(required), `Campaign missing minigame integration: ${required}`);
+	assert(source.includes(required), `Campaign split missing minigame integration: ${required}`);
 }
 for (const required of ['minigames?: StageMinigame[]', 'minigames: stage.minigames?.map']) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing minigame stage projection: ${required}`);
@@ -422,13 +448,13 @@ for (const required of ['stage.minigames?.[0]', 'Minigame:', 'minigame.kind']) {
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing minigame panel rendering: ${required}`);
 }
 
-for (const required of [
-	'SideQuest',
-	'CAMPAIGN_SIDE_QUESTS',
-	'meter-maidens-ledger',
-	'tools-not-heroes',
+for (const [source, required] of [
+	[campaignSchemaSource, 'SideQuest'],
+	[campaignSideQuestSource, 'CAMPAIGN_SIDE_QUESTS'],
+	[campaignSideQuestSource, 'meter-maidens-ledger'],
+	[campaignSideQuestSource, 'tools-not-heroes'],
 ]) {
-	assert(campaignSource.includes(required), `Campaign missing side quest integration: ${required}`);
+	assert(source.includes(required), `Campaign split missing side quest integration: ${required}`);
 }
 for (const required of ['sideQuests?: SideQuest[]', 'sideQuests: stage.sideQuests?.map']) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing side quest stage projection: ${required}`);
