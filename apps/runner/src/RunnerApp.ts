@@ -1,9 +1,10 @@
 import { EventBus } from './engine/EventBus';
 import { type Scene, SceneManager } from './engine/SceneManager';
-import { createGameFlow, type MenuOptionId } from './game/GameFlow';
+import type { MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
+import { createLocalStorageSaveDriver, loadGameFlow } from './storage/SaveStore';
 
 export interface RunnerApp {
 	start(): void;
@@ -14,7 +15,8 @@ export interface RunnerApp {
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const eventBus = new EventBus();
 	const sceneManager = new SceneManager({ eventBus, canvas });
-	const flow = createGameFlow();
+	const saveDriver = createLocalStorageSaveDriver(window.localStorage);
+	const flow = loadGameFlow(saveDriver);
 	const factories = createDefaultModeSceneFactories({
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
 	});

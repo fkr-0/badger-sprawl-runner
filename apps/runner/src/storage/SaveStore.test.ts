@@ -101,3 +101,29 @@ describe('save store', () => {
 		expect(loaded.getMeta()).toMatchObject({ blueprintShards: 0, purchasedSkills: [] });
 	});
 });
+
+it('migrates legacy v1 story progress through save load', () => {
+	const driver = createMemorySaveDriver({
+		'badger-sprawl-runner.save.v1': JSON.stringify({
+			version: 1,
+			meta: { blueprintShards: 2 },
+			storyProgress: {
+				currentStageId: 'asteroid-redoubt',
+				completedStageIds: ['lower-sprawl', 'lower-sprawl'],
+				completedChapterIds: ['ch01'],
+				acquiredPayloads: ['wafer_key'],
+				resultFlags: ['lio_protected', 'colony_alignment_supplier', 'broadcast_publish_tools'],
+			},
+		}),
+	});
+
+	const loaded = loadGameFlow(driver);
+	expect(loaded.getStoryProgress()).toMatchObject({
+		schemaVersion: 2,
+		currentStageId: 'asteroid-redoubt',
+		completedStageIds: ['lower-sprawl'],
+		lioTrust: 'protected',
+		colonyAlignment: 'supplier',
+		finalBroadcastDoctrine: 'publish-tools',
+	});
+});

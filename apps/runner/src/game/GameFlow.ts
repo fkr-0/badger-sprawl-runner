@@ -8,6 +8,7 @@ import {
 	type StageMinigame,
 } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
+import { createDefaultStoryProgress, migrateStoryProgress } from './StoryProgressMigration';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills' | 'endless';
 
 export interface MenuOption {
@@ -111,6 +112,7 @@ export interface MetaState {
 }
 
 export interface StoryProgress {
+	schemaVersion: number;
 	currentStageId: string;
 	completedStageIds: string[];
 	completedChapterIds: string[];
@@ -245,17 +247,6 @@ function createDefaultMetaState(): MetaState {
 	};
 }
 
-function createDefaultStoryProgress(): StoryProgress {
-	return {
-		currentStageId: STAGES[0]?.id ?? '',
-		completedStageIds: [],
-		completedChapterIds: [],
-		acquiredPayloads: [],
-		resultFlags: [],
-		campaignComplete: false,
-	};
-}
-
 function createSkillMap(purchasedSkills: readonly string[]): Map<string, SkillNode> {
 	const nodes = new Map(SKILLS.map((skill) => [skill.id, { ...skill }]));
 	for (const skillId of purchasedSkills) {
@@ -307,7 +298,7 @@ export class GameFlow {
 
 	constructor(meta: Partial<MetaState> = {}, storyProgress: Partial<StoryProgress> = {}) {
 		this.meta = { ...createDefaultMetaState(), ...meta };
-		this.storyProgress = { ...createDefaultStoryProgress(), ...storyProgress };
+		this.storyProgress = migrateStoryProgress({ ...createDefaultStoryProgress(), ...storyProgress }).progress;
 		this.skills = createSkillMap(this.meta.purchasedSkills);
 	}
 

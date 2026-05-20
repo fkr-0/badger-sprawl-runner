@@ -546,7 +546,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add a result/branch recap panel after every stage choice: selected option, consequence text, result flag, and heat/favor changes.
 - [x] Surface story progress in the menu: current chapter, completed chapters, campaign-complete badge, and final broadcast doctrine.
 - [x] Add stage-detail debug panel for development builds showing payload, boss contract, tutorial beats, modifiers, branch outcomes, and result flags.
-- [ ] Add save migration/versioning for expanded `StoryProgress` fields: `lioTrust`, `colonyAlignment`, `finalBroadcastDoctrine`, `resultFlags`.
+- [x] Add save migration/versioning for expanded `StoryProgress` fields: `lioTrust`, `colonyAlignment`, `finalBroadcastDoctrine`, `resultFlags`.
 - [ ] Add contract tests proving every `CampaignStage.todo` item marked done in `todo.md` has matching structured campaign data or flow behavior.
 - [ ] Split the large campaign data file into smaller content modules once the schema stabilizes.
 
@@ -574,7 +574,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Menu and save UX
 
-- [ ] Show save-aware story CTA: `New Story`, `Continue`, or `Campaign Complete` based on `StoryProgress`.
+- [x] Show save-aware story CTA: `New Story`, `Continue`, or `Campaign Complete` based on `StoryProgress`.
 - [ ] Add save-slot management: new slot, load slot, delete slot, export/import save JSON.
 - [ ] Add reset-campaign confirmation so players can restart without wiping settings.
 - [ ] Add visible autosave feedback after stage completion, branch choice, skill purchase, and campaign completion.

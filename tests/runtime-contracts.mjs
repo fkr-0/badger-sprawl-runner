@@ -21,6 +21,7 @@ const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
+const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgressMigration.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
 const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
@@ -181,7 +182,8 @@ for (const required of [
 for (const required of [
 	'createDefaultModeSceneFactories({',
 	'onStartStoryStage: (scene) => sceneManager.replace(scene)',
-	'createGameFlow()',
+	'createLocalStorageSaveDriver(window.localStorage)',
+	'loadGameFlow(saveDriver)',
 	'storyProgress: flow.getStoryProgress()',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`);
@@ -242,6 +244,24 @@ for (const required of [
 ]) {
 	assert(endlessSprawlRunSource.includes(required), `EndlessSprawlRun missing endless mode contract: ${required}`);
 }
+for (const required of [
+	'STORY_PROGRESS_SCHEMA_VERSION',
+	'createDefaultStoryProgress',
+	'migrateStoryProgress',
+	'schema-v2-story-branches',
+	'lio-trust-inferred',
+	'colony-alignment-inferred',
+	'final-broadcast-doctrine-inferred',
+]) {
+	assert(storyProgressMigrationSource.includes(required), `StoryProgressMigration missing save migration contract: ${required}`);
+}
+for (const required of [
+	'loadGameFlow(saveDriver)',
+	'createLocalStorageSaveDriver(window.localStorage)',
+]) {
+	assert(runnerApp.includes(required), `RunnerApp missing save-backed GameFlow load: ${required}`);
+}
+
 for (const required of [
 	'buildStoryProgressSummary',
 	'formatStoryProgressSummary',

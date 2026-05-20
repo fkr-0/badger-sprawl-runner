@@ -4,6 +4,7 @@ import {
 	type MetaState,
 	type StoryProgress,
 } from '../game/GameFlow';
+import { STORY_PROGRESS_SCHEMA_VERSION, migrateStoryProgress } from '../game/StoryProgressMigration';
 
 export const SAVE_KEY = 'badger-sprawl-runner.save.v1';
 
@@ -22,7 +23,7 @@ export function saveGameFlow(driver: SaveDriver, flow: GameFlow): void {
 	const payload: SavePayloadV1 = {
 		version: 1,
 		meta: flow.getMeta(),
-		storyProgress: flow.getStoryProgress(),
+		storyProgress: { ...flow.getStoryProgress(), schemaVersion: STORY_PROGRESS_SCHEMA_VERSION },
 	};
 	driver.setItem(SAVE_KEY, JSON.stringify(payload));
 }
@@ -61,31 +62,7 @@ export function createMemorySaveDriver(seed: Record<string, string> = {}): SaveD
 
 function sanitizeStoryProgress(progress: unknown): Partial<StoryProgress> {
 	if (!progress || typeof progress !== 'object') return {};
-	const value = progress as Partial<StoryProgress>;
-	return {
-		currentStageId: typeof value.currentStageId === 'string' ? value.currentStageId : undefined,
-		completedStageIds: stringArray(value.completedStageIds),
-		acquiredPayloads: stringArray(value.acquiredPayloads),
-		resultFlags: stringArray(value.resultFlags),
-		lioTrust: lioTrustBranch(value.lioTrust),
-		colonyAlignment: colonyAlignmentBranch(value.colonyAlignment),
-		finalBroadcastDoctrine: finalBroadcastBranch(value.finalBroadcastDoctrine),
-		campaignComplete: value.campaignComplete === true,
-	};
-}
-
-function lioTrustBranch(value: unknown): StoryProgress['lioTrust'] {
-	return value === 'exposed' || value === 'protected' || value === 'baited' ? value : undefined;
-}
-
-function colonyAlignmentBranch(value: unknown): StoryProgress['colonyAlignment'] {
-	return value === 'chorus' || value === 'army' || value === 'supplier' ? value : undefined;
-}
-
-function finalBroadcastBranch(value: unknown): StoryProgress['finalBroadcastDoctrine'] {
-	return value === 'abolish-skylock' || value === 'chorus-control' || value === 'publish-tools'
-		? value
-		: undefined;
+	return migrateStoryProgress(progress as Partial<StoryProgress>).progress;
 }
 
 function sanitizeMeta(meta: Partial<MetaState>): Partial<MetaState> {
