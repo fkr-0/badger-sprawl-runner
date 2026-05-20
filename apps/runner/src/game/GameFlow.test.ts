@@ -301,6 +301,16 @@ describe('Badger Sprawl Runner game flow', () => {
 });
 
 
+
+	it('exposes cloned side quests through stage specs', () => {
+		const flow = createGameFlow();
+		const stage = flow.getStages()[0];
+		expect(stage?.sideQuests?.[0]?.id).toBe('meter-maidens-ledger');
+		if (!stage?.sideQuests) throw new Error('expected side quests');
+		stage.sideQuests[0].title = 'mutated side quest';
+		expect(flow.getStages()[0]?.sideQuests?.[0]?.title).toBe('Meter Maidens Ledger');
+	});
+
 	it('exposes a cloned current stage with choice outcomes while story mode is staged', () => {
 		const flow = createGameFlow();
 		flow.selectMenu('story');

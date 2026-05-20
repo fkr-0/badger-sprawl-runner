@@ -26,6 +26,7 @@ const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.t
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
+const campaignSource = await text('apps/runner/src/game/Campaign.ts');
 const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
@@ -95,6 +96,22 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+
+for (const required of [
+	'SideQuest',
+	'CAMPAIGN_SIDE_QUESTS',
+	'meter-maidens-ledger',
+	'tools-not-heroes',
+]) {
+	assert(campaignSource.includes(required), `Campaign missing side quest integration: ${required}`);
+}
+for (const required of ['sideQuests?: SideQuest[]', 'sideQuests: stage.sideQuests?.map']) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing side quest stage projection: ${required}`);
+}
+for (const required of ['stage.sideQuests?.[0]', 'Side job:', 'sideQuest.objective.slice']) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing side quest panel rendering: ${required}`);
+}
 
 for (const required of [
 	'getPriceModifier',

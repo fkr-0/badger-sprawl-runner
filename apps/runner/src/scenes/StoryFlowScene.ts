@@ -150,11 +150,17 @@ export class StoryFlowScene implements Scene {
 			ctx.fillStyle = selected ? '#cfeee4' : '#8d94a7';
 			ctx.fillText(outcome.consequence.slice(0, 92), panelX + 62, y + 17);
 		}
+		const sideQuest = stage.sideQuests?.[0];
+		if (sideQuest) {
+			ctx.fillStyle = '#92a4be';
+			ctx.fillText(`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`, panelX + 22, panelY + 140);
+		}
+
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 154);
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 158);
 		if (this.lastChoiceResult) {
 			ctx.fillStyle = '#67f3c4';
-			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 154);
+			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 158);
 		}
 	}
 

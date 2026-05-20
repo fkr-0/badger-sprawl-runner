@@ -90,7 +90,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
 - [x] Add trust/heat effects to merchant prices: ShopEngine now applies orbitHeat markup, dubFavor discounts, and guile discounts, and ShopScene purchases from generated offers.
 - [~] Implement branch consequences from dialogue choices: StoryFlow choice UI now calls GameFlow.chooseStageChoice, and branch meta deltas now affect shop prices through heat/favor; stage-specific gameplay consequences remain.
-- [ ] Add side quest system integration
+- [x] Add side quest system integration: campaign stages now expose typed side quests through GameFlow and StoryFlow renders the current stage side job.
 - [ ] Connect chapter progression to actual game flow
 
 ## Content alignment
@@ -101,7 +101,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [ ] Implement all 8 chapter stages with proper content
 - [~] Add all boss phases as specified in YAML
 - [~] Implement all heist payloads and dramatic questions: stage choice UI now exposes dramatic questions; final stage-specific gameplay payload integrations remain.
-- [ ] Add side quests for each chapter
+- [x] Add side quests for each chapter: every campaign stage now has at least one typed side quest contract.
 - [ ] Add minigames for each chapter
 
 ---

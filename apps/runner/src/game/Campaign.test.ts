@@ -34,6 +34,20 @@ describe('Brechtian story campaign skeleton', () => {
 		]);
 	});
 
+
+	it('defines one integrated side quest for every campaign stage', () => {
+		for (const stage of CAMPAIGN.stages) {
+			expect(stage.sideQuests?.length).toBeGreaterThanOrEqual(1);
+			const quest = stage.sideQuests?.[0];
+			expect(quest?.id).toBeTruthy();
+			expect(quest?.title).toBeTruthy();
+			expect(quest?.giver).toBeTruthy();
+			expect(quest?.objective).toBeTruthy();
+			expect(quest?.reward).toBeTruthy();
+			expect(quest?.stageHook).toBeTruthy();
+		}
+	});
+
 	it('prints every campaign stage into the global todo checklist', () => {
 		const todo = readFileSync(new URL('../../../../todo.md', import.meta.url), 'utf8');
 

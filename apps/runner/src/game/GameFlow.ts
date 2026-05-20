@@ -1,4 +1,4 @@
-import { CAMPAIGN, type CampaignStage } from './Campaign';
+import { CAMPAIGN, type CampaignStage, type SideQuest } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
 
@@ -23,6 +23,7 @@ export interface StageSpec {
 	tutorialBeats?: TutorialBeat[];
 	choiceOutcomes?: ChoiceOutcome[];
 	traversalHazards?: TraversalHazard[];
+	sideQuests?: SideQuest[];
 }
 
 export interface DialogueSpec {
@@ -160,6 +161,7 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
 	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+	sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
 }));
 
 const DIALOGUES: Record<string, DialogueSpec> = Object.fromEntries(
@@ -302,6 +304,7 @@ export class GameFlow {
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+			sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
 		}));
 	}
 
@@ -318,6 +321,7 @@ export class GameFlow {
 					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
 				}
 			: undefined;
 	}
