@@ -114,7 +114,7 @@ export class DialogueSystem {
     if (!scene || this.currentState.currentLine >= scene.dialogueLines.length) {
       return null;
     }
-    return scene.dialogueLines[this.currentState.currentLine];
+    return scene.dialogueLines[this.currentState.currentLine] ?? null;
   }
 
   /**
@@ -133,11 +133,11 @@ export class DialogueSystem {
       if (scene.choices && scene.choices.length > 0) {
         // We've reached choices - don't auto-complete
         return false;
-      } else {
-        // Scene complete
-        this.completeScene();
-        return false;
       }
+
+      // Scene complete
+      this.completeScene();
+      return false;
     }
 
     return true;

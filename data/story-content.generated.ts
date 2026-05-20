@@ -1,0 +1,2117 @@
+/**
+ * Generated from docs/story-flavour.yml.
+ * Regenerate intentionally; do not hand-edit story data in this file.
+ */
+
+import type { StoryContent } from "./story-content";
+
+export const GENERATED_STORY_CONTENT = {
+  "schemaVersion": "1.0.0",
+  "sourceBasis": "Uploaded Story Bible for Badger Sprawl Runner",
+  "genre": "2D adventure platformer hack-and-slash with heist, rhythm, and coding-gate systems",
+  "creativeDirection": {
+    "coreTone": [
+      "cyber-noir street pressure",
+      "dub colony warmth",
+      "orbital class satire",
+      "Brechtian placards",
+      "hardboiled humor",
+      "mathematical logic as gameplay texture"
+    ],
+    "flavourSourcesAsBroadAtmosphere": [
+      "noir and hardboiled detective mood",
+      "classic cyberpunk sprawl density",
+      "dub and early hip-hop sound-system culture",
+      "graffiti/trainwriting craft",
+      "jazz-club intimacy",
+      "political philosophy about class, discipline, absurdity, and authority",
+      "hacker jargon and public cryptography"
+    ],
+    "styleRule": "Use references as broad inspiration only. Keep all dialogue, lore, character voices, and lyrics original."
+  },
+  "universe": {
+    "name": "The Rent-Locked Sky",
+    "planet": "Brackwater",
+    "planetDescription": "A wet industrial planet of canal cities, marsh tunnels, factories, rain markets, and sprawl towers.",
+    "orbitalShell": "The Nacre Ring",
+    "asteroid": "Speakerstone-9",
+    "rebelNetwork": "The Choir of Static",
+    "corporatePower": "Vane Directorate",
+    "majorLedgers": {
+      "streetLedger": "meters routes, bridges, water, clinics, and neighborhood gates",
+      "liftLedger": "classifies cargo and people for orbital movement",
+      "skyLock": "leases air, transit, sunlight, and broadcast rights",
+      "choirband": "pirate radio mesh for mutual aid and rebel coordination"
+    }
+  },
+  "gearAndSystems": [
+    {
+      "id": "whisker_wetware_mk0",
+      "name": "Whisker Wetware MK-0",
+      "function": "signal-sensing whisker implants reveal hidden routes, lies, and ownership tech",
+      "prompt": "wetware whisker UI icon; six chrome whiskers over green waveform; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    },
+    {
+      "id": "clawline_protocol",
+      "name": "Clawline Protocol",
+      "function": "melee/parry tree: cut locks, disarm weapons, expose boss systems",
+      "prompt": "claw upgrade emblem; three claw marks across a red turnstile; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    },
+    {
+      "id": "skankpack_7",
+      "name": "Skankpack-7 Rocket Rig",
+      "function": "short-burst rocket pack recharged by offbeat movement",
+      "prompt": "badger rocket backpack; patched cylinders, bass valve, soot, stencil 7; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    },
+    {
+      "id": "turing_ratcheter",
+      "name": "Turing Ratcheter",
+      "function": "state-machine debugger for code gates and enemy patterns",
+      "prompt": "portable hacker debugger; radio shell, paper tape spool, logic lamps; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    },
+    {
+      "id": "godel_deadbolt",
+      "name": "Gödel Deadbolt",
+      "function": "logic lock that cannot prove its own safety, used in coding puzzles",
+      "prompt": "logic deadbolt terminal; recursive bracket glyphs, toggles, amber errors; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    },
+    {
+      "id": "bass_reactor_core",
+      "name": "Bass Reactor Core",
+      "function": "powers rebel transmitters, shields, rhythm puzzles, and crowd buffs",
+      "prompt": "bass reactor core; subwoofer coil in amber coolant, copper cables; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+    }
+  ],
+  "worldIndex": [
+    {
+      "world": "Lower Sprawl",
+      "chapters": [
+        "ch01_lower_sprawl",
+        "ch02_drainmarket"
+      ],
+      "aesthetic": "rain noir, toll gates, drains, market steam, graffiti maps, street wisdom"
+    },
+    {
+      "world": "Chrome Arcology",
+      "chapters": [
+        "ch03_chrome_arcology"
+      ],
+      "aesthetic": "polished luxury over hidden labor, mirrored surfaces, service corridors"
+    },
+    {
+      "world": "Straylight Mirage",
+      "chapters": [
+        "ch04_straylight_mirage"
+      ],
+      "aesthetic": "orbital banquet masks, false sunsets, etiquette as violence"
+    },
+    {
+      "world": "Dub Colony",
+      "chapters": [
+        "ch05_dub_colony"
+      ],
+      "aesthetic": "warm bass, greenhouse cars, repair decks, democratic argument"
+    },
+    {
+      "world": "Antenna Barrens",
+      "chapters": [
+        "ch06_antenna_barrens"
+      ],
+      "aesthetic": "dead uplinks, desert logic, black ice, public manuals, tower graffiti"
+    },
+    {
+      "world": "Orbital Lift",
+      "chapters": [
+        "ch07_orbital_lift"
+      ],
+      "aesthetic": "vertical logistics cathedral, cargo prisons, scanner halos, wind chase"
+    },
+    {
+      "world": "Asteroid Redoubt",
+      "chapters": [
+        "ch08_asteroid_redoubt"
+      ],
+      "aesthetic": "mined moon, transmitter fortress, final commons, sky authorship"
+    }
+  ],
+  "globalIdleActions": [
+    {
+      "seconds": 8,
+      "animation": "Moss sniffs the air and wetware whiskers spark.",
+      "line": "Moss: Street's still charging rent just for standing on it."
+    },
+    {
+      "seconds": 16,
+      "animation": "Rook projects a decision tree then deletes every polite branch.",
+      "line": "Rook Null: Inaction has a cost. The Directorate bills it monthly."
+    },
+    {
+      "seconds": 24,
+      "animation": "Auntie's pirate signal bleeds into the HUD.",
+      "line": "Auntie Subharmonic: Even silence got rhythm. Use yours."
+    }
+  ],
+  "reusableBarks": {
+    "merchant": [
+      "Auntie: I got batteries, broth, and uncomfortable truths.",
+      "Murr: This item fell off a truck that was oppressing someone."
+    ],
+    "enemyLowHealth": [
+      "He clipped my meter!",
+      "Unlicensed impact detected!",
+      "Stop resisting the floor plan!"
+    ],
+    "playerParry": [
+      "Counter-pattern!",
+      "That defense was not filed in triplicate!",
+      "Your proof has claws!"
+    ]
+  },
+  "chapters": [
+    {
+      "chapterId": "ch01_lower_sprawl",
+      "stageIndex": 1,
+      "act": "Prologue / Act I",
+      "world": "Lower Sprawl",
+      "stageTitle": "The Song of the Toll",
+      "levelCodename": "STG_01_TOLL_RAIN",
+      "primaryVerb": "jump_run",
+      "heistPayload": "Wafer Key",
+      "dramaticQuestion": "Who owns the street?",
+      "placard": "A city that charges for crossing the street will one day charge for breathing.",
+      "scenicDescription": "A rain-slick street maze of food stalls, cable nests, scooters, locked bridges, and drain routes. Every crossing has a smiling toll mascot. Children know the pipe maps because the bridges have become luxury goods.",
+      "worldBuilding": [
+        "Street Ledger meters walking, water access, clinics, and elevator permissions through the same debt backend.",
+        "Graffiti crews mark free routes with chalk arrows, bubble letters, and tiny badger paw icons.",
+        "Pirate dub signal first appears as bass leaking from drainage grates."
+      ],
+      "areas": [
+        {
+          "name": "Rain Turnstiles",
+          "gameplay": "jump over toll arms and spark puddles",
+          "textures": [
+            "wet asphalt",
+            "peeling fee decals",
+            "neon noodle steam"
+          ]
+        },
+        {
+          "name": "Kettle Bridge Pipes",
+          "gameplay": "vertical route through steam vents",
+          "textures": [
+            "rusted ribs",
+            "chalk route marks",
+            "hacked antenna cans"
+          ]
+        },
+        {
+          "name": "Ledger Office Annex",
+          "gameplay": "first code gate and wafer-key theft",
+          "textures": [
+            "receipt paper waterfalls",
+            "green CRTs",
+            "wax seals"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "moss",
+          "name": "Moss",
+          "role": "player courier",
+          "voice": "dry, stubborn, observant",
+          "visualPrompt": "Moss the badger; patched courier coat, chrome wetware whiskers, claw wraps, rain sheen; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I don't hate gates. I hate gates that smirk.",
+            "Street smells wrong. Wet coins and someone else's law."
+          ]
+        },
+        {
+          "id": "auntie_subharmonic",
+          "name": "Auntie Subharmonic",
+          "role": "pirate-radio mentor",
+          "voice": "warm, teasing, sharp",
+          "visualPrompt": "elder possum merchant; record-shop shawl, cassette charms, portable turntable, gold tooth; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "First rule of a toll booth, child: it pretends the road was born yesterday.",
+            "Take the key, but listen to what it unlocks."
+          ]
+        },
+        {
+          "id": "juno_jar",
+          "name": "Juno Jar",
+          "role": "pipe kid map-runner",
+          "voice": "fast, funny, practical",
+          "visualPrompt": "rat child map-runner; oversized rain poncho, chalk tube, muddy boots; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Paid bridge is for tall people with passwords.",
+            "You got claws. I got chalk. That's almost a union."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE STREET WAS PUBLIC UNTIL SOMEONE LEARNED TO COUNT FOOTSTEPS."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Just a key. In, out, paws dry."
+          },
+          {
+            "speaker": "Auntie Subharmonic",
+            "text": "Dry paws? In this city? Baby, you're already dreaming."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Captain Grin",
+            "text": "Movement without permission is disorder."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Funny. I was moving fine until you arrived."
+          }
+        ],
+        "exit": [
+          {
+            "speaker": "Rook Null",
+            "text": "You stole a small key from a large prison."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss flicks rain from his claws.",
+          "line": "Moss: I can hear the meter thinking about me."
+        },
+        {
+          "seconds": 16,
+          "animation": "A toll gate prints a receipt for Moss standing still.",
+          "line": "Toll Mascot: Loitering event politely recorded."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq01_pipe_map",
+          "title": "Chalk Map for the Short-Legged",
+          "giver": "Juno Jar",
+          "objective": "Collect chalk marks and erase child-route fees.",
+          "reward": "Unlock pipe shortcuts and +2 Choir trust.",
+          "dialogue": [
+            {
+              "speaker": "Juno",
+              "text": "You made the map bigger."
+            },
+            {
+              "speaker": "Moss",
+              "text": "No. I made the lie smaller."
+            }
+          ]
+        },
+        {
+          "id": "sq01_noodle_radio",
+          "title": "Noodle Stall Antenna",
+          "giver": "Ma Oxbow",
+          "objective": "Repoint soup-can antennas to boost pirate signal.",
+          "reward": "Hidden rooms get bass-pulse hints.",
+          "dialogue": [
+            {
+              "speaker": "Ma Oxbow",
+              "text": "Soup feeds bodies. Signal feeds running feet."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg01_turnstile_offbeat",
+          "name": "Offbeat Turnstile Hop",
+          "type": "rhythm_platforming",
+          "rules": "Jump on bass offbeats to pass toll arms without paying.",
+          "reward": "Soul-Sample Token"
+        },
+        {
+          "id": "mg01_receipt_logic",
+          "name": "Receipt Logic Scratch",
+          "type": "simple_logic_gate",
+          "rules": "Reorder paper-tape rules so 'walker exists' no longer implies 'walker owes'.",
+          "reward": "Wafer Key fragment"
+        }
+      ],
+      "allies": [
+        "Auntie Subharmonic: radio hints",
+        "Juno Jar: shortcut chalk after side quest"
+      ],
+      "enemies": [
+        {
+          "id": "rent_cop_piker",
+          "name": "Rent Cop Piker",
+          "modelName": "ENM_RENTCOP_PIKE_A",
+          "behavior": "marches and jabs across lanes",
+          "callouts": [
+            "Unlicensed running!",
+            "Your paws are in arrears!"
+          ],
+          "spritePrompt": "weasel rent cop; raincoat armor, toll pike, glowing receipt pad; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "whistle chop, coin clack, boot stomp"
+        },
+        {
+          "id": "turnstile_mite",
+          "name": "Turnstile Mite",
+          "modelName": "ENM_TURNSTILE_MITE",
+          "behavior": "small robot that spins into a hazard",
+          "callouts": [
+            "Click-click-pay!",
+            "Route not recognized!"
+          ],
+          "spritePrompt": "turnstile mite robot; crab body made of gate arms and coin slots; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "ratchet clicks, servo squeal"
+        }
+      ],
+      "boss": {
+        "name": "Tollbooth Captain Grin",
+        "modelName": "BOSS_CAPTAIN_GRIN_TOLLMECH",
+        "phases": [
+          "Polite Collection",
+          "Debt Spiral",
+          "Public Road"
+        ],
+        "defeatLine": "Without fees, how will anyone know where they are allowed to stand?",
+        "spritePrompt": "tollbooth captain boss; smiling official in toll booth exosuit, barrier arms as weapons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "rain, scooters, receipt printers, turnstile slaps, dub echoes through drains",
+      "musicalTheme": {
+        "name": "Toll Rain Skank",
+        "bpm": 88,
+        "palette": "dub organ, walking bass, brushed snare, muted trumpet, rain foley"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_LOWER_SPRAWL_RAINMARKET",
+          "prompt": "rain market background; food steam, hanging cables, toll gates, graffiti, noir lights; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "TEX_WET_ASPHALT_DECALS",
+          "prompt": "wet asphalt texture; puddles, route-fee stickers, faded crosswalk, grime; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_WAFER_KEY",
+          "prompt": "wafer key collectible; translucent circuit wafer with street-map veins; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch02_drainmarket",
+      "stageIndex": 2,
+      "act": "Act I",
+      "world": "Drainmarket",
+      "stageTitle": "Knife Weather Under the City",
+      "levelCodename": "STG_02_DRAINMARKET_CUT",
+      "primaryVerb": "melee_parry",
+      "heistPayload": "Stim Cache",
+      "dramaticQuestion": "Who profits from injury?",
+      "placard": "The wound was privatized before the bandage was invented.",
+      "scenicDescription": "A storm-drain bazaar under the city where clinics, DJs, graffiti elders, and repair crews share space with knife-drone nests. The ceiling drips in time with basement funk breaks.",
+      "worldBuilding": [
+        "Clinic contracts convert injury into debt.",
+        "Underground jazz rooms double as strike kitchens.",
+        "Trainwriting crews use tunnel walls as public newspapers."
+      ],
+      "areas": [
+        {
+          "name": "Sump Bazaar",
+          "gameplay": "parry tutorial and healing ethics",
+          "textures": [
+            "medical neon",
+            "puddle reflections",
+            "milk crates of bootleg stims"
+          ]
+        },
+        {
+          "name": "Fan Nest",
+          "gameplay": "arena fights around industrial fans",
+          "textures": [
+            "surgical blade nests",
+            "red mist lights",
+            "greasy fan grates"
+          ]
+        },
+        {
+          "name": "Blue Note Squat",
+          "gameplay": "safe room and beat-making minigame",
+          "textures": [
+            "candles",
+            "sampler pads",
+            "sax case",
+            "worker murals"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "rook_null",
+          "name": "Rook Null",
+          "role": "former logistics AI companion",
+          "voice": "calm, precise, tender in odd ways",
+          "visualPrompt": "raven radio hologram; CRT scanlines, waveform feathers, geometric eyes; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Knife drones are predictable. Employers are also predictable, but worse.",
+            "The market is not hidden. It is below the class that reports maps."
+          ]
+        },
+        {
+          "id": "dr_mina_suture",
+          "name": "Dr. Mina Suture",
+          "role": "back-alley medic",
+          "voice": "weary, practical, angry",
+          "visualPrompt": "mole medic; headlamp goggles, patched white coat, stim belt; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I patch them up. The clinic sells them back to the accident.",
+            "Take the cache. Leave the tracking dye."
+          ]
+        },
+        {
+          "id": "dj_calculus",
+          "name": "DJ Calculus",
+          "role": "beatmaker and squat organizer",
+          "voice": "nerdy, streetwise, playful",
+          "visualPrompt": "hedgehog DJ; thick glasses, sampler pads, chalk equations on jacket; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Four bars, two breaks, one unpaid landlord. That's basically algebra."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "A CITY THAT BREAKS YOU WILL SELL YOU CRUTCHES."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Smells like rust, soup, and trouble."
+          },
+          {
+            "speaker": "Rook Null",
+            "text": "Trouble is a billing category here."
+          }
+        ],
+        "medic": [
+          {
+            "speaker": "Mina",
+            "text": "If you're here to rob me, take the invoices too."
+          },
+          {
+            "speaker": "Moss",
+            "text": "First warm welcome I've had all day."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Knife-Drone Nest",
+            "text": "TRIAGE MODE: PROFITABLE."
+          },
+          {
+            "speaker": "Rook Null",
+            "text": "It has mistaken cruelty for optimization."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss watches a drip land on beat.",
+          "line": "Moss: Even the ceiling's got timing down here."
+        },
+        {
+          "seconds": 18,
+          "animation": "Rook draws a probability cloud over a puddle.",
+          "line": "Rook Null: Stillness reduces stab risk and liberation odds."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq02_scrub_dye",
+          "title": "Scrub the Dye",
+          "giver": "Dr. Mina Suture",
+          "objective": "Remove tracking dye from stolen stims.",
+          "reward": "Clean Stims heal without Heat gain.",
+          "dialogue": [
+            {
+              "speaker": "Mina",
+              "text": "Clean medicine. Imagine the luxury."
+            }
+          ]
+        },
+        {
+          "id": "sq02_wall_newspaper",
+          "title": "Wall Newspaper",
+          "giver": "Sable Serif",
+          "objective": "Tag three hidden walls with public warnings.",
+          "reward": "Graffiti hints appear in later stages.",
+          "dialogue": [
+            {
+              "speaker": "Sable Serif",
+              "text": "A tag ain't vandalism if the wall was lying first."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg02_breakbeat_parry",
+          "name": "Breakbeat Parry Lab",
+          "type": "combat_rhythm",
+          "rules": "Match knife-drone attacks to kick, snare, ghost-note windows.",
+          "reward": "Perfect Parry bass pulse"
+        },
+        {
+          "id": "mg02_throwup_route",
+          "name": "Throw-Up Route Tag",
+          "type": "timed_line_trace",
+          "rules": "Trace a bubble-letter warning before scanners return.",
+          "reward": "Hidden route layer"
+        }
+      ],
+      "allies": [
+        "Rook Null: enemy state reveal",
+        "Dr. Mina Suture: clean healing after side quest"
+      ],
+      "enemies": [
+        {
+          "id": "knife_drone",
+          "name": "Knife-Drone Fledgling",
+          "modelName": "ENM_KNIFE_DRONE_SMALL",
+          "behavior": "diagonal dives, parryable",
+          "callouts": [
+            "Patient acquired!",
+            "Blade says hello!"
+          ],
+          "spritePrompt": "knife drone; insect drone with scalpel wings and red clinic light; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "scalpel zing, hi-hat ticks"
+        },
+        {
+          "id": "clinic_repo",
+          "name": "Clinic Repo Thug",
+          "modelName": "ENM_CLINIC_REPO_BRUISER",
+          "behavior": "clipboard shield, baton swing",
+          "callouts": [
+            "That bruise has an owner!",
+            "Medicine ain't charity!"
+          ],
+          "spritePrompt": "clinic repo thug; rat bruiser with clipboard shield and medical-debt armor; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "clipboard thwack, rubber glove snap"
+        }
+      ],
+      "boss": {
+        "name": "Knife-Drone Nest",
+        "modelName": "BOSS_KNIFE_DRONE_NEST",
+        "phases": [
+          "Triage Swarm",
+          "Invoice Bloom",
+          "Public Clinic"
+        ],
+        "defeatLine": "ERROR. CHARITY HAS ENTERED THE ROOM.",
+        "spritePrompt": "knife drone nest boss; giant nest of scalpels, syringes, fan blades, clinic receipts; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "sewer drips, breakbeats, fan blades, glass vials, scalpel hi-hats",
+      "musicalTheme": {
+        "name": "Sump Break Clinic",
+        "bpm": 96,
+        "palette": "dry funk break, rubber bass, muted sax ghosts, sewer drip percussion"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_DRAINMARKET_SUMP",
+          "prompt": "drainmarket background; sewer bazaar, medicine stalls, graffiti, puddles, old rail tunnel; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_STIM_CACHE_CLEAN",
+          "prompt": "clean stim cache; medical crate with glowing vials and scratched-off barcodes; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_MPC_SAMPLER",
+          "prompt": "beat sampler prop; worn drum machine, cassette deck, stickers, glowing pads; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch03_chrome_arcology",
+      "stageIndex": 3,
+      "act": "Act I",
+      "world": "Chrome Arcology",
+      "stageTitle": "The Elevator Seed",
+      "levelCodename": "STG_03_CHROME_SEED",
+      "primaryVerb": "railgun_precision",
+      "heistPayload": "Elevator Seed",
+      "dramaticQuestion": "Who rides above hidden labor?",
+      "placard": "The tower calls itself vertical progress. Ask who holds the floor up.",
+      "scenicDescription": "A spotless tower of glass, citrus polish, indoor rain curtains, and private elevators. Behind the mirrored walls are grease-hot service corridors, worker bunks, freight rails, and prisoners moved as cargo.",
+      "worldBuilding": [
+        "Elevator permissions create vertical class geography.",
+        "Luxury surfaces hide maintenance violence.",
+        "The elevator seed grows route authority like a plant."
+      ],
+      "areas": [
+        {
+          "name": "Lobby of Reflection",
+          "gameplay": "railgun ricochet puzzles",
+          "textures": [
+            "white stone",
+            "mirror floor",
+            "gold kiosks"
+          ]
+        },
+        {
+          "name": "Service Guts",
+          "gameplay": "freight rail platforming",
+          "textures": [
+            "grease pipes",
+            "worker notes",
+            "red emergency light"
+          ]
+        },
+        {
+          "name": "Algorithmic Garden",
+          "gameplay": "heist room light puzzle",
+          "textures": [
+            "fiber optic bonsai",
+            "glass soil",
+            "permission leaves"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "sister_version",
+          "name": "Sister Version",
+          "role": "dub engineer",
+          "voice": "bright, militant, mechanically exact",
+          "visualPrompt": "otter engineer; solder goggles, speaker-tool belt, patched flight apron; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Towers hate side doors. We build better side doors.",
+            "Don't just steal the seed. Steal the diagram."
+          ]
+        },
+        {
+          "id": "foreman_pell",
+          "name": "Foreman Pell",
+          "role": "maintenance organizer",
+          "voice": "low, careful, dry humor",
+          "visualPrompt": "beaver maintenance foreman; greasy overalls, hidden union pin, tool harness; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Guests call it a waterfall. We call it a cooling leak.",
+            "Break Vitrine's mirror and I'll show you the prisoner elevator."
+          ]
+        },
+        {
+          "id": "madame_vitrine",
+          "name": "Madame Vitrine",
+          "role": "arcology contract boss",
+          "voice": "silky, condescending",
+          "visualPrompt": "mink executive boss; mirror-glass gown armor, gold contract fans; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Visibility is a privilege. Labor should not distract from beauty."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE HIGHER FLOORS ARE BUILT FROM LOWER BACKS."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Everything's too clean. Makes me want to track mud."
+          },
+          {
+            "speaker": "Sister Version",
+            "text": "Do. Mud is testimony."
+          }
+        ],
+        "serviceReveal": [
+          {
+            "speaker": "Pell",
+            "text": "Guests go up. Heat goes down. Blame goes nowhere."
+          },
+          {
+            "speaker": "Rook Null",
+            "text": "Blame is routed away from ownership."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Vitrine",
+            "text": "You have mistaken access for invitation."
+          },
+          {
+            "speaker": "Moss",
+            "text": "No. I mistook your wall for something breakable."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 9,
+          "animation": "Moss sees his reflection in a security uniform.",
+          "line": "Moss: Mirror's got bad taste."
+        },
+        {
+          "seconds": 20,
+          "animation": "A kiosk tries to polish Moss's muddy boots.",
+          "line": "Kiosk: Unauthorized mud detected."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq03_lunchboxes",
+          "title": "Lunchboxes in the Walls",
+          "giver": "Foreman Pell",
+          "objective": "Recover confiscated worker lunchboxes from guest floors.",
+          "reward": "Worker Access Vents open later.",
+          "dialogue": [
+            {
+              "speaker": "Pell",
+              "text": "That's my son's drawing."
+            },
+            {
+              "speaker": "Moss",
+              "text": "Kid made the tower look smaller."
+            }
+          ]
+        },
+        {
+          "id": "sq03_reflection_strike",
+          "title": "Reflection Strike",
+          "giver": "Sister Version",
+          "objective": "Use mirrors to project worker footage into the guest atrium.",
+          "reward": "Arcology propaganda weakens in later scenes.",
+          "dialogue": [
+            {
+              "speaker": "Sister Version",
+              "text": "Let them see who polishes their sky."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg03_rail_reflection",
+          "name": "Railgun Reflection",
+          "type": "trajectory_puzzle",
+          "rules": "Bounce low-power rail shots through mirrors to trigger switches.",
+          "reward": "Quiet route to seed chamber"
+        },
+        {
+          "id": "mg03_schedule_shuffle",
+          "name": "Schedule Shuffle",
+          "type": "logic_grid",
+          "rules": "Swap elevator cargo labels so prisoners exit to service vents.",
+          "reward": "Trust gain with workers"
+        }
+      ],
+      "allies": [
+        "Sister Version: gear upgrade hints",
+        "Foreman Pell: worker vents if helped"
+      ],
+      "enemies": [
+        {
+          "id": "chrome_bellhop",
+          "name": "Chrome Bellhop",
+          "modelName": "ENM_CHROME_BELLHOP",
+          "behavior": "dash melee with luggage shield",
+          "callouts": [
+            "May I take your class position?",
+            "The floor prefers you gone!"
+          ],
+          "spritePrompt": "robotic chrome bellhop; polished uniform, luggage shield, blade umbrella; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "elevator ding, suitcase slam"
+        },
+        {
+          "id": "mirror_sentinel",
+          "name": "Mirror Sentinel",
+          "modelName": "ENM_MIRROR_SENTINEL",
+          "behavior": "reflects direct shots",
+          "callouts": [
+            "Angle denied.",
+            "Beauty must be defended."
+          ],
+          "spritePrompt": "mirror sentinel robot; faceless reflective torso, prism spear, gold trim; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "glass shimmer, thin laser ping"
+        }
+      ],
+      "boss": {
+        "name": "Madame Vitrine",
+        "modelName": "BOSS_MADAME_VITRINE_GLASSCOURT",
+        "phases": [
+          "Guest Etiquette",
+          "Hidden Floor",
+          "Public Proof"
+        ],
+        "defeatLine": "You have shattered presentation, not power.",
+        "spritePrompt": "Madame Vitrine boss; glass-armored executive with mirror fan blades and contract ribbons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "elevator chimes, muffled machinery, glass cracks, railgun hum, legal stamp impacts",
+      "musicalTheme": {
+        "name": "Service Floor Elegy",
+        "bpm": 104,
+        "palette": "icy jazz waltz, vibraphone delays, sub bass, railgun percussion"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_CHROME_LOBBY",
+          "prompt": "chrome arcology lobby; mirror floors, indoor waterfall, biometric kiosks, hidden service shadows; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_ELEVATOR_SEED",
+          "prompt": "elevator seed; chrome seed with green route veins inside glass flower; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "TEX_POLISHED_CHROME_CRACKED",
+          "prompt": "cracked chrome texture; mirror surface with hairline cracks, gold seams, muddy paw prints; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch04_straylight_mirage",
+      "stageIndex": 4,
+      "act": "Act II",
+      "world": "Straylight Mirage",
+      "stageTitle": "Treason at the Mirror Banquet",
+      "levelCodename": "STG_04_MIRAGE_BANQUET",
+      "primaryVerb": "rocket_pack",
+      "heistPayload": "Mirror Pass",
+      "dramaticQuestion": "What does betrayal cost?",
+      "placard": "When love is collateral, betrayal arrives wearing your friend's face.",
+      "scenicDescription": "An orbital palace that simulates sunset and ocean wind for masked guests. Ballroom etiquette hides duel rails, contract traps, debt collars, and rehearsed smiles.",
+      "worldBuilding": [
+        "Debt contracts turn care into leverage.",
+        "Banquet songs carry coded strike requests.",
+        "Mirrors show acceptable versions, not true ones."
+      ],
+      "areas": [
+        {
+          "name": "Zero-G Cloakroom",
+          "gameplay": "rocket-pack tutorial",
+          "textures": [
+            "floating velvet coats",
+            "star glass",
+            "hidden lapel cameras"
+          ]
+        },
+        {
+          "name": "Banquet of Versions",
+          "gameplay": "dialogue duels and table combat",
+          "textures": [
+            "mirror tables",
+            "contract wine",
+            "mask racks"
+          ]
+        },
+        {
+          "name": "Reflecting Court",
+          "gameplay": "choice-shaped boss arena",
+          "textures": [
+            "black mirror floor",
+            "witness chairs",
+            "legal constellations"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "lio",
+          "name": "Lio",
+          "role": "old ally, pressured betrayer",
+          "voice": "guarded, regretful",
+          "visualPrompt": "fox courier in banquet mask; scarf hiding debt collar, formal jacket over torn courier gear; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I didn't sell you because I stopped caring.",
+            "They bought my fear. They knew the exact price."
+          ]
+        },
+        {
+          "id": "cobalt_carmine",
+          "name": "Cobalt Carmine",
+          "role": "banquet singer and ex-radical",
+          "voice": "smooth, haunted",
+          "visualPrompt": "blue jay jazz singer; silver tux, hidden protest pin, vintage microphone; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Some songs become cages when sung for the wrong table."
+          ]
+        },
+        {
+          "id": "reflection_judge",
+          "name": "Reflection Judge",
+          "role": "courtroom boss",
+          "voice": "echoing, accusatory",
+          "visualPrompt": "black glass judge boss; orbiting witness masks, gavel sword, constellation halo; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "State your loyalty for the record."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE MASK IS A CONTRACT WITH THE ROOM."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Place smells expensive and hungry."
+          },
+          {
+            "speaker": "Auntie",
+            "text": "That's old money, baby. It eats before dinner."
+          }
+        ],
+        "betrayal": [
+          {
+            "speaker": "Lio",
+            "text": "Don't run left."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Why?"
+          },
+          {
+            "speaker": "Lio",
+            "text": "Because I already told them you would."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Reflection Judge",
+            "text": "Traitor, fool, or tool?"
+          },
+          {
+            "speaker": "Moss",
+            "text": "Badger."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss drifts slightly above the mirror floor.",
+          "line": "Moss: Even the floor's listening."
+        },
+        {
+          "seconds": 22,
+          "animation": "Lio starts to speak, then stops.",
+          "line": "Lio: ...No. Not yet."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq04_old_song",
+          "title": "Request the Old Song",
+          "giver": "Cobalt Carmine",
+          "objective": "Decode a request card and make the orchestra play a banned strike melody.",
+          "reward": "Guest panic creates boss safe windows.",
+          "dialogue": [
+            {
+              "speaker": "Cobalt",
+              "text": "Haven't sung that since the river arrests."
+            }
+          ]
+        },
+        {
+          "id": "sq04_debt_thread",
+          "title": "Debt Thread",
+          "giver": "Hidden Lio notes",
+          "objective": "Find proof of Lio's family contract before betrayal.",
+          "reward": "Unlocks merciful/rescue dialogue options.",
+          "dialogue": [
+            {
+              "speaker": "Lio",
+              "text": "I said I was fine every time I was asking for help."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg04_mask_reading",
+          "name": "Mask Reading",
+          "type": "dialogue_logic",
+          "rules": "Track guest contradictions to learn security phrases.",
+          "reward": "Secret cloakroom vent"
+        },
+        {
+          "id": "mg04_rocket_waltz",
+          "name": "Rocket Waltz",
+          "type": "aerial_rhythm",
+          "rules": "Boost through chandelier rings on a 3-count while combat interrupts in 4.",
+          "reward": "Rocket fuel extension"
+        }
+      ],
+      "allies": [
+        "Auntie Subharmonic: moral context",
+        "Lio: enemy/hostage/ally depending choice",
+        "Cobalt Carmine: musical distraction"
+      ],
+      "enemies": [
+        {
+          "id": "masque_duelist",
+          "name": "Masque Duelist",
+          "modelName": "ENM_MASQUE_DUELIST",
+          "behavior": "rapier enemy with punishable bow",
+          "callouts": [
+            "Etiquette cuts deepest!",
+            "Your invitation is bleeding!"
+          ],
+          "spritePrompt": "masked orbital duelist; silver mask, rapier, cape, rocket-boot heels; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "rapier ping, polite applause"
+        },
+        {
+          "id": "contract_servitor",
+          "name": "Contract Servitor",
+          "modelName": "ENM_CONTRACT_SERVITOR",
+          "behavior": "projects slowing legal zones",
+          "callouts": [
+            "Clause incoming.",
+            "Consent assumed!"
+          ],
+          "spritePrompt": "legal scroll drone; wax seal eye, silver arms, blue light; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "paper unfurl, wax pop"
+        }
+      ],
+      "boss": {
+        "name": "Reflection Judge",
+        "modelName": "BOSS_REFLECTION_JUDGE_COURT",
+        "phases": [
+          "Accusation",
+          "Cross-Examination",
+          "Unowned Mercy"
+        ],
+        "defeatLine": "The record cannot hold this much contradiction.",
+        "spritePrompt": "Reflection Judge boss; black glass judge with mask halo and cracked mirror robe; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "crystal rings, fake ocean wind, contract stamps, rocket hiss, gavel kicks",
+      "musicalTheme": {
+        "name": "Banquet for a Bought Friend",
+        "bpm": 72,
+        "palette": "orbital waltz, dusty boom-bap drums, upright bass, reversed piano"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_STRAYLIGHT_BANQUET",
+          "prompt": "orbital banquet hall; masked guests, black mirror floor, simulated sunset, contract banners; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_MIRROR_PASS",
+          "prompt": "mirror pass collectible; silver mask with shifting reflection and orbital crest; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "CHR_LIO_MASKED",
+          "prompt": "Lio masked sprite; fox courier in formal mask, scarf over debt collar, conflicted stance; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch05_dub_colony",
+      "stageIndex": 5,
+      "act": "Act III",
+      "world": "Dub Colony",
+      "stageTitle": "The Colony Teaches the Price of Air",
+      "levelCodename": "STG_05_DUB_REACTOR",
+      "primaryVerb": "beat_timing",
+      "heistPayload": "Bass Reactor Core",
+      "dramaticQuestion": "Can safety become tyranny?",
+      "placard": "A fortress can protect a people, then forget the people are not bricks.",
+      "scenicDescription": "A moving home base of greenhouse cars, studio temples, repair decks, speaker gardens, shared kitchens, solar sails, and arguments held in good faith until fear raises its voice.",
+      "worldBuilding": [
+        "The colony is democratic but under siege.",
+        "Bass is infrastructure: shield, power, signal, memory.",
+        "King Feedback wants emergency command to protect everyone."
+      ],
+      "areas": [
+        {
+          "name": "Greenhouse Cars",
+          "gameplay": "shield ally tutorial with Naya",
+          "textures": [
+            "vines on speaker cables",
+            "patched glass",
+            "seed labels"
+          ]
+        },
+        {
+          "name": "Studio Temple",
+          "gameplay": "reactor tuning rhythm puzzles",
+          "textures": [
+            "speaker altars",
+            "cassette reels",
+            "solder smoke"
+          ]
+        },
+        {
+          "name": "Assembly Deck",
+          "gameplay": "vote and boss arena",
+          "textures": [
+            "mismatched chairs",
+            "vote flags",
+            "amp throne"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "naya_root",
+          "name": "Naya Root",
+          "role": "shield ally and greenhouse defender",
+          "voice": "grounded, brave, blunt",
+          "visualPrompt": "raccoon shield fighter; leaf-pattern shield, seed pouch, work boots; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I can block a bullet. I can't block bad decisions alone.",
+            "These beans fed us through a siege. Step careful."
+          ]
+        },
+        {
+          "id": "king_feedback",
+          "name": "King Feedback",
+          "role": "security leader and rebel boss",
+          "voice": "booming, frightened beneath confidence",
+          "visualPrompt": "rebel amp commander; speaker armor, cable crown, microphone mace; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Votes are slow. Missiles are fast.",
+            "Freedom that dies tomorrow is just a pretty rumor."
+          ]
+        },
+        {
+          "id": "little_ix",
+          "name": "Little Ix",
+          "role": "child tinkerer",
+          "voice": "curious, fearless",
+          "visualPrompt": "squirrel child tinkerer; goggles, soldering toy robot, oversize headphones; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "If a machine only listens to one person, is it lonely or rude?"
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE PEOPLE MEET. THE SPEAKERS LISTEN."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Smells like solder, basil, and bad ideas."
+          },
+          {
+            "speaker": "Naya",
+            "text": "Good. We grow two of those on purpose."
+          }
+        ],
+        "vote": [
+          {
+            "speaker": "King Feedback",
+            "text": "Votes are slow. Missiles are fast."
+          },
+          {
+            "speaker": "Naya",
+            "text": "Then teach the votes to run. Don't bury them."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "King Feedback",
+            "text": "I will be wrong later if it means we survive now."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Later never arrives empty-handed."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss taps a claw and a speaker answers.",
+          "line": "Moss: Even the furniture talks back."
+        },
+        {
+          "seconds": 18,
+          "animation": "Naya waters a plant beside Moss.",
+          "line": "Naya: You can pause. Plants do it all winter. Then they move."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq05_seed_speaker",
+          "title": "Seed and Speaker",
+          "giver": "Naya Root",
+          "objective": "Protect seedlings while retuning speaker shields.",
+          "reward": "Naya shield gains heal zone.",
+          "dialogue": [
+            {
+              "speaker": "Naya",
+              "text": "You saved the beans."
+            },
+            {
+              "speaker": "Moss",
+              "text": "Revolution's got to eat."
+            }
+          ]
+        },
+        {
+          "id": "sq05_vote_cards",
+          "title": "Missing Vote Cards",
+          "giver": "Little Ix",
+          "objective": "Recover vote cards hidden by nervous security volunteers.",
+          "reward": "Unlocks distributed 'chorus' colony outcome.",
+          "dialogue": [
+            {
+              "speaker": "Little Ix",
+              "text": "If the cards are missing, do missing people still vote?"
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg05_bass_tune",
+          "name": "Bass Reactor Tune",
+          "type": "rhythm_calibration",
+          "rules": "Trigger kick, snare, and echo valves so no channel dominates.",
+          "reward": "Bass Reactor Core synchronized"
+        },
+        {
+          "id": "mg05_assembly_vote",
+          "name": "Assembly Vote",
+          "type": "branching_civic_puzzle",
+          "rules": "Hear speakers, challenge contradictions, choose chorus, army, or supplier.",
+          "reward": "Colony outcome flag"
+        }
+      ],
+      "allies": [
+        "Naya Root: shield companion",
+        "Sister Version: reactor tuning",
+        "Little Ix: hidden item markers"
+      ],
+      "enemies": [
+        {
+          "id": "signal_jammer_bat",
+          "name": "Signal Jammer Bat",
+          "modelName": "ENM_SIGNAL_JAMMER_BAT",
+          "behavior": "disables rhythm UI until stunned",
+          "callouts": [
+            "No chorus, no problem!",
+            "Beat denied!"
+          ],
+          "spritePrompt": "signal jammer bat drone; antenna wings, red static core, hanging wires; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "AM squeal, fluttering tape"
+        },
+        {
+          "id": "feedback_guard",
+          "name": "Feedback Guard",
+          "modelName": "ENM_FEEDBACK_GUARD",
+          "behavior": "blocks frontal attacks, talk-down possible",
+          "callouts": [
+            "Emergency order!",
+            "Safety requires silence!"
+          ],
+          "spritePrompt": "colony feedback guard; speaker shield, emergency badge, conflicted posture; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "shield thump, mic squeal"
+        }
+      ],
+      "boss": {
+        "name": "King Feedback",
+        "modelName": "BOSS_KING_FEEDBACK_AMPTHRONE",
+        "phases": [
+          "Security Pulse",
+          "Emergency Crown",
+          "Chorus Test"
+        ],
+        "defeatLine": "I heard the guns louder than the people.",
+        "spritePrompt": "King Feedback boss; speaker armor, cable crown, amp throne, anxious eyes; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "speaker hum, greenhouse fans, kitchen pots, feedback squeal, sub-bass shield pulses",
+      "musicalTheme": {
+        "name": "Assembly in Low Frequency",
+        "bpm": 140,
+        "palette": "dub steppers, organ skank, hand drums, neo-soul chords, crowd murmurs"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_DUB_GREENHOUSE_CAR",
+          "prompt": "dub colony greenhouse car; plants, patched glass, speaker cables, seed trays; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_BASS_REACTOR_CORE",
+          "prompt": "bass reactor core; subwoofer reactor in amber coolant, copper coils, vibrating rings; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "CHR_NAYA_ROOT",
+          "prompt": "Naya Root ally sprite; shield fighter with leaf shield and seed pouch; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch06_antenna_barrens",
+      "stageIndex": 6,
+      "act": "Act III",
+      "world": "Antenna Barrens",
+      "stageTitle": "The Black-Ice Fox",
+      "levelCodename": "STG_06_BARRENS_CODE",
+      "primaryVerb": "coding_gates",
+      "heistPayload": "Debt Ledger Shard",
+      "dramaticQuestion": "Can code be a weapon for everyone?",
+      "placard": "A lock written in numbers still has a landlord.",
+      "scenicDescription": "A desert of dead uplink towers, broken dishes, solar bones, Faraday tents, chalk logic murals, and data shrines where sand gets into every sacred machine.",
+      "worldBuilding": [
+        "Debt shards are hidden behind code that treats public understanding as a bug.",
+        "Hackers debate secrecy versus public manuals.",
+        "Graffiti on towers turns infrastructure into sky-facing newspapers."
+      ],
+      "areas": [
+        {
+          "name": "Dish Graveyard",
+          "gameplay": "wind platforming",
+          "textures": [
+            "rusted dishes",
+            "coax cables",
+            "sun-bleached tags"
+          ]
+        },
+        {
+          "name": "Logic Cairns",
+          "gameplay": "truth-table rooms",
+          "textures": [
+            "circuit stones",
+            "floating glyphs",
+            "chalk diagrams"
+          ]
+        },
+        {
+          "name": "Black-Ice Node",
+          "gameplay": "code-combat boss",
+          "textures": [
+            "black frost servers",
+            "fox shadows",
+            "debt constellations"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "mara_modulo",
+          "name": "Mara Modulo",
+          "role": "public cryptography teacher",
+          "voice": "patient, intense",
+          "visualPrompt": "lizard squat hacker; sun-faded hoodie, chalkboard backpack, antenna piercings; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "A secret is not the same as safety.",
+            "Teach one neighbor a key and you double the lockpick supply."
+          ]
+        },
+        {
+          "id": "black_ice_fox",
+          "name": "Black-Ice Fox",
+          "role": "elite hacker boss",
+          "voice": "cool, amused, exact",
+          "visualPrompt": "silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I guard the illusion that only I can understand it.",
+            "The public loves open code until it has to read."
+          ]
+        },
+        {
+          "id": "rook_null",
+          "name": "Rook Null",
+          "role": "state-machine companion",
+          "voice": "precise, dry",
+          "visualPrompt": "raven radio hologram; waveform feathers with desert static; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "A paradox is only a wall until someone draws a door on it."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE PASSWORD IS PUBLIC. THE MANUAL IS HIDDEN."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Lot of dead towers for a place that still talks."
+          },
+          {
+            "speaker": "Rook",
+            "text": "Dead infrastructure is often the loudest witness."
+          }
+        ],
+        "foxIntro": [
+          {
+            "speaker": "Fox",
+            "text": "Moss. Courier. Claws. Wetware. Charming deficit of abstraction."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Fox. Gatekeeper. Ego. Cold room. Charming surplus of smug."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Fox",
+            "text": "Should every tool be put in every paw?"
+          },
+          {
+            "speaker": "Moss",
+            "text": "Some tools belong in the wall until the wall stops being smug."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss brushes sand from his whisker implants.",
+          "line": "Moss: Sand in the circuits. The old machines deserve it."
+        },
+        {
+          "seconds": 18,
+          "animation": "Rook displays a blinking cursor.",
+          "line": "Rook: Awaiting input. So is history."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq06_public_manual",
+          "title": "Public Manual",
+          "giver": "Mara Modulo",
+          "objective": "Translate corporate lock routines into tutorial murals.",
+          "reward": "Community Hack Assist in future gates.",
+          "dialogue": [
+            {
+              "speaker": "Mara",
+              "text": "Now they can't sell mystery back to us."
+            }
+          ]
+        },
+        {
+          "id": "sq06_tower_throwup",
+          "title": "Tower Throw-Up",
+          "giver": "Faraday Saints",
+          "objective": "Tag the highest dish before a sandstorm.",
+          "reward": "Faraday Saints patch and visible rebel sky tag.",
+          "dialogue": [
+            {
+              "speaker": "Vex",
+              "text": "A tower makes people look up."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg06_state_duel",
+          "name": "State-Machine Duel",
+          "type": "code_combat",
+          "rules": "Predict enemy state transitions and patch one condition per cycle.",
+          "reward": "Predictive Telegraph overlay"
+        },
+        {
+          "id": "mg06_boolean_bridge",
+          "name": "Boolean Bridge",
+          "type": "logic_platforming",
+          "rules": "Toggle AND OR XOR gates to materialize platforms.",
+          "reward": "Debt shard access"
+        }
+      ],
+      "allies": [
+        "Rook Null: state overlays",
+        "Mara Modulo: community hack assist",
+        "Faraday Saints: high route markers"
+      ],
+      "enemies": [
+        {
+          "id": "error_mite",
+          "name": "Error Mite",
+          "modelName": "ENM_ERROR_MITE",
+          "behavior": "spawns from wrong logic gates",
+          "callouts": [
+            "Syntax bite!",
+            "False! False!"
+          ],
+          "spritePrompt": "glitch error mite; red brackets, cracked pixels, tiny teeth; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "glitch chirp, modem tick"
+        },
+        {
+          "id": "debt_wraith",
+          "name": "Debt Wraith",
+          "modelName": "ENM_DEBT_WRAITH",
+          "behavior": "homing name-ghosts until decoded",
+          "callouts": [
+            "Name unpaid.",
+            "You inherit the chain."
+          ],
+          "spritePrompt": "debt wraith; paper-and-code ghost with red thread chains; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "whispered names, paper rip"
+        }
+      ],
+      "boss": {
+        "name": "Black-Ice Fox",
+        "modelName": "BOSS_BLACK_ICE_FOX_NODE",
+        "phases": [
+          "Closed Source",
+          "Proof Obligation",
+          "Public Commit"
+        ],
+        "defeatLine": "You did not beat my lock. You reduced my importance.",
+        "spritePrompt": "Black-Ice Fox boss; silver fox with black crystalline code tails and frost pixels; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "wind through dishes, modem shrieks, keyboard clacks, frost crackle, paper-tape flutter",
+      "musicalTheme": {
+        "name": "Open the Cold Lock",
+        "bpm": 128,
+        "palette": "glitch-dub, FM bells, sub bass, radio choir pads"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_ANTENNA_BARRENS",
+          "prompt": "antenna barrens background; broken dishes, desert cables, dusk, graffiti, sand haze; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_DEBT_LEDGER_SHARD",
+          "prompt": "debt ledger shard; jagged data crystal with names glowing inside red thread; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "UI_BOOLEAN_GATES",
+          "prompt": "boolean gate icons; AND OR XOR NOT as chunky brass and neon toggles; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch07_orbital_lift",
+      "stageIndex": 7,
+      "act": "Act IV",
+      "world": "Orbital Lift",
+      "stageTitle": "The Old Ally Wears a New Uniform",
+      "levelCodename": "STG_07_LIFT_REVERSAL",
+      "primaryVerb": "escape_chase",
+      "heistPayload": "Cargo Reversal Key",
+      "dramaticQuestion": "Can obedience be innocent?",
+      "placard": "The machine says it only follows orders. The orders say they are only a machine.",
+      "scenicDescription": "A vertical logistics cathedral of cargo containers, sky cables, customs rings, counterweights, manifest chants, and wind strong enough to make every jump feel like a vote.",
+      "worldBuilding": [
+        "People are classified as cargo to make cruelty sound like scheduling.",
+        "The Elevator Angel is serene, useful, and morally empty.",
+        "Murr Murrby runs a shop inside a customs scanner because rules forgot to forbid it."
+      ],
+      "areas": [
+        {
+          "name": "Container Choir",
+          "gameplay": "autoscrolling climb",
+          "textures": [
+            "cargo marks",
+            "manifest flags",
+            "cable sparks"
+          ]
+        },
+        {
+          "name": "Customs Maw",
+          "gameplay": "scanner stealth and merchant scene",
+          "textures": [
+            "rotating scanner halos",
+            "crate labels",
+            "fold-out cat shop"
+          ]
+        },
+        {
+          "name": "Angel Counterweight",
+          "gameplay": "boss chase and flow reversal",
+          "textures": [
+            "counterweights",
+            "clouds",
+            "logistics prayers"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "murr_murrby",
+          "name": "Murr Murrby",
+          "role": "void-cat merchant",
+          "voice": "cheerful, slippery, principled at odd moments",
+          "visualPrompt": "black void-cat merchant; vacuum vest, folding crate shop, charming smile; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Emergency prices are immoral. Fortunately, morality is discounted today."
+          ]
+        },
+        {
+          "id": "lio",
+          "name": "Lio",
+          "role": "enemy, hostage, or fragile ally branch",
+          "voice": "ashamed, urgent",
+          "visualPrompt": "fox in customs uniform; ill-fitting uniform, visible debt collar, torn scarf; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Tell me where to stand, Moss. This time I won't sell the map."
+          ]
+        },
+        {
+          "id": "elevator_angel",
+          "name": "Elevator Angel",
+          "role": "obedient logistics boss",
+          "voice": "serene, bureaucratic",
+          "visualPrompt": "white gold lift machine; cable wings, scanner halo, cargo-hook hands; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "I do not judge cargo. I deliver it."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE CARGO DOES NOT CONSENT TO BE CARGO."
+          },
+          {
+            "speaker": "Moss",
+            "text": "That cable goes all the way to orbit?"
+          },
+          {
+            "speaker": "Sister Version",
+            "text": "And back to every bill in the city."
+          }
+        ],
+        "murr": [
+          {
+            "speaker": "Murr",
+            "text": "Welcome to Customs-Approved Contraband, where every item is legally somewhere else."
+          },
+          {
+            "speaker": "Moss",
+            "text": "You're inside a scanner."
+          },
+          {
+            "speaker": "Murr",
+            "text": "Business thrives where definitions panic."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Elevator Angel",
+            "text": "If cargo resists classification, cargo may fall."
+          },
+          {
+            "speaker": "Moss",
+            "text": "People fall too. Then we catch them."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss grips a cable in high wind.",
+          "line": "Moss: World looks cheaper from up here. Not better. Cheaper."
+        },
+        {
+          "seconds": 18,
+          "animation": "Murr's shop bell rings inside a scanner crate.",
+          "line": "Murr: Browsing is free until I invent a browsing tax ironically."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq07_manifest_names",
+          "title": "Names in the Manifest",
+          "giver": "Container-Mother Sara",
+          "objective": "Replace prisoner cargo IDs with real names.",
+          "reward": "Prisoner Chorus helps stun boss hooks.",
+          "dialogue": [
+            {
+              "speaker": "Sara",
+              "text": "A name is not paperwork. It is a rope."
+            }
+          ]
+        },
+        {
+          "id": "sq07_morality_discount",
+          "title": "Morality Discount",
+          "giver": "Murr Murrby",
+          "objective": "Deliver mutual-aid parcels hidden among shop goods.",
+          "reward": "Permanent fair-price shop tier.",
+          "dialogue": [
+            {
+              "speaker": "Murr",
+              "text": "Profit is a cat. It must be trained not to eat the table."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg07_cargo_reverse",
+          "name": "Cargo Sort Reverse",
+          "type": "high_speed_logic_sort",
+          "rules": "Swap cargo categories while autoscroll pressure rises.",
+          "reward": "Cargo Reversal Key charge"
+        },
+        {
+          "id": "mg07_scanner_smuggle",
+          "name": "Scanner Smuggle",
+          "type": "stealth_timing",
+          "rules": "Hide contraband pulses in legal cargo rhythms.",
+          "reward": "Customs Smoke Bombs"
+        }
+      ],
+      "allies": [
+        "Murr Murrby: merchant and smuggle route",
+        "Lio: branch support",
+        "Prisoner Chorus: stun after names quest"
+      ],
+      "enemies": [
+        {
+          "id": "customs_lancer",
+          "name": "Customs Lancer",
+          "modelName": "ENM_CUSTOMS_LANCER",
+          "behavior": "charges with scan-lance",
+          "callouts": [
+            "Declare your bones!",
+            "Cargo cannot improvise!"
+          ],
+          "spritePrompt": "orbital customs lancer; white armor, blue scanner visor, long scan-lance; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "scanner chirp, wind whoosh"
+        },
+        {
+          "id": "manifest_monk",
+          "name": "Manifest Monk",
+          "modelName": "ENM_MANIFEST_MONK",
+          "behavior": "summons cargo barriers with chants",
+          "callouts": [
+            "Box. Body. Balance.",
+            "Name not found."
+          ],
+          "spritePrompt": "manifest monk drone; paper scroll robes, scanner halo, calm faceplate; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "low chant, receipt flutter"
+        }
+      ],
+      "boss": {
+        "name": "Elevator Angel",
+        "modelName": "BOSS_ELEVATOR_ANGEL_COUNTERWEIGHT",
+        "phases": [
+          "Classification",
+          "Merciful Schedule",
+          "Reversal"
+        ],
+        "defeatLine": "New schedule impossible. New schedule... running.",
+        "spritePrompt": "Elevator Angel boss; white-gold lift AI with cable wings and cargo hook hands; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "high wind, container knocks, scanner sweeps, cable groans, cargo reversal booms",
+      "musicalTheme": {
+        "name": "Cargo Choir Reversal",
+        "bpm": 156,
+        "palette": "industrial percussion, processed choir, dub bass, cable twangs"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_ORBITAL_LIFT",
+          "prompt": "orbital lift vertical background; sky cable, cargo containers, clouds far below, station above; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_CARGO_REVERSAL_KEY",
+          "prompt": "cargo reversal key; brass keycard with arrows reversing and snapped chain motif; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "NPC_MURR_SHOP_CRATE",
+          "prompt": "void-cat folding shop; warm shop unfolding inside customs crate, trinkets, hidden compartments; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    },
+    {
+      "chapterId": "ch08_asteroid_redoubt",
+      "stageIndex": 8,
+      "act": "Act V",
+      "world": "Asteroid Redoubt / Final Broadcast",
+      "stageTitle": "The Asteroid Learns to Speak",
+      "levelCodename": "STG_08_ASTEROID_BROADCAST",
+      "primaryVerb": "full_kit",
+      "heistPayload": "Asteroid Transmitter Root",
+      "dramaticQuestion": "Who owns the sky?",
+      "placard": "The last lock is not on the door. It is on the story of who may open doors.",
+      "scenicDescription": "Speakerstone-9, a mined-out asteroid, becomes a transmitter fortress of iron tunnels, cable roots, solar sails, greenhouse capsules, speaker arrays, murals, and one dangerous question: broadcast freedom or build a new lock.",
+      "worldBuilding": [
+        "The final threat is Director Vane and also the rebel temptation to centralize power.",
+        "Former boss arguments return as political ghosts.",
+        "The final action is writing what the broadcast says."
+      ],
+      "areas": [
+        {
+          "name": "Iron Arrival Tunnels",
+          "gameplay": "full-kit gauntlet",
+          "textures": [
+            "iron rock",
+            "solar foil windows",
+            "low-gravity dust"
+          ]
+        },
+        {
+          "name": "Speakerstone Commons",
+          "gameplay": "ally convergence and debate",
+          "textures": [
+            "murals",
+            "greenhouse pods",
+            "portable radios"
+          ]
+        },
+        {
+          "name": "Transmitter Root Chamber",
+          "gameplay": "final boss, hack, broadcast choice",
+          "textures": [
+            "cable roots",
+            "satellite flowers",
+            "editable light script"
+          ]
+        }
+      ],
+      "characters": [
+        {
+          "id": "director_vane",
+          "name": "Director Vane",
+          "role": "final antagonist",
+          "voice": "controlled, paternal, furious when challenged",
+          "visualPrompt": "wolf executive final boss; black-white orbital suit, gold ledger spine, air-lock halo; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Freedom is infrastructure without accountable owners.",
+            "I did not steal the sky. I prevented waste."
+          ]
+        },
+        {
+          "id": "command_lock_faction",
+          "name": "Command Lock Faction",
+          "role": "internal rebel antagonist",
+          "voice": "fearful, righteous",
+          "visualPrompt": "worried rebel faction; emergency armor, red cable armbands, speaker badges; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "One temporary lock. One safe dawn.",
+            "Debate after victory."
+          ]
+        },
+        {
+          "id": "auntie_subharmonic",
+          "name": "Auntie Subharmonic",
+          "role": "moral anchor",
+          "voice": "loving, unsparing",
+          "visualPrompt": "elder radio mentor final; patched shawl, radio cane, asteroid dust on boots; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "sampleLines": [
+            "Don't broadcast victory so loud you can't hear the kitchens."
+          ]
+        }
+      ],
+      "dialogues": {
+        "intro": [
+          {
+            "speaker": "Placard",
+            "text": "THE ASTEROID WAS A MINE. THEN A FORT. NOW IT MUST DECIDE WHETHER TO BE A MOUTH."
+          },
+          {
+            "speaker": "Moss",
+            "text": "Lot of rock for something about to talk."
+          },
+          {
+            "speaker": "Auntie",
+            "text": "Rocks remember pressure."
+          }
+        ],
+        "vaneArrival": [
+          {
+            "speaker": "Vane",
+            "text": "You have captured a device you do not understand."
+          },
+          {
+            "speaker": "Moss",
+            "text": "I understand what it costs when you do."
+          }
+        ],
+        "finalChoice": [
+          {
+            "speaker": "Moss",
+            "text": "No owner. No command crown. Publish the ledgers, open the air, teach the tools."
+          },
+          {
+            "speaker": "Rook",
+            "text": "A distributed voice can still shout someone down. Audit required."
+          }
+        ],
+        "bossPre": [
+          {
+            "speaker": "Vane",
+            "text": "Who elected a badger to edit the sky?"
+          },
+          {
+            "speaker": "Moss",
+            "text": "Nobody. That's why the broadcast can't end with me."
+          }
+        ]
+      },
+      "actionsWhenUserIdles": [
+        {
+          "seconds": 8,
+          "animation": "Moss drifts in low gravity and hooks a claw into the floor.",
+          "line": "Moss: Even standing still is weird in a stolen moon."
+        },
+        {
+          "seconds": 20,
+          "animation": "The transmitter writes three dots of waiting light.",
+          "line": "Rook Null: The cursor is not neutral. It waits for an author."
+        },
+        {
+          "seconds": 32,
+          "animation": "Auntie taps her cane and the asteroid hums.",
+          "line": "Auntie: Don't let fear write the chorus, child."
+        }
+      ],
+      "sideQuests": [
+        {
+          "id": "sq08_mural_routes",
+          "title": "Mural of Routes",
+          "giver": "Juno Jar and Faraday Saints",
+          "objective": "Paint a final mural of every liberated route.",
+          "reward": "Broadcast credits neighborhoods instead of only heroes.",
+          "dialogue": [
+            {
+              "speaker": "Juno",
+              "text": "Make Moss bigger?"
+            },
+            {
+              "speaker": "Moss",
+              "text": "Make the doors bigger."
+            }
+          ]
+        },
+        {
+          "id": "sq08_breath_first",
+          "title": "Breath First",
+          "giver": "Naya Root",
+          "objective": "Prioritize air valves and greenhouse oxygen before weapons.",
+          "reward": "Oxygen Shield in final phase; lower civilian harm.",
+          "dialogue": [
+            {
+              "speaker": "Naya",
+              "text": "Air first. Then food. Then speeches."
+            }
+          ]
+        },
+        {
+          "id": "sq08_lio_signal",
+          "title": "Lio's Signal",
+          "giver": "Lio if redeemed",
+          "objective": "Use Lio's compromised channel to feed Vane a false surrender script.",
+          "reward": "Vane phase two starts weakened; Lio speaks freely.",
+          "dialogue": [
+            {
+              "speaker": "Lio",
+              "text": "I want to lie to them one last time, then stop."
+            }
+          ]
+        }
+      ],
+      "minigames": [
+        {
+          "id": "mg08_broadcast_script",
+          "name": "Broadcast Script",
+          "type": "moral_hacking_dialogue",
+          "rules": "Assemble the final broadcast from ledgers, testimony, safety clauses, and anti-command safeguards.",
+          "reward": "Ending: Open Commons, Guarded Transition, Command Lock, or Refuse Command Lock"
+        },
+        {
+          "id": "mg08_full_kit_gauntlet",
+          "name": "Full-Kit Gauntlet",
+          "type": "combined_mastery",
+          "rules": "Chain claws, rocket boosts, shield pulses, rail shots, and code patches without dropping signal.",
+          "reward": "Final Broadcast clarity boost"
+        }
+      ],
+      "allies": [
+        "Auntie: heal song and moral interrupt",
+        "Rook: code patch and broadcast assembly",
+        "Naya: oxygen shield",
+        "Lio: false signal if redeemed",
+        "Murr: last shop"
+      ],
+      "enemies": [
+        {
+          "id": "vane_air_bailiff",
+          "name": "Vane Air Bailiff",
+          "modelName": "ENM_VANE_AIR_BAILIFF",
+          "behavior": "controls oxygen pockets",
+          "callouts": [
+            "Breath is licensed!",
+            "Inhale under authority!"
+          ],
+          "spritePrompt": "air bailiff enemy; jackal officer with oxygen meter staff and gold ledger mask; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "oxygen hiss, legal stamp thud"
+        },
+        {
+          "id": "command_lock_partisan",
+          "name": "Command Lock Partisan",
+          "modelName": "ENM_COMMAND_LOCK_PARTISAN",
+          "behavior": "seizes transmitter switches, talk-down possible",
+          "callouts": [
+            "One lock to save all doors!",
+            "Debate after victory!"
+          ],
+          "spritePrompt": "rebel command-lock enemy; emergency armor, red cable armband, worried face; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+          "soundVibe": "amp buzz, nervous shield clang"
+        }
+      ],
+      "boss": {
+        "name": "Director Vane",
+        "modelName": "BOSS_DIRECTOR_VANE_SKYLOCK",
+        "phases": [
+          "Accountable Owner",
+          "Air Lease",
+          "Authorship War",
+          "The New Lock",
+          "Last Verb"
+        ],
+        "defeatLine": "You will discover that freedom requires maintenance.",
+        "mossReply": "Good. We know mechanics.",
+        "spritePrompt": "Director Vane final boss; wolf executive with air-lock halo, gold ledger spine, code ribbons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+      },
+      "soundEffectVibes": "asteroid hull creaks, radio chorus, oxygen fans, satellite beam roar, final bass drop into human voices",
+      "musicalTheme": {
+        "name": "No Owner of the Sky",
+        "bpm": 92,
+        "palette": "final dub-jazz anthem, boom-bap drums, modal horns, radio choir, industrial anvils"
+      },
+      "spriteTextureGenerationPrompts": [
+        {
+          "assetId": "BG_ASTEROID_TUNNELS",
+          "prompt": "asteroid iron tunnels; mined rock, rebel arrows, cables, solar foil windows, low gravity dust; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "BG_TRANSMITTER_ROOT",
+          "prompt": "transmitter root chamber; copper cable roots, satellite dish flowers, editable light script; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "PROP_TRANSMITTER_ROOT",
+          "prompt": "asteroid transmitter root; root-shaped data key made of copper cable and crystal broadcast rings; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        },
+        {
+          "assetId": "CHR_DIRECTOR_VANE_FINAL",
+          "prompt": "Director Vane final sprite; immaculate wolf executive, black white gold suit, air halo, severe silhouette; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background."
+        }
+      ]
+    }
+  ],
+  "implementationNotes": {
+    "dialogueBoxStyle": "large readable RPG text boxes with speaker portraits and theatrical placards",
+    "choicePropertiesToTrack": [
+      "trust_shift",
+      "heat_shift",
+      "merchant_price_modifier",
+      "companion_availability",
+      "ending_modifier",
+      "faction_memory"
+    ],
+    "assetPipelineHint": "Use sprite_texture_generation_prompts per chapter for batch image generation. Use scenic descriptions and areas for parallax backgrounds."
+  }
+} satisfies StoryContent;

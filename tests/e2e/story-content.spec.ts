@@ -113,8 +113,8 @@ test.describe('Chapter Structure', () => {
     };
 
     // Verify the mapping structure
-    expect(chapterToWorldMapping['ch01_lower_sprawl']).toBe('Lower Sprawl');
-    expect(chapterToWorldMapping['ch08_asteroid_redoubt']).toBe('Asteroid Redoubt');
+    expect(chapterToWorldMapping.ch01_lower_sprawl).toBe('Lower Sprawl');
+    expect(chapterToWorldMapping.ch08_asteroid_redoubt).toBe('Asteroid Redoubt');
   });
 });
 
@@ -210,7 +210,7 @@ test.describe('Placards', () => {
     };
 
     // Verify placard structure
-    expect(placards['ch01_lower_sprawl']).toContain('city that charges');
-    expect(placards['ch04_straylight_mirage']).toContain('love is collateral');
+    expect(placards.ch01_lower_sprawl).toContain('city that charges');
+    expect(placards.ch04_straylight_mirage).toContain('love is collateral');
   });
 });

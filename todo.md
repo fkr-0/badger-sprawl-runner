@@ -43,9 +43,67 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 ## Known deferred/non-blocking after v1.0
 
 - [!] Replace generated placeholder art/audio with final production assets.
-- [!] Add browser-driven end-to-end gameplay tests.
+- [x] Add browser-driven end-to-end gameplay tests (Playwright E2E implemented).
 - [!] Add CI workflow publishing hosted build artifacts.
 - [!] Decide whether reusable packages should publish to npm or remain workspace-internal.
+- [~] Integrate story-flavour.yml content into runtime game systems.
+
+---
+
+# Story Content System Implementation
+
+Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked or intentionally deferred.
+
+## Core systems implemented
+
+- [x] Story content types and interfaces (`data/story-content.ts`)
+- [x] Story content loader with chapter/character access methods
+- [x] Chapter manager for progression tracking and companion system
+- [x] Dialogue system with choices, consequences, and Brechtian devices
+- [x] Companion trust and heat systems affecting gameplay
+- [x] Save/load functionality for story state
+
+## Integration tasks
+
+- [x] Integrate story-flavour.yml parsing into StoryContentLoader
+- [ ] Connect dialogue system to game scenes and UI rendering
+- [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
+- [ ] Add trust/heat effects to merchant prices and gameplay
+- [ ] Implement branch consequences from dialogue choices
+- [ ] Add side quest system integration
+- [ ] Connect chapter progression to actual game flow
+
+## Content alignment
+
+- [x] Align chapter structure with story-flavour.yml (8 chapters, correct worlds)
+- [x] Update enemy details to match YAML specifications
+- [x] Harmonize character information with YAML content
+- [ ] Implement all 8 chapter stages with proper content
+- [ ] Add all boss phases as specified in YAML
+- [ ] Implement all heist payloads and dramatic questions
+- [ ] Add side quests for each chapter
+- [ ] Add minigames for each chapter
+
+---
+
+# Documentation Structure Updates
+
+## Completed documentation refactoring
+
+- [x] Moved all root *.md files to docs/ directory
+- [x] Updated README.md with new documentation paths
+- [x] Harmonized STORY.md with story-flavour.yml character details
+- [x] Updated CAMPAIGN.md to match YAML chapter structure
+- [x] Enhanced ENEMY_BIBLE.md with specific enemy details from YAML
+- [x] Added comprehensive documentation for new systems
+
+## Documentation additions needed
+
+- [ ] Add docs/story-content-system.md explaining the new content systems
+- [ ] Add docs/companion-system.md explaining companion mechanics
+- [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
+- [ ] Update docs/campaign-schema.md with new chapter manager integration
+- [ ] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
 
 ---
 
@@ -263,6 +321,11 @@ implementation_tasks:
   - [x] Increase code-gate frequency.
   - [x] Add Black-Ice Fox hack duel placeholder.
   - [x] Connect ledger release to heat/favor.
+  - [x] Align with story-flavour.yml ch06_antenna_barrens content.
+  - [ ] Implement Mara Modulo public cryptography teaching.
+  - [ ] Add boolean bridge logic platforming puzzles.
+  - [ ] Implement state-machine duel mechanics.
+  - [ ] Add public manual mural side quest.
 ```
 
 ### Stage 7: Cargo Liberation
@@ -472,10 +535,14 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 - [ ] Convert stage templates/modifiers into actual `StageRunScene` configuration: hazards, enemy mix, camera pressure, payload reward, and boss placeholder.
 - [ ] Implement tutorial beat rendering for parry, railgun sightlines, beat timing, code-gate pressure, lift chase, and final broadcast.
-- [ ] Implement boss placeholder runtime behavior for all eight bosses using the structured phase/lesson/behavior data.
+- [ ] Implement boss placeholder runtime behavior for all eight bosses using the structured phase/lesson/behavior data from story-flavour.yml.
 - [ ] Add branch-specific debrief lines for Lio, colony alignment, ledger release, cargo reversal, and final broadcast doctrine.
-- [ ] Add heat/favor balancing rules so `orbitHeat` and `dubFavor` affect shop prices, ally assists, hazards, or ending text.
-- [ ] Add campaign-complete ending cards for all three final broadcast doctrines.
+- [ ] Add heat/favor balancing rules so merchant prices, ally assists, hazards, and ending text respond to player choices.
+- [ ] Add campaign-complete ending cards for all final broadcast doctrines from story-flavour.yml.
+- [ ] Implement side quest system with proper tracking and rewards as specified in YAML.
+- [ ] Add minigame implementations for rhythm platforming, combat rhythm, logic puzzles, etc. as specified in each chapter.
+- [ ] Implement idle action system for global and chapter-specific character barks.
+- [ ] Add companion ability system (Rook overlays, Naya shield, Murr merchant routes, etc.).
 
 ## Menu and save UX
 
@@ -515,18 +582,160 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Testing and release automation
 
 - [x] Set Vitest test timeout to 30 seconds in shared workspace config.
-- [ ] Add browser-driven E2E tests for menu navigation, story progression, choice selection, save/load, training reset, and VS rematch.
+- [x] Add browser-driven E2E tests for menu navigation, story progression, choice selection, save/load, training reset, and VS rematch (Playwright E2E implemented).
 - [ ] Add CI workflow that runs test, typecheck, build, smoke, lint, and uploads runner build artifacts.
-- [ ] Add a lightweight Playwright smoke that opens the built runner and verifies canvas/menu status text.
+- [x] Add a lightweight Playwright smoke that opens the built runner and verifies canvas/menu status text (implemented in tests/e2e/game-mechanics.spec.ts).
 - [ ] Add a release checklist test that fails when `todo.md` contains checked items without code/test evidence markers.
 - [ ] Add bundle-size tracking for `apps/runner/dist` so content growth is intentional.
 - [ ] Decide whether workspace packages publish to npm or stay internal; document the decision and package visibility.
+- [x] Add Playwright configuration with dev server integration and cross-browser testing (chromium, firefox, webkit).
 
 ## Documentation and design hygiene
 
-- [x] Add long-form scene-by-scene story book for episodic play, side facts, and spinoff seeds.
-- [ ] Update README with current story-mode scope: full campaign spine, choices, save fields, and remaining runtime scene gaps.
-- [ ] Update STORY.md from design-only prose to match the implemented campaign schema and branch outcomes.
+- [x] Add long-form scene-by-scene story book for episodic play, side facts, and spinoff seeds (docs/story-book.md exists).
+- [x] Update README with current story-mode scope and new documentation structure (all docs moved to docs/).
+- [x] Update STORY.md with detailed character information from story-flavour.yml (character voices, sample lines added).
+- [x] Update CAMPAIGN.md to match YAML chapter structure and naming (Antenna Barrens alignment completed).
+- [x] Enhance ENEMY_BIBLE.md with specific enemy details from YAML (model names, sprite prompts, callouts added).
+- [x] Consolidate all documentation to docs/ directory for better organization.
 - [ ] Add `docs/campaign-schema.md` explaining acts, stages, choices, branches, modifiers, boss contracts, and save fields.
 - [ ] Add `docs/release-evidence.md` summarizing the current verification gates and what each gate proves.
+- [ ] Add `docs/story-content-system.md` explaining the new story content types and integration.
+- [ ] Add `docs/companion-system.md` explaining companion mechanics and trust/heat systems.
+- [ ] Add `docs/dialogue-system.md` explaining dialogue choices, consequences, and Brechtian devices.
 - [ ] Keep `todo.md` statuses conservative: use `[~]` for skeleton/contract work when concrete runtime UI is not complete.
+
+---
+
+# Story-flavour.yml Content Integration
+
+## Character implementation priority
+
+### Core cast (must have full implementation)
+- [x] Moss - player character with dry, stubborn, observant voice (player character exists)
+- [ ] Auntie Subharmonic - pirate-radio mentor with warm, teasing voice
+- [ ] Rook Null - former logistics AI with calm, precise voice  
+- [ ] Murr Murrby - void-cat merchant with cheerful, slippery voice
+- [ ] Lio - old ally/possible traitor with guarded, regretful voice
+- [ ] Naya Root - shield ally with grounded, brave voice
+- [ ] Director Vane - final antagonist with controlled, paternal voice
+
+### Chapter-specific characters (implement per chapter)
+- [ ] Chapter 1: Juno Jar (pipe kid), Captain Grin (tollbooth boss)
+- [ ] Chapter 2: Dr. Mina Suture (medic), DJ Calculus (beatmaker), Knife-Drone Nest boss
+- [ ] Chapter 3: Sister Version (engineer), Foreman Pell (maintainer), Madame Vitrine (boss)
+- [ ] Chapter 4: Cobalt Carmine (singer), Reflection Judge (boss)
+- [ ] Chapter 5: Little Ix (tinkerer), King Feedback (boss)
+- [ ] Chapter 6: Mara Modulo (crypto teacher), Black-Ice Fox (boss)
+- [ ] Chapter 7: Elevator Angel (obedient boss), Container-Mother Sara
+- [ ] Chapter 8: Command Lock Faction, Director Vane final boss
+
+## Chapter-specific features to implement from story-flavour.yml
+
+### Chapter 1: Lower Sprawl (ch01_lower_sprawl)
+- [ ] Rain Turnstiles area with toll arms and spark puddles
+- [ ] Kettle Bridge Pipes vertical route with steam vents
+- [ ] Ledger Office Annex with first code gate
+- [ ] Side quest: Chalk Map for the Short-Legged (Juno Jar)
+- [ ] Side quest: Noodle Stall Antenna (Ma Oxbow)
+- [ ] Minigame: Offbeat Turnstile Hop
+- [ ] Minigame: Receipt Logic Scratch
+
+### Chapter 2: Drainmarket (ch02_drainmarket)
+- [ ] Sump Bazaar with parry tutorial and healing ethics
+- [ ] Fan Nest arena fights around industrial fans
+- [ ] Blue Note Squat safe room and beat-making minigame
+- [ ] Side quest: Scrub the Dye (tracking dye removal)
+- [ ] Side quest: Wall Newspaper (public warnings)
+- [ ] Minigame: Breakbeat Parry Lab
+- [ ] Minigame: Throw-Up Route Tag
+
+### Chapter 3: Chrome Arcology (ch03_chrome_arcology)
+- [ ] Lobby of Reflection with railgun ricochet puzzles
+- [ ] Service Guts freight rail platforming
+- [ ] Algorithmic Garden heist room light puzzle
+- [ ] Side quest: Lunchboxes in the Walls (Foreman Pell)
+- [ ] Side quest: Reflection Strike (Sister Version)
+- [ ] Minigame: Railgun Reflection
+- [ ] Minigame: Schedule Shuffle
+
+### Chapter 4: Straylight Mirage (ch04_straylight_mirage)
+- [ ] Zero-G Cloakroom rocket-pack tutorial
+- [ ] Banquet of Versions dialogue duels and table combat
+- [ ] Reflecting Court choice-shaped boss arena
+- [ ] Side quest: Request the Old Song (Cobalt Carmine)
+- [ ] Side quest: Debt Thread (Lio family contract)
+- [ ] Minigame: Mask Reading
+- [ ] Minigame: Rocket Waltz
+
+### Chapter 5: Dub Colony (ch05_dub_colony)
+- [ ] Greenhouse Cars shield ally tutorial with Naya
+- [ ] Studio Temple reactor tuning rhythm puzzles
+- [ ] Assembly Deck vote and boss arena
+- [ ] Side quest: Seed and Speaker (Naya Root)
+- [ ] Side quest: Missing Vote Cards (Little Ix)
+- [ ] Minigame: Bass Reactor Tune
+- [ ] Minigame: Assembly Vote
+
+### Chapter 6: Antenna Barrens (ch06_antenna_barrens)
+- [ ] Dish Graveyard wind platforming
+- [ ] Logic Cairns truth-table rooms
+- [ ] Black-Ice Node code-combat boss
+- [ ] Side quest: Public Manual (Mara Modulo)
+- [ ] Side quest: Tower Throw-Up (Faraday Saints)
+- [ ] Minigame: State-Machine Duel
+- [ ] Minigame: Boolean Bridge
+
+### Chapter 7: Orbital Lift (ch07_orbital_lift)
+- [ ] Container Choir autoscrolling climb
+- [ ] Customs Maw scanner stealth and merchant scene
+- [ ] Angel Counterweight boss chase and flow reversal
+- [ ] Side quest: Names in the Manifest (Container-Mother Sara)
+- [ ] Side quest: Morality Discount (Murr Murrby)
+- [ ] Minigame: Cargo Sort Reverse
+- [ ] Minigame: Scanner Smuggle
+
+### Chapter 8: Asteroid Redoubt (ch08_asteroid_redoubt)
+- [ ] Iron Arrival Tunnels full-kit gauntlet
+- [ ] Speakerstone Commons ally convergence and debate
+- [ ] Transmitter Root Chamber final boss and broadcast choice
+- [ ] Side quest: Mural of Routes (Juno Jar and Faraday Saints)
+- [ ] Side quest: Breath First (Naya Root)
+- [ ] Side quest: Lio's Signal (if redeemed)
+- [ ] Minigame: Broadcast Script (final choice)
+- [ ] Minigame: Full-Kit Gauntlet
+
+## Enemy implementation from story-flavour.yml
+
+### Chapter-specific enemies
+- [ ] Chapter 1: Rent Cop Piker, Turnstile Mite, Tollbooth Captain Grin boss
+- [ ] Chapter 2: Knife-Drone Fledgling, Clinic Repo Thug, Knife-Drone Nest boss
+- [ ] Chapter 3: Chrome Bellhop, Mirror Sentinel, Madame Vitrine boss
+- [ ] Chapter 4: Masque Duelist, Contract Servitor, Reflection Judge boss
+- [ ] Chapter 5: Signal Jammer Bat, Feedback Guard, King Feedback boss
+- [ ] Chapter 6: Error Mite, Debt Wraith, Black-Ice Fox boss
+- [ ] Chapter 7: Customs Lancer, Manifest Monk, Elevator Angel boss
+- [ ] Chapter 8: Vane Air Bailiff, Command Lock Partisan, Director Vane final boss
+
+## Boss implementation with phases from story-flavour.yml
+
+- [ ] Captain Grin: Polite Collection, Debt Spiral, Public Road phases
+- [ ] Knife-Drone Nest: Triage Swarm, Invoice Bloom, Public Clinic phases
+- [ ] Madame Vitrine: Guest Etiquette, Hidden Floor, Public Proof phases
+- [ ] Reflection Judge: Accusation, Cross-Examination, Unowned Mercy phases
+- [ ] King Feedback: Security Pulse, Emergency Crown, Chorus Test phases
+- [ ] Black-Ice Fox: Closed Source, Proof Obligation, Public Commit phases
+- [ ] Elevator Angel: Classification, Merciful Schedule, Reversal phases
+- [ ] Director Vane: Accountable Owner, Air Lease, Authorship War, The New Lock, Last Verb phases
+
+## New systems integration tasks
+
+- [ ] Integrate StoryContentLoader with actual YAML parsing
+- [ ] Connect ChapterManager to game progression and save system
+- [ ] Implement DialogueSystem with UI rendering and scene integration
+- [ ] Add companion system to gameplay (Naya shield, Rook overlays, Murr merchant discounts)
+- [ ] Implement trust/heat effects on merchant prices and gameplay
+- [ ] Add side quest tracking and rewards system
+- [ ] Implement global idle actions and chapter-specific barks
+- [ ] Add musical theme system with chapter-specific BPM and palettes
+- [ ] Integrate sprite generation prompts with asset production workflow

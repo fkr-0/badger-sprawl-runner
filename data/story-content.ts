@@ -145,6 +145,8 @@ export interface StoryContent {
  * Story content loader - in production this would parse the YAML file
  * For now, we'll provide a typed interface for future implementation
  */
+import { GENERATED_STORY_CONTENT } from './story-content.generated';
+
 export class StoryContentLoader {
   private static instance: StoryContentLoader;
   private content: StoryContent | null = null;
@@ -159,65 +161,12 @@ export class StoryContentLoader {
   }
 
   /**
-   * Load story content from the YAML file
-   * TODO: Implement actual YAML parsing
+   * Load story content generated from docs/story-flavour.yml.
    */
   async loadContent(): Promise<StoryContent> {
-    if (this.content) {
-      return this.content;
+    if (!this.content) {
+      this.content = GENERATED_STORY_CONTENT;
     }
-
-    // For now, return a minimal stub
-    // In production, this would fetch and parse story-flavour.yml
-    this.content = {
-      schemaVersion: "1.0.0",
-      sourceBasis: "Uploaded Story Bible for Badger Sprawl Runner",
-      genre: "2D adventure platformer hack-and-slash with heist, rhythm, and coding-gate systems",
-      creativeDirection: {
-        coreTone: [
-          "cyber-noir street pressure",
-          "dub colony warmth",
-          "orbital class satire",
-          "Brechtian placards",
-          "hardboiled humor",
-          "mathematical logic as gameplay texture"
-        ],
-        flavourSourcesAsBroadAtmosphere: [
-          "noir and hardboiled detective mood",
-          "classic cyberpunk sprawl density",
-          "dub and early hip-hop sound-system culture",
-          "graffiti/trainwriting craft",
-          "jazz-club intimacy",
-          "political philosophy about class, discipline, absurdity, and authority",
-          "hacker jargon and public cryptography"
-        ],
-        styleRule: "Use references as broad inspiration only. Keep all dialogue, lore, character voices, and lyrics original."
-      },
-      universe: {
-        name: "The Rent-Locked Sky",
-        planet: "Brackwater",
-        planetDescription: "A wet industrial planet of canal cities, marsh tunnels, factories, rain markets, and sprawl towers.",
-        orbitalShell: "The Nacre Ring",
-        asteroid: "Speakerstone-9",
-        rebelNetwork: "The Choir of Static",
-        corporatePower: "Vane Directorate",
-        majorLedgers: {
-          street_ledger: "meters routes, bridges, water, clinics, and neighborhood gates",
-          lift_ledger: "classifies cargo and people for orbital movement",
-          sky_lock: "leases air, transit, sunlight, and broadcast rights",
-          choirband: "pirate radio mesh for mutual aid and rebel coordination"
-        }
-      },
-      gearAndSystems: [],
-      worldIndex: [],
-      globalIdleActions: [],
-      reusableBarks: {
-        merchant: [],
-        enemyLowHealth: [],
-        playerParry: []
-      },
-      chapters: []
-    };
 
     return this.content;
   }

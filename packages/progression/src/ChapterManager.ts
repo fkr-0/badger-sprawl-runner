@@ -3,7 +3,6 @@
  * Handles chapter progression, state tracking, and story flow
  */
 
-import type { Chapter, Character } from '../../data/story-content.js';
 
 export interface ChapterState {
   chapterId: string;
@@ -28,13 +27,13 @@ export interface CompanionState {
 export class ChapterManager {
   private static instance: ChapterManager;
   private currentChapter: string | null = null;
-  private currentStage: number = 0;
+  private currentStage = 0;
   private chapterStates: Map<string, ChapterState> = new Map();
   private companions: Map<string, CompanionState> = new Map();
   private globalTrust: Map<string, number> = new Map();
-  private globalHeat: number = 0;
-  private merchantPriceModifier: number = 1.0;
-  private endingModifier: string = '';
+  private globalHeat = 0;
+  private merchantPriceModifier = 1.0;
+  private endingModifier = '';
 
   private constructor() {
     this.initializeDefaultCompanions();
@@ -55,7 +54,7 @@ export class ChapterManager {
       { characterId: 'murr_murrby', trust: 40, abilitiesUnlocked: ['merchant_access'] }
     ];
 
-    defaultCompanions.forEach(comp => {
+    for (const comp of defaultCompanions) {
       this.companions.set(comp.characterId, {
         characterId: comp.characterId,
         available: true,
@@ -63,7 +62,7 @@ export class ChapterManager {
         currentStatus: 'active',
         abilitiesUnlocked: comp.abilitiesUnlocked
       });
-    });
+    }
   }
 
   /**
@@ -118,10 +117,10 @@ export class ChapterManager {
       state.rewards.push(...rewards);
 
       // Apply trust changes
-      Object.entries(trustChanges).forEach(([characterId, amount]) => {
+      for (const [characterId, amount] of Object.entries(trustChanges)) {
         state.trustGained[characterId] = (state.trustGained[characterId] || 0) + amount;
         this.modifyCompanionTrust(characterId, amount);
-      });
+      }
     }
   }
 
@@ -147,12 +146,12 @@ export class ChapterManager {
       }
 
       if (consequences.companions) {
-        consequences.companions.forEach(compId => {
+        for (const compId of consequences.companions) {
           const comp = this.companions.get(compId);
           if (comp && !comp.available) {
             comp.available = true;
           }
-        });
+        }
       }
     }
   }
