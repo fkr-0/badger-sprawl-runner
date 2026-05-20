@@ -23,6 +23,7 @@ const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
 const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
+const stageLayoutRegistrySource = await text('apps/runner/src/world/stageLayoutRegistry.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
@@ -149,11 +150,24 @@ for (const required of [
 	'getCurrentStage()',
 	'getStoryProgress()',
 	'getActiveBranchConsequences(stage.id)',
+	'stage && isRuntimeStageId(stage.id) ? stage.id : undefined',
 	'acquiredPayloadIds: storyProgress.acquiredPayloads',
 	'branchGameplayHooks',
 	'bossPhases: stage?.boss?.phases?.map',
 ]) {
 	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
+}
+for (const required of [
+	'RUNTIME_STAGE_IDS',
+	'RuntimeStageId',
+	'cloneStageLayout',
+	'cargo_reversal_key_pickup',
+	'asteroid_transmitter_root_pickup',
+]) {
+	assert(stageLayoutRegistrySource.includes(required), `stageLayoutRegistry missing runtime stage layout contract: ${required}`);
+}
+for (const required of ['stageId?: RuntimeStageId', 'cloneStageLayout(this.options.stageId)']) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime stage layout selection: ${required}`);
 }
 
 for (const required of [

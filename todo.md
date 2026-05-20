@@ -98,7 +98,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Align chapter structure with story-flavour.yml (8 chapters, correct worlds)
 - [x] Update enemy details to match YAML specifications
 - [x] Harmonize character information with YAML content
-- [~] Implement all 8 chapter stages with proper content: stages now include chapter metadata, side quests, minigames, dramatic choices, payload contracts, and boss contracts; bespoke playable layouts remain.
+- [~] Implement all 8 chapter stages with proper content: stages now include chapter metadata, side quests, minigames, dramatic choices, payload contracts, boss contracts, and stage-addressable runtime layout contracts; fully bespoke playable layouts/final art remain.
 - [x] Add all boss phases as specified in YAML: boss phase mechanics now project through GameFlow and render in StoryFlow stage panels.
 - [x] Implement all heist payloads and dramatic questions: stage choice UI exposes dramatic questions and StageRunOptions now passes acquired payloads, branch hooks, and boss phases into runtime stage options.
 - [x] Add side quests for each chapter: every campaign stage now has at least one typed side quest contract.
@@ -138,7 +138,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Route story mode through all eight stages from `GameFlow`.
 - [x] Persist story progress through the save store: current stage, completed stages, acquired payloads, campaign completion.
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
-- [ ] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio.
+- [~] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio: StageRunScene now selects stage-addressable runtime layout contracts; fully bespoke per-stage geometry/art remains.
 - [x] Wire StoryFlow stage entry directly into StageRunScene using buildStageRunSceneOptions(): StoryFlow stage mode now launches stage runtime options through its R-key start seam and default scene factory.
 - [x] Implement playable boss phase behavior in StageRunScene/boss encounters: BossPhaseSystem now selects active phases by boss HP, applies phase pressure, and surfaces boss phase HUD/overlays.
 - [x] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers: Naya shield bonus, Rook ambush overlay, and companion assist timing hooks now resolve into StageRunScene companion modifiers.

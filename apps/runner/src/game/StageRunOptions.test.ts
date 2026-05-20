@@ -19,6 +19,7 @@ describe('buildStageRunSceneOptions', () => {
 		enterCurrentStage(flow);
 
 		const options = buildStageRunSceneOptions(flow);
+		expect(options.stageId).toBe('chrome-arcology');
 		expect(options.acquiredPayloadIds).toEqual(['wafer_key']);
 		expect(options.bossPhases?.[0]).toMatchObject({ id: 'display-window' });
 	});

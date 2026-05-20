@@ -111,8 +111,8 @@ for (const runtimeAnimation of ['jump_up', 'melee_katana', 'melee_claws']) {
 }
 
 assert(
-	stageScene.includes('cloneLowerSprawlLayout') && !stageScene.includes('// Pickups from prototype'),
-	'StageRunScene should load world data from lowerSprawlLayout instead of hard-coded pickup arrays',
+	stageScene.includes('cloneStageLayout(this.options.stageId)') && !stageScene.includes('// Pickups from prototype'),
+	'StageRunScene should load world data from the stage layout registry instead of hard-coded pickup arrays',
 );
 assert(typedLayout.includes('export const lowerSprawlLayout'), 'typed lower sprawl layout export missing');
 

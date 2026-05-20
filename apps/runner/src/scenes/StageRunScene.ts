@@ -17,7 +17,7 @@ import {
 	ItemSystem,
 	type Pickup,
 } from '../systems/ItemSystem';
-import { cloneLowerSprawlLayout } from '../world/lowerSprawlLayout';
+import { cloneStageLayout, type RuntimeStageId } from '../world/stageLayoutRegistry';
 import { createPlayer, processMossInput, type Player } from '../actors/MossBadger';
 import type { Platform } from '../systems/PhysicsSystem';
 import type { Renderer } from '../renderer/Renderer';
@@ -28,6 +28,7 @@ import {
 } from '../renderer/AnimationState';
 
 export interface StageRunSceneOptions {
+	stageId?: RuntimeStageId;
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	bossPhases?: readonly RuntimeBossPhase[];
@@ -353,7 +354,7 @@ export class StageRunScene implements Scene {
 	}
 
 	private initWorld(): void {
-		const layout = cloneLowerSprawlLayout();
+		const layout = cloneStageLayout(this.options.stageId);
 		this.platforms = layout.platforms;
 		this.pickups = layout.pickups;
 		applyPersistedPayloadPickups(this.pickups, this.options.acquiredPayloadIds ?? []);
