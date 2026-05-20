@@ -24,6 +24,7 @@ const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
+const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
@@ -117,6 +118,23 @@ for (const required of [
 
 
 
+
+
+for (const required of [
+	'StoryFlowSceneOptions',
+	'onStartStage',
+	'buildStageRunSceneOptions(this.flow)',
+	"event.key.toLowerCase() === 'r'",
+	'R: run stage',
+]) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing StageRunScene launch seam: ${required}`);
+}
+for (const required of [
+	'StageRunScene',
+	'onStartStage: (options) => new StageRunScene(options)',
+]) {
+	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
+}
 
 for (const required of [
 	'buildStageRunSceneOptions',

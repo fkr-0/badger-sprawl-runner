@@ -1,6 +1,12 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { type GameFlow, createGameFlow } from '../game/GameFlow';
+import { buildStageRunSceneOptions } from '../game/StageRunOptions';
+import type { StageRunSceneOptions } from './StageRunScene';
 import type { Renderer } from '../renderer/Renderer';
+
+export interface StoryFlowSceneOptions {
+	onStartStage?: (options: StageRunSceneOptions) => void;
+}
 
 export class StoryFlowScene implements Scene {
 	readonly name = 'StoryFlowScene';
@@ -9,7 +15,10 @@ export class StoryFlowScene implements Scene {
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 	private lastChoiceResult = '';
 
-	constructor(private readonly flow: GameFlow = createGameFlow()) {}
+	constructor(
+		private readonly flow: GameFlow = createGameFlow(),
+		private readonly options: StoryFlowSceneOptions = {}
+	) {}
 
 	getFlow(): GameFlow {
 		return this.flow;
@@ -46,6 +55,11 @@ export class StoryFlowScene implements Scene {
 			return;
 		}
 		if (state.mode !== 'stage') return;
+		if (event.key.toLowerCase() === 'r') {
+			event.preventDefault();
+			this.startCurrentStage();
+			return;
+		}
 		const stage = this.flow.getCurrentStage();
 		const choices = stage?.choiceOutcomes ?? [];
 		if (choices.length === 0) return;
@@ -62,6 +76,10 @@ export class StoryFlowScene implements Scene {
 			event.preventDefault();
 			this.chooseStageChoice(this.selectedChoiceIndex);
 		}
+	}
+
+	private startCurrentStage(): void {
+		this.options.onStartStage?.(buildStageRunSceneOptions(this.flow));
 	}
 
 	private chooseStageChoice(choiceIndex: number): void {
@@ -180,7 +198,7 @@ export class StoryFlowScene implements Scene {
 		}
 
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 188);
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • R: run stage', panelX + 22, panelY + 188);
 		if (this.lastChoiceResult) {
 			ctx.fillStyle = '#67f3c4';
 			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 188);
