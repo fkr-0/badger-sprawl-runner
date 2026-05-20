@@ -1,18 +1,27 @@
 import type { Scene } from '../engine/SceneManager';
 import type { MenuOptionId } from '../game/GameFlow';
 import { SkillTreeScene } from './SkillTreeScene';
-import { StoryFlowScene } from './StoryFlowScene';
 import { StageRunScene } from './StageRunScene';
+import { StoryFlowScene } from './StoryFlowScene';
 import { TrainingScene } from './TrainingScene';
 import { VersusScene } from './VersusScene';
 
 export type ModeSceneFactories = Record<MenuOptionId, () => Scene>;
 
-export function createDefaultModeSceneFactories(): ModeSceneFactories {
+export interface DefaultModeSceneFactoryOptions {
+	onStartStoryStage?: (scene: Scene) => void;
+}
+
+export function createDefaultModeSceneFactories(
+	options: DefaultModeSceneFactoryOptions = {}
+): ModeSceneFactories {
 	return {
 		story: () =>
 			new StoryFlowScene(undefined, {
-				onStartStage: (options) => new StageRunScene(options),
+				onStartStage: (stageOptions) => {
+					const scene = new StageRunScene(stageOptions);
+					options.onStartStoryStage?.(scene);
+				},
 			}),
 		versus: () => new VersusScene(),
 		training: () => new TrainingScene(),

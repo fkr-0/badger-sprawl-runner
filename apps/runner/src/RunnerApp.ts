@@ -13,8 +13,10 @@ export interface RunnerApp {
 
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const eventBus = new EventBus();
-	const factories = createDefaultModeSceneFactories();
 	const sceneManager = new SceneManager({ eventBus, canvas });
+	const factories = createDefaultModeSceneFactories({
+		onStartStoryStage: (scene) => sceneManager.replace(scene),
+	});
 
 	function routeMode(modeId: MenuOptionId): void {
 		routeModeSelection(sceneManager, modeId, factories);

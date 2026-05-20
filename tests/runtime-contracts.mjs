@@ -131,9 +131,17 @@ for (const required of [
 }
 for (const required of [
 	'StageRunScene',
-	'onStartStage: (options) => new StageRunScene(options)',
+	'onStartStage: (stageOptions) =>',
+	'const scene = new StageRunScene(stageOptions)',
+	'options.onStartStoryStage?.(scene)',
 ]) {
 	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
+}
+for (const required of [
+	'createDefaultModeSceneFactories({',
+	'onStartStoryStage: (scene) => sceneManager.replace(scene)',
+]) {
+	assert(runnerApp.includes(required), `RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`);
 }
 
 for (const required of [
