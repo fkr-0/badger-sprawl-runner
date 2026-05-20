@@ -1,0 +1,8 @@
+{
+	"version": 1,
+	"chunks": [
+		{ "id": "lower_sprawl_toll_crossing_01", "stageTags": ["lower-sprawl", "toll"], "sockets": { "left": "ground", "right": "ground" }, "encounterSlots": [{ "id": "entry_pack", "x": 620, "y": 462, "budget": 4 }] },
+		{ "id": "drainmarket_clinic_crossing_01", "stageTags": ["drainmarket", "clinic"], "sockets": { "left": "ground", "right": "ground", "top": "vent" }, "encounterSlots": [{ "id": "pressure_pack", "x": 760, "y": 420, "budget": 5 }] },
+		{ "id": "antenna_static_side_room_01", "stageTags": ["antenna-barrens", "signal"], "sockets": { "left": "ground", "right": "ground" }, "encounterSlots": [{ "id": "static_pack", "x": 920, "y": 370, "budget": 6 }] }
+	]
+}

@@ -24,6 +24,7 @@ const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
 const stageLayoutRegistrySource = await text('apps/runner/src/world/stageLayoutRegistry.ts');
+const encounterGeneratorSource = await text('apps/runner/src/procgen/EncounterGenerator.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
@@ -153,6 +154,8 @@ for (const required of [
 	'stage && isRuntimeStageId(stage.id) ? stage.id : undefined',
 	'acquiredPayloadIds: storyProgress.acquiredPayloads',
 	'branchGameplayHooks',
+	'procgenSeed',
+	'generatedEnemyPacks',
 	'bossPhases: stage?.boss?.phases?.map',
 ]) {
 	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
@@ -166,8 +169,20 @@ for (const required of [
 ]) {
 	assert(stageLayoutRegistrySource.includes(required), `stageLayoutRegistry missing runtime stage layout contract: ${required}`);
 }
-for (const required of ['stageId?: RuntimeStageId', 'cloneStageLayout(this.options.stageId)']) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime stage layout selection: ${required}`);
+for (const required of ['stageId?: RuntimeStageId', 'cloneStageLayout(this.options.stageId)', 'generatedEnemyPacks?: readonly GeneratedEnemyPack[]', 'this.encounterGenerator.generatePacks']) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime stage layout/procgen selection: ${required}`);
+}
+for (const required of [
+	'EncounterGenerator',
+	'SeededRng',
+	'DEFAULT_ENEMY_FAMILIES',
+	'DEFAULT_AFFIXES',
+	'DEFAULT_STAGE_PROFILES',
+	'generatePack',
+	'forbiddenWith',
+	'procgenAffixes',
+]) {
+	assert(encounterGeneratorSource.includes(required), `EncounterGenerator missing procedural enemy contract: ${required}`);
 }
 
 for (const required of [

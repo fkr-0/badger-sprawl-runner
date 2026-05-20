@@ -1,0 +1,10 @@
+{
+	"version": 1,
+	"affixes": [
+		{ "id": "static_aura", "cost": 2, "allowedRoles": ["ranged", "summoner", "trapper"], "forbiddenWith": [], "telegraph": "blue ring + buzzing speakers", "effect": "periodic EMP pulse" },
+		{ "id": "debt_shield", "cost": 2, "allowedRoles": ["shield", "bruiser"], "forbiddenWith": ["mirror_counter"], "telegraph": "receipt halo", "effect": "absorbs first hit until parried" },
+		{ "id": "fast_route", "cost": 1, "allowedRoles": ["skirmisher", "swarm", "bruiser"], "forbiddenWith": ["knife_cloud"], "telegraph": "orange leg trails", "effect": "movement speed bonus" },
+		{ "id": "knife_cloud", "cost": 2, "allowedRoles": ["skirmisher", "trapper", "swarm"], "forbiddenWith": ["fast_route"], "telegraph": "orbiting knife sprites", "effect": "proximity chip damage" },
+		{ "id": "mirror_counter", "cost": 2, "allowedRoles": ["skirmisher", "shield"], "forbiddenWith": ["debt_shield"], "telegraph": "mirror flash", "effect": "brief counter/parry window" }
+	]
+}

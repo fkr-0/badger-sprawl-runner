@@ -11,6 +11,7 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
+import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
 import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
 	applyPersistedPayloadPickups,
@@ -32,6 +33,8 @@ export interface StageRunSceneOptions {
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	bossPhases?: readonly RuntimeBossPhase[];
+	generatedEnemyPacks?: readonly GeneratedEnemyPack[];
+	procgenSeed?: string;
 	onStoryPayloadCollected?: (payloadId: string) => void;
 }
 
@@ -44,6 +47,7 @@ export class StageRunScene implements Scene {
 	private camera = new CameraSystem();
 	private companions: CompanionSystem;
 	private bossPhases: BossPhaseSystem;
+	private encounterGenerator = new EncounterGenerator();
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
@@ -358,6 +362,15 @@ export class StageRunScene implements Scene {
 		this.platforms = layout.platforms;
 		this.pickups = layout.pickups;
 		applyPersistedPayloadPickups(this.pickups, this.options.acquiredPayloadIds ?? []);
-		this.enemies = layout.enemies;
+		const generatedPacks = this.options.generatedEnemyPacks ??
+			this.encounterGenerator.generatePacks(
+				{
+					stageId: this.options.stageId ?? layout.id,
+					seed: this.options.procgenSeed ?? `${this.options.stageId ?? layout.id}:story`,
+					gameplayHooks: this.options.branchGameplayHooks ?? [],
+				},
+				1
+			);
+		this.enemies = [...layout.enemies, ...generatedPacks.flatMap((pack) => pack.enemies)];
 	}
 }

@@ -1,0 +1,13 @@
+{
+	"version": 1,
+	"profiles": [
+		{ "stageId": "lower-sprawl", "basePackBudget": 5, "familyWeights": { "toll_authority": 5 }, "rankWeights": { "normal": 5, "champion": 1 } },
+		{ "stageId": "drainmarket", "basePackBudget": 6, "familyWeights": { "drainmarket_knives": 5 }, "rankWeights": { "normal": 4, "champion": 2 } },
+		{ "stageId": "chrome-arcology", "basePackBudget": 7, "familyWeights": { "arcology_security": 5 }, "rankWeights": { "normal": 3, "champion": 2, "elite": 1 } },
+		{ "stageId": "mirror-palace", "basePackBudget": 7, "familyWeights": { "arcology_security": 5 }, "rankWeights": { "normal": 3, "champion": 2, "elite": 1 } },
+		{ "stageId": "dub-colony", "basePackBudget": 8, "familyWeights": { "cargo_union_pressure": 5 }, "rankWeights": { "normal": 3, "champion": 3, "elite": 1 } },
+		{ "stageId": "antenna-barrens", "basePackBudget": 8, "familyWeights": { "pirate_static": 5 }, "rankWeights": { "normal": 2, "champion": 3, "elite": 2 } },
+		{ "stageId": "orbital-lift", "basePackBudget": 9, "familyWeights": { "toll_authority": 2, "cargo_union_pressure": 4 }, "rankWeights": { "normal": 2, "champion": 3, "elite": 2 } },
+		{ "stageId": "asteroid-redoubt", "basePackBudget": 10, "familyWeights": { "pirate_static": 3, "cargo_union_pressure": 3 }, "rankWeights": { "normal": 1, "champion": 3, "elite": 3, "unique": 1 } }
+	]
+}

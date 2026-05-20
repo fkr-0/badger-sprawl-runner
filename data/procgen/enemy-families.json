@@ -1,0 +1,60 @@
+{
+	"version": 1,
+	"families": [
+		{
+			"id": "toll_authority",
+			"stages": ["lower-sprawl", "orbital-lift"],
+			"roleWeights": { "shield": 3, "bruiser": 2, "trapper": 2, "ranged": 1 },
+			"units": [
+				{ "id": "meter_bailiff", "role": "shield", "cost": 2, "hp": 3, "speed": 22 },
+				{ "id": "turnstile_guard", "role": "bruiser", "cost": 2, "hp": 3, "speed": 34 },
+				{ "id": "receipt_trapper", "role": "trapper", "cost": 3, "hp": 2, "speed": 12 },
+				{ "id": "fare_laser", "role": "ranged", "cost": 3, "hp": 2, "speed": 8 }
+			]
+		},
+		{
+			"id": "drainmarket_knives",
+			"stages": ["drainmarket"],
+			"roleWeights": { "skirmisher": 4, "ranged": 2, "trapper": 2 },
+			"units": [
+				{ "id": "knife_drone", "role": "skirmisher", "cost": 1, "hp": 1, "speed": 62 },
+				{ "id": "clinic_collector", "role": "bruiser", "cost": 2, "hp": 3, "speed": 28 },
+				{ "id": "price_tag_wasp", "role": "ranged", "cost": 2, "hp": 1, "speed": 42 },
+				{ "id": "invoice_snare", "role": "trapper", "cost": 3, "hp": 2, "speed": 10 }
+			]
+		},
+		{
+			"id": "arcology_security",
+			"stages": ["chrome-arcology", "mirror-palace"],
+			"roleWeights": { "ranged": 3, "shield": 3, "trapper": 2, "skirmisher": 1 },
+			"units": [
+				{ "id": "lobby_sentinel", "role": "ranged", "cost": 2, "hp": 2, "speed": 14 },
+				{ "id": "elevator_bouncer", "role": "shield", "cost": 3, "hp": 4, "speed": 20 },
+				{ "id": "banquet_reflector", "role": "trapper", "cost": 3, "hp": 2, "speed": 18 },
+				{ "id": "contract_duelist", "role": "skirmisher", "cost": 2, "hp": 2, "speed": 48 }
+			]
+		},
+		{
+			"id": "pirate_static",
+			"stages": ["antenna-barrens", "asteroid-redoubt"],
+			"roleWeights": { "summoner": 3, "ranged": 3, "trapper": 2 },
+			"units": [
+				{ "id": "static_mast_imp", "role": "summoner", "cost": 3, "hp": 2, "speed": 16 },
+				{ "id": "ledger_ghost", "role": "ranged", "cost": 2, "hp": 2, "speed": 24 },
+				{ "id": "antenna_saboteur", "role": "trapper", "cost": 3, "hp": 2, "speed": 28 },
+				{ "id": "broadcast_leech", "role": "skirmisher", "cost": 1, "hp": 1, "speed": 52 }
+			]
+		},
+		{
+			"id": "cargo_union_pressure",
+			"stages": ["dub-colony", "orbital-lift", "asteroid-redoubt"],
+			"roleWeights": { "bruiser": 3, "support": 3, "swarm": 2 },
+			"units": [
+				{ "id": "crate_brute", "role": "bruiser", "cost": 3, "hp": 4, "speed": 18 },
+				{ "id": "lift_chain_worker", "role": "support", "cost": 2, "hp": 2, "speed": 26 },
+				{ "id": "chorus_shieldhand", "role": "shield", "cost": 3, "hp": 4, "speed": 16 },
+				{ "id": "freight_tick", "role": "swarm", "cost": 1, "hp": 1, "speed": 58 }
+			]
+		}
+	]
+}

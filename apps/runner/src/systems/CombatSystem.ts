@@ -25,6 +25,9 @@ export interface CombatEntity extends Entity {
 	bossPhaseLabel?: string;
 	bossPhaseMechanic?: string;
 	bossPhaseIndex?: number;
+	procgenFamily?: string;
+	procgenRole?: string;
+	procgenAffixes?: string[];
 }
 
 export interface HitboxSet {
