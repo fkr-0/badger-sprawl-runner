@@ -28,7 +28,7 @@ export class ChapterManager {
             { characterId: 'rook_null', trust: 30, abilitiesUnlocked: ['enemy_reveal'] },
             { characterId: 'murr_murrby', trust: 40, abilitiesUnlocked: ['merchant_access'] }
         ];
-        defaultCompanions.forEach(comp => {
+        for (const comp of defaultCompanions) {
             this.companions.set(comp.characterId, {
                 characterId: comp.characterId,
                 available: true,
@@ -36,7 +36,7 @@ export class ChapterManager {
                 currentStatus: 'active',
                 abilitiesUnlocked: comp.abilitiesUnlocked
             });
-        });
+        }
     }
     /**
      * Start a new chapter
@@ -85,10 +85,10 @@ export class ChapterManager {
             state.sideQuestsCompleted.push(questId);
             state.rewards.push(...rewards);
             // Apply trust changes
-            Object.entries(trustChanges).forEach(([characterId, amount]) => {
+            for (const [characterId, amount] of Object.entries(trustChanges)) {
                 state.trustGained[characterId] = (state.trustGained[characterId] || 0) + amount;
                 this.modifyCompanionTrust(characterId, amount);
-            });
+            }
         }
     }
     /**
@@ -106,12 +106,12 @@ export class ChapterManager {
                 this.modifyHeat(consequences.heatShift);
             }
             if (consequences.companions) {
-                consequences.companions.forEach(compId => {
+                for (const compId of consequences.companions) {
                     const comp = this.companions.get(compId);
                     if (comp && !comp.available) {
                         comp.available = true;
                     }
-                });
+                }
             }
         }
     }

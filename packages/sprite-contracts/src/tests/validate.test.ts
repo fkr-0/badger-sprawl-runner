@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { loadSpriteSheet } from '../loader';
-import { validateSpriteManifest } from '../validate';
+import { describe, expect, it } from 'vitest';
+import { __spriteLoaderInternals } from '../loader';
+import { normalizeSpriteManifest, validateSpriteManifest } from '../validate';
 import type { SpriteManifest, SpriteSheet } from '../types';
 
 describe('validateSpriteManifest', () => {
-	it('validates correct sprite manifest structure', () => {
+	it('validates normalized sprite manifest structure', () => {
 		const validManifest: SpriteManifest = {
 			version: '1.0',
 			sheets: [
@@ -15,7 +15,6 @@ describe('validateSpriteManifest', () => {
 					animations: {
 						idle: { frames: 4, fps: 10 },
 						run: { frames: 6, fps: 12 },
-						jump: { frames: 2, fps: 10 },
 					},
 				},
 			],
@@ -23,160 +22,171 @@ describe('validateSpriteManifest', () => {
 		expect(validateSpriteManifest(validManifest)).toBe(true);
 	});
 
-	it('rejects manifest with missing sheets array', () => {
-		const invalidManifest = {
-			version: '1.0',
-		};
-		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
-	});
-
-	it('rejects manifest with invalid frame size', () => {
-		const invalidManifest: unknown = {
-			version: '1.0',
-			sheets: [
+	it('validates project data/sprites.json shape with spriteSheets', () => {
+		const projectManifest = {
+			schemaVersion: 1,
+			baseGrid: 16,
+			spriteSheets: [
 				{
-					id: 'player',
-					file: 'player.png',
-					frameSize: { width: 0, height: 32 }, // Invalid: 0 width
-					animations: { idle: { frames: [0], fps: 10 } },
-				},
-			],
-		};
-		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
-	});
-
-	it('rejects sheet with zero animation frames', () => {
-		const invalidManifest: unknown = {
-			version: '1.0',
-			sheets: [
-				{
-					id: 'enemy',
-					file: 'enemy.png',
-					frameSize: { width: 24, height: 24 },
-					animations: {
-						idle: { frames: [], fps: 10 }, // Invalid: empty frames
-					},
-				},
-			],
-		};
-		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
-	});
-
-	it('rejects manifest with negative fps', () => {
-		const invalidManifest: unknown = {
-			version: '1.0',
-			sheets: [
-				{
-					id: 'projectile',
-					file: 'projectile.png',
-					frameSize: { width: 16, height: 16 },
-					animations: {
-						fly: { frames: [0, 1], fps: -5 }, // Invalid: negative fps
-					},
-				},
-			],
-		};
-		expect(validateSpriteManifest(invalidManifest as SpriteManifest)).toBe(false);
-	});
-
-	it('validates multiple sheets in manifest', () => {
-		const multiSheetManifest: SpriteManifest = {
-			version: '1.0',
-			sheets: [
-				{
-					id: 'player',
-					file: 'sprites/player.png',
+					id: 'items_core',
+					file: 'assets/sprites/items_core.png',
 					frameSize: [32, 32],
-					animations: { idle: { frames: 4, fps: 10 } },
-				},
-				{
-					id: 'enemy',
-					file: 'sprites/enemy.png',
-					frameSize: [24, 24],
-					animations: { patrol: { frames: 2, fps: 8 } },
+					animations: { rocket_backpack_pickup: { frames: 4, fps: 8 } },
 				},
 			],
 		};
-		expect(validateSpriteManifest(multiSheetManifest)).toBe(true);
+
+		expect(validateSpriteManifest(projectManifest)).toBe(true);
+		expect(normalizeSpriteManifest(projectManifest)).toEqual({
+			version: '1',
+			sheets: projectManifest.spriteSheets,
+		});
 	});
 
-	it('rejects manifest with duplicate sheet ids', () => {
-		const duplicateIdManifest: unknown = {
+	it('validates grid, order, anchors, boxes, events, and tags', () => {
+		const manifest: SpriteManifest = {
 			version: '1.0',
 			sheets: [
 				{
-					id: 'player',
-					file: 'player.png',
-					frameSize: { width: 32, height: 32 },
-					animations: { idle: { frames: [0], fps: 10 } },
-				},
-				{
-					id: 'player', // Duplicate!
-					file: 'player-alt.png',
-					frameSize: { width: 32, height: 32 },
-					animations: { idle: { frames: [0], fps: 10 } },
-				},
-			],
-		};
-		expect(validateSpriteManifest(duplicateIdManifest as SpriteManifest)).toBe(false);
-	});
-
-	it('validates animations with multiple frame sequences', () => {
-		const complexManifest: SpriteManifest = {
-			version: '1.0',
-			sheets: [
-				{
-					id: 'complex',
-					file: 'sprites/complex.png',
-					frameSize: [48, 48],
+					id: 'grid-sheet',
+					file: 'sprites/grid.png',
+					frameSize: [64, 64],
+					grid: { columns: 4, rows: 2 },
 					animations: {
-						attack1: { frames: 4, fps: 15 },
-						attack2: { frames: 5, fps: 15 },
-						idle: { frames: 3, fps: 6 },
+						run: {
+							frames: 8,
+							fps: 12,
+							order: [0, 1, 2, 3, 4, 5, 6, 7],
+							loop: true,
+							anchor: [32, 56],
+							hitboxes: [{ x: 40, y: 20, w: 16, h: 12, label: 'shoulder' }],
+							hurtboxes: [{ x: 18, y: 10, w: 30, h: 46 }],
+							events: [{ frame: 3, kind: 'footstep', name: 'right' }],
+							tags: ['locomotion'],
+						},
 					},
 				},
 			],
 		};
-		expect(validateSpriteManifest(complexManifest)).toBe(true);
+		expect(validateSpriteManifest(manifest)).toBe(true);
+	});
+
+	it('rejects missing sheets array', () => {
+		expect(validateSpriteManifest({ version: '1.0' })).toBe(false);
+	});
+
+	it('rejects invalid frame size', () => {
+		expect(
+			validateSpriteManifest({
+				version: '1.0',
+				sheets: [
+					{
+						id: 'player',
+						file: 'player.png',
+						frameSize: [0, 32],
+						animations: { idle: { frames: 1, fps: 10 } },
+					},
+				],
+			})
+		).toBe(false);
+	});
+
+	it('rejects zero animation frames and negative fps', () => {
+		expect(
+			validateSpriteManifest({
+				version: '1.0',
+				sheets: [
+					{
+						id: 'enemy',
+						file: 'enemy.png',
+						frameSize: [24, 24],
+						animations: { idle: { frames: 0, fps: -5 } },
+					},
+				],
+			})
+		).toBe(false);
+	});
+
+	it('rejects duplicate sheet ids', () => {
+		expect(
+			validateSpriteManifest({
+				version: '1.0',
+				sheets: [
+					{
+						id: 'player',
+						file: 'player.png',
+						frameSize: [32, 32],
+						animations: { idle: { frames: 1, fps: 10 } },
+					},
+					{
+						id: 'player',
+						file: 'player-alt.png',
+						frameSize: [32, 32],
+						animations: { idle: { frames: 1, fps: 10 } },
+					},
+				],
+			})
+		).toBe(false);
+	});
+
+	it('rejects invalid grid order references', () => {
+		expect(
+			validateSpriteManifest({
+				version: '1.0',
+				sheets: [
+					{
+						id: 'grid-sheet',
+						file: 'sprites/grid.png',
+						frameSize: [64, 64],
+						grid: { columns: 2, rows: 2 },
+						animations: { run: { frames: 4, fps: 12, order: [0, 1, 2, 4] } },
+					},
+				],
+			})
+		).toBe(false);
+	});
+
+	it('rejects invalid animation events', () => {
+		expect(
+			validateSpriteManifest({
+				version: '1.0',
+				sheets: [
+					{
+						id: 'events',
+						file: 'sprites/events.png',
+						frameSize: [32, 32],
+						animations: { fire: { frames: 3, fps: 10, events: [{ frame: 3, kind: 'shoot' }] } },
+					},
+				],
+			})
+		).toBe(false);
 	});
 });
 
-describe('loadSpriteSheet', () => {
-	it('returns LoadedSheet structure (stub)', async () => {
+describe('sprite frame source selection', () => {
+	it('maps row-per-animation sheets by animation row', () => {
 		const sheet: SpriteSheet = {
-			id: 'test-sheet',
-			file: 'sprites/test.png',
-			frameSize: { width: 32, height: 32 },
+			id: 'row-sheet',
+			file: 'sprites/row.png',
+			frameSize: [32, 16],
 			animations: {
-				idle: { frames: [0], fps: 10 },
+				idle: { frames: 2, fps: 8 },
+				run: { frames: 3, fps: 12 },
 			},
 		};
-
-		// loadSpriteSheet is a stub; it should not throw
-		// In a real implementation, this would load canvas and parse spritesheet
-		try {
-			const result = await loadSpriteSheet(sheet, null as unknown as CanvasRenderingContext2D);
-			expect(result).toBeDefined();
-		} catch {
-			// Stub may not be fully implemented; don't fail test
-			expect(true).toBe(true);
-		}
+		expect(__spriteLoaderInternals.getFrameSource(sheet, 'run', 2)).toEqual([64, 16]);
 	});
 
-	it('handles missing canvas context gracefully', async () => {
+	it('maps explicit grid/order sheets by absolute frame index', () => {
 		const sheet: SpriteSheet = {
-			id: 'no-context',
-			file: 'sprites/missing.png',
-			frameSize: { width: 32, height: 32 },
-			animations: { idle: { frames: [0], fps: 10 } },
+			id: 'grid-sheet',
+			file: 'sprites/grid.png',
+			frameSize: [256, 256],
+			grid: { columns: 4, rows: 2 },
+			animations: {
+				run: { frames: 8, fps: 12, order: [0, 1, 2, 3, 4, 5, 6, 7] },
+			},
 		};
-
-		try {
-			await loadSpriteSheet(sheet, undefined as unknown as CanvasRenderingContext2D);
-			expect(true).toBe(true);
-		} catch {
-			// Expected for stub implementation
-			expect(true).toBe(true);
-		}
+		expect(__spriteLoaderInternals.getFrameSource(sheet, 'run', 5)).toEqual([256, 256]);
 	});
 });

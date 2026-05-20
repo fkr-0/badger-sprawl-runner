@@ -71,11 +71,9 @@ export class DialogueSystem {
                 // We've reached choices - don't auto-complete
                 return false;
             }
-            else {
-                // Scene complete
-                this.completeScene();
-                return false;
-            }
+            // Scene complete
+            this.completeScene();
+            return false;
         }
         return true;
     }

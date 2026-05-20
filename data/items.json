@@ -5,120 +5,179 @@
 			"name": "Rocket Backpack",
 			"slot": "active",
 			"rarity": "core",
-			"tags": ["movement", "fuel"],
-			"effect": "Directional burst; recharges on ground and with fuel cells."
+			"tags": [
+				"movement",
+				"fuel"
+			],
+			"effect": "Directional burst; recharges on ground and with fuel cells.",
+			"iconAnimation": "rocket_backpack_icon"
 		},
 		{
 			"id": "railgun",
 			"name": "Railgun",
 			"slot": "weapon",
 			"rarity": "core",
-			"tags": ["ranged", "timing"],
-			"effect": "Heavy piercing shot with reload cadence and recoil."
+			"tags": [
+				"ranged",
+				"timing"
+			],
+			"effect": "Heavy piercing shot with reload cadence and recoil.",
+			"iconAnimation": "railgun_icon"
 		},
 		{
 			"id": "stim_pack",
 			"name": "Stim Pack",
 			"slot": "consumable",
 			"rarity": "core",
-			"tags": ["heal", "focus"],
-			"effect": "Heal and briefly slow perceived time."
+			"tags": [
+				"heal",
+				"focus"
+			],
+			"effect": "Heal and briefly slow perceived time.",
+			"iconAnimation": "stim_pack_icon"
 		},
 		{
 			"id": "claws",
 			"name": "Claws",
 			"slot": "melee",
 			"rarity": "starter",
-			"tags": ["melee", "parry"],
-			"effect": "Fast slash; parry during enemy flash."
+			"tags": [
+				"melee",
+				"parry"
+			],
+			"effect": "Fast slash; parry during enemy flash.",
+			"iconAnimation": "claws_icon"
 		},
 		{
 			"id": "katana",
 			"name": "Katana",
 			"slot": "melee_upgrade",
 			"rarity": "rare",
-			"tags": ["melee", "perfect"],
-			"effect": "Draw slash after parry or perfect dodge."
+			"tags": [
+				"melee",
+				"perfect"
+			],
+			"effect": "Draw slash after parry or perfect dodge.",
+			"iconAnimation": "katana_icon"
 		},
 		{
 			"id": "signal_jammer",
 			"name": "Signal Jammer",
 			"slot": "active",
 			"rarity": "uncommon",
-			"tags": ["hack", "stealth"],
-			"effect": "Freezes cameras, slows drones, hides hack traces."
+			"tags": [
+				"hack",
+				"stealth"
+			],
+			"effect": "Freezes cameras, slows drones, hides hack traces.",
+			"iconAnimation": "signal_jammer_icon"
 		},
 		{
 			"id": "phase_pick",
 			"name": "Phase Pick",
 			"slot": "utility",
 			"rarity": "uncommon",
-			"tags": ["heist", "secret"],
-			"effect": "Opens weak walls and locked loot hatches."
+			"tags": [
+				"heist",
+				"secret"
+			],
+			"effect": "Opens weak walls and locked loot hatches.",
+			"iconAnimation": "phase_pick_icon"
 		},
 		{
 			"id": "dub_shield",
 			"name": "Dub Shield",
 			"slot": "defense",
 			"rarity": "rare",
-			"tags": ["beat", "guard"],
-			"effect": "Beat-synced pulse absorbs one hit if timed on downbeat."
+			"tags": [
+				"beat",
+				"guard"
+			],
+			"effect": "Beat-synced pulse absorbs one hit if timed on downbeat.",
+			"iconAnimation": "dub_shield_icon"
 		},
 		{
 			"id": "echo_cassette",
 			"name": "Echo Cassette",
 			"slot": "boon",
 			"rarity": "rare",
-			"tags": ["decoy", "run"],
-			"effect": "Replays last two seconds as a ghost decoy."
+			"tags": [
+				"decoy",
+				"run"
+			],
+			"effect": "Replays last two seconds as a ghost decoy.",
+			"iconAnimation": "echo_cassette_icon"
 		},
 		{
 			"id": "gravity_talisman",
 			"name": "Gravity Talisman",
 			"slot": "movement",
 			"rarity": "rare",
-			"tags": ["air", "flip"],
-			"effect": "One air flip that bends vertical velocity."
+			"tags": [
+				"air",
+				"flip"
+			],
+			"effect": "One air flip that bends vertical velocity.",
+			"iconAnimation": "gravity_talisman_icon"
 		},
 		{
 			"id": "nanofur_weave",
 			"name": "Nanofur Weave",
 			"slot": "passive",
 			"rarity": "uncommon",
-			"tags": ["armor"],
-			"effect": "Reduces spike and graze damage."
+			"tags": [
+				"armor"
+			],
+			"effect": "Reduces spike and graze damage.",
+			"iconAnimation": "nanofur_weave_icon"
 		},
 		{
 			"id": "solder_mite_swarm",
 			"name": "Solder Mite Swarm",
 			"slot": "companion",
 			"rarity": "rare",
-			"tags": ["repair", "armor"],
-			"effect": "Repairs rocket cells and nibbles enemy armor."
+			"tags": [
+				"repair",
+				"armor"
+			],
+			"effect": "Repairs rocket cells and nibbles enemy armor.",
+			"iconAnimation": "solder_mite_swarm_icon"
 		},
 		{
 			"id": "black_ice_tooth",
 			"name": "Black Ice Tooth",
 			"slot": "hack_combat",
 			"rarity": "epic",
-			"tags": ["hack", "emp"],
-			"effect": "Successful code gate charges next melee with EMP."
+			"tags": [
+				"hack",
+				"emp"
+			],
+			"effect": "Successful code gate charges next melee with EMP.",
+			"iconAnimation": "black_ice_tooth_icon"
 		},
 		{
 			"id": "bassline_boots",
 			"name": "Bassline Boots",
 			"slot": "movement",
 			"rarity": "uncommon",
-			"tags": ["beat", "landing"],
-			"effect": "Landing on beat creates a shockwave."
+			"tags": [
+				"beat",
+				"landing"
+			],
+			"effect": "Landing on beat creates a shockwave.",
+			"iconAnimation": "bassline_boots_icon"
 		},
 		{
 			"id": "contraband_seed_key",
 			"name": "Contraband Seed Key",
 			"slot": "meta",
 			"rarity": "legendary",
-			"tags": ["shop", "meta"],
-			"effect": "Unlocks a hidden shop category across runs."
+			"tags": [
+				"shop",
+				"meta"
+			],
+			"effect": "Unlocks a hidden shop category across runs.",
+			"iconAnimation": "contraband_seed_key_icon"
 		}
 	]
 }

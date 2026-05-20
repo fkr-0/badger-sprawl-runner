@@ -2,7 +2,12 @@
  * SpriteRenderer - loads sprite sheets and draws animated frames
  */
 
-import { loadSpriteSheet, type SpriteManifest, type LoadedSheet } from '@badger/sprite-contracts';
+import {
+	loadSpriteSheet,
+	normalizeSpriteManifest,
+	type SpriteManifest,
+	type LoadedSheet,
+} from '@badger/sprite-contracts';
 
 interface FallbackEntity {
 	x: number;
@@ -23,7 +28,7 @@ export class SpriteRenderer {
 
 	async loadManifest(manifestUrl: string): Promise<void> {
 		const response = await fetch(manifestUrl);
-		this.manifest = (await response.json()) as SpriteManifest;
+		this.manifest = normalizeSpriteManifest(await response.json());
 
 		const loadPromises = this.manifest.sheets.map((sheetDef) =>
 			loadSpriteSheet(sheetDef, this.ctx).then((loaded) => {

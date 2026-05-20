@@ -18,6 +18,8 @@ const readme = await text('README.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
+const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
+const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const smokeMain = await text('apps/runner/src/smokeMain.ts');
@@ -80,6 +82,24 @@ for (const required of ['BADGER SPRAWL RUNNER', 'createLocalStorageSaveDriver', 
 for (const mode of ['story', 'versus', 'training', 'skills']) {
 	assert(runnerGameFlow.includes(mode), `runner flow missing menu mode: ${mode}`);
 }
+
+
+for (const required of [
+	'HUD_ICON_SHEET',
+	'item_icons',
+	'rocket_backpack_icon',
+	'railgun_icon',
+	'katana_icon',
+	'stim_pack_icon',
+	'spriteRenderer.drawFrame(HUD_ICON_SHEET',
+	'getHudIconSlots',
+]) {
+	assert(uiRendererSource.includes(required), `UIRenderer missing item icon HUD contract: ${required}`);
+}
+assert(
+	rendererSource.includes('this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer)'),
+	'Renderer must pass SpriteRenderer into UIRenderer so item_icons can render',
+);
 
 for (const scene of ['TitleScene', 'StageRunScene', 'TrainingScene', 'HordeScene']) {
 	const scenePath = `apps/runner/src/scenes/${scene}.ts`;

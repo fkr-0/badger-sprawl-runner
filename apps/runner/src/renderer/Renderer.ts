@@ -9,7 +9,8 @@ import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
-import type { EnemyEntity } from '../systems/EnemySystem';
+import type { CombatEntity } from '../systems/CombatSystem';
+import type { Pickup } from '../systems/ItemSystem';
 
 export class Renderer {
 	private spriteRenderer: SpriteRenderer;
@@ -108,7 +109,7 @@ export class Renderer {
 		}
 	}
 
-	renderEnemies(enemies: EnemyEntity[], cameraX: number): void {
+	renderEnemies(enemies: CombatEntity[], cameraX: number): void {
 		for (const enemy of enemies) {
 			const x = enemy.x - cameraX;
 
@@ -128,25 +129,30 @@ export class Renderer {
 		}
 	}
 
-	renderPickups(
-		pickups: Array<{ x: number; y: number; kind: string; taken: boolean }>,
-		cameraX: number
-	): void {
+	renderPickups(pickups: Pickup[], cameraX: number): void {
 		for (const p of pickups) {
-			if (p.taken) continue;
+			if (p.taken || p.visualState === 'collected') continue;
 
 			const x = p.x - cameraX;
 			const bob = Math.sin(Date.now() / 200) * 4;
+			const color = this.getPickupColor(p.kind);
+			const scale = p.visualState === 'collecting' ? 1.35 : 1;
 
-			// Glow
-			this.ctx.shadowColor = this.getPickupColor(p.kind);
-			this.ctx.shadowBlur = 16;
+			this.ctx.save();
+			this.ctx.shadowColor = color;
+			this.ctx.shadowBlur = p.visualState === 'collecting' ? 24 : 16;
 
-			// Item
-			this.ctx.fillStyle = this.getPickupColor(p.kind);
-			this.ctx.fillRect(x - 8, p.y + bob - 8, 16, 16);
+			if (this.spriteRenderer.hasSheet('items_core') && p.animation) {
+				const frame = Math.floor(Date.now() / 125) % 4;
+				this.spriteRenderer.drawFrame('items_core', p.animation, frame, x - 16, p.y + bob - 16);
+			} else {
+				this.ctx.translate(x, p.y + bob);
+				this.ctx.scale(scale, scale);
+				this.ctx.fillStyle = color;
+				this.ctx.fillRect(-8, -8, 16, 16);
+			}
 
-			this.ctx.shadowBlur = 0;
+			this.ctx.restore();
 		}
 	}
 
@@ -155,7 +161,7 @@ export class Renderer {
 	}
 
 	renderUI(player: Player, camera: Camera): void {
-		this.uiRenderer.render(this.ctx, player, camera);
+		this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer);
 	}
 
 	renderTitleCard(title: string, subtitle?: string, progress = 0): void {
@@ -196,6 +202,8 @@ export class Renderer {
 				return '#ff5e7a';
 			case 'katana':
 				return '#eaf2ff';
+			case 'pickup':
+				return '#ffe06b';
 			default:
 				return '#fff';
 		}

@@ -11,13 +11,13 @@ import { CombatSystem } from '../systems/CombatSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import { ItemSystem } from '../systems/ItemSystem';
+import { cloneLowerSprawlLayout } from '../world/lowerSprawlLayout';
 import { createPlayer, processMossInput, type Player } from '../actors/MossBadger';
 import type { Platform } from '../systems/PhysicsSystem';
 import type { Pickup } from '../systems/ItemSystem';
 import type { Renderer } from '../renderer/Renderer';
 import {
 	playAnimation,
-	advanceAnimation,
 	createAnimationState,
 	type AnimationState,
 } from '../renderer/AnimationState';
@@ -29,7 +29,11 @@ export class StageRunScene implements Scene {
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
-	private items = new ItemSystem();
+	private items = new ItemSystem({
+		onCollect: (pickup) => {
+			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
+		},
+	});
 
 	private player: Player;
 	private platforms: Platform[] = [];
@@ -153,7 +157,7 @@ export class StageRunScene implements Scene {
 		// Determine animation based on state
 		if (!this.player.onGround) {
 			if (this.player.vy < 0) {
-				playAnimation(animState, 'jump');
+				playAnimation(animState, 'jump_up');
 			} else {
 				playAnimation(animState, 'fall');
 			}
@@ -166,7 +170,7 @@ export class StageRunScene implements Scene {
 		// Check for attack animation
 		const lastAction = this.combat.getLastAction();
 		if (lastAction?.kind === 'melee' && Date.now() - lastAction.time < 200) {
-			playAnimation(animState, 'attack', false);
+			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
 		}
 
 		// Animation frame advancement happens during render when sprite sheet is available
@@ -257,29 +261,9 @@ export class StageRunScene implements Scene {
 	}
 
 	private initWorld(): void {
-		// Platforms from prototype
-		this.platforms = [
-			{ x: 0, y: 494, w: 1900, h: 80 },
-			{ x: 230, y: 415, w: 135, h: 18 },
-			{ x: 455, y: 360, w: 130, h: 18 },
-			{ x: 705, y: 405, w: 150, h: 18 },
-			{ x: 950, y: 338, w: 170, h: 18 },
-			{ x: 1230, y: 420, w: 160, h: 18 },
-			{ x: 1480, y: 365, w: 240, h: 18 },
-		];
-
-		// Pickups from prototype
-		this.pickups = [
-			{ id: 'rocket_backpack', x: 270, y: 382, kind: 'rocket', taken: false },
-			{ id: 'railgun', x: 500, y: 326, kind: 'railgun', taken: false },
-			{ id: 'stim_pack', x: 996, y: 304, kind: 'stim', taken: false },
-			{ id: 'katana', x: 1518, y: 330, kind: 'katana', taken: false },
-		];
-
-		// Enemies from prototype
-		this.enemies = [
-			{ x: 620, y: 462, w: 34, h: 32, vx: -42, hp: 2, stun: 0, invuln: 0 },
-			{ x: 1130, y: 305, w: 34, h: 30, vx: 0, hp: 2, stun: 0, invuln: 0, phase: 0 },
-		];
+		const layout = cloneLowerSprawlLayout();
+		this.platforms = layout.platforms;
+		this.pickups = layout.pickups;
+		this.enemies = layout.enemies;
 	}
 }

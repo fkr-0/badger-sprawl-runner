@@ -2,7 +2,7 @@
 
 Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked or intentionally deferred.
 
-Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on 2026-05-10.
+Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on 2026-05-20.
 
 ## Release-critical gates
 
@@ -33,20 +33,40 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 
 ## Fresh verification evidence
 
-- [x] `pnpm run test` exited 0: data validation, runtime contracts, and all package tests passed.
+- [x] `pnpm run test` exited 0: data validation, runtime contracts, story/animation/public sprite asset contracts, and all package tests passed.
 - [x] `pnpm run typecheck` exited 0: all workspace packages and `apps/runner` typechecked.
 - [x] `pnpm run build` exited 0: packages built and Vite produced `apps/runner/dist`.
 - [x] `pnpm run smoke:runner` exited 0: runner bundle smoke contract passed.
-- [x] `pnpm run lint` exited 0: Biome checked 122 files with no fixes applied.
-- [x] `git status --short && git diff --stat` produced no working-tree changes after verification before this checklist update.
+- [x] `pnpm run lint` exited 0: Biome checked 152 files with no fixes applied.
+- [x] Working tree sprite/animation implementation is ready to commit after this checklist update.
+
+## Sprite, texture, and animation pipeline
+
+- [x] Add `animation.yml` as the canonical sprite/texture/animation production map.
+- [x] Decide frame packaging policy: use grids/atlases for animation frames, keep individual PNGs for rare one-off plates/illustrations.
+- [x] Model pickups as stage/layout entities instead of per-movement-frame annotations.
+- [x] Move Lower Sprawl pickup/platform/enemy prototype data into typed stage layout data.
+- [x] Add pickup visual state, collection timing, pickup VFX hook, and item animation mapping.
+- [x] Align runtime player animation names with `data/sprites.json` (`jump_up`, `melee_claws`, `melee_katana`).
+- [x] Extend `@badger/sprite-contracts` with manifest normalization plus grid/order/anchor/boxes/events/tags support.
+- [x] Normalize `/data/sprites.json` loading so the runner accepts the project `spriteSheets` manifest shape.
+- [x] Encode Moss, items, story payloads, VFX, world tiles/parallax, enemies, bosses, companions, NPCs, and item icon animation contracts.
+- [x] Add deterministic placeholder PNG atlas generation for every sprite sheet.
+- [x] Serve generated placeholder sprite manifest/assets from `apps/runner/public`.
+- [x] Add public sprite asset verification for PNG existence, dimensions, and manifest freshness.
+- [x] Add HUD item icon rendering for rocket pack, railgun, katana, and stims through `item_icons`.
+- [ ] Replace placeholder PNG atlases with final production art while preserving manifest dimensions/names.
+- [ ] Add character/NPC dialogue portrait rendering using the encoded character sheet contracts.
+- [ ] Add runtime animation events for hitboxes, hurtboxes, action windows, cancel windows, footsteps, and attack/VFX triggers.
+- [ ] Persist `story_payload` pickups so collected story items never respawn after save/load.
 
 ## Known deferred/non-blocking after v1.0
 
-- [!] Replace generated placeholder art/audio with final production assets.
+- [~] Replace generated placeholder sprite/audio assets with final production assets. Placeholder sprite atlases are now generated and served for all sprite contracts.
 - [x] Add browser-driven end-to-end gameplay tests (Playwright E2E implemented).
 - [!] Add CI workflow publishing hosted build artifacts.
 - [!] Decide whether reusable packages should publish to npm or remain workspace-internal.
-- [~] Integrate story-flavour.yml content into runtime game systems.
+- [x] Integrate story-flavour.yml content into runtime game systems: generated typed story content, sprite contracts, character/enemy/boss metadata, and animation planning are wired.
 
 ---
 
@@ -79,8 +99,8 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Update enemy details to match YAML specifications
 - [x] Harmonize character information with YAML content
 - [ ] Implement all 8 chapter stages with proper content
-- [ ] Add all boss phases as specified in YAML
-- [ ] Implement all heist payloads and dramatic questions
+- [~] Add all boss phases as specified in YAML
+- [~] Implement all heist payloads and dramatic questions
 - [ ] Add side quests for each chapter
 - [ ] Add minigames for each chapter
 
