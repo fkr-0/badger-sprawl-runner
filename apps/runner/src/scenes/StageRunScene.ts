@@ -36,11 +36,19 @@ export interface RuntimeTutorialBeat {
 	teaches: string;
 }
 
+export interface RuntimeBossPlaceholder {
+	id: string;
+	name: string;
+	argument: string;
+	phaseCount: number;
+}
+
 export interface StageRunSceneOptions {
 	stageId?: RuntimeStageId;
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	bossPhases?: readonly RuntimeBossPhase[];
+	bossPlaceholder?: RuntimeBossPlaceholder;
 	tutorialBeats?: readonly RuntimeTutorialBeat[];
 	generatedEnemyPacks?: readonly GeneratedEnemyPack[];
 	generatedSideRooms?: readonly GeneratedSideRoom[];
@@ -95,10 +103,17 @@ export class StageRunScene implements Scene {
 		return (this.options.tutorialBeats ?? []).map((beat) => ({ ...beat }));
 	}
 
+	getBossPlaceholder(): RuntimeBossPlaceholder | null {
+		return this.options.bossPlaceholder ? { ...this.options.bossPlaceholder } : null;
+	}
+
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
 		if (this.options.tutorialBeats?.length) {
 			window.dispatchEvent(new CustomEvent('badger:tutorial-overlay', { detail: this.getTutorialOverlayBeats() }));
+		}
+		if (this.options.bossPlaceholder) {
+			window.dispatchEvent(new CustomEvent('badger:boss-placeholder', { detail: this.getBossPlaceholder() }));
 		}
 		this.renderer = ctx.renderer as Renderer;
 		// Load sprite manifest if available
@@ -434,10 +449,42 @@ export class StageRunScene implements Scene {
 		const sideRooms = this.options.generatedSideRooms ?? [];
 		this.platforms = [...this.platforms, ...sideRooms.flatMap((room) => room.platforms)];
 		this.pickups = [...this.pickups, ...sideRooms.flatMap((room) => room.pickups)];
+		const bossPlaceholder = this.createBossPlaceholder(layout.id);
 		this.enemies = [
 			...layout.enemies,
 			...generatedPacks.flatMap((pack) => pack.enemies),
 			...sideRooms.flatMap((room) => room.enemyPacks.flatMap((pack) => pack.enemies)),
+			...(bossPlaceholder ? [bossPlaceholder] : []),
 		];
+	}
+
+
+
+	private createBossPlaceholder(stageId: string): CombatEntity | null {
+		const boss = this.options.bossPlaceholder;
+		if (!boss) return null;
+		const phaseCount = Math.max(1, boss.phaseCount);
+		return {
+			x: 1480,
+			y: 418,
+			w: 42,
+			h: 62,
+			vx: 0,
+			vy: 0,
+			onGround: false,
+			coyoteLeft: 0,
+			jumpBuffered: 0,
+			dir: -1,
+			hp: 4 + phaseCount * 2,
+			maxHp: 4 + phaseCount * 2,
+			invuln: 0,
+			stun: 0,
+			bossId: boss.id,
+			bossName: boss.name,
+			bossArgument: boss.argument,
+			isBossPlaceholder: true,
+			procgenFamily: `${stageId}_boss_placeholder`,
+			procgenRole: 'boss',
+		};
 	}
 }

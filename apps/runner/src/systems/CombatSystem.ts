@@ -25,6 +25,10 @@ export interface CombatEntity extends Entity {
 	bossPhaseLabel?: string;
 	bossPhaseMechanic?: string;
 	bossPhaseIndex?: number;
+	bossId?: string;
+	bossName?: string;
+	bossArgument?: string;
+	isBossPlaceholder?: boolean;
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
