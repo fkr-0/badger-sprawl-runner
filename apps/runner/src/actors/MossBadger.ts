@@ -6,6 +6,7 @@
 import type { Entity } from '../systems/PhysicsSystem';
 import type { CombatEntity, CombatSystem } from '../systems/CombatSystem';
 import type { ActionMap } from '../systems/InputSystem';
+import type { AnimationState } from '../renderer/AnimationState';
 
 export interface Player extends Entity, CombatEntity {
 	fuel: number;
@@ -26,6 +27,7 @@ export interface Player extends Entity, CombatEntity {
 	isDodging?: boolean;
 	comboCount?: number;
 	comboTimer?: number;
+	animState?: AnimationState;
 }
 
 export function createPlayer(): Player {

@@ -33,6 +33,10 @@ export class BossPhaseSystem {
 			Math.floor((1 - healthRatio) * this.phases.length)
 		);
 		const phase = this.phases[phaseIndex] ?? this.phases[0];
+		if (!phase) {
+			this.state = null;
+			return null;
+		}
 		this.applyPhasePressure(boss, phase, phaseIndex);
 		this.state = {
 			activePhaseId: phase.id,

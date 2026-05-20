@@ -22,6 +22,7 @@ const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
 const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
+const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
@@ -115,6 +116,19 @@ for (const required of [
 }
 
 
+
+
+for (const required of [
+	'buildStageRunSceneOptions',
+	'getCurrentStage()',
+	'getStoryProgress()',
+	'getActiveBranchConsequences(stage.id)',
+	'acquiredPayloadIds: storyProgress.acquiredPayloads',
+	'branchGameplayHooks',
+	'bossPhases: stage?.boss?.phases?.map',
+]) {
+	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
+}
 
 for (const required of [
 	'BossPhaseSystem',

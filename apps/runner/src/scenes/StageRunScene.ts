@@ -114,7 +114,7 @@ export class StageRunScene implements Scene {
 			onCoyoteJump: () => this.emitCoyoteParticles(),
 		});
 		// 4. Combat with event handlers
-		this.combat.step(this.player, this.enemies, action as Record<string, boolean>, simDt, {
+		this.combat.step(this.player, this.enemies, action as unknown as Record<string, boolean>, simDt, {
 			onEvent: (event) => this.handleCombatEvent(event),
 			mitigateDamage: (amount) =>
 				this.companions.mitigateDamage(amount, {
@@ -166,7 +166,7 @@ export class StageRunScene implements Scene {
 
 	render(renderer: unknown, alpha: number): void {
 		const rend = renderer as Renderer;
-		const cam = this.camera.getState();
+		const cam = this.camera.getCamera();
 
 		// Apply screen shake offset
 		const shakeX =

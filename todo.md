@@ -100,7 +100,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Harmonize character information with YAML content
 - [~] Implement all 8 chapter stages with proper content: stages now include chapter metadata, side quests, minigames, dramatic choices, payload contracts, and boss contracts; bespoke playable layouts remain.
 - [x] Add all boss phases as specified in YAML: boss phase mechanics now project through GameFlow and render in StoryFlow stage panels.
-- [~] Implement all heist payloads and dramatic questions: stage choice UI now exposes dramatic questions; final stage-specific gameplay payload integrations remain.
+- [x] Implement all heist payloads and dramatic questions: stage choice UI exposes dramatic questions and StageRunOptions now passes acquired payloads, branch hooks, and boss phases into runtime stage options.
 - [x] Add side quests for each chapter: every campaign stage now has at least one typed side quest contract.
 - [x] Add minigames for each chapter: every campaign stage now exposes a typed minigame contract through GameFlow and StoryFlow.
 
@@ -139,6 +139,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Persist story progress through the save store: current stage, completed stages, acquired payloads, campaign completion.
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
 - [ ] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio.
+- [ ] Wire StoryFlow stage entry directly into StageRunScene using buildStageRunSceneOptions().
 - [x] Implement playable boss phase behavior in StageRunScene/boss encounters: BossPhaseSystem now selects active phases by boss HP, applies phase pressure, and surfaces boss phase HUD/overlays.
 - [x] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers: Naya shield bonus, Rook ambush overlay, and companion assist timing hooks now resolve into StageRunScene companion modifiers.
 
