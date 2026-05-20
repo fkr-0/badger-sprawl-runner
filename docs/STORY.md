@@ -31,17 +31,27 @@ tone:
 
 ## Main cast
 
-| Character | Role | Notes |
-|---|---|---|
-| Moss the Badger | Player | Courier, thief, reluctant rebel, excellent claws. |
-| Sister Version | Dub colony engineer | Builds rocket backpack, teaches infrastructure sabotage. |
-| Rook Null | Heist planner | Former logistics AI running on scavenged radios; sees systems too clearly. |
-| Auntie Subharmonic | Mentor/merchant-adjacent elder | Trades in beats, rumors, stims, and ethics. |
-| Murr Murrby | Travelling void-cat merchant | Cheerful profiteer with secret mutual-aid routes. |
-| Lio | Old ally / possible traitor / possible redeemed companion | Courier from Moss's past; debt contract pressures them into betrayal. |
-| Naya Root | New ally | Dub colony shield fighter and greenhouse defender. |
-| Director Vane | Antagonist | Runs orbital resource locks and city debt prisons. |
-| The Choir of Static | Rebel network | Many small voices on pirate channels; can become a distributed power. |
+| Character | Role | Voice | Notes |
+|---|---|---|---|
+| Moss the Badger | Player courier | dry, stubborn, observant | Courier, thief, reluctant rebel, excellent claws. |
+| Auntie Subharmonic | Pirate-radio mentor | warm, teasing, sharp | Trades in beats, rumors, stims, and ethics. |
+| Rook Null | Former logistics AI | calm, precise, tender in odd ways | Heist planner running on scavenged radios; sees systems too clearly. |
+| Sister Version | Dub colony engineer | bright, militant, mechanically exact | Builds rocket backpack, teaches infrastructure sabotage. |
+| Murr Murrby | Void-cat merchant | cheerful, slippery, principled at odd moments | Travelling merchant with secret mutual-aid routes. |
+| Lio | Old ally / possible traitor | guarded, regretful | Courier from Moss's past; debt contract pressures them into betrayal. |
+| Naya Root | Shield ally | grounded, brave, blunt | Dub colony shield fighter and greenhouse defender. |
+| Director Vane | Final antagonist | controlled, paternal, furious when challenged | Runs orbital resource locks and city debt prisons. |
+| Juno Jar | Pipe kid map-runner | fast, funny, practical | Child graffiti artist who marks free routes. |
+| Dr. Mina Suture | Back-alley medic | weary, practical, angry | Runs underground clinic in drainmarket. |
+| DJ Calculus | Beatmaker and organizer | nerdy, streetwise, playful | Squat organizer and beatmaker. |
+| Foreman Pell | Maintenance organizer | low, careful, dry humor | Hidden union organizer in arcology. |
+| Madame Vitrine | Arcology contract boss | silky, condescending | Mirror-armored executive boss. |
+| Cobalt Carmine | Banquet singer | smooth, haunted | Ex-radical jazz singer at orbital court. |
+| King Feedback | Security leader | booming, frightened beneath confidence | Rebel boss who wants emergency command. |
+| Mara Modulo | Public cryptography teacher | patient, intense | Teaches that secrets aren't the same as safety. |
+| Black-Ice Fox | Elite hacker boss | cool, amused, exact | Guardian of closed-source locks. |
+| Elevator Angel | Obedient logistics boss | serene, bureaucratic | Machine that follows orders without judging. |
+| The Choir of Static | Rebel network | many voices | Pirate radio mesh that can become distributed power. |
 
 ## Dramatic grammar
 

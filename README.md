@@ -67,7 +67,7 @@ pnpm run smoke:runner  # verifies runner dist entry and bundled app contract
 pnpm run lint          # Biome release lint gate
 ```
 
-A v1 release is ready only when all commands above exit 0 and `todo.md` has no unchecked release-critical items.
+A v1 release is ready only when all commands above exit 0 and `docs/todo.md` has no unchecked release-critical items.
 
 ## Repository map
 
@@ -79,18 +79,18 @@ badger-sprawl-runner/
 ├── packages/progression/        # run/meta progression systems
 ├── packages/sprite-contracts/   # sprite schemas and loader
 ├── data/                        # manifest, item, progression, sprite data
-├── docs/                        # implementation plans and workflows
+├── docs/                        # implementation plans, workflows, and design docs
 ├── src/                         # legacy static prototype source
 ├── tests/                       # workspace-level validation and smoke tests
-├── todo.md                      # v1 release checklist
 └── package.json                 # workspace scripts
 ```
 
 ## Expanded design docs
 
-- `STORY.md` — five-act Brechtian drama, cast, heist payloads, dialogue promise.
-- `CAMPAIGN.md` — expanded worlds, stages, sub-bosses, endbosses, placards, level descriptions.
-- `ENEMY_BIBLE.md` — enemy classes, world rosters, counters, hack/trap interactions.
-- `SPRITES.md` — sprite requirements and asset direction.
-- `MINIGAMES.md` — code gate and heist minigame design.
-- `ROADMAP.md` — broader post-v1 project roadmap.
+- `docs/STORY.md` — five-act Brechtian drama, cast, heist payloads, dialogue promise.
+- `docs/CAMPAIGN.md` — expanded worlds, stages, sub-bosses, endbosses, placards, level descriptions.
+- `docs/ENEMY_BIBLE.md` — enemy classes, world rosters, counters, hack/trap interactions.
+- `docs/SPRITES.md` — sprite requirements and asset direction.
+- `docs/MINIGAMES.md` — code gate and heist minigame design.
+- `docs/ROADMAP.md` — broader post-v1 project roadmap.
+- `docs/story-flavour.yml` — comprehensive story content pack with dialogue, characters, chapters, and sprite generation prompts.

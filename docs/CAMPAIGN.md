@@ -13,7 +13,7 @@ structure:
   prologue: "World 1 opening"
   act_i: [Lower Sprawl, Chrome Arcology]
   act_ii: [Straylight Mirage]
-  act_iii: [Dub Colony, Uplink Barrens]
+  act_iii: [Dub Colony, Antenna Barrens]
   act_iv: [Orbital Lift]
   act_v: [Asteroid Redoubt, Final Broadcast]
 ```
@@ -86,73 +86,73 @@ Endboss: **King Feedback, the Friendly Tyrant**. He wants to centralize all colo
 
 Enemy additions: bass beetles, echo drummers, feedback cobras, amp golems, static choir, mold angels, rival selectors.
 
-## World 5 — Uplink Barrens: The Old Ally Wears a New Uniform
+## World 5 — Dub Colony: The Colony Teaches the Price of Air
 
-Placard: **A signal is free only if the receiver can answer.**
+Placard: **A refuge can become a fortress; a fortress can become a prison.**
 
-Theme: antenna deserts, storm bridges, smuggler pylons, lightning, signal silence. Platforming is windy, tall, and dangerous. Combat connects hacking to weather: terminal arcs, lightning routes, conductive rain, antenna targeting.
-
-| Stage | Name | Level description | Sub-bosses | Story beat |
-|---|---|---|---|---|
-| 5-1 | Pylon Steppe | Wind pushes jumps across antenna legs. Spark jackals chase through conductive grass. | Spark Jackal, Wire Witch | Rook Null detects debt ledger shards split across signal towers. |
-| 5-2 | Storm Bridge | Rocket precision over lightning gaps and collapsing relay bridges. | Thunder Bailiff, Dish-Climber Pack | Lio returns wounded, maybe enemy or maybe warning. |
-| 5-3 | Black-Ice Relay | Combat coding under pressure. Naya guards while Moss types, parries, and overloads. | Regex Fox, Packet Butcher, Null Monk | Hacking becomes fighting in full view. |
-| 5-4 | Smuggler Parliament | Platforming through jury-like pylon chambers; answer selection changes allies. | Old Captain Ossa, Bribe Engine, Signal Leech | Player chooses whether to trust old smugglers or expose them. |
-
-Endboss: **The Black-Ice Fox**. A hacker-duelist with visible code states: SCAN, INJECT, EXECUTE, ROLLBACK. Perfect hacks turn attacks into healing code; failed syntax creates enemy clones.
-
-Enemy additions: spark jackals, wire witches, regex foxes, packet butchers, null monks, signal leeches, dish climbers.
-
-## World 6 — Orbital Lift: The Machine That Carries Obedience
-
-Placard: **No machine is neutral when its schedule is a sentence.**
-
-Theme: cargo containers, sky elevator, chase stages, rotating gravity. Platforming is about moving rooms, counterweights, outside cables, pressure doors, and cargo prayers. This is the act of obedience and old allies in new uniforms.
+Theme: moving sound-system habitat, reggae/dub workshops, bass platforms, solar sails, greenhouse train cars. Mechanics emphasize beat timing, companion defense, non-lethal choices, shops, and community votes.
 
 | Stage | Name | Level description | Sub-bosses | Story beat |
 |---|---|---|---|---|
-| 6-1 | Cargo Rosary | Containers move like beads on belts. Enemies pray to logistics schedules. | Container Saint, Strap-Hook Twins | The rebellion hides in cargo marked “unprofitable bodies.” |
-| 6-2 | Customs Spine | Scanner corridors, stamp traps, contraband side rooms. Murr Murrby sells from a scanner kiosk. | Gravity Customs, Stamp Golem, Sniffer Cherub | Murr jokes about emergency morality while prices shift with heat. |
-| 6-3 | Cable Outside | High-altitude exterior climb, wind lancers, rescue setpiece for a companion. | Wind Lancer, Maintenance Choir | A companion falls; trust determines who risks the rescue. |
-| 6-4 | Counterweight Heart | Multi-companion puzzle: reverse cargo flow while fighting debt paladins. | Balance Maw, Debt Paladin, Lift Oracle | Moss frees prisoners but reveals rebel capacity to seize orbit. |
+| 5-1 | Speakerstack Gardens | Bass-reactive platforms, planters, speaker elevators. Teaches downbeat guard and bounce timing. | Bass Beetle, Echo Drummer | The colony becomes home base, but not everyone trusts Moss. |
+| 5-2 | Studio Temple | Recording rooms become combat rooms. Tape loops rewind hazards unless cut or hacked. | Tape Priestess, Feedback Cobra | Moss learns that rhythm can guard, push, and overload. |
+| 5-3 | Greenhouse Train | Moving train cars with fragile crops. Naya Root joins as shield companion. | Mold Angel, Rail-Rider Crew, Pollen Turret | Protecting food changes route rewards and colony trust. |
+| 5-4 | Soundclash Dock | Wave defense at docking bay with shop breaks, debate interruptions, and rival selectors. | Rival Selector, Amp Golem, Static Choir | Colony votes whether to become openly rebel. |
 
-Endboss: **The Elevator Angel**. A huge maintenance intelligence with cable halos. It is obedient, not hateful. Dialogue can reduce phases if Moss proves the schedule is murder.
+Endboss: **King Feedback, the Friendly Tyrant**. He wants to centralize all colony channels "temporarily" for safety. The fight alternates between rhythm boss, shielded debate, and audience vote. Victory can exile, persuade, or bind him to a council.
 
-Enemy additions: strap-hook twins, stamp golems, sniffer cherubs, gravity customs, debt paladins, maintenance choir, balance maw.
+Enemy additions: bass beetles, echo drummers, feedback cobras, amp golems, static choir, mold angels, rival selectors.
 
-## World 7 — Asteroid Redoubt: The Asteroid Learns to Speak
+## World 6 — Antenna Barrens: The Black-Ice Fox
 
-Placard: **After the fortress is taken, the first enemy is the new lock on its door.**
+Placard: **A lock written in numbers still has a landlord.**
 
-Theme: low gravity caves, rebel workshops, vacuum doors, transmitter dishes. This world begins triumphant but becomes politically dangerous. Some rebels want mutual aid; others want command. Treason becomes factional.
-
-| Stage | Name | Level description | Sub-bosses | Story beat |
-|---|---|---|---|---|
-| 7-1 | Rock With a Mouth | Low-grav caves with transmitter fossils and drill enemies. | Drill Hermit, Rock Mite Matron | Rebels seize the first transmitter cave. |
-| 7-2 | Vacuum Chapel | Pressure doors, airlock puzzles, hull spiders, moral choice over prisoners. | Airlock Nun, Hull Spider, Oxygen Clerk | Old and new allies disagree on mercy. |
-| 7-3 | Rebel Foundry | Crafting/defense stage. Build dish parts while enemies breach walls. | Forge Ox, Ammunition Ghost, Foundry Choir | Skill tree final branches unlock; command faction appears. |
-| 7-4 | Dish Crown | Full-kit platforming on transmitter dishes; traitor faction sabotages relays. | Signal Lancer, Choir Splitter, Traitor Mask | The traitor is revealed as a faction, not one person. |
-
-Endboss: **Director Vane's Proxy Body**. Remote-operated war frame carrying projected contract clauses. Break armor, hack clauses, then survive the command faction's attempt to seize the victory narrative.
-
-Enemy additions: drill hermits, rock mites, airlock nuns, hull spiders, oxygen clerks, ammunition ghosts, traitor masks.
-
-## World 8 — Final Broadcast: The Audience Is Asked Who Owns the Sky
-
-Placard: **A rebellion that cannot be answered is only another broadcast.**
-
-Theme: uprising montage, multi-companion assault, public ledger rewrite, final tower. This is a boss-rush argument and full-system exam: platforming, hacking, companions, dialogue, traps, railgun, sword, claws.
+Theme: dead uplink towers, broken dishes, solar bones, Faraday tents, chalk logic murals, data shrines. Combat combines hacking with weather: terminal arcs, lightning routes, conductive rain, antenna targeting.
 
 | Stage | Name | Level description | Sub-bosses | Story beat |
 |---|---|---|---|---|
-| 8-1 | City Answers Back | Districts send fighters. Ally routes open based on prior trust and choices. | Riot Drone Choir, Bailiff Remnant, Citizen Shieldbreak | All rescued districts answer the asteroid. |
-| 8-2 | Ledger Under Glass | Code combat inside a visible debt ledger. Platforms are clauses; traps are signatures. | Clause Serpent, Archive Twins, Redaction Nun | Moss edits the debt ledger live. |
-| 8-3 | The Treason Lesson | Boss-rush argument with echoes of former enemies and allies. | Lio Rematch, King Feedback Echo, Vitrine Echo | Former enemies return as political arguments. |
-| 8-4 | Broadcast Tower | Final ascent through state machines, lightning routing, companion assists, and public choices. | Star Lancer, Angel Fragment, Fox Fragment | The player chooses what to broadcast. |
+| 6-1 | Dish Graveyard | Wind pushes jumps across antenna legs. Error mites spawn from wrong logic gates. | Error Mite, Debt Wraith | Rook Null detects debt ledger shards split across signal towers. |
+| 6-2 | Logic Cairns | Truth-table rooms with floating glyphs and chalk diagrams. State-machine duels begin. | Debt Wraith, Mara Modulo | Mara Modulo teaches that secrets aren't safety. |
+| 6-3 | Black-Ice Node | Combat coding under pressure. Rook provides overlays while Moss types and parries. | Black-Ice Fox Phases | Hacking becomes fighting in full view. |
+| 6-4 | Tower Throw-Up | Tag highest dish before sandstorm. Boolean bridge puzzles unlock final route. | Faraday Saints, Community Hack Assist | Player creates public manual for corporate locks. |
 
-Final Endboss: **Director Vane, Keeper of the Sky-Lock**. Three-phase fight: bodyguard duel, contract hack, public argument. The final input is a broadcast choice that determines ending tone.
+Endboss: **The Black-Ice Fox**. A hacker-duelist with visible code states and crystalline code tails. Perfect syntax turns attacks into healing; mistakes create enemy clones.
 
-Enemy additions: riot drone choir, clause serpents, archive twins, redaction nuns, star lancers, angel fragments, fox fragments.
+Enemy additions: error mites, debt wraiths, signal jammer bats.
+
+## World 7 — Orbital Lift: The Old Ally Wears a New Uniform
+
+Placard: **The machine says it only follows orders. The orders say they are only a machine.**
+
+Theme: vertical logistics cathedral, cargo containers, sky cables, customs rings, counterweights, wind strong enough to make every jump feel like a vote. Platforming involves moving rooms, outside cables, scanner stealth, and cargo flow reversal.
+
+| Stage | Name | Level description | Sub-bosses | Story beat |
+|---|---|---|---|---|
+| 7-1 | Container Choir | Autoscrolling climb through cargo containers with manifest flags and cable sparks. | Customs Lancer, Manifest Monk | Rebellion hides in cargo marked “unprofitable bodies.” |
+| 7-2 | Customs Maw | Scanner corridors and contraband side rooms. Murr Murrby's shop folds inside a scanner. | Customs Lancer, Murr Murrby Shop | Murr jokes about emergency morality while prices shift with heat. |
+| 7-3 | Cable Outside | High-altitude exterior climb with wind lancers and cargo flow puzzles. | Wind Lancer (implicit), Customs Lancer | Lio returns in customs uniform, ashamed and urgent. |
+| 7-4 | Angel Counterweight | Multi-companion puzzle: reverse cargo flow while fighting the elevator's logic. | Elevator Angel phases, Lio branch | Moss frees prisoners but reveals rebel capacity to seize orbit. |
+
+Endboss: **The Elevator Angel**. A white-gold lift machine with cable wings and scanner halo. Obedient, not hateful. It asks: if a machine feeds a cruel order, is the machine guilty, or only useful?
+
+Enemy additions: Customs Lancers, Manifest Monks, Signal Jammer Bats, Feedback Guards.
+
+## World 8 — Asteroid Redoubt: The Asteroid Learns to Speak
+
+Placard: **The last lock is not on the door. It is on the story of who may open doors.**
+
+Theme: mined moon, transmitter fortress, final commons, sky authorship. Iron tunnels, cable roots, solar sails, greenhouse capsules, speaker arrays, murals, and one dangerous question: broadcast freedom or build a new lock.
+
+| Stage | Name | Level description | Sub-bosses | Story beat |
+|---|---|---|---|---|
+| 8-1 | Iron Arrival Tunnels | Full-kit gauntlet through low-gravity mines with solar foil windows. | Vane Air Bailiff, Command Lock Partisan | Rebels seize transmitter approaches. |
+| 8-2 | Speakerstone Commons | Ally convergence and debate. All companions return with arguments. | Command Lock Faction, Little Ix | Former boss arguments return as political ghosts. |
+| 8-3 | Mural of Routes | Paint final liberation mural while oxygen valves prioritize food over weapons. | Naya Root Quest, Juno Jar Quest | Side quests determine broadcast's focus and tone. |
+| 8-4 | Transmitter Root Chamber | Final boss, hack, broadcast choice. Director Vane and internal rebellion. | Director Vane, Command Lock Faction | Final action: write what the broadcast says. |
+
+Endboss: **Director Vane**. Four-phase fight: Accountable Owner, Air Lease, Authorship War, The New Lock, Last Verb. Moss must fight, hack, and answer. The final input is choosing what the broadcast says.
+
+Enemy additions: Vane Air Bailiffs, Command Lock Partisans, Riot Drone Choirs, Clause Serpents.
 
 ## Stage design requirements
 
@@ -175,3 +175,16 @@ requirements:
     - has one non-damage vulnerability
     - can be made easier by a hack, trap, or dialogue flag
 ```
+
+## World and chapter alignment
+
+The campaign structure aligns with the detailed chapter definitions in `story-flavour.yml`:
+
+- **ch01_lower_sprawl**: World 1, Stage 1 - The Song of the Toll
+- **ch02_drainmarket**: World 1, Stage 2 - Knife Weather Under the City  
+- **ch03_chrome_arcology**: World 2, Stage 3 - The Elevator Seed
+- **ch04_straylight_mirage**: World 3, Stage 4 - Treason at the Mirror Banquet
+- **ch05_dub_colony**: World 4, Stage 5 - The Colony Teaches the Price of Air
+- **ch06_antenna_barrens**: World 6, Stage 6 - The Black-Ice Fox
+- **ch07_orbital_lift**: World 7, Stage 7 - The Old Ally Wears a New Uniform
+- **ch08_asteroid_redoubt**: World 8, Stage 8 - The Asteroid Learns to Speak

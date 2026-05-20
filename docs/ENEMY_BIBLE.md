@@ -35,25 +35,41 @@ enemy_rules:
 
 | Enemy | Class | Platforming role | Attack | Hacking/trap interaction |
 |---|---|---|---|---|
-| Toll Rat | Walker | patrols short ledges | bite and coin toss | can be lured into turnstile trap |
-| Coin Mite | Swarm | crawls on ceilings | small leap | railgun through coin pile chains damage |
+| Rent Cop Piker | Walker | marches and jabs across lanes | toll pike jab, glowing receipt pad | can be lured into turnstile trap |
+| Turnstile Mite | Swarm | small robot that spins into hazard | crab-body made of gate arms and coin slots | railgun through coin pile chains damage |
 | Bailiff Scooter | Jumper/Rusher | crosses gaps fast | ram | hacked traffic light redirects it |
 | Signboard Sniper | Turret | rooftop pressure | slow aimed shot | drop their neon sign with railgun |
 | Debt Printer Imp | Caster | hides behind platforms | paper warrant traps | overload printer for explosion |
 | Fuse Monk | Shield/Caster | guards wet wires | electric staff | wet-gutter lightning can stun |
 | Drone Kennel-Master | Sub-boss | locks arena exits | releases drones | hack kennel door to reverse spawn |
 
+**Detailed enemy data from story-flavour.yml:**
+
+- **Rent Cop Piker (ENM_RENTCOP_PIKE_A)**: Weasel rent cop with raincoat armor, toll pike, glowing receipt pad. Callouts: "Unlicensed running!", "Your paws are in arrears!" Sound: whistle chop, coin clack, boot stomp.
+
+- **Turnstile Mite (ENM_TURNSTILE_MITE)**: Crab robot made of gate arms and coin slots. Callouts: "Click-click-pay!", "Route not recognized!" Sound: ratchet clicks, servo squeal.
+
+- **Tollbooth Captain Grin (BOSS_CAPTAIN_GRIN_TOLLMECH)**: Smiling official in toll booth exosuit, barrier arms as weapons. Phases: Polite Collection, Debt Spiral, Public Road. Defeat line: "Without fees, how will anyone know where they are allowed to stand?"
+
 ### Chrome Arcology
 
 | Enemy | Class | Platforming role | Attack | Hacking/trap interaction |
 |---|---|---|---|---|
+| Chrome Bellhop | Walker/Rusher | dash melee with luggage shield | blade umbrella, luggage shield | parry opens elevator switch |
+| Mirror Sentinel | Shield/Turret | reflects direct shots | prism spear, mirror torso | angle shots through mirrors |
 | Glass Intern | Walker | slips on glass floors | clipboard jab | shatters if knocked into pane |
 | Reception Lancer | Assassin | guards elevator lips | spear dash | parry opens elevator switch |
-| Memo Wasp | Flyer | blocks vertical shafts | paper sting | camera spoof redirects swarm |
 | Holo-Gardener | Caster | teleports between planters | thorn drone | water pipe hack roots it |
 | Contract Lawyer Bot | Caster | floats backward | binding clause | syntax parry cancels clause |
-| Compliance Shield | Shield | blocks narrow routes | shield bash | back panel vulnerable after jump-over |
 | Panic Siren | Turret/Runner | flees through platforms | alarm pulse | signal jammer stops heat gain |
+
+**Detailed enemy data from story-flavour.yml:**
+
+- **Chrome Bellhop (ENM_CHROME_BELLHOP)**: Robotic chrome bellhop with polished uniform, luggage shield, blade umbrella. Callouts: "May I take your class position?", "The floor prefers you gone!" Sound: elevator ding, suitcase slam.
+
+- **Mirror Sentinel (ENM_MIRROR_SENTINEL)**: Faceless reflective torso with prism spear and gold trim. Callouts: "Angle denied.", "Beauty must be defended." Sound: glass shimmer, thin laser ping.
+
+- **Madame Vitrine (BOSS_MADAME_VITRINE_GLASSCOURT)**: Glass-armored executive with mirror fan blades and contract ribbons. Phases: Guest Etiquette, Hidden Floor, Public Proof. Defeat line: "You have shattered presentation, not power."
 
 ### Straylight Mirage
 
