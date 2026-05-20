@@ -1,6 +1,6 @@
 import { EventBus } from './engine/EventBus';
 import { type Scene, SceneManager } from './engine/SceneManager';
-import type { MenuOptionId } from './game/GameFlow';
+import { createGameFlow, type MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
@@ -14,6 +14,7 @@ export interface RunnerApp {
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const eventBus = new EventBus();
 	const sceneManager = new SceneManager({ eventBus, canvas });
+	const flow = createGameFlow();
 	const factories = createDefaultModeSceneFactories({
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
 	});
@@ -23,7 +24,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	}
 
 	function createTitleScene(): TitleScene {
-		return new TitleScene({ onSelectMode: routeMode });
+		return new TitleScene({ onSelectMode: routeMode, storyProgress: flow.getStoryProgress() });
 	}
 
 	return {

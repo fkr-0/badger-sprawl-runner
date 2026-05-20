@@ -19,6 +19,8 @@ const storyContentSystemDoc = await text('docs/story-content-system.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
+const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
+const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
 const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
@@ -166,6 +168,8 @@ for (const required of [
 for (const required of [
 	'createDefaultModeSceneFactories({',
 	'onStartStoryStage: (scene) => sceneManager.replace(scene)',
+	'createGameFlow()',
+	'storyProgress: flow.getStoryProgress()',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`);
 }
@@ -225,6 +229,16 @@ for (const required of [
 ]) {
 	assert(endlessSprawlRunSource.includes(required), `EndlessSprawlRun missing endless mode contract: ${required}`);
 }
+for (const required of [
+	'buildStoryProgressSummary',
+	'formatStoryProgressSummary',
+	'badger:title-progress-summary',
+	'getStoryProgressSummary',
+	'Final doctrine:',
+]) {
+	assert(titleSceneSource.includes(required) || storyProgressSummarySource.includes(required), `title progress summary missing: ${required}`);
+}
+
 for (const required of ['endless', 'Endless Sprawl']) {
 	assert(
 		modeSceneFactoriesSource.includes(required) || runnerGameFlow.includes(required) || runnerApp.includes(required) || modeMenuSource.includes(required),
