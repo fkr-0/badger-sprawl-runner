@@ -566,7 +566,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Implement boss placeholder runtime behavior for all eight bosses using the structured phase/lesson/behavior data from story-flavour.yml.
 - [x] Add branch-specific debrief lines for Lio, colony alignment, ledger release, cargo reversal, and final broadcast doctrine.
 - [x] Add heat/favor balancing rules so merchant prices, ally assists, hazards, and ending text respond to player choices.
-- [ ] Add campaign-complete ending cards for all final broadcast doctrines from story-flavour.yml.
+- [x] Add campaign-complete ending cards for all final broadcast doctrines from story-flavour.yml.
 - [ ] Implement side quest system with proper tracking and rewards as specified in YAML.
 - [ ] Add minigame implementations for rhythm platforming, combat rhythm, logic puzzles, etc. as specified in each chapter.
 - [ ] Implement idle action system for global and chapter-specific character barks.

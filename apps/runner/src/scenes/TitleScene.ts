@@ -4,6 +4,7 @@
 
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
+import { buildEndingCard, type EndingCard } from '../game/EndingCards';
 import type { MenuOption, MenuOptionId, StoryProgress } from '../game/GameFlow';
 import { MODE_OPTIONS } from '../game/ModeMenu';
 import {
@@ -74,6 +75,8 @@ export class TitleScene implements Scene {
 	onEnter(_ctx: SceneContext): void {
 		console.log('TitleScene entered');
 		window.dispatchEvent(new CustomEvent('badger:title-progress-summary', { detail: this.getStoryProgressSummary() }));
+		const endingCard = this.getEndingCard();
+		if (endingCard) window.dispatchEvent(new CustomEvent('badger:ending-card', { detail: endingCard }));
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			switch (e.code) {
 				case 'ArrowUp':
@@ -121,6 +124,32 @@ export class TitleScene implements Scene {
 		return this.options.storyProgress ? buildStoryProgressSummary(this.options.storyProgress) : null;
 	}
 
+	getEndingCard(): EndingCard | null {
+		return this.options.storyProgress ? buildEndingCard(this.options.storyProgress) : null;
+	}
+
+
+	private renderEndingCard(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+		const card = this.getEndingCard();
+		if (!card) return;
+		const x = W / 2 - 300;
+		const y = H / 2 + 174;
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.86)';
+		ctx.fillRect(x, y, 600, 116);
+		ctx.strokeStyle = '#67f3c4';
+		ctx.strokeRect(x, y, 600, 116);
+		ctx.font = '700 15px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(card.title, W / 2, y + 24);
+		ctx.font = '12px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(card.subtitle, W / 2, y + 44);
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText(card.body.slice(0, 78), W / 2, y + 66);
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(card.closingLine, W / 2, y + 88);
+	}
+
 	private renderStoryProgress(ctx: CanvasRenderingContext2D, W: number, H: number): void {
 		const summary = this.getStoryProgressSummary();
 		if (!summary) return;
@@ -160,6 +189,7 @@ export class TitleScene implements Scene {
 		ctx.fillText('A Cyber-Platformer Adventure', W / 2, H / 3 + 100);
 
 		this.renderStoryProgress(ctx, W, H);
+		this.renderEndingCard(ctx, W, H);
 
 		// Menu
 		let y = H / 2 + 96;

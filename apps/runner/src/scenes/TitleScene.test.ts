@@ -50,4 +50,23 @@ describe('TitleScene story progress summary', () => {
 			finalBroadcastDoctrine: 'Publish Tools',
 		});
 	});
+
+	it('emits an ending card event when campaign-complete progress has a final doctrine', () => {
+		const scene = new TitleScene({
+			storyProgress: storyProgress({ campaignComplete: true, finalBroadcastDoctrine: 'publish-tools' }),
+		});
+		const events: unknown[] = [];
+		window.addEventListener('badger:ending-card', (event) => events.push((event as CustomEvent).detail), {
+			once: true,
+		});
+		scene.onEnter({ eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() }, canvas: document.createElement('canvas') });
+		scene.onExit();
+		expect(scene.getEndingCard()).toMatchObject({
+			doctrine: 'publish-tools',
+			title: 'Publish the Tools',
+			resultFlag: 'broadcast_publish_tools',
+		});
+		expect(events[0]).toMatchObject({ title: 'Publish the Tools' });
+	});
+
 });

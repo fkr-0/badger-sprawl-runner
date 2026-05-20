@@ -24,6 +24,7 @@ const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
 const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgressMigration.ts');
+const endingCardsSource = await text('apps/runner/src/game/EndingCards.ts');
 const autosaveFeedbackSource = await text('apps/runner/src/storage/AutosaveFeedback.ts');
 const storyBalanceRulesSource = await text('apps/runner/src/game/StoryBalanceRules.ts');
 const campaignBarrelSource = await text('apps/runner/src/game/Campaign.ts');
@@ -395,6 +396,28 @@ for (const required of [
 	'onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason)',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing autosave feedback wiring: ${required}`);
+}
+
+
+for (const required of [
+	'buildEndingCard',
+	'getEndingCards',
+	'Abolish Skylock',
+	'Chorus Control',
+	'Publish the Tools',
+	'broadcast_abolish_skylock',
+	'broadcast_chorus_control',
+	'broadcast_publish_tools',
+]) {
+	assert(endingCardsSource.includes(required), `EndingCards missing final doctrine contract: ${required}`);
+}
+for (const required of [
+	'getEndingCard',
+	'renderEndingCard',
+	'badger:ending-card',
+	'buildEndingCard(this.options.storyProgress)',
+]) {
+	assert(titleSceneSource.includes(required), `TitleScene missing ending card surface: ${required}`);
 }
 
 for (const required of [
