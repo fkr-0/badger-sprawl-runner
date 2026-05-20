@@ -17,6 +17,25 @@ export interface CompanionEvents {
 	onHint?: (message: string) => void;
 }
 
+export interface CompanionGameplayModifiers {
+	nayaShieldBonus?: number;
+	rookOverlayBonusSeconds?: number;
+	assistHintLeadSeconds?: number;
+	ambushWarningOverlay?: boolean;
+}
+
+export function resolveCompanionGameplayModifiers(
+	gameplayHooks: readonly string[]
+): CompanionGameplayModifiers {
+	const hooks = new Set(gameplayHooks);
+	return {
+		nayaShieldBonus: hooks.has('naya_shield_bonus') ? 1 : 0,
+		rookOverlayBonusSeconds: hooks.has('ambush_warning_overlay') ? 0.9 : 0,
+		assistHintLeadSeconds: hooks.has('companion_assist_ready') ? 1.4 : hooks.has('companion_assist_delay') ? -1 : 0,
+		ambushWarningOverlay: hooks.has('ambush_warning_overlay'),
+	};
+}
+
 const DEFAULT_COMPANIONS: CompanionId[] = ['naya_root', 'rook_null', 'auntie_subharmonic'];
 const NAYA_SHIELD_MAX = 2;
 const NAYA_RECHARGE_PER_SECOND = 0.18;
@@ -32,20 +51,25 @@ export class CompanionSystem {
 		hintTimer: AUNTIE_HINT_SECONDS,
 	};
 
-	constructor(active: CompanionId[] = DEFAULT_COMPANIONS) {
+	constructor(
+		active: CompanionId[] = DEFAULT_COMPANIONS,
+		private readonly modifiers: CompanionGameplayModifiers = {}
+	) {
 		this.state.active = [...active];
+		this.state.nayaShield += modifiers.nayaShieldBonus ?? 0;
+		this.state.hintTimer = Math.max(0.8, this.state.hintTimer - (modifiers.assistHintLeadSeconds ?? 0));
 	}
 
 	step(player: Player, enemies: CombatEntity[], dt: number, events: CompanionEvents = {}): void {
 		if (this.hasCompanion('naya_root')) {
 			this.state.nayaShield = Math.min(
-				NAYA_SHIELD_MAX,
+				NAYA_SHIELD_MAX + (this.modifiers.nayaShieldBonus ?? 0),
 				this.state.nayaShield + dt * NAYA_RECHARGE_PER_SECOND
 			);
 		}
 
 		if (this.hasCompanion('rook_null') && enemies.some((enemy) => enemy.hp > 0)) {
-			this.state.rookOverlayUntil = ROOK_OVERLAY_SECONDS;
+			this.state.rookOverlayUntil = ROOK_OVERLAY_SECONDS + (this.modifiers.rookOverlayBonusSeconds ?? 0);
 			events.onOverlay?.();
 		} else {
 			this.state.rookOverlayUntil = Math.max(0, this.state.rookOverlayUntil - dt);
@@ -76,7 +100,9 @@ export class CompanionSystem {
 			active: [...this.state.active],
 			nayaShield: Number(this.state.nayaShield.toFixed(2)),
 			rookOverlayUntil: Number(this.state.rookOverlayUntil.toFixed(2)),
-			auntieHint: this.state.auntieHint,
+			auntieHint: this.modifiers.ambushWarningOverlay
+				? `${this.state.auntieHint} Rook marks an ambush route.`
+				: this.state.auntieHint,
 			hintTimer: Number(this.state.hintTimer.toFixed(2)),
 		};
 	}

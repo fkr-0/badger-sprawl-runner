@@ -113,6 +113,24 @@ for (const required of [
 	assert(uiRendererSource.includes(required), `UIRenderer missing companion HUD status: ${required}`);
 }
 
+
+for (const required of [
+	'CompanionGameplayModifiers',
+	'resolveCompanionGameplayModifiers',
+	'naya_shield_bonus',
+	'ambush_warning_overlay',
+	'companion_assist_ready',
+	'companion_assist_delay',
+]) {
+	assert(companionSystemSource.includes(required), `CompanionSystem missing branch gameplay modifier contract: ${required}`);
+}
+for (const required of [
+	'branchGameplayHooks?: readonly string[]',
+	'resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing branch gameplay hook option: ${required}`);
+}
+
 for (const required of [
 	'CompanionSystem',
 	'naya_root',
@@ -125,7 +143,7 @@ for (const required of [
 	assert(companionSystemSource.includes(required), `CompanionSystem missing runtime companion contract: ${required}`);
 }
 for (const required of [
-	'private companions = new CompanionSystem()',
+	'private companions: CompanionSystem',
 	'mitigateDamage: (amount)',
 	'this.companions.step',
 	'companionShield',

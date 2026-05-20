@@ -140,7 +140,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
 - [ ] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio.
 - [ ] Implement playable boss phase behavior in StageRunScene/boss encounters.
-- [ ] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers.
+- [x] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers: Naya shield bonus, Rook ambush overlay, and companion assist timing hooks now resolve into StageRunScene companion modifiers.
 
 ## First three acts design
 

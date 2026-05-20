@@ -8,7 +8,7 @@ import type { SceneContext } from '../engine/SceneManager';
 import { InputSystem } from '../systems/InputSystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import { CombatSystem } from '../systems/CombatSystem';
-import { CompanionSystem } from '../systems/CompanionSystem';
+import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import {
@@ -28,6 +28,7 @@ import {
 
 export interface StageRunSceneOptions {
 	acquiredPayloadIds?: readonly string[];
+	branchGameplayHooks?: readonly string[];
 	onStoryPayloadCollected?: (payloadId: string) => void;
 }
 
@@ -38,7 +39,7 @@ export class StageRunScene implements Scene {
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
-	private companions = new CompanionSystem();
+	private companions: CompanionSystem;
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
@@ -59,6 +60,10 @@ export class StageRunScene implements Scene {
 	private lastAnimationFrame = 0;
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
+		this.companions = new CompanionSystem(
+			undefined,
+			resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])
+		);
 		this.player = createPlayer();
 		// Initialize animation state
 		this.player.animState = createAnimationState();

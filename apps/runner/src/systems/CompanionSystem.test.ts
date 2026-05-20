@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPlayer } from '../actors/MossBadger';
 import type { CombatEntity } from './CombatSystem';
-import { CompanionSystem } from './CompanionSystem';
+import { CompanionSystem, resolveCompanionGameplayModifiers } from './CompanionSystem';
 
 function enemy(overrides: Partial<CombatEntity> = {}): CombatEntity {
 	return {
@@ -24,6 +24,32 @@ function enemy(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 describe('CompanionSystem', () => {
+
+	it('resolves branch gameplay hooks into concrete companion modifiers', () => {
+		const modifiers = resolveCompanionGameplayModifiers([
+			'naya_shield_bonus',
+			'ambush_warning_overlay',
+			'companion_assist_ready',
+		]);
+		expect(modifiers).toMatchObject({
+			nayaShieldBonus: 1,
+			rookOverlayBonusSeconds: 0.9,
+			assistHintLeadSeconds: 1.4,
+			ambushWarningOverlay: true,
+		});
+	});
+
+	it('applies Naya shield bonus and ambush overlay modifiers at runtime', () => {
+		const system = new CompanionSystem(
+			['naya_root', 'rook_null', 'auntie_subharmonic'],
+			resolveCompanionGameplayModifiers(['naya_shield_bonus', 'ambush_warning_overlay'])
+		);
+		system.step(createPlayer(), [enemy()], 0.016);
+		expect(system.getState().nayaShield).toBeGreaterThan(2);
+		expect(system.getState().rookOverlayUntil).toBeGreaterThan(1.6);
+		expect(system.getState().auntieHint).toContain('ambush');
+	});
+
 	it('Naya shield mitigates incoming damage before HP loss', () => {
 		const system = new CompanionSystem(['naya_root']);
 		let blocked = 0;
