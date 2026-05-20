@@ -132,6 +132,20 @@ export const CAMPAIGN: CampaignDefinition = {
 				lines: ['You stole a key and found a map of hunger.', 'Next time, steal the rulebook too.'],
 			},
 			rewards: ['wafer_key', 'blueprint_shard'],
+			tutorialBeats: [
+				{
+					id: 'jump-coyote',
+					label: 'Coyote-hop over toll arms',
+					trigger: 'first_toll_arm_gap',
+					teaches: 'Use jump buffering and late coyote jumps to clear toll arms without stopping.',
+				},
+				{
+					id: 'public-route-reading',
+					label: 'Read public routes',
+					trigger: 'first_route_placard',
+					teaches: 'Follow placards and visible machinery to understand who owns the route.',
+				},
+			],
 			todo: [
 				'connect placard intro to TitleCardRenderer',
 				'route stage completion into colony debrief',

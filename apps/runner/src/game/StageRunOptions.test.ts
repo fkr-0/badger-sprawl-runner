@@ -22,6 +22,7 @@ describe('buildStageRunSceneOptions', () => {
 		expect(options.stageId).toBe('chrome-arcology');
 		expect(options.acquiredPayloadIds).toEqual(['wafer_key']);
 		expect(options.bossPhases?.[0]).toMatchObject({ id: 'display-window' });
+		expect(options.tutorialBeats?.[0]).toMatchObject({ id: 'railgun-sightline' });
 		expect(options.procgenSeed).toContain('chrome-arcology');
 		expect(options.generatedEnemyPacks?.[0]?.enemies.length).toBeGreaterThan(0);
 		expect(options.generatedSideRooms?.[0]?.platforms.length).toBeGreaterThan(0);

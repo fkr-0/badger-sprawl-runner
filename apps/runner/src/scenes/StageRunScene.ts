@@ -29,11 +29,19 @@ import {
 	type AnimationState,
 } from '../renderer/AnimationState';
 
+export interface RuntimeTutorialBeat {
+	id: string;
+	label: string;
+	trigger: string;
+	teaches: string;
+}
+
 export interface StageRunSceneOptions {
 	stageId?: RuntimeStageId;
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	bossPhases?: readonly RuntimeBossPhase[];
+	tutorialBeats?: readonly RuntimeTutorialBeat[];
 	generatedEnemyPacks?: readonly GeneratedEnemyPack[];
 	generatedSideRooms?: readonly GeneratedSideRoom[];
 	procgenSeed?: string;
@@ -83,8 +91,15 @@ export class StageRunScene implements Scene {
 		this.initWorld();
 	}
 
+	getTutorialOverlayBeats(): RuntimeTutorialBeat[] {
+		return (this.options.tutorialBeats ?? []).map((beat) => ({ ...beat }));
+	}
+
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
+		if (this.options.tutorialBeats?.length) {
+			window.dispatchEvent(new CustomEvent('badger:tutorial-overlay', { detail: this.getTutorialOverlayBeats() }));
+		}
 		this.renderer = ctx.renderer as Renderer;
 		// Load sprite manifest if available
 		this.renderer.loadSprites('/data/sprites.json').catch(() => {
@@ -210,7 +225,36 @@ export class StageRunScene implements Scene {
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
+		this.renderTutorialOverlay(ctx);
 
+		ctx.restore();
+	}
+
+
+	private renderTutorialOverlay(ctx: CanvasRenderingContext2D): void {
+		const beats = this.options.tutorialBeats ?? [];
+		if (beats.length === 0) return;
+		const x = 24;
+		const y = 116;
+		const panelW = 396;
+		const panelH = Math.min(150, 42 + beats.length * 38);
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.82)';
+		ctx.fillRect(x, y, panelW, panelH);
+		ctx.strokeStyle = '#67f3c4';
+		ctx.strokeRect(x, y, panelW, panelH);
+		ctx.textAlign = 'left';
+		ctx.font = '700 13px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText('Tutorial beats', x + 14, y + 22);
+		ctx.font = '11px ui-monospace, monospace';
+		for (const [index, beat] of beats.slice(0, 3).entries()) {
+			const lineY = y + 44 + index * 34;
+			ctx.fillStyle = '#eaf2ff';
+			ctx.fillText(`${beat.label}: ${beat.trigger}`.slice(0, 54), x + 14, lineY);
+			ctx.fillStyle = '#92a4be';
+			ctx.fillText(beat.teaches.slice(0, 58), x + 14, lineY + 15);
+		}
 		ctx.restore();
 	}
 

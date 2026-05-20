@@ -218,6 +218,7 @@ for (const required of [
 	'generatedEnemyPacks',
 	'generatedSideRooms',
 	'bossPhases: stage?.boss?.phases?.map',
+	'tutorialBeats: stage?.tutorialBeats?.map',
 ]) {
 	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
 }
@@ -231,6 +232,12 @@ for (const required of [
 	assert(stageLayoutRegistrySource.includes(required), `stageLayoutRegistry missing runtime stage layout contract: ${required}`);
 }
 for (const required of [
+	'RuntimeTutorialBeat',
+	'tutorialBeats?: readonly RuntimeTutorialBeat[]',
+	'getTutorialOverlayBeats',
+	'badger:tutorial-overlay',
+	'renderTutorialOverlay',
+	'Tutorial beats',
 	'stageId?: RuntimeStageId',
 	'cloneStageLayout(this.options.stageId)',
 	'generatedEnemyPacks?: readonly GeneratedEnemyPack[]',

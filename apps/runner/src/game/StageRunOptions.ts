@@ -33,6 +33,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		generatedEnemyPacks,
 		generatedSideRooms,
 		bossPhases: stage?.boss?.phases?.map((phase) => ({ ...phase })) ?? [],
+		tutorialBeats: stage?.tutorialBeats?.map((beat) => ({ ...beat })) ?? [],
 		onStoryPayloadCollected: undefined,
 	};
 }
