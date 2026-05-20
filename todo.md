@@ -142,7 +142,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [~] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio: StageRunScene now selects stage-addressable runtime layout contracts; fully bespoke per-stage geometry/art remains.
 - [x] Implement procedural enemy pack generator from docs/PROCEDURAL_GENERATION.md milestone 1: EncounterGenerator now deterministically creates stage-seeded enemy packs with ranks, budgets, affixes, and StageRunScene option/runtime integration.
 - [x] Add procgen data contracts for enemy families, affixes, stage profiles, and room chunks.
-- [ ] Add optional side-room generator for replay routes after enemy pack generation is stable.
+- [x] Add optional side-room generator for replay routes after enemy pack generation is stable: SideRoomGenerator now deterministically appends optional room platforms, rewards, and generated enemy packs to StageRunScene options.
 - [ ] Add Endless Sprawl mode using procedural room graphs and escalating enemy budgets.
 - [x] Wire StoryFlow stage entry directly into StageRunScene using buildStageRunSceneOptions(): StoryFlow stage mode now launches stage runtime options through its R-key start seam and default scene factory.
 - [x] Implement playable boss phase behavior in StageRunScene/boss encounters: BossPhaseSystem now selects active phases by boss HP, applies phase pressure, and surfaces boss phase HUD/overlays.

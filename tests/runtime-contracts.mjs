@@ -25,6 +25,7 @@ const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts'
 const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
 const stageLayoutRegistrySource = await text('apps/runner/src/world/stageLayoutRegistry.ts');
 const encounterGeneratorSource = await text('apps/runner/src/procgen/EncounterGenerator.ts');
+const sideRoomGeneratorSource = await text('apps/runner/src/procgen/SideRoomGenerator.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
@@ -156,6 +157,7 @@ for (const required of [
 	'branchGameplayHooks',
 	'procgenSeed',
 	'generatedEnemyPacks',
+	'generatedSideRooms',
 	'bossPhases: stage?.boss?.phases?.map',
 ]) {
 	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
@@ -169,7 +171,14 @@ for (const required of [
 ]) {
 	assert(stageLayoutRegistrySource.includes(required), `stageLayoutRegistry missing runtime stage layout contract: ${required}`);
 }
-for (const required of ['stageId?: RuntimeStageId', 'cloneStageLayout(this.options.stageId)', 'generatedEnemyPacks?: readonly GeneratedEnemyPack[]', 'this.encounterGenerator.generatePacks']) {
+for (const required of [
+	'stageId?: RuntimeStageId',
+	'cloneStageLayout(this.options.stageId)',
+	'generatedEnemyPacks?: readonly GeneratedEnemyPack[]',
+	'generatedSideRooms?: readonly GeneratedSideRoom[]',
+	'this.encounterGenerator.generatePacks',
+	'sideRooms.flatMap((room) => room.platforms)',
+]) {
 	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime stage layout/procgen selection: ${required}`);
 }
 for (const required of [
@@ -183,6 +192,17 @@ for (const required of [
 	'procgenAffixes',
 ]) {
 	assert(encounterGeneratorSource.includes(required), `EncounterGenerator missing procedural enemy contract: ${required}`);
+}
+for (const required of [
+	'SideRoomGenerator',
+	'DEFAULT_ROOM_CHUNKS',
+	'generateSideRooms',
+	'GeneratedSideRoom',
+	'platforms: this.buildPlatforms(anchorX)',
+	'pickups: this.buildPickups',
+	'enemyPacks',
+]) {
+	assert(sideRoomGeneratorSource.includes(required), `SideRoomGenerator missing optional side-room contract: ${required}`);
 }
 
 for (const required of [

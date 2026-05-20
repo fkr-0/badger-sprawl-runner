@@ -1,4 +1,5 @@
 import { EncounterGenerator } from '../procgen/EncounterGenerator';
+import { SideRoomGenerator } from '../procgen/SideRoomGenerator';
 import type { StageRunSceneOptions } from '../scenes/StageRunScene';
 import { isRuntimeStageId } from '../world/stageLayoutRegistry';
 import type { GameFlow } from './GameFlow';
@@ -15,6 +16,14 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 	const generatedEnemyPacks = stageId
 		? new EncounterGenerator().generatePacks({ stageId, seed: procgenSeed, gameplayHooks: branchGameplayHooks }, 1)
 		: [];
+	const generatedSideRooms = stageId
+		? new SideRoomGenerator().generateSideRooms({
+				stageId,
+				seed: procgenSeed,
+				count: 1,
+				gameplayHooks: branchGameplayHooks,
+			})
+		: [];
 
 	return {
 		stageId,
@@ -22,6 +31,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		branchGameplayHooks,
 		procgenSeed,
 		generatedEnemyPacks,
+		generatedSideRooms,
 		bossPhases: stage?.boss?.phases?.map((phase) => ({ ...phase })) ?? [],
 		onStoryPayloadCollected: undefined,
 	};

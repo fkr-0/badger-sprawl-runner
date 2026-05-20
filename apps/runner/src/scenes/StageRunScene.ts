@@ -12,6 +12,7 @@ import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/C
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
+import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
 import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
 	applyPersistedPayloadPickups,
@@ -34,6 +35,7 @@ export interface StageRunSceneOptions {
 	branchGameplayHooks?: readonly string[];
 	bossPhases?: readonly RuntimeBossPhase[];
 	generatedEnemyPacks?: readonly GeneratedEnemyPack[];
+	generatedSideRooms?: readonly GeneratedSideRoom[];
 	procgenSeed?: string;
 	onStoryPayloadCollected?: (payloadId: string) => void;
 }
@@ -371,6 +373,13 @@ export class StageRunScene implements Scene {
 				},
 				1
 			);
-		this.enemies = [...layout.enemies, ...generatedPacks.flatMap((pack) => pack.enemies)];
+		const sideRooms = this.options.generatedSideRooms ?? [];
+		this.platforms = [...this.platforms, ...sideRooms.flatMap((room) => room.platforms)];
+		this.pickups = [...this.pickups, ...sideRooms.flatMap((room) => room.pickups)];
+		this.enemies = [
+			...layout.enemies,
+			...generatedPacks.flatMap((pack) => pack.enemies),
+			...sideRooms.flatMap((room) => room.enemyPacks.flatMap((pack) => pack.enemies)),
+		];
 	}
 }

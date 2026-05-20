@@ -24,6 +24,7 @@ describe('buildStageRunSceneOptions', () => {
 		expect(options.bossPhases?.[0]).toMatchObject({ id: 'display-window' });
 		expect(options.procgenSeed).toContain('chrome-arcology');
 		expect(options.generatedEnemyPacks?.[0]?.enemies.length).toBeGreaterThan(0);
+		expect(options.generatedSideRooms?.[0]?.platforms.length).toBeGreaterThan(0);
 	});
 
 	it('maps active branch consequences into branchGameplayHooks', () => {
@@ -38,6 +39,7 @@ describe('buildStageRunSceneOptions', () => {
 		expect(options.branchGameplayHooks).toContain('companion_assist_ready');
 		expect(options.branchGameplayHooks).toContain('naya_shield_bonus');
 		expect(options.generatedEnemyPacks?.[0]?.stageId).toBe('dub-colony');
+		expect(options.generatedSideRooms?.[0]?.stageId).toBe('dub-colony');
 	});
 
 	it('returns safe defaults outside a stage state', () => {
@@ -45,5 +47,6 @@ describe('buildStageRunSceneOptions', () => {
 		expect(options.acquiredPayloadIds).toEqual([]);
 		expect(options.branchGameplayHooks).toEqual([]);
 		expect(options.bossPhases).toEqual([]);
+		expect(options.generatedSideRooms).toEqual([]);
 	});
 });
