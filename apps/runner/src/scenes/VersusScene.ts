@@ -31,6 +31,10 @@ export const DUEL_YARD_ARENA: VersusArenaConfig = {
 	],
 };
 
+export interface VersusSceneOptions {
+	onReturnToTitle?: () => void;
+}
+
 export class VersusScene implements Scene {
 	readonly name = 'VersusScene';
 
@@ -40,6 +44,9 @@ export class VersusScene implements Scene {
 		winScore: 3,
 		roundState: 'ready',
 	};
+	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
+
+	constructor(private readonly options: VersusSceneOptions = {}) {}
 
 	getArena(): VersusArenaConfig {
 		return structuredClone(DUEL_YARD_ARENA) as VersusArenaConfig;
@@ -81,8 +88,24 @@ export class VersusScene implements Scene {
 		this.score = { playerScore: 0, rivalScore: 0, winScore: 3, roundState: 'ready' };
 	}
 
-	onEnter(_ctx: SceneContext): void {}
-	onExit(): void {}
+	onEnter(_ctx: SceneContext): void {
+		console.log('VersusScene entered');
+		const handleKeyDown = (event: KeyboardEvent): void => {
+			if (event.code === 'Escape') {
+				this.options.onReturnToTitle?.();
+				event.preventDefault();
+			}
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		this.keyHandler = handleKeyDown;
+	}
+	onExit(): void {
+		console.log('VersusScene exited');
+		if (this.keyHandler) {
+			window.removeEventListener('keydown', this.keyHandler);
+			this.keyHandler = null;
+		}
+	}
 	update(_dt: number): void {}
 
 	render(renderer: unknown, _alpha: number): void {

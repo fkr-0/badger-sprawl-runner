@@ -174,7 +174,7 @@ for (const required of [
 for (const required of [
 	'StageRunScene',
 	'onStartStage: (stageOptions) =>',
-	'const scene = new StageRunScene(stageOptions)',
+	'const scene = new StageRunScene({ ...stageOptions, onReturnToTitle: options.onReturnToTitle })',
 	'options.onStartStoryStage?.(scene)',
 ]) {
 	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
@@ -182,11 +182,22 @@ for (const required of [
 for (const required of [
 	'createDefaultModeSceneFactories({',
 	'onStartStoryStage: (scene) => sceneManager.replace(scene)',
+	'onReturnToTitle: () => sceneManager.replace(createTitleScene())',
 	'createLocalStorageSaveDriver(window.localStorage)',
 	'loadGameFlow(saveDriver)',
 	'storyProgress: flow.getStoryProgress()',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`);
+}
+for (const [source, required] of [
+	[modeSceneFactoriesSource, 'onReturnToTitle?: () => void'],
+	[modeSceneFactoriesSource, 'new TrainingScene({ onReturnToTitle: options.onReturnToTitle })'],
+	[modeSceneFactoriesSource, 'new VersusScene({ onReturnToTitle: options.onReturnToTitle })'],
+	[modeSceneFactoriesSource, 'new SkillTreeScene({ onReturnToTitle: options.onReturnToTitle })'],
+	[stageRunSceneSource, 'onReturnToTitle?: () => void'],
+	[stageRunSceneSource, "event.code === 'Escape'"],
+]) {
+	assert(source.includes(required), `scene return-to-title contract missing: ${required}`);
 }
 
 for (const required of [

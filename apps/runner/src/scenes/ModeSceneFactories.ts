@@ -11,6 +11,7 @@ export type ModeSceneFactories = Record<MenuOptionId, () => Scene>;
 
 export interface DefaultModeSceneFactoryOptions {
 	onStartStoryStage?: (scene: Scene) => void;
+	onReturnToTitle?: () => void;
 }
 
 export function createDefaultModeSceneFactories(
@@ -20,13 +21,13 @@ export function createDefaultModeSceneFactories(
 		story: () =>
 			new StoryFlowScene(undefined, {
 				onStartStage: (stageOptions) => {
-					const scene = new StageRunScene(stageOptions);
+					const scene = new StageRunScene({ ...stageOptions, onReturnToTitle: options.onReturnToTitle });
 					options.onStartStoryStage?.(scene);
 				},
 			}),
-		versus: () => new VersusScene(),
-		training: () => new TrainingScene(),
-		skills: () => new SkillTreeScene(),
-		endless: () => new StageRunScene(buildEndlessSprawlRun().options),
+		versus: () => new VersusScene({ onReturnToTitle: options.onReturnToTitle }),
+		training: () => new TrainingScene({ onReturnToTitle: options.onReturnToTitle }),
+		skills: () => new SkillTreeScene({ onReturnToTitle: options.onReturnToTitle }),
+		endless: () => new StageRunScene({ ...buildEndlessSprawlRun().options, onReturnToTitle: options.onReturnToTitle }),
 	};
 }

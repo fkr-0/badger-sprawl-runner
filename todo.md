@@ -553,10 +553,10 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Runtime scene wiring
 
 - [x] Replace the shell-only `ModeRouter` placeholder scene factory with concrete runtime scene construction.
-- [ ] Wire `TitleScene` into the real app shell or remove duplicate menu rendering from `main.ts` so there is only one main-menu implementation.
+- [x] Wire `TitleScene` into the real app shell or remove duplicate menu rendering from `main.ts` so there is only one main-menu implementation.
 - [x] Instantiate `TrainingScene`, `VersusScene`, `SkillTreeScene`, and story flow screens through the same `SceneManager` pathway.
 - [x] Add a route contract test using a fake `SceneManager` plus concrete scene constructors, not only scene-name placeholders.
-- [ ] Add back/cancel behavior from concrete scenes to `TitleScene` through `SceneManager`.
+- [x] Add back/cancel behavior from concrete scenes to `TitleScene` through `SceneManager`.
 - [x] Decide whether the current immediate-mode `main.ts` prototype remains a smoke harness or becomes the production shell: `main.ts` is the SceneManager shell; `smokeMain.ts` preserves the immediate-mode harness.
 
 ## Story gameplay depth

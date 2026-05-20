@@ -19,6 +19,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const flow = loadGameFlow(saveDriver);
 	const factories = createDefaultModeSceneFactories({
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
+		onReturnToTitle: () => sceneManager.replace(createTitleScene()),
 	});
 
 	function routeMode(modeId: MenuOptionId): void {

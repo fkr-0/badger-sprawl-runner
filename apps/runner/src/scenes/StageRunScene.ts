@@ -38,6 +38,7 @@ export interface StageRunSceneOptions {
 	generatedSideRooms?: readonly GeneratedSideRoom[];
 	procgenSeed?: string;
 	onStoryPayloadCollected?: (payloadId: string) => void;
+	onReturnToTitle?: () => void;
 }
 
 export class StageRunScene implements Scene {
@@ -65,6 +66,7 @@ export class StageRunScene implements Scene {
 	private enemies: CombatEntity[] = [];
 
 	private renderer: Renderer | null = null;
+	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 	private hitstopRemaining = 0;
 	private screenShakeIntensity = 0;
 	private lastAnimationFrame = 0;
@@ -88,10 +90,22 @@ export class StageRunScene implements Scene {
 		this.renderer.loadSprites('/data/sprites.json').catch(() => {
 			console.log('Sprite manifest not found, using fallback rendering');
 		});
+		const handleKeyDown = (event: KeyboardEvent): void => {
+			if (event.code === 'Escape') {
+				this.options.onReturnToTitle?.();
+				event.preventDefault();
+			}
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		this.keyHandler = handleKeyDown;
 	}
 
 	onExit(): void {
 		console.log('StageRunScene exited');
+		if (this.keyHandler) {
+			window.removeEventListener('keydown', this.keyHandler);
+			this.keyHandler = null;
+		}
 	}
 
 	update(dt: number): void {

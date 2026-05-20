@@ -8,12 +8,18 @@ const SKILL_IDS = ['double_swipe', 'parry_tooth', 'rail_mastery'] as const;
 
 type SkillId = (typeof SKILL_IDS)[number];
 
+export interface SkillTreeSceneOptions {
+	onReturnToTitle?: () => void;
+}
+
 export class SkillTreeScene implements Scene {
 	readonly name = 'SkillTreeScene';
 
 	private selectedIndex = 0;
 	private purchased = new Set<SkillId>();
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
+
+	constructor(private readonly options: SkillTreeSceneOptions = {}) {}
 
 	getSelectedSkill(): SkillId {
 		return SKILL_IDS[this.selectedIndex] ?? 'double_swipe';
@@ -24,7 +30,13 @@ export class SkillTreeScene implements Scene {
 	}
 
 	onEnter(_ctx: SceneContext): void {
+		console.log('SkillTreeScene entered');
 		const handleKeyDown = (event: KeyboardEvent): void => {
+			if (event.code === 'Escape') {
+				this.options.onReturnToTitle?.();
+				event.preventDefault();
+				return;
+			}
 			if (event.code === 'ArrowUp') {
 				this.moveSelection(-1);
 				event.preventDefault();
@@ -43,6 +55,7 @@ export class SkillTreeScene implements Scene {
 	}
 
 	onExit(): void {
+		console.log('SkillTreeScene exited');
 		if (this.keyHandler) {
 			window.removeEventListener('keydown', this.keyHandler);
 			this.keyHandler = null;

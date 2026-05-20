@@ -5,18 +5,30 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { type TrainingAction, createTrainingMode } from '../game/TrainingMode';
 
+export interface TrainingSceneOptions {
+	onReturnToTitle?: () => void;
+}
+
 export class TrainingScene implements Scene {
 	readonly name = 'TrainingScene';
 
 	private readonly training = createTrainingMode();
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 
+	constructor(private readonly options: TrainingSceneOptions = {}) {}
+
 	getTrainingState(): ReturnType<typeof this.training.getState> {
 		return this.training.getState();
 	}
 
 	onEnter(_ctx: SceneContext): void {
+		console.log('TrainingScene entered');
 		const handleKeyDown = (event: KeyboardEvent): void => {
+			if (event.code === 'Escape') {
+				this.options.onReturnToTitle?.();
+				event.preventDefault();
+				return;
+			}
 			if (event.code === 'KeyR') {
 				this.training.resetPractice();
 				event.preventDefault();
@@ -31,6 +43,7 @@ export class TrainingScene implements Scene {
 	}
 
 	onExit(): void {
+		console.log('TrainingScene exited');
 		if (this.keyHandler) {
 			window.removeEventListener('keydown', this.keyHandler);
 			this.keyHandler = null;
