@@ -21,6 +21,7 @@ export interface CombatEntity extends Entity {
 	comboCount?: number;
 	comboTimer?: number;
 	lastHitTime?: number;
+	rookMarked?: boolean;
 }
 
 export interface HitboxSet {
@@ -39,6 +40,7 @@ export interface CombatEvents {
 	onEvent?: (event: CombatEvent) => void;
 	requestHitstop?: (duration: number) => void;
 	requestScreenShake?: (intensity: number) => void;
+	mitigateDamage?: (amount: number) => number;
 }
 
 export class CombatSystem {
@@ -214,12 +216,17 @@ export class CombatSystem {
 	}
 
 	private damage(entity: CombatEntity, amount: number, events?: CombatEvents): void {
-		entity.hp -= amount;
+		const finalAmount = events?.mitigateDamage?.(amount) ?? amount;
+		if (finalAmount <= 0) {
+			entity.invuln = Math.max(entity.invuln, 0.35);
+			return;
+		}
+		entity.hp -= finalAmount;
 		entity.invuln = 1.1;
 		events?.onEvent?.({
 			kind: 'damage',
 			source: 'enemy',
-			damage: amount,
+			damage: finalAmount,
 		});
 		events?.requestScreenShake?.(6);
 		events?.requestHitstop?.(0.06);

@@ -41,6 +41,7 @@ export class UIRenderer {
 		);
 
 		this.renderItemIcons(ctx, player, spriteRenderer, 30, 84);
+		this.renderCompanionStatus(ctx, player, 214, 84);
 	}
 
 	private renderItemIcons(
@@ -89,6 +90,21 @@ export class UIRenderer {
 		}
 
 		ctx.restore();
+	}
+
+
+	private renderCompanionStatus(ctx: CanvasRenderingContext2D, player: Player, x: number, y: number): void {
+		ctx.font = '12px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(`Naya shield ${Math.floor(player.companionShield ?? 0)}`, x, y + 10);
+		if (player.rookOverlayActive) {
+			ctx.fillStyle = '#ffb35e';
+			ctx.fillText('Rook overlay active', x, y + 27);
+		}
+		if (player.companionHint) {
+			ctx.fillStyle = '#92a4be';
+			ctx.fillText(player.companionHint.slice(0, 52), x, y + 44);
+		}
 	}
 
 	private getHudIconSlots(player: Player): HudIconSlot[] {

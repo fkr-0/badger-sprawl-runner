@@ -126,6 +126,12 @@ export class Renderer {
 			this.ctx.fillStyle = '#1a1d26';
 			this.ctx.fillRect(x, enemy.y, enemy.w, enemy.h);
 
+			if (enemy.rookMarked) {
+				this.ctx.strokeStyle = '#67f3c4';
+				this.ctx.lineWidth = 2;
+				this.ctx.strokeRect(x - 4, enemy.y - 4, enemy.w + 8, enemy.h + 8);
+			}
+
 			// Eye
 			this.ctx.fillStyle = enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';
 			this.ctx.fillRect(x + (enemy.vx > 0 ? 22 : 6), enemy.y + 8, 6, 6);

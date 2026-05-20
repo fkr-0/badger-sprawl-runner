@@ -87,7 +87,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 - [x] Integrate story-flavour.yml parsing into StoryContentLoader
 - [x] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels render speaker portraits and stage choice UI.
-- [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
+- [x] Implement companion system in gameplay: Naya shield mitigation, Rook enemy overlays, and Auntie contextual hints are wired into StageRunScene.
 - [x] Add trust/heat effects to merchant prices: ShopEngine now applies orbitHeat markup, dubFavor discounts, and guile discounts, and ShopScene purchases from generated offers.
 - [~] Implement branch consequences from dialogue choices: StoryFlow choice UI now calls GameFlow.chooseStageChoice, and branch meta deltas now affect shop prices through heat/favor; stage-specific gameplay consequences remain.
 - [x] Add side quest system integration: campaign stages now expose typed side quests through GameFlow and StoryFlow renders the current stage side job.
@@ -120,7 +120,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Documentation additions needed
 
 - [ ] Add docs/story-content-system.md explaining the new content systems
-- [ ] Add docs/companion-system.md explaining companion mechanics
+- [~] Add docs/companion-system.md explaining companion mechanics
 - [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
 - [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
 - [ ] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow

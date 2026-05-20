@@ -8,6 +8,7 @@ import type { SceneContext } from '../engine/SceneManager';
 import { InputSystem } from '../systems/InputSystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import { CombatSystem } from '../systems/CombatSystem';
+import { CompanionSystem } from '../systems/CompanionSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import {
@@ -37,6 +38,7 @@ export class StageRunScene implements Scene {
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
+	private companions = new CompanionSystem();
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
@@ -105,6 +107,10 @@ export class StageRunScene implements Scene {
 		// 4. Combat with event handlers
 		this.combat.step(this.player, this.enemies, action as Record<string, boolean>, simDt, {
 			onEvent: (event) => this.handleCombatEvent(event),
+			mitigateDamage: (amount) =>
+				this.companions.mitigateDamage(amount, {
+					onShield: (blocked) => this.renderer?.emitVFX(this.player.x, this.player.y, 'emp', blocked + 3, 30),
+				}),
 			requestHitstop: (duration) => {
 				this.hitstopRemaining = duration;
 			},
@@ -114,7 +120,19 @@ export class StageRunScene implements Scene {
 		});
 		// 5. Items
 		this.items.step(this.player, action, this.pickups, simDt);
-		// 6-8. Hack, Enemy, Companion (not implemented)
+		// 6-8. Hack, Enemy, Companion
+		this.companions.step(this.player, this.enemies, simDt, {
+			onHint: (message) => {
+				this.player.companionHint = message;
+			},
+		});
+		const companionState = this.companions.getState();
+		this.player.companionShield = companionState.nayaShield;
+		this.player.rookOverlayActive = companionState.rookOverlayUntil > 0;
+		this.player.companionHint = companionState.auntieHint;
+		for (const enemy of this.enemies) {
+			enemy.rookMarked = companionState.rookOverlayUntil > 0 && enemy.hp > 0;
+		}
 		// 9-11. Beat, WaveDirector, Camera
 		this.camera.step(this.player.x, 0, 990, simDt);
 

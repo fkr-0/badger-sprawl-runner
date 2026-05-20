@@ -28,6 +28,9 @@ export interface Entity {
 	lastHitTime?: number;
 	parryWindow?: number;
 	isDodging?: boolean;
+	companionHint?: string;
+	companionShield?: number;
+	rookOverlayActive?: boolean;
 
 	// Visual juice properties
 	scaleX?: number;

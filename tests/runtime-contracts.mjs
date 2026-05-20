@@ -26,6 +26,7 @@ const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.t
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
+const companionSystemSource = await text('apps/runner/src/systems/CompanionSystem.ts');
 const campaignSource = await text('apps/runner/src/game/Campaign.ts');
 const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
@@ -98,6 +99,42 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+
+
+for (const required of [
+	'renderCompanionStatus',
+	'companionShield',
+	'rookOverlayActive',
+	'companionHint',
+	'Naya shield',
+	'Rook overlay active',
+]) {
+	assert(uiRendererSource.includes(required), `UIRenderer missing companion HUD status: ${required}`);
+}
+
+for (const required of [
+	'CompanionSystem',
+	'naya_root',
+	'rook_null',
+	'auntie_subharmonic',
+	'mitigateDamage',
+	'rookOverlayUntil',
+	'auntieHint',
+]) {
+	assert(companionSystemSource.includes(required), `CompanionSystem missing runtime companion contract: ${required}`);
+}
+for (const required of [
+	'private companions = new CompanionSystem()',
+	'mitigateDamage: (amount)',
+	'this.companions.step',
+	'companionShield',
+	'rookMarked',
+	'companionHint',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing companion gameplay wiring: ${required}`);
+}
+assert(rendererSource.includes('enemy.rookMarked'), 'Renderer must draw Rook-marked enemy overlays');
 
 for (const required of [
 	'chapterId: string',
