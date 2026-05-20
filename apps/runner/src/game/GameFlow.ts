@@ -1,4 +1,10 @@
-import { CAMPAIGN, type CampaignStage, type SideQuest, type StageMinigame } from './Campaign';
+import {
+	CAMPAIGN,
+	type BossPhase,
+	type CampaignStage,
+	type SideQuest,
+	type StageMinigame,
+} from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
 
@@ -88,6 +94,7 @@ export interface BossContract {
 	name: string;
 	phaseCount: number;
 	argument: string;
+	phases?: BossPhase[];
 	lessons?: BossLesson[];
 }
 
@@ -166,7 +173,11 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	place: stage.place,
 	heistPayloadId: stage.heistPayload.id,
 	placard: stage.placard,
-	boss: { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) },
+	boss: {
+		...stage.boss,
+		lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
+		phases: stage.boss.phases?.map((phase) => ({ ...phase })),
+	},
 	resultFlag: stage.resultFlag,
 	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
@@ -311,7 +322,11 @@ export class GameFlow {
 		return STAGES.map((stage) => ({
 			...stage,
 			boss: stage.boss
-				? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) }
+				? {
+					...stage.boss,
+					lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
+					phases: stage.boss.phases?.map((phase) => ({ ...phase })),
+				}
 				: undefined,
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
@@ -329,7 +344,11 @@ export class GameFlow {
 			? {
 					...stage,
 					boss: stage.boss
-						? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) }
+						? {
+					...stage.boss,
+					lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
+					phases: stage.boss.phases?.map((phase) => ({ ...phase })),
+				}
 						: undefined,
 					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),

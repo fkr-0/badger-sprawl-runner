@@ -317,6 +317,21 @@ describe('Badger Sprawl Runner game flow', () => {
 	});
 
 
+
+	it('exposes cloned boss phase mechanics through stage specs', () => {
+		const flow = createGameFlow();
+		const arcology = flow.getStages().find((stage) => stage.id === 'chrome-arcology');
+		expect(arcology?.boss?.phases?.[0]).toMatchObject({
+			id: 'display-window',
+			label: 'Display Window',
+		});
+		if (!arcology?.boss?.phases) throw new Error('expected boss phases');
+		arcology.boss.phases[0].label = 'mutated phase';
+		expect(flow.getStages().find((stage) => stage.id === 'chrome-arcology')?.boss?.phases?.[0]?.label).toBe(
+			'Display Window'
+		);
+	});
+
 	it('exposes cloned minigames through stage specs', () => {
 		const flow = createGameFlow();
 		const stage = flow.getStages()[0];

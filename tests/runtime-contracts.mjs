@@ -147,6 +147,14 @@ for (const required of [
 }
 
 
+
+for (const required of ['type BossPhase', 'phases?: BossPhase[]', 'phases: stage.boss.phases?.map((phase) => ({ ...phase }))']) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing boss phase projection: ${required}`);
+}
+for (const required of ['stage.boss?.phases?.[0]', 'Boss phase:', 'bossPhase.mechanic.slice']) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing boss phase panel rendering: ${required}`);
+}
+
 for (const required of [
 	'StageMinigame',
 	'CAMPAIGN_MINIGAMES',

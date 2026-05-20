@@ -134,9 +134,9 @@ export class StoryFlowScene implements Scene {
 		const panelY = ctx.canvas.height - 220;
 		const panelW = ctx.canvas.width - 108;
 		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
-		ctx.fillRect(panelX, panelY, panelW, 174);
+		ctx.fillRect(panelX, panelY, panelW, 190);
 		ctx.strokeStyle = '#ffb35e';
-		ctx.strokeRect(panelX, panelY, panelW, 174);
+		ctx.strokeRect(panelX, panelY, panelW, 190);
 		ctx.textAlign = 'left';
 		ctx.fillStyle = '#ffb35e';
 		ctx.font = '700 15px ui-monospace, monospace';
@@ -160,12 +160,21 @@ export class StoryFlowScene implements Scene {
 			ctx.fillStyle = '#cfeee4';
 			ctx.fillText(`Minigame: ${minigame.title} (${minigame.kind})`, panelX + 22, panelY + 146);
 		}
+		const bossPhase = stage.boss?.phases?.[0];
+		if (bossPhase) {
+			ctx.fillStyle = '#ff5e7a';
+			ctx.fillText(
+				`Boss phase: ${stage.boss?.name} — ${bossPhase.label}: ${bossPhase.mechanic.slice(0, 48)}`,
+				panelX + 22,
+				panelY + 160
+			);
+		}
 
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 158);
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 174);
 		if (this.lastChoiceResult) {
 			ctx.fillStyle = '#67f3c4';
-			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 158);
+			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 174);
 		}
 	}
 
