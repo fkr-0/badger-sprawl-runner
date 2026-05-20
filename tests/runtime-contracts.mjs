@@ -24,6 +24,8 @@ const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
+const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
+const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
 const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
@@ -92,6 +94,28 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+
+for (const required of [
+	'getPriceModifier',
+	'heatMarkup',
+	'favorDiscount',
+	'guileDiscount',
+	'priceModifier',
+]) {
+	assert(shopEngineSource.includes(required), `ShopEngine missing heat/favor economy pricing: ${required}`);
+}
+for (const required of [
+	'currentOffer',
+	'refreshOffer',
+	'this.shopEngine.generateOffer',
+	'this.metaState.orbitHeat',
+	'this.metaState.dubFavor',
+	'getGuileFromSkills',
+	'modifier.toFixed(2)',
+]) {
+	assert(shopSceneSource.includes(required), `ShopScene missing trust/heat shop wiring: ${required}`);
+}
 
 for (const required of [
 	'getCurrentStage()',

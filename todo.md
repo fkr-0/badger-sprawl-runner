@@ -37,7 +37,7 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 - [x] `pnpm run typecheck` exited 0: all workspace packages and `apps/runner` typechecked.
 - [x] `pnpm run build` exited 0: packages built and Vite produced `apps/runner/dist`.
 - [x] `pnpm run smoke:runner` exited 0: runner bundle smoke contract passed.
-- [x] `pnpm run lint` exited 0: Biome checked 153 files with no fixes applied.
+- [x] `pnpm run lint` exited 0: Biome checked 154 files with no fixes applied.
 - [x] Working tree sprite/animation implementation is ready to commit after this checklist update.
 
 ## Sprite, texture, and animation pipeline
@@ -88,8 +88,8 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Integrate story-flavour.yml parsing into StoryContentLoader
 - [x] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels render speaker portraits and stage choice UI.
 - [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
-- [ ] Add trust/heat effects to merchant prices and gameplay
-- [~] Implement branch consequences from dialogue choices: StoryFlow stage choice UI now calls GameFlow.chooseStageChoice; deeper gameplay consequences remain.
+- [x] Add trust/heat effects to merchant prices: ShopEngine now applies orbitHeat markup, dubFavor discounts, and guile discounts, and ShopScene purchases from generated offers.
+- [~] Implement branch consequences from dialogue choices: StoryFlow choice UI now calls GameFlow.chooseStageChoice, and branch meta deltas now affect shop prices through heat/favor; stage-specific gameplay consequences remain.
 - [ ] Add side quest system integration
 - [ ] Connect chapter progression to actual game flow
 

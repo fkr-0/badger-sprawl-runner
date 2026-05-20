@@ -4,7 +4,7 @@
 
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
-import { ShopEngine } from '@badger/progression';
+import { ShopEngine, type ShopOffer } from '@badger/progression';
 import { loadMeta, persistMeta, type MetaState } from '@badger/progression';
 import type { Renderer } from '../renderer/Renderer';
 
@@ -23,6 +23,7 @@ export class ShopScene implements Scene {
 	private shopEngine: ShopEngine;
 	private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 	private metaState: MetaState | null = null;
+	private currentOffer: ShopOffer | null = null;
 	private renderer: Renderer | null = null;
 	private selectedItem = 0;
 	private message = '';
@@ -36,6 +37,7 @@ export class ShopScene implements Scene {
 		console.log('ShopScene entered');
 		this.renderer = ctx.renderer as Renderer;
 		this.metaState = loadMeta();
+		this.refreshOffer();
 
 		// Set up keyboard input
 		const handleKeyDown = (e: KeyboardEvent): void => {
@@ -113,19 +115,30 @@ export class ShopScene implements Scene {
 		ctx.textAlign = 'center';
 		ctx.fillText('MURR MURRBY SHOP', W / 2, panelY + 40);
 
-		// Currency display
+		// Currency and economy display
 		if (this.metaState) {
 			ctx.fillStyle = '#ffb35e';
 			ctx.font = '16px ui-monospace, monospace';
 			ctx.fillText(`Credchips: ${this.metaState.credchips}`, W / 2, panelY + 70);
+			const modifier = this.currentOffer?.priceModifier ?? 1;
+			ctx.fillStyle = modifier > 1 ? '#ff5e7a' : modifier < 1 ? '#67f3c4' : '#92a4be';
+			ctx.font = '12px ui-monospace, monospace';
+			ctx.fillText(
+				`Heat ${this.metaState.orbitHeat} / Favor ${this.metaState.dubFavor} / Price x${modifier.toFixed(2)}`,
+				W / 2,
+				panelY + 90
+			);
 		}
 
 		// Item list
-		let y = panelY + 110;
-		for (let i = 0; i < SHOP_ITEMS.length; i++) {
-			const item = SHOP_ITEMS[i];
+		const offerItems = this.currentOffer?.items ?? [];
+		let y = panelY + 125;
+		for (let i = 0; i < offerItems.length; i++) {
+			const item = offerItems[i];
 			const isSelected = i === this.selectedItem;
 			const canAfford = this.metaState && this.metaState.credchips >= item.price;
+			const catalogItem = SHOP_ITEMS.find((candidate) => candidate.id === item.id);
+			const rarity = catalogItem?.rarity ?? 'common';
 
 			// Highlight selected item
 			if (isSelected) {
@@ -146,9 +159,9 @@ export class ShopScene implements Scene {
 
 			// Rarity indicator
 			ctx.textAlign = 'left';
-			ctx.fillStyle = item.rarity === 'rare' ? '#ff5e7a' : '#92a4be';
+			ctx.fillStyle = rarity === 'rare' ? '#ff5e7a' : '#92a4be';
 			ctx.font = '12px ui-monospace, monospace';
-			ctx.fillText(item.rarity.toUpperCase(), panelX + 40, y + 18);
+			ctx.fillText(rarity.toUpperCase(), panelX + 40, y + 18);
 
 			y += 50;
 		}
@@ -173,8 +186,34 @@ export class ShopScene implements Scene {
 		}
 	}
 
+
+	private refreshOffer(): void {
+		if (!this.metaState) {
+			this.currentOffer = null;
+			return;
+		}
+		this.currentOffer = this.shopEngine.generateOffer(
+			'lower-sprawl',
+			this.metaState.orbitHeat,
+			this.metaState.dubFavor,
+			this.getGuileFromSkills(this.metaState),
+			SHOP_ITEMS
+		);
+		this.selectedItem = Math.min(this.selectedItem, Math.max(0, this.currentOffer.items.length - 1));
+	}
+
+	private getGuileFromSkills(metaState: MetaState): number {
+		return metaState.purchasedSkills.filter((skillId) =>
+			['silver_tongue', 'black_market_map', 'merchant_patience'].includes(skillId)
+		).length;
+	}
+
 	private purchaseItem(): void {
-		const item = SHOP_ITEMS[this.selectedItem];
+		const item = this.currentOffer?.items[this.selectedItem];
+		if (!item) {
+			this.showMessage('No offer loaded!');
+			return;
+		}
 		if (!this.metaState) {
 			this.showMessage('No save data!');
 			return;
@@ -183,6 +222,7 @@ export class ShopScene implements Scene {
 		if (this.metaState.credchips >= item.price) {
 			this.metaState.credchips -= item.price;
 			persistMeta(this.metaState);
+			this.refreshOffer();
 			this.showMessage(`Purchased ${item.name}!`);
 		} else {
 			this.showMessage('Not enough credchips!');
