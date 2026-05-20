@@ -17,6 +17,7 @@ const runnerPackage = await json('apps/runner/package.json');
 const readme = await text('README.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
+const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
 const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
@@ -26,6 +27,7 @@ const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.t
 const stageLayoutRegistrySource = await text('apps/runner/src/world/stageLayoutRegistry.ts');
 const encounterGeneratorSource = await text('apps/runner/src/procgen/EncounterGenerator.ts');
 const sideRoomGeneratorSource = await text('apps/runner/src/procgen/SideRoomGenerator.ts');
+const endlessSprawlRunSource = await text('apps/runner/src/procgen/EndlessSprawlRun.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
@@ -193,6 +195,22 @@ for (const required of [
 ]) {
 	assert(encounterGeneratorSource.includes(required), `EncounterGenerator missing procedural enemy contract: ${required}`);
 }
+for (const required of [
+	'buildEndlessSprawlRun',
+	'ENDLESS_STAGE_ROTATION',
+	'enemyPackCount',
+	'sideRoomCount',
+	'ambush_warning_overlay',
+]) {
+	assert(endlessSprawlRunSource.includes(required), `EndlessSprawlRun missing endless mode contract: ${required}`);
+}
+for (const required of ['endless', 'Endless Sprawl']) {
+	assert(
+		modeSceneFactoriesSource.includes(required) || runnerGameFlow.includes(required) || runnerApp.includes(required) || modeMenuSource.includes(required),
+		`endless mode route missing: ${required}`
+	);
+}
+
 for (const required of [
 	'SideRoomGenerator',
 	'DEFAULT_ROOM_CHUNKS',

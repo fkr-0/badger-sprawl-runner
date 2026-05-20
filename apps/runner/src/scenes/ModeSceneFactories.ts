@@ -1,5 +1,6 @@
 import type { Scene } from '../engine/SceneManager';
 import type { MenuOptionId } from '../game/GameFlow';
+import { buildEndlessSprawlRun } from '../procgen/EndlessSprawlRun';
 import { SkillTreeScene } from './SkillTreeScene';
 import { StageRunScene } from './StageRunScene';
 import { StoryFlowScene } from './StoryFlowScene';
@@ -26,5 +27,6 @@ export function createDefaultModeSceneFactories(
 		versus: () => new VersusScene(),
 		training: () => new TrainingScene(),
 		skills: () => new SkillTreeScene(),
+		endless: () => new StageRunScene(buildEndlessSprawlRun().options),
 	};
 }

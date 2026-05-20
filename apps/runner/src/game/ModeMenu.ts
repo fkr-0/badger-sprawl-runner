@@ -22,6 +22,11 @@ export const MODE_OPTIONS: MenuOption[] = [
 		label: 'Skill Tree',
 		description: 'Spend blueprint shards on persistent upgrades.',
 	},
+	{
+		id: 'endless',
+		label: 'Endless Sprawl',
+		description: 'Replay procedural floors with escalating enemy budgets and side rooms.',
+	},
 ];
 
 export const MODE_SCENE_ROUTES: Record<MenuOptionId, ModeSceneRoute> = {
@@ -29,4 +34,5 @@ export const MODE_SCENE_ROUTES: Record<MenuOptionId, ModeSceneRoute> = {
 	versus: { sceneName: 'VersusScene', status: 'implemented' },
 	training: { sceneName: 'TrainingScene', status: 'implemented' },
 	skills: { sceneName: 'SkillTreeScene', status: 'implemented' },
+	endless: { sceneName: 'StageRunScene', status: 'implemented' },
 };

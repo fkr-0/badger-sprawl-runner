@@ -4,6 +4,7 @@ import { MODE_OPTIONS, MODE_SCENE_ROUTES } from './ModeMenu';
 import { TitleScene } from '../scenes/TitleScene';
 import { createDefaultModeSceneFactories } from '../scenes/ModeSceneFactories';
 import { SkillTreeScene } from '../scenes/SkillTreeScene';
+import { StageRunScene } from '../scenes/StageRunScene';
 import { StoryFlowScene } from '../scenes/StoryFlowScene';
 import { TrainingScene } from '../scenes/TrainingScene';
 import { VersusScene } from '../scenes/VersusScene';
@@ -88,6 +89,7 @@ describe('mode router', () => {
 		expect(createModeScene('training', factories)).toBeInstanceOf(TrainingScene);
 		expect(createModeScene('versus', factories)).toBeInstanceOf(VersusScene);
 		expect(createModeScene('skills', factories)).toBeInstanceOf(SkillTreeScene);
+		expect(createModeScene('endless', factories)).toBeInstanceOf(StageRunScene);
 	});
 
 	it('replaces the current scene with the selected concrete mode scene', () => {
@@ -100,8 +102,9 @@ describe('mode router', () => {
 		routeModeSelection(sceneManager, 'training', factories);
 		routeModeSelection(sceneManager, 'versus', factories);
 		routeModeSelection(sceneManager, 'skills', factories);
+		routeModeSelection(sceneManager, 'endless', factories);
 
-		expect(replaced).toEqual(['TrainingScene', 'VersusScene', 'SkillTreeScene']);
+		expect(replaced).toEqual(['TrainingScene', 'VersusScene', 'SkillTreeScene', 'StageRunScene']);
 	});
 
 	it('routes TitleScene selection through a SceneManager-compatible replacement path', () => {

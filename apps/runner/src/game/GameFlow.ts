@@ -8,7 +8,7 @@ import {
 	type StageMinigame,
 } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
-export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
+export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills' | 'endless';
 
 export interface MenuOption {
 	id: MenuOptionId;
@@ -147,7 +147,8 @@ export type GameFlowState =
 	| { mode: 'debrief'; stageId: string; stageIndex: number; debriefId: string; lineIndex: number }
 	| { mode: 'versus'; arenaId: string; winScore: number; playerScore: number; rivalScore: number }
 	| { mode: 'training'; dummy: { label: string; invincible: true; hp: 'infinite' } }
-	| { mode: 'skills'; selectedSkillId: string };
+	| { mode: 'skills'; selectedSkillId: string }
+	| { mode: 'endless'; seed: string; floor: number };
 
 const MENU_OPTIONS: MenuOption[] = MODE_OPTIONS;
 
@@ -363,7 +364,13 @@ export class GameFlow {
 
 	getCurrentChapterId(): string | undefined {
 		const state = this.state;
-		if (state.mode === 'menu' || state.mode === 'versus' || state.mode === 'training' || state.mode === 'skills') {
+		if (
+			state.mode === 'menu' ||
+			state.mode === 'versus' ||
+			state.mode === 'training' ||
+			state.mode === 'skills' ||
+			state.mode === 'endless'
+		) {
 			return undefined;
 		}
 		const stage =
@@ -408,7 +415,8 @@ export class GameFlow {
 			state.mode === 'menu' ||
 			state.mode === 'versus' ||
 			state.mode === 'training' ||
-			state.mode === 'skills'
+			state.mode === 'skills' ||
+			state.mode === 'endless'
 		) {
 			return undefined;
 		}
@@ -456,6 +464,9 @@ export class GameFlow {
 				break;
 			case 'skills':
 				this.state = { mode: 'skills', selectedSkillId: 'double_swipe' };
+				break;
+			case 'endless':
+				this.state = { mode: 'endless', seed: 'endless-sprawl', floor: 1 };
 				break;
 		}
 	}

@@ -10,6 +10,11 @@ describe('createDefaultModeSceneFactories', () => {
 		expect(scene).toBeInstanceOf(StoryFlowScene);
 	});
 
+	it('creates Endless Sprawl as a generated StageRunScene', () => {
+		const factories = createDefaultModeSceneFactories();
+		expect(factories.endless()).toBeInstanceOf(StageRunScene);
+	});
+
 	it('routes StoryFlow stage launch callback to a StageRunScene', () => {
 		const onStartStoryStage = vi.fn();
 		const factories = createDefaultModeSceneFactories({ onStartStoryStage });
