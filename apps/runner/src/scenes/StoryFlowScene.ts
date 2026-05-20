@@ -22,6 +22,18 @@ export interface BranchChoiceRecap {
 	orbitHeatDelta: number;
 }
 
+export interface StageDebugDetail {
+	stageId: string;
+	stageName: string;
+	payloadId: string;
+	bossId: string;
+	bossName: string;
+	tutorialBeats: string[];
+	modifiers: string[];
+	branchOutcomes: string[];
+	resultFlags: string[];
+}
+
 export class StoryFlowScene implements Scene {
 	readonly name = 'StoryFlowScene';
 
@@ -29,6 +41,8 @@ export class StoryFlowScene implements Scene {
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 	private lastChoiceResult = '';
 	private lastChoiceRecap: BranchChoiceRecap | null = null;
+	private debugPanelVisible = false;
+	private lastDebugDetail: StageDebugDetail | null = null;
 
 	constructor(
 		private readonly flow: GameFlow = createGameFlow(),
@@ -41,6 +55,18 @@ export class StoryFlowScene implements Scene {
 
 	getLastChoiceRecap(): BranchChoiceRecap | null {
 		return this.lastChoiceRecap ? { ...this.lastChoiceRecap } : null;
+	}
+
+	getLastDebugDetail(): StageDebugDetail | null {
+		return this.lastDebugDetail
+			? {
+					...this.lastDebugDetail,
+					tutorialBeats: [...this.lastDebugDetail.tutorialBeats],
+					modifiers: [...this.lastDebugDetail.modifiers],
+					branchOutcomes: [...this.lastDebugDetail.branchOutcomes],
+					resultFlags: [...this.lastDebugDetail.resultFlags],
+				}
+			: null;
 	}
 
 	onEnter(_ctx: SceneContext): void {
@@ -82,6 +108,11 @@ export class StoryFlowScene implements Scene {
 			return;
 		}
 		if (state.mode !== 'stage') return;
+		if (event.key.toLowerCase() === 'd') {
+			event.preventDefault();
+			this.toggleStageDebugPanel();
+			return;
+		}
 		if (event.key.toLowerCase() === 'r') {
 			event.preventDefault();
 			this.startCurrentStage();
@@ -103,6 +134,30 @@ export class StoryFlowScene implements Scene {
 			event.preventDefault();
 			this.chooseStageChoice(this.selectedChoiceIndex);
 		}
+	}
+
+	private toggleStageDebugPanel(): void {
+		this.debugPanelVisible = !this.debugPanelVisible;
+		this.lastDebugDetail = this.debugPanelVisible ? this.buildStageDebugDetail() : null;
+		if (this.lastDebugDetail) {
+			window.dispatchEvent(new CustomEvent('badger:stage-debug-detail', { detail: this.lastDebugDetail }));
+		}
+	}
+
+	private buildStageDebugDetail(): StageDebugDetail | null {
+		const stage = this.flow.getCurrentStage();
+		if (!stage) return null;
+		return {
+			stageId: stage.id,
+			stageName: stage.name,
+			payloadId: stage.heistPayloadId ?? 'none',
+			bossId: stage.boss?.id ?? 'none',
+			bossName: stage.boss?.name ?? 'none',
+			tutorialBeats: stage.tutorialBeats?.map((beat) => beat.id) ?? [],
+			modifiers: stage.stageModifiers?.map((modifier) => modifier.id) ?? [],
+			branchOutcomes: stage.choiceOutcomes?.map((outcome) => outcome.resultFlag) ?? [],
+			resultFlags: this.flow.getStoryProgress().resultFlags,
+		};
 	}
 
 	private startCurrentStage(): void {
@@ -163,6 +218,7 @@ export class StoryFlowScene implements Scene {
 			}
 		} else if (state.mode === 'stage') {
 			this.renderStageChoicePanel(ctx);
+			this.renderStageDebugPanel(ctx);
 		}
 
 		ctx.restore();
@@ -245,8 +301,39 @@ export class StoryFlowScene implements Scene {
 		}
 
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • R: run stage', panelX + 22, panelY + 188);
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • D: debug • R: run stage', panelX + 22, panelY + 188);
 		this.renderChoiceRecap(ctx, panelX + 22, panelY + 204, panelW - 44);
+	}
+
+
+	private renderStageDebugPanel(ctx: CanvasRenderingContext2D): void {
+		if (!this.debugPanelVisible) return;
+		const detail = this.lastDebugDetail ?? this.buildStageDebugDetail();
+		if (!detail) return;
+		const x = ctx.canvas.width - 378;
+		const y = 104;
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.88)';
+		ctx.fillRect(x, y, 324, 184);
+		ctx.strokeStyle = '#67f3c4';
+		ctx.strokeRect(x, y, 324, 184);
+		ctx.textAlign = 'left';
+		ctx.font = '700 13px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText('Stage debug detail', x + 14, y + 22);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		const lines = [
+			`stage: ${detail.stageId}`,
+			`payload: ${detail.payloadId}`,
+			`boss: ${detail.bossId} (${detail.bossName})`,
+			`tutorial: ${detail.tutorialBeats.join(', ') || 'none'}`,
+			`modifiers: ${detail.modifiers.join(', ') || 'none'}`,
+			`branches: ${detail.branchOutcomes.join(', ') || 'none'}`,
+			`flags: ${detail.resultFlags.join(', ') || 'none'}`,
+		];
+		for (const [index, line] of lines.entries()) {
+			ctx.fillText(line.slice(0, 45), x + 14, y + 44 + index * 18);
+		}
 	}
 
 	private renderChoiceRecap(ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number): void {

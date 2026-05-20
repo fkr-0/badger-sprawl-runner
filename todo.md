@@ -545,7 +545,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Turn campaign choice data into an in-game choice UI instead of requiring direct `GameFlow.chooseStageChoice()` calls from tests.
 - [x] Add a result/branch recap panel after every stage choice: selected option, consequence text, result flag, and heat/favor changes.
 - [x] Surface story progress in the menu: current chapter, completed chapters, campaign-complete badge, and final broadcast doctrine.
-- [ ] Add stage-detail debug panel for development builds showing payload, boss contract, tutorial beats, modifiers, branch outcomes, and result flags.
+- [x] Add stage-detail debug panel for development builds showing payload, boss contract, tutorial beats, modifiers, branch outcomes, and result flags.
 - [ ] Add save migration/versioning for expanded `StoryProgress` fields: `lioTrust`, `colonyAlignment`, `finalBroadcastDoctrine`, `resultFlags`.
 - [ ] Add contract tests proving every `CampaignStage.todo` item marked done in `todo.md` has matching structured campaign data or flow behavior.
 - [ ] Split the large campaign data file into smaller content modules once the schema stabilizes.

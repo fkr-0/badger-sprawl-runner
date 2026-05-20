@@ -35,6 +35,34 @@ describe('StoryFlowScene stage launch', () => {
 		expect(recapEvents[0]).toMatchObject({ resultFlag: 'lio_protected' });
 	});
 
+
+	it('toggles and emits the development stage debug detail panel', () => {
+		const flow = createGameFlow(undefined, {
+			currentStageId: 'antenna-barrens',
+			resultFlags: ['ledger_public_dump'],
+		});
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		const scene = new StoryFlowScene(flow);
+		const debugEvents: unknown[] = [];
+		window.addEventListener('badger:stage-debug-detail', (event) => debugEvents.push((event as CustomEvent).detail), {
+			once: true,
+		});
+		scene.onEnter({ eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() }, canvas: document.createElement('canvas') });
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }));
+		scene.onExit();
+
+		expect(scene.getLastDebugDetail()).toMatchObject({
+			stageId: 'antenna-barrens',
+			payloadId: 'debt_ledger_shard',
+			bossId: 'black_ice_fox',
+			resultFlags: ['ledger_public_dump'],
+		});
+		expect(scene.getLastDebugDetail()?.branchOutcomes).toContain('ledger_public_dump');
+		expect(debugEvents[0]).toMatchObject({ payloadId: 'debt_ledger_shard' });
+	});
+
 	it('builds StageRunSceneOptions when R is pressed in stage mode', () => {
 		const flow = createGameFlow(undefined, {
 			currentStageId: 'dub-colony',

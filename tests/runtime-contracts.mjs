@@ -150,12 +150,25 @@ for (const required of [
 	'badger:story-choice-recap',
 	'Branch recap:',
 	'Heat ${formatSigned',
+	'StageDebugDetail',
+	'getLastDebugDetail',
+	'toggleStageDebugPanel',
+	'buildStageDebugDetail',
+	'badger:stage-debug-detail',
+	'Stage debug detail',
+	"event.key.toLowerCase() === 'd'",
 	'onStartStage',
 	'buildStageRunSceneOptions(this.flow)',
 	"event.key.toLowerCase() === 'r'",
-	'R: run stage',
+	'D: debug',
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing StageRunScene launch seam: ${required}`);
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing StageRunScene launch/debug seam: ${required}`);
+}
+for (const required of [
+	'stageModifiers?: { id: string; label: string; kind: string }[]',
+	'stageModifiers: stage.stageModifiers?.map',
+]) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing debug stage modifier projection: ${required}`);
 }
 for (const required of [
 	'StageRunScene',

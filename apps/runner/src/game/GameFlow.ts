@@ -31,6 +31,7 @@ export interface StageSpec {
 	boss?: BossContract;
 	resultFlag?: string;
 	tutorialBeats?: TutorialBeat[];
+	stageModifiers?: { id: string; label: string; kind: string }[];
 	choiceOutcomes?: ChoiceOutcome[];
 	traversalHazards?: TraversalHazard[];
 	sideQuests?: SideQuest[];
@@ -183,6 +184,11 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	},
 	resultFlag: stage.resultFlag,
 	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+	stageModifiers: stage.stageModifiers?.map((modifier) => ({
+		id: modifier.id,
+		label: modifier.label,
+		kind: modifier.kind,
+	})),
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
 	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 	sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -332,6 +338,7 @@ export class GameFlow {
 				}
 				: undefined,
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+			stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 			sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -354,6 +361,7 @@ export class GameFlow {
 				}
 						: undefined,
 					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+					stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
