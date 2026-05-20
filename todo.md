@@ -120,6 +120,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Documentation additions needed
 
 - [ ] Add docs/story-content-system.md explaining the new content systems
+- [x] Add docs/PROCEDURAL_GENERATION.md designing optional dungeon/room and Diablo-style enemy generation.
 - [~] Add docs/companion-system.md explaining companion mechanics
 - [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
 - [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
@@ -139,6 +140,10 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Persist story progress through the save store: current stage, completed stages, acquired payloads, campaign completion.
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
 - [~] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio: StageRunScene now selects stage-addressable runtime layout contracts; fully bespoke per-stage geometry/art remains.
+- [ ] Implement procedural enemy pack generator from docs/PROCEDURAL_GENERATION.md milestone 1.
+- [ ] Add procgen data contracts for enemy families, affixes, stage profiles, and room chunks.
+- [ ] Add optional side-room generator for replay routes after enemy pack generation is stable.
+- [ ] Add Endless Sprawl mode using procedural room graphs and escalating enemy budgets.
 - [x] Wire StoryFlow stage entry directly into StageRunScene using buildStageRunSceneOptions(): StoryFlow stage mode now launches stage runtime options through its R-key start seam and default scene factory.
 - [x] Implement playable boss phase behavior in StageRunScene/boss encounters: BossPhaseSystem now selects active phases by boss HP, applies phase pressure, and surfaces boss phase HUD/overlays.
 - [x] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers: Naya shield bonus, Rook ambush overlay, and companion assist timing hooks now resolve into StageRunScene companion modifiers.
