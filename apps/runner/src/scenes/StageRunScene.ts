@@ -11,6 +11,7 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
+import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
 	applyPersistedPayloadPickups,
 	ItemSystem,
@@ -29,6 +30,7 @@ import {
 export interface StageRunSceneOptions {
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
+	bossPhases?: readonly RuntimeBossPhase[];
 	onStoryPayloadCollected?: (payloadId: string) => void;
 }
 
@@ -40,6 +42,7 @@ export class StageRunScene implements Scene {
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
 	private companions: CompanionSystem;
+	private bossPhases: BossPhaseSystem;
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
@@ -64,6 +67,7 @@ export class StageRunScene implements Scene {
 			undefined,
 			resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])
 		);
+		this.bossPhases = new BossPhaseSystem(options.bossPhases ?? []);
 		this.player = createPlayer();
 		// Initialize animation state
 		this.player.animState = createAnimationState();
@@ -138,6 +142,10 @@ export class StageRunScene implements Scene {
 		for (const enemy of this.enemies) {
 			enemy.rookMarked = companionState.rookOverlayUntil > 0 && enemy.hp > 0;
 		}
+		const bossPhaseState = this.bossPhases.step(this.player, this.enemies, simDt);
+		this.player.bossPhaseHint = bossPhaseState
+			? `Boss ${bossPhaseState.phaseIndex + 1}/${bossPhaseState.phaseCount}: ${bossPhaseState.activePhaseLabel}`
+			: undefined;
 		// 9-11. Beat, WaveDirector, Camera
 		this.camera.step(this.player.x, 0, 990, simDt);
 

@@ -139,7 +139,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Persist story progress through the save store: current stage, completed stages, acquired payloads, campaign completion.
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
 - [ ] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio.
-- [ ] Implement playable boss phase behavior in StageRunScene/boss encounters.
+- [x] Implement playable boss phase behavior in StageRunScene/boss encounters: BossPhaseSystem now selects active phases by boss HP, applies phase pressure, and surfaces boss phase HUD/overlays.
 - [x] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers: Naya shield bonus, Rook ambush overlay, and companion assist timing hooks now resolve into StageRunScene companion modifiers.
 
 ## First three acts design

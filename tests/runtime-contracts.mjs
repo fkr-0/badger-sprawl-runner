@@ -27,6 +27,7 @@ const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/Dial
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
 const companionSystemSource = await text('apps/runner/src/systems/CompanionSystem.ts');
+const bossPhaseSystemSource = await text('apps/runner/src/systems/BossPhaseSystem.ts');
 const campaignSource = await text('apps/runner/src/game/Campaign.ts');
 const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
@@ -113,6 +114,28 @@ for (const required of [
 	assert(uiRendererSource.includes(required), `UIRenderer missing companion HUD status: ${required}`);
 }
 
+
+
+for (const required of [
+	'BossPhaseSystem',
+	'RuntimeBossPhase',
+	'BossPhaseRuntimeState',
+	'applyPhasePressure',
+	'bossPhaseLabel',
+	'bossPhaseMechanic',
+]) {
+	assert(bossPhaseSystemSource.includes(required), `BossPhaseSystem missing runtime boss phase contract: ${required}`);
+}
+for (const required of [
+	'bossPhases?: readonly RuntimeBossPhase[]',
+	'private bossPhases: BossPhaseSystem',
+	'this.bossPhases.step',
+	'bossPhaseHint',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing boss phase runtime wiring: ${required}`);
+}
+assert(rendererSource.includes('enemy.bossPhaseLabel'), 'Renderer must draw boss phase overlays');
+assert(uiRendererSource.includes('bossPhaseHint'), 'UIRenderer must surface active boss phase hints');
 
 for (const required of [
 	'CompanionGameplayModifiers',

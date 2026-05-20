@@ -22,6 +22,9 @@ export interface CombatEntity extends Entity {
 	comboTimer?: number;
 	lastHitTime?: number;
 	rookMarked?: boolean;
+	bossPhaseLabel?: string;
+	bossPhaseMechanic?: string;
+	bossPhaseIndex?: number;
 }
 
 export interface HitboxSet {

@@ -31,6 +31,7 @@ export interface Entity {
 	companionHint?: string;
 	companionShield?: number;
 	rookOverlayActive?: boolean;
+	bossPhaseHint?: string;
 
 	// Visual juice properties
 	scaleX?: number;

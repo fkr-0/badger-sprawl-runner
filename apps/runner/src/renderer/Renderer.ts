@@ -131,6 +131,11 @@ export class Renderer {
 				this.ctx.lineWidth = 2;
 				this.ctx.strokeRect(x - 4, enemy.y - 4, enemy.w + 8, enemy.h + 8);
 			}
+			if (enemy.bossPhaseLabel) {
+				this.ctx.strokeStyle = '#ff5e7a';
+				this.ctx.lineWidth = 2;
+				this.ctx.strokeRect(x - 7, enemy.y - 7, enemy.w + 14, enemy.h + 14);
+			}
 
 			// Eye
 			this.ctx.fillStyle = enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';

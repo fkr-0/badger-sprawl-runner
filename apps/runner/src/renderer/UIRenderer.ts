@@ -105,6 +105,10 @@ export class UIRenderer {
 			ctx.fillStyle = '#92a4be';
 			ctx.fillText(player.companionHint.slice(0, 52), x, y + 44);
 		}
+		if (player.bossPhaseHint) {
+			ctx.fillStyle = '#ff5e7a';
+			ctx.fillText(player.bossPhaseHint.slice(0, 52), x, y + 61);
+		}
 	}
 
 	private getHudIconSlots(player: Player): HudIconSlot[] {
