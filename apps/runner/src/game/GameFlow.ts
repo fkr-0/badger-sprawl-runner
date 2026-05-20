@@ -1,4 +1,4 @@
-import { CAMPAIGN, type CampaignStage, type SideQuest } from './Campaign';
+import { CAMPAIGN, type CampaignStage, type SideQuest, type StageMinigame } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills';
 
@@ -26,6 +26,7 @@ export interface StageSpec {
 	choiceOutcomes?: ChoiceOutcome[];
 	traversalHazards?: TraversalHazard[];
 	sideQuests?: SideQuest[];
+	minigames?: StageMinigame[];
 }
 
 export interface DialogueSpec {
@@ -171,6 +172,7 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
 	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 	sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
+	minigames: stage.minigames?.map((minigame) => ({ ...minigame })),
 }));
 
 const DIALOGUES: Record<string, DialogueSpec> = Object.fromEntries(
@@ -315,6 +317,7 @@ export class GameFlow {
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 			sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
+			minigames: stage.minigames?.map((minigame) => ({ ...minigame })),
 		}));
 	}
 
@@ -332,6 +335,7 @@ export class GameFlow {
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
+					minigames: stage.minigames?.map((minigame) => ({ ...minigame })),
 				}
 			: undefined;
 	}

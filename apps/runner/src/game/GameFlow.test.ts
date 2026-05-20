@@ -316,6 +316,16 @@ describe('Badger Sprawl Runner game flow', () => {
 		expect(flow.getStoryProgress().completedChapterIds).toContain('ch01');
 	});
 
+
+	it('exposes cloned minigames through stage specs', () => {
+		const flow = createGameFlow();
+		const stage = flow.getStages()[0];
+		expect(stage?.minigames?.[0]?.id).toBe('toll-gate-rhythm');
+		if (!stage?.minigames) throw new Error('expected minigames');
+		stage.minigames[0].title = 'mutated minigame';
+		expect(flow.getStages()[0]?.minigames?.[0]?.title).toBe('Toll Gate Rhythm');
+	});
+
 	it('exposes cloned side quests through stage specs', () => {
 		const flow = createGameFlow();
 		const stage = flow.getStages()[0];

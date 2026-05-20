@@ -35,6 +35,20 @@ describe('Brechtian story campaign skeleton', () => {
 	});
 
 
+
+	it('defines one integrated minigame for every campaign stage', () => {
+		for (const stage of CAMPAIGN.stages) {
+			expect(stage.minigames?.length).toBeGreaterThanOrEqual(1);
+			const minigame = stage.minigames?.[0];
+			expect(minigame?.id).toBeTruthy();
+			expect(minigame?.title).toBeTruthy();
+			expect(minigame?.kind).toMatch(/^(timing|codegate|routing|memory|signal)$/);
+			expect(minigame?.objective).toBeTruthy();
+			expect(minigame?.teaches).toBeTruthy();
+			expect(minigame?.reward).toBeTruthy();
+		}
+	});
+
 	it('defines one integrated side quest for every campaign stage', () => {
 		for (const stage of CAMPAIGN.stages) {
 			expect(stage.sideQuests?.length).toBeGreaterThanOrEqual(1);

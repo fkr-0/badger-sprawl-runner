@@ -146,6 +146,22 @@ for (const required of [
 	assert(runnerGameFlow.includes(required), `GameFlow missing chapter progression bridge: ${required}`);
 }
 
+
+for (const required of [
+	'StageMinigame',
+	'CAMPAIGN_MINIGAMES',
+	'toll-gate-rhythm',
+	'public-toolkit-broadcast',
+]) {
+	assert(campaignSource.includes(required), `Campaign missing minigame integration: ${required}`);
+}
+for (const required of ['minigames?: StageMinigame[]', 'minigames: stage.minigames?.map']) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing minigame stage projection: ${required}`);
+}
+for (const required of ['stage.minigames?.[0]', 'Minigame:', 'minigame.kind']) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing minigame panel rendering: ${required}`);
+}
+
 for (const required of [
 	'SideQuest',
 	'CAMPAIGN_SIDE_QUESTS',

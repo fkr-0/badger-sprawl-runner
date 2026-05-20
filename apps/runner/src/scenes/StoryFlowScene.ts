@@ -153,7 +153,12 @@ export class StoryFlowScene implements Scene {
 		const sideQuest = stage.sideQuests?.[0];
 		if (sideQuest) {
 			ctx.fillStyle = '#92a4be';
-			ctx.fillText(`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`, panelX + 22, panelY + 140);
+			ctx.fillText(`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`, panelX + 22, panelY + 132);
+		}
+		const minigame = stage.minigames?.[0];
+		if (minigame) {
+			ctx.fillStyle = '#cfeee4';
+			ctx.fillText(`Minigame: ${minigame.title} (${minigame.kind})`, panelX + 22, panelY + 146);
 		}
 
 		ctx.fillStyle = '#8d94a7';
