@@ -91,7 +91,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add trust/heat effects to merchant prices: ShopEngine now applies orbitHeat markup, dubFavor discounts, and guile discounts, and ShopScene purchases from generated offers.
 - [~] Implement branch consequences from dialogue choices: StoryFlow choice UI now calls GameFlow.chooseStageChoice, and branch meta deltas now affect shop prices through heat/favor; stage-specific gameplay consequences remain.
 - [x] Add side quest system integration: campaign stages now expose typed side quests through GameFlow and StoryFlow renders the current stage side job.
-- [ ] Connect chapter progression to actual game flow
+- [x] Connect chapter progression to actual game flow: GameFlow now exposes stage chapter ids and records completed chapter ids alongside stage progress.
 
 ## Content alignment
 
@@ -122,7 +122,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [ ] Add docs/story-content-system.md explaining the new content systems
 - [ ] Add docs/companion-system.md explaining companion mechanics
 - [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
-- [ ] Update docs/campaign-schema.md with new chapter manager integration
+- [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
 - [ ] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
 
 ---

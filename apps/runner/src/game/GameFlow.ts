@@ -15,6 +15,8 @@ export interface StageSpec {
 	dramaticQuestion: string;
 	rewardBlueprintShards: number;
 	actId?: string;
+	chapter: number;
+	chapterId: string;
 	place?: string;
 	heistPayloadId?: string;
 	placard?: string;
@@ -100,6 +102,7 @@ export interface MetaState {
 export interface StoryProgress {
 	currentStageId: string;
 	completedStageIds: string[];
+	completedChapterIds: string[];
 	acquiredPayloads: string[];
 	resultFlags: string[];
 	lioTrust?: LioTrustBranch;
@@ -146,6 +149,10 @@ function stageRewardShards(stage: CampaignStage): number {
 			: 0;
 }
 
+function toChapterId(chapter: number): string {
+	return `ch${String(chapter).padStart(2, '0')}`;
+}
+
 const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	id: stage.id,
 	name: stage.name,
@@ -153,6 +160,8 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	dramaticQuestion: stage.dramaticQuestion,
 	rewardBlueprintShards: stageRewardShards(stage),
 	actId: stage.actId,
+	chapter: stage.chapter,
+	chapterId: toChapterId(stage.chapter),
 	place: stage.place,
 	heistPayloadId: stage.heistPayload.id,
 	placard: stage.placard,
@@ -218,6 +227,7 @@ function createDefaultStoryProgress(): StoryProgress {
 	return {
 		currentStageId: STAGES[0]?.id ?? '',
 		completedStageIds: [],
+		completedChapterIds: [],
 		acquiredPayloads: [],
 		resultFlags: [],
 		campaignComplete: false,
@@ -324,6 +334,22 @@ export class GameFlow {
 					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
 				}
 			: undefined;
+	}
+
+	getCurrentChapterId(): string | undefined {
+		const state = this.state;
+		if (state.mode === 'menu' || state.mode === 'versus' || state.mode === 'training' || state.mode === 'skills') {
+			return undefined;
+		}
+		const stage =
+			state.mode === 'dialogue'
+				? STAGES.find((candidate) => `${candidate.id}-briefing` === state.dialogueId)
+				: STAGES[state.stageIndex];
+		return stage?.chapterId;
+	}
+
+	getCompletedChapterIds(): string[] {
+		return [...this.storyProgress.completedChapterIds];
 	}
 
 	getCurrentDialogue(): DialogueSpec | undefined {
@@ -472,6 +498,9 @@ export class GameFlow {
 			this.storyProgress = {
 				...this.storyProgress,
 				completedStageIds: Array.from(new Set([...this.storyProgress.completedStageIds, stage.id])),
+				completedChapterIds: Array.from(
+					new Set([...this.storyProgress.completedChapterIds, stage.chapterId])
+				),
 				acquiredPayloads: stage.heistPayloadId
 					? Array.from(new Set([...this.storyProgress.acquiredPayloads, stage.heistPayloadId]))
 					: this.storyProgress.acquiredPayloads,

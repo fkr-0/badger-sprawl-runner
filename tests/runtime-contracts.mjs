@@ -98,6 +98,17 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+for (const required of [
+	'chapterId: string',
+	'toChapterId',
+	'completedChapterIds',
+	'getCurrentChapterId',
+	'getCompletedChapterIds',
+]) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing chapter progression bridge: ${required}`);
+}
+
 for (const required of [
 	'SideQuest',
 	'CAMPAIGN_SIDE_QUESTS',

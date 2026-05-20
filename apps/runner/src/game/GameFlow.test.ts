@@ -302,6 +302,20 @@ describe('Badger Sprawl Runner game flow', () => {
 
 
 
+
+	it('connects chapter ids to story stage progression', () => {
+		const flow = createGameFlow();
+		expect(flow.getStages()[0]).toMatchObject({ chapter: 1, chapterId: 'ch01' });
+		flow.selectMenu('story');
+		if (flow.getState().mode === 'title-card') flow.advanceTitleCard();
+		expect(flow.getCurrentChapterId()).toBe('ch01');
+		advanceCurrentDialogue(flow);
+		expect(flow.getState().mode).toBe('stage');
+		expect(flow.getCurrentChapterId()).toBe('ch01');
+		flow.completeStage();
+		expect(flow.getStoryProgress().completedChapterIds).toContain('ch01');
+	});
+
 	it('exposes cloned side quests through stage specs', () => {
 		const flow = createGameFlow();
 		const stage = flow.getStages()[0];
