@@ -22,6 +22,7 @@ const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
 const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgressMigration.ts');
+const storyBalanceRulesSource = await text('apps/runner/src/game/StoryBalanceRules.ts');
 const campaignBarrelSource = await text('apps/runner/src/game/Campaign.ts');
 const campaignSchemaSource = await text('apps/runner/src/game/campaign/schema.ts');
 const campaignDataSource = await text('apps/runner/src/game/campaign/campaignData.ts');
@@ -305,6 +306,33 @@ for (const [source, required] of [
 	[campaignConsequenceSource, 'export const BRANCH_CONSEQUENCES'],
 ]) {
 	assert(source.includes(required), `campaign content split missing marker: ${required}`);
+}
+
+
+for (const required of [
+	'buildStoryBalanceRules',
+	'merchantPriceModifier',
+	'allyAssistLevel',
+	'hazardIntensity',
+	'endingTone',
+	'getPriceModifier',
+]) {
+	assert(storyBalanceRulesSource.includes(required), `StoryBalanceRules missing heat/favor balance contract: ${required}`);
+}
+for (const required of [
+	'balanceRules = buildStoryBalanceRules(meta, storyProgress)',
+	'balanceRules,',
+]) {
+	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing story balance projection: ${required}`);
+}
+for (const required of [
+	'balanceRules?: StoryBalanceRules',
+	'getBalanceRules',
+	'badger:story-balance',
+	'renderBalanceOverlay',
+	'Story balance',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing story balance runtime surface: ${required}`);
 }
 
 for (const required of [

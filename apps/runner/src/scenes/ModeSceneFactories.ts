@@ -1,5 +1,5 @@
 import type { Scene } from '../engine/SceneManager';
-import type { MenuOptionId } from '../game/GameFlow';
+import type { GameFlow, MenuOptionId } from '../game/GameFlow';
 import { buildEndlessSprawlRun } from '../procgen/EndlessSprawlRun';
 import { SkillTreeScene } from './SkillTreeScene';
 import { StageRunScene } from './StageRunScene';
@@ -12,6 +12,7 @@ export type ModeSceneFactories = Record<MenuOptionId, () => Scene>;
 export interface DefaultModeSceneFactoryOptions {
 	onStartStoryStage?: (scene: Scene) => void;
 	onReturnToTitle?: () => void;
+	storyFlow?: GameFlow;
 }
 
 export function createDefaultModeSceneFactories(
@@ -19,7 +20,7 @@ export function createDefaultModeSceneFactories(
 ): ModeSceneFactories {
 	return {
 		story: () =>
-			new StoryFlowScene(undefined, {
+			new StoryFlowScene(options.storyFlow, {
 				onStartStage: (stageOptions) => {
 					const scene = new StageRunScene({ ...stageOptions, onReturnToTitle: options.onReturnToTitle });
 					options.onStartStoryStage?.(scene);

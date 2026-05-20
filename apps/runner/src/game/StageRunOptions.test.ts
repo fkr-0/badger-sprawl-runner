@@ -25,6 +25,12 @@ describe('buildStageRunSceneOptions', () => {
 		expect(options.bossPlaceholder).toMatchObject({ id: 'madame-vitrine', name: 'Madame Vitrine' });
 		expect(options.tutorialBeats?.[0]).toMatchObject({ id: 'railgun-sightline' });
 		expect(options.procgenSeed).toContain('chrome-arcology');
+		expect(options.balanceRules).toMatchObject({
+			merchantPriceModifier: expect.any(Number),
+			allyAssistLevel: expect.any(String),
+			hazardIntensity: expect.any(String),
+			endingTone: expect.any(String),
+		});
 		expect(options.generatedEnemyPacks?.[0]?.enemies.length).toBeGreaterThan(0);
 		expect(options.generatedSideRooms?.[0]?.platforms.length).toBeGreaterThan(0);
 	});

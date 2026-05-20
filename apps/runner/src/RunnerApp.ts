@@ -18,6 +18,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const saveDriver = createLocalStorageSaveDriver(window.localStorage);
 	const flow = loadGameFlow(saveDriver);
 	const factories = createDefaultModeSceneFactories({
+		storyFlow: flow,
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
 		onReturnToTitle: () => sceneManager.replace(createTitleScene()),
 	});

@@ -13,6 +13,7 @@ import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
+import type { StoryBalanceRules } from '../game/StoryBalanceRules';
 import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
 	applyPersistedPayloadPickups,
@@ -47,6 +48,7 @@ export interface StageRunSceneOptions {
 	stageId?: RuntimeStageId;
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
+	balanceRules?: StoryBalanceRules;
 	bossPhases?: readonly RuntimeBossPhase[];
 	bossPlaceholder?: RuntimeBossPlaceholder;
 	tutorialBeats?: readonly RuntimeTutorialBeat[];
@@ -107,6 +109,12 @@ export class StageRunScene implements Scene {
 		return this.options.bossPlaceholder ? { ...this.options.bossPlaceholder } : null;
 	}
 
+	getBalanceRules(): StoryBalanceRules | null {
+		return this.options.balanceRules
+			? { ...this.options.balanceRules, activeReasons: [...this.options.balanceRules.activeReasons] }
+			: null;
+	}
+
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
 		if (this.options.tutorialBeats?.length) {
@@ -114,6 +122,9 @@ export class StageRunScene implements Scene {
 		}
 		if (this.options.bossPlaceholder) {
 			window.dispatchEvent(new CustomEvent('badger:boss-placeholder', { detail: this.getBossPlaceholder() }));
+		}
+		if (this.options.balanceRules) {
+			window.dispatchEvent(new CustomEvent('badger:story-balance', { detail: this.getBalanceRules() }));
 		}
 		this.renderer = ctx.renderer as Renderer;
 		// Load sprite manifest if available
@@ -240,11 +251,36 @@ export class StageRunScene implements Scene {
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
+		this.renderBalanceOverlay(ctx);
 		this.renderTutorialOverlay(ctx);
 
 		ctx.restore();
 	}
 
+
+	private renderBalanceOverlay(ctx: CanvasRenderingContext2D): void {
+		const rules = this.options.balanceRules;
+		if (!rules) return;
+		const x = ctx.canvas.width - 310;
+		const y = 116;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.78)';
+		ctx.fillRect(x, y, 286, 112);
+		ctx.strokeStyle = rules.hazardIntensity === 'extreme' ? '#ff5e7a' : '#ffb35e';
+		ctx.strokeRect(x, y, 286, 112);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText('Story balance', x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(`merchant x${rules.merchantPriceModifier.toFixed(2)} / assist ${rules.allyAssistLevel}`, x + 12, y + 42);
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText(`hazards ${rules.hazardIntensity} / ending ${rules.endingTone}`, x + 12, y + 60);
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(rules.activeReasons.slice(0, 3).join(' • ').slice(0, 42), x + 12, y + 80);
+		ctx.restore();
+	}
 
 	private renderTutorialOverlay(ctx: CanvasRenderingContext2D): void {
 		const beats = this.options.tutorialBeats ?? [];
