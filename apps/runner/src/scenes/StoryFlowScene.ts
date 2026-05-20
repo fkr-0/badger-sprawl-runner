@@ -1,5 +1,6 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
+import type { AutosaveFeedback } from '../storage/AutosaveFeedback';
 import { buildStageRunSceneOptions } from '../game/StageRunOptions';
 import type { Renderer } from '../renderer/Renderer';
 import type { StageRunSceneOptions } from './StageRunScene';
@@ -10,6 +11,7 @@ function formatSigned(value: number): string {
 
 export interface StoryFlowSceneOptions {
 	onStartStage?: (options: StageRunSceneOptions) => void;
+	onAutosave?: (reason: 'branch-choice') => AutosaveFeedback | undefined;
 }
 
 export interface BranchChoiceRecap {
@@ -43,6 +45,7 @@ export class StoryFlowScene implements Scene {
 	private lastChoiceRecap: BranchChoiceRecap | null = null;
 	private debugPanelVisible = false;
 	private lastDebugDetail: StageDebugDetail | null = null;
+	private lastAutosaveFeedback: AutosaveFeedback | null = null;
 
 	constructor(
 		private readonly flow: GameFlow = createGameFlow(),
@@ -55,6 +58,10 @@ export class StoryFlowScene implements Scene {
 
 	getLastChoiceRecap(): BranchChoiceRecap | null {
 		return this.lastChoiceRecap ? { ...this.lastChoiceRecap } : null;
+	}
+
+	getLastAutosaveFeedback(): AutosaveFeedback | null {
+		return this.lastAutosaveFeedback ? { ...this.lastAutosaveFeedback } : null;
 	}
 
 	getLastDebugDetail(): StageDebugDetail | null {
@@ -176,6 +183,8 @@ export class StoryFlowScene implements Scene {
 		if (stage && outcome) {
 			this.lastChoiceResult = `${result.branch} / ${result.resultFlag}`;
 			this.lastChoiceRecap = this.buildChoiceRecap(stage.id, outcome);
+			const autosaveFeedback = this.options.onAutosave?.('branch-choice');
+			this.lastAutosaveFeedback = autosaveFeedback ? { ...autosaveFeedback } : null;
 			window.dispatchEvent(new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap }));
 		}
 	}
@@ -303,6 +312,7 @@ export class StoryFlowScene implements Scene {
 		ctx.fillStyle = '#8d94a7';
 		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • D: debug • R: run stage', panelX + 22, panelY + 188);
 		this.renderChoiceRecap(ctx, panelX + 22, panelY + 204, panelW - 44);
+		this.renderAutosaveFeedback(ctx, panelX + panelW - 272, panelY + 204);
 	}
 
 
@@ -334,6 +344,14 @@ export class StoryFlowScene implements Scene {
 		for (const [index, line] of lines.entries()) {
 			ctx.fillText(line.slice(0, 45), x + 14, y + 44 + index * 18);
 		}
+	}
+
+	private renderAutosaveFeedback(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+		const feedback = this.lastAutosaveFeedback;
+		if (!feedback) return;
+		ctx.fillStyle = '#67f3c4';
+		ctx.font = '700 11px ui-monospace, monospace';
+		ctx.fillText(`✓ ${feedback.label}`, x, y);
 	}
 
 	private renderChoiceRecap(ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number): void {

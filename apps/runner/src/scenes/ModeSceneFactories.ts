@@ -1,5 +1,6 @@
 import type { Scene } from '../engine/SceneManager';
 import type { GameFlow, MenuOptionId } from '../game/GameFlow';
+import type { AutosaveFeedback } from '../storage/AutosaveFeedback';
 import { buildEndlessSprawlRun } from '../procgen/EndlessSprawlRun';
 import { SkillTreeScene } from './SkillTreeScene';
 import { StageRunScene } from './StageRunScene';
@@ -13,6 +14,7 @@ export interface DefaultModeSceneFactoryOptions {
 	onStartStoryStage?: (scene: Scene) => void;
 	onReturnToTitle?: () => void;
 	storyFlow?: GameFlow;
+	onAutosave?: (reason: 'branch-choice') => AutosaveFeedback | undefined;
 }
 
 export function createDefaultModeSceneFactories(
@@ -21,6 +23,7 @@ export function createDefaultModeSceneFactories(
 	return {
 		story: () =>
 			new StoryFlowScene(options.storyFlow, {
+				onAutosave: options.onAutosave,
 				onStartStage: (stageOptions) => {
 					const scene = new StageRunScene({ ...stageOptions, onReturnToTitle: options.onReturnToTitle });
 					options.onStartStoryStage?.(scene);

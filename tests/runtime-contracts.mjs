@@ -24,6 +24,7 @@ const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
 const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgressMigration.ts');
+const autosaveFeedbackSource = await text('apps/runner/src/storage/AutosaveFeedback.ts');
 const storyBalanceRulesSource = await text('apps/runner/src/game/StoryBalanceRules.ts');
 const campaignBarrelSource = await text('apps/runner/src/game/Campaign.ts');
 const campaignSchemaSource = await text('apps/runner/src/game/campaign/schema.ts');
@@ -367,6 +368,33 @@ for (const required of [
 	'Story balance',
 ]) {
 	assert(stageRunSceneSource.includes(required), `StageRunScene missing story balance runtime surface: ${required}`);
+}
+
+
+for (const required of [
+	'autosaveGameFlow',
+	'AutosaveReason',
+	'Autosaved branch choice',
+	'Autosaved stage progress',
+	'Autosaved skill purchase',
+	'Autosaved campaign completion',
+	'badger:autosave-feedback',
+]) {
+	assert(autosaveFeedbackSource.includes(required), `AutosaveFeedback missing visible autosave contract: ${required}`);
+}
+for (const required of [
+	"onAutosave?: (reason: 'branch-choice')",
+	'getLastAutosaveFeedback',
+	'renderAutosaveFeedback',
+	"this.options.onAutosave?.('branch-choice')",
+]) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing autosave feedback surface: ${required}`);
+}
+for (const required of [
+	'autosaveGameFlow(saveDriver, flow, reason)',
+	'onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason)',
+]) {
+	assert(runnerApp.includes(required), `RunnerApp missing autosave feedback wiring: ${required}`);
 }
 
 for (const required of [

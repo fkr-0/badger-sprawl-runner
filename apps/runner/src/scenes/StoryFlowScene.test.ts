@@ -36,6 +36,26 @@ describe('StoryFlowScene stage launch', () => {
 	});
 
 
+
+	it('records autosave feedback after a committed story choice', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'lower-sprawl' });
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		const scene = new StoryFlowScene(flow, {
+			onAutosave: (reason) => ({ reason, label: 'Autosaved branch choice', timestamp: 42 }),
+		});
+		scene.onEnter({ eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() }, canvas: document.createElement('canvas') });
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
+		scene.onExit();
+
+		expect(scene.getLastAutosaveFeedback()).toEqual({
+			reason: 'branch-choice',
+			label: 'Autosaved branch choice',
+			timestamp: 42,
+		});
+	});
+
 	it('toggles and emits the development stage debug detail panel', () => {
 		const flow = createGameFlow(undefined, {
 			currentStageId: 'antenna-barrens',

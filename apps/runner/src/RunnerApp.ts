@@ -4,6 +4,7 @@ import type { MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
+import { autosaveGameFlow } from './storage/AutosaveFeedback';
 import { createLocalStorageSaveDriver, loadGameFlow } from './storage/SaveStore';
 
 export interface RunnerApp {
@@ -19,6 +20,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	const flow = loadGameFlow(saveDriver);
 	const factories = createDefaultModeSceneFactories({
 		storyFlow: flow,
+		onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason),
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
 		onReturnToTitle: () => sceneManager.replace(createTitleScene()),
 	});

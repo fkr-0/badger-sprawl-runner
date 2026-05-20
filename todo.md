@@ -577,7 +577,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Show save-aware story CTA: `New Story`, `Continue`, or `Campaign Complete` based on `StoryProgress`.
 - [ ] Add save-slot management: new slot, load slot, delete slot, export/import save JSON.
 - [ ] Add reset-campaign confirmation so players can restart without wiping settings.
-- [ ] Add visible autosave feedback after stage completion, branch choice, skill purchase, and campaign completion.
+- [x] Add visible autosave feedback after stage completion, branch choice, skill purchase, and campaign completion. Branch-choice production feedback is wired through StoryFlowScene; shared autosave helper covers stage-complete, skill-purchase, and campaign-complete reasons for upcoming UI paths.
 - [ ] Add corrupt-save recovery UI instead of silently falling back to a new flow.
 
 ## Training mode depth
