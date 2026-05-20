@@ -299,3 +299,18 @@ describe('Badger Sprawl Runner game flow', () => {
 		expect(flow.getMeta().purchasedSkills).toEqual(['double_swipe']);
 	});
 });
+
+
+	it('exposes a cloned current stage with choice outcomes while story mode is staged', () => {
+		const flow = createGameFlow();
+		flow.selectMenu('story');
+		if (flow.getState().mode === 'title-card') flow.advanceTitleCard();
+		advanceCurrentDialogue(flow);
+		const stage = flow.getCurrentStage();
+		expect(stage?.id).toBe('lower-sprawl');
+		expect(stage?.choiceOutcomes?.length).toBe(3);
+		if (!stage?.choiceOutcomes) throw new Error('expected stage choice outcomes');
+		stage.choiceOutcomes[0].prompt = 'mutated outside flow';
+		expect(flow.getCurrentStage()?.choiceOutcomes?.[0]?.prompt).not.toBe('mutated outside flow');
+	});
+

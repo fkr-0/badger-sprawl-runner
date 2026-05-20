@@ -12,6 +12,7 @@ export interface StageSpec {
 	id: string;
 	name: string;
 	objective: string;
+	dramaticQuestion: string;
 	rewardBlueprintShards: number;
 	actId?: string;
 	place?: string;
@@ -148,6 +149,7 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	id: stage.id,
 	name: stage.name,
 	objective: `${stage.primaryVerb}: ${stage.dramaticQuestion}`,
+	dramaticQuestion: stage.dramaticQuestion,
 	rewardBlueprintShards: stageRewardShards(stage),
 	actId: stage.actId,
 	place: stage.place,
@@ -301,6 +303,23 @@ export class GameFlow {
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 		}));
+	}
+
+	getCurrentStage(): StageSpec | undefined {
+		const state = this.state;
+		if (state.mode !== 'stage') return undefined;
+		const stage = STAGES[state.stageIndex];
+		return stage
+			? {
+					...stage,
+					boss: stage.boss
+						? { ...stage.boss, lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })) }
+						: undefined,
+					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
+					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
+					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
+				}
+			: undefined;
 	}
 
 	getCurrentDialogue(): DialogueSpec | undefined {

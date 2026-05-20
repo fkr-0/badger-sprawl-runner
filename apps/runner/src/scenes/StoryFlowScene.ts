@@ -5,6 +5,10 @@ import type { Renderer } from '../renderer/Renderer';
 export class StoryFlowScene implements Scene {
 	readonly name = 'StoryFlowScene';
 
+	private selectedChoiceIndex = 0;
+	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
+	private lastChoiceResult = '';
+
 	constructor(private readonly flow: GameFlow = createGameFlow()) {}
 
 	getFlow(): GameFlow {
@@ -15,9 +19,59 @@ export class StoryFlowScene implements Scene {
 		if (this.flow.getState().mode === 'menu') {
 			this.flow.selectMenu('story');
 		}
+		this.keyHandler = (event) => this.handleKeyDown(event);
+		window.addEventListener('keydown', this.keyHandler);
 	}
 
-	onExit(): void {}
+	onExit(): void {
+		if (this.keyHandler) {
+			window.removeEventListener('keydown', this.keyHandler);
+		}
+	}
+
+	private handleKeyDown(event: KeyboardEvent): void {
+		const state = this.flow.getState();
+		if (state.mode === 'dialogue') {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault();
+				this.flow.advanceDialogue();
+			}
+			return;
+		}
+		if (state.mode === 'debrief') {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault();
+				this.flow.advanceDebrief();
+			}
+			return;
+		}
+		if (state.mode !== 'stage') return;
+		const stage = this.flow.getCurrentStage();
+		const choices = stage?.choiceOutcomes ?? [];
+		if (choices.length === 0) return;
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			this.selectedChoiceIndex = (this.selectedChoiceIndex + choices.length - 1) % choices.length;
+		} else if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			this.selectedChoiceIndex = (this.selectedChoiceIndex + 1) % choices.length;
+		} else if (/^[1-9]$/.test(event.key)) {
+			const index = Number(event.key) - 1;
+			if (index < choices.length) this.chooseStageChoice(index);
+		} else if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			this.chooseStageChoice(this.selectedChoiceIndex);
+		}
+	}
+
+	private chooseStageChoice(choiceIndex: number): void {
+		const result = this.flow.chooseStageChoice(choiceIndex);
+		if (result.ok) {
+			this.lastChoiceResult = `${result.branch} / ${result.resultFlag}`;
+			return;
+		}
+		this.lastChoiceResult = result.reason;
+	}
 	update(_dt: number): void {}
 
 	render(renderer: unknown, _alpha: number): void {
@@ -42,6 +96,8 @@ export class StoryFlowScene implements Scene {
 			if (debrief) {
 				this.renderDialoguePanel(ctx, maybeRenderer, debrief.speaker, debrief.lines[state.lineIndex] ?? '');
 			}
+		} else if (state.mode === 'stage') {
+			this.renderStageChoicePanel(ctx);
 		}
 
 		ctx.restore();
@@ -70,4 +126,36 @@ export class StoryFlowScene implements Scene {
 		ctx.font = '14px ui-monospace, monospace';
 		ctx.fillText(line.slice(0, 96), panelX + 108, panelY + 68);
 	}
+
+	private renderStageChoicePanel(ctx: CanvasRenderingContext2D): void {
+		const stage = this.flow.getCurrentStage();
+		if (!stage?.choiceOutcomes?.length) return;
+		const panelX = 54;
+		const panelY = ctx.canvas.height - 220;
+		const panelW = ctx.canvas.width - 108;
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
+		ctx.fillRect(panelX, panelY, panelW, 174);
+		ctx.strokeStyle = '#ffb35e';
+		ctx.strokeRect(panelX, panelY, panelW, 174);
+		ctx.textAlign = 'left';
+		ctx.fillStyle = '#ffb35e';
+		ctx.font = '700 15px ui-monospace, monospace';
+		ctx.fillText(stage.dramaticQuestion, panelX + 22, panelY + 30);
+		ctx.font = '14px ui-monospace, monospace';
+		for (const [index, outcome] of stage.choiceOutcomes.entries()) {
+			const y = panelY + 62 + index * 32;
+			const selected = index === this.selectedChoiceIndex;
+			ctx.fillStyle = selected ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(`${selected ? '>' : ' '} ${index + 1}. ${outcome.prompt}`, panelX + 28, y);
+			ctx.fillStyle = selected ? '#cfeee4' : '#8d94a7';
+			ctx.fillText(outcome.consequence.slice(0, 92), panelX + 62, y + 17);
+		}
+		ctx.fillStyle = '#8d94a7';
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 154);
+		if (this.lastChoiceResult) {
+			ctx.fillStyle = '#67f3c4';
+			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 154);
+		}
+	}
+
 }

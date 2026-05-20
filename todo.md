@@ -86,10 +86,10 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 ## Integration tasks
 
 - [x] Integrate story-flavour.yml parsing into StoryContentLoader
-- [~] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels now render speaker portraits; full choice UI remains.
+- [x] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels render speaker portraits and stage choice UI.
 - [ ] Implement companion system in gameplay (Naya shield, Rook overlays, etc.)
 - [ ] Add trust/heat effects to merchant prices and gameplay
-- [ ] Implement branch consequences from dialogue choices
+- [~] Implement branch consequences from dialogue choices: StoryFlow stage choice UI now calls GameFlow.chooseStageChoice; deeper gameplay consequences remain.
 - [ ] Add side quest system integration
 - [ ] Connect chapter progression to actual game flow
 
@@ -100,7 +100,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Harmonize character information with YAML content
 - [ ] Implement all 8 chapter stages with proper content
 - [~] Add all boss phases as specified in YAML
-- [~] Implement all heist payloads and dramatic questions
+- [~] Implement all heist payloads and dramatic questions: stage choice UI now exposes dramatic questions; final stage-specific gameplay payload integrations remain.
 - [ ] Add side quests for each chapter
 - [ ] Add minigames for each chapter
 

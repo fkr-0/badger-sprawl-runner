@@ -92,6 +92,26 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 
 
 
+
+for (const required of [
+	'getCurrentStage()',
+	'choiceOutcomes: stage.choiceOutcomes?.map',
+]) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing current-stage choice API: ${required}`);
+}
+for (const required of [
+	'renderStageChoicePanel',
+	'handleKeyDown',
+	'chooseStageChoice',
+	'ArrowUp',
+	'ArrowDown',
+	"/^[1-9]$/",
+	'lastChoiceResult',
+	'getCurrentStage()',
+]) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing stage choice UI wiring: ${required}`);
+}
+
 for (const required of [
 	'getAnimationEvents',
 	'SpriteAnimationEvent',
