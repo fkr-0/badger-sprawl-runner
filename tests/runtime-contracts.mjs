@@ -20,6 +20,8 @@ const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const runnerGameFlow = await text('apps/runner/src/game/GameFlow.ts');
 const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
+const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
+const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const smokeMain = await text('apps/runner/src/smokeMain.ts');
@@ -83,6 +85,24 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 	assert(runnerGameFlow.includes(mode), `runner flow missing menu mode: ${mode}`);
 }
 
+
+
+for (const required of [
+	'isStoryPayloadPickup',
+	'applyPersistedPayloadPickups',
+	'getCollectedStoryPayloadIds',
+	"pickup.persistence === 'story_payload'",
+]) {
+	assert(itemSystemSource.includes(required), `ItemSystem missing story payload persistence contract: ${required}`);
+}
+for (const required of [
+	'StageRunSceneOptions',
+	'acquiredPayloadIds',
+	'onStoryPayloadCollected',
+	'applyPersistedPayloadPickups(this.pickups',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing story payload persistence wiring: ${required}`);
+}
 
 for (const required of [
 	'HUD_ICON_SHEET',

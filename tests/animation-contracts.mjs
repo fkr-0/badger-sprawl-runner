@@ -184,6 +184,12 @@ for (const pickup of lowerSprawlLayout.pickups) {
 	assert(itemSheetAnimations[pickup.animation], `pickup ${pickup.id} animation missing from items_core: ${pickup.animation}`);
 	assert(typedLayout.includes(`id: '${pickup.id}'`), `typed layout missing pickup ${pickup.id}`);
 }
+const storyPayloadPickup = lowerSprawlLayout.pickups.find((pickup) => pickup.persistence === 'story_payload');
+assert(storyPayloadPickup, 'lower sprawl layout must include a story_payload pickup');
+assert(storyPayloadPickup.itemId === 'wafer_key', 'lower sprawl story payload pickup must be wafer_key');
+assert(storyPayloadPickup.animation === 'wafer_key_pickup', 'lower sprawl story payload pickup must use wafer_key animation');
+assert(typedLayout.includes("persistence: 'story_payload'"), 'typed layout must carry story_payload persistence');
+assert(typedLayout.includes("itemId: 'wafer_key'"), 'typed layout must carry wafer_key story payload');
 
 const characterRequiredAnimations = ['idle', 'talk', 'assist', 'react', 'exit'];
 const characterSheets = sprites.spriteSheets.filter((sheet) =>

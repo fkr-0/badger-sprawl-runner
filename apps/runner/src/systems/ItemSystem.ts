@@ -26,6 +26,34 @@ export interface ItemSystemEvents {
 	onCollect?: (pickup: Pickup) => void;
 }
 
+export function isStoryPayloadPickup(pickup: Pickup): boolean {
+	return pickup.persistence === 'story_payload' && Boolean(pickup.itemId);
+}
+
+export function applyPersistedPayloadPickups(
+	pickups: Pickup[],
+	acquiredPayloadIds: readonly string[]
+): void {
+	const acquired = new Set(acquiredPayloadIds);
+	for (const pickup of pickups) {
+		if (isStoryPayloadPickup(pickup) && pickup.itemId && acquired.has(pickup.itemId)) {
+			pickup.taken = true;
+			pickup.visualState = 'collected';
+			pickup.collectTimer = 0;
+		}
+	}
+}
+
+export function getCollectedStoryPayloadIds(pickups: readonly Pickup[]): string[] {
+	return Array.from(
+		new Set(
+			pickups
+				.filter((pickup) => isStoryPayloadPickup(pickup) && pickup.itemId && pickup.taken)
+				.map((pickup) => pickup.itemId as string)
+		)
+	);
+}
+
 const DEFAULT_PICKUP_RADIUS = 30;
 const DEFAULT_PICKUP_CENTER_OFFSET = 14;
 const COLLECT_ANIMATION_SECONDS = 0.18;

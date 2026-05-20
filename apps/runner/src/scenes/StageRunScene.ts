@@ -10,17 +10,25 @@ import { PhysicsSystem } from '../systems/PhysicsSystem';
 import { CombatSystem } from '../systems/CombatSystem';
 import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
 import { CameraSystem } from '../systems/CameraSystem';
-import { ItemSystem } from '../systems/ItemSystem';
+import {
+	applyPersistedPayloadPickups,
+	ItemSystem,
+	type Pickup,
+} from '../systems/ItemSystem';
 import { cloneLowerSprawlLayout } from '../world/lowerSprawlLayout';
 import { createPlayer, processMossInput, type Player } from '../actors/MossBadger';
 import type { Platform } from '../systems/PhysicsSystem';
-import type { Pickup } from '../systems/ItemSystem';
 import type { Renderer } from '../renderer/Renderer';
 import {
 	playAnimation,
 	createAnimationState,
 	type AnimationState,
 } from '../renderer/AnimationState';
+
+export interface StageRunSceneOptions {
+	acquiredPayloadIds?: readonly string[];
+	onStoryPayloadCollected?: (payloadId: string) => void;
+}
 
 export class StageRunScene implements Scene {
 	readonly name = 'StageRunScene';
@@ -32,6 +40,9 @@ export class StageRunScene implements Scene {
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
+			if (pickup.persistence === 'story_payload' && pickup.itemId) {
+				this.options.onStoryPayloadCollected?.(pickup.itemId);
+			}
 		},
 	});
 
@@ -44,7 +55,7 @@ export class StageRunScene implements Scene {
 	private hitstopRemaining = 0;
 	private screenShakeIntensity = 0;
 
-	constructor() {
+	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.player = createPlayer();
 		// Initialize animation state
 		this.player.animState = createAnimationState();
@@ -264,6 +275,7 @@ export class StageRunScene implements Scene {
 		const layout = cloneLowerSprawlLayout();
 		this.platforms = layout.platforms;
 		this.pickups = layout.pickups;
+		applyPersistedPayloadPickups(this.pickups, this.options.acquiredPayloadIds ?? []);
 		this.enemies = layout.enemies;
 	}
 }

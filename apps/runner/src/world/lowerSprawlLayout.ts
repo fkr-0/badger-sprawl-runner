@@ -69,6 +69,18 @@ export const lowerSprawlLayout: StageLayout = {
 			animation: 'katana_pickup',
 			persistence: 'saved_once',
 		},
+		{
+			id: 'wafer_key_payload',
+			itemId: 'wafer_key',
+			x: 1688,
+			y: 330,
+			kind: 'story_payload',
+			radius: 30,
+			taken: false,
+			visualState: 'available',
+			animation: 'wafer_key_pickup',
+			persistence: 'story_payload',
+		},
 	],
 	enemies: [
 		{

@@ -58,7 +58,7 @@ Verified from repo root `/home/user/work/code/artifacts/badger-sprawl-runner` on
 - [ ] Replace placeholder PNG atlases with final production art while preserving manifest dimensions/names.
 - [ ] Add character/NPC dialogue portrait rendering using the encoded character sheet contracts.
 - [ ] Add runtime animation events for hitboxes, hurtboxes, action windows, cancel windows, footsteps, and attack/VFX triggers.
-- [ ] Persist `story_payload` pickups so collected story items never respawn after save/load.
+- [x] Persist `story_payload` pickups so collected story items are hidden from stage layouts after save/load state is supplied.
 
 ## Known deferred/non-blocking after v1.0
 
