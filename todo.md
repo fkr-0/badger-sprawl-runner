@@ -451,7 +451,7 @@ next_steps:
   - [x] Add "VS Mode" to the rendered menu.
   - [x] Decide whether Horde Mode remains separate, becomes VS-adjacent survival, or is hidden until polished: hidden from canonical menu until polished.
   - [x] Wire TitleScene selection to SceneManager transitions.
-  - [ ] Show save-aware story CTA: "Continue" when storyProgress.currentStageId is not the first stage.
+  - [x] Show save-aware story CTA: "Continue" when storyProgress.currentStageId is not the first stage.
   - [x] Show small mode descriptions from GameFlow below the selected option.
   - [x] Add a back/cancel behavior from submenus back to TitleScene.
   - [x] Add a title-menu contract test covering visible options and route targets.

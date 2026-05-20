@@ -28,8 +28,10 @@ export function buildStoryProgressSummary(progress: StoryProgress): StoryProgres
 	const completedChapters = progress.completedChapterIds.length;
 	const completedStages = progress.completedStageIds.length;
 	const campaignComplete = progress.campaignComplete;
+	const firstStageId = CAMPAIGN.stages[0]?.id ?? 'lower-sprawl';
+	const hasStartedStory = completedStages > 0 || progress.currentStageId !== firstStageId;
 	return {
-		ctaLabel: campaignComplete ? 'Campaign Complete' : completedStages > 0 ? 'Continue' : 'New Story',
+		ctaLabel: campaignComplete ? 'Campaign Complete' : hasStartedStory ? 'Continue' : 'New Story',
 		currentChapter: currentStage
 			? `Chapter ${currentStage.chapter}: ${currentStage.place}`
 			: 'Chapter 1: Lower Sprawl',

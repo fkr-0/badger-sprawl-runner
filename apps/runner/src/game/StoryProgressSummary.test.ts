@@ -22,6 +22,16 @@ describe('buildStoryProgressSummary', () => {
 		});
 	});
 
+	it('labels mid-campaign stage progress as Continue even before completed stages are recorded', () => {
+		const summary = buildStoryProgressSummary({
+			...baseProgress,
+			currentStageId: 'mirror-palace',
+		});
+		expect(summary.ctaLabel).toBe('Continue');
+		expect(summary.currentChapter).toBe('Chapter 4: Mirror Palace');
+		expect(summary.completedStages).toBe(0);
+	});
+
 	it('labels partial campaign progress as Continue', () => {
 		const summary = buildStoryProgressSummary({
 			...baseProgress,
