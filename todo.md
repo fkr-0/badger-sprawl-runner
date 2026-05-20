@@ -119,7 +119,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 ## Documentation additions needed
 
-- [ ] Add docs/story-content-system.md explaining the new content systems
+- [x] Add docs/story-content-system.md explaining the new content systems.
 - [x] Add docs/PROCEDURAL_GENERATION.md designing optional dungeon/room and Diablo-style enemy generation.
 - [~] Add docs/companion-system.md explaining companion mechanics
 - [ ] Add docs/dialogue-system.md explaining dialogue choices and consequences
@@ -628,7 +628,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Consolidate all documentation to docs/ directory for better organization.
 - [ ] Add `docs/campaign-schema.md` explaining acts, stages, choices, branches, modifiers, boss contracts, and save fields.
 - [ ] Add `docs/release-evidence.md` summarizing the current verification gates and what each gate proves.
-- [ ] Add `docs/story-content-system.md` explaining the new story content types and integration.
+- [x] Add `docs/story-content-system.md` explaining the new story content types and integration.
 - [ ] Add `docs/companion-system.md` explaining companion mechanics and trust/heat systems.
 - [ ] Add `docs/dialogue-system.md` explaining dialogue choices, consequences, and Brechtian devices.
 - [ ] Keep `todo.md` statuses conservative: use `[~]` for skeleton/contract work when concrete runtime UI is not complete.

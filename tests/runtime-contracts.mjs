@@ -15,6 +15,7 @@ async function json(path) {
 const rootPackage = await json('package.json');
 const runnerPackage = await json('apps/runner/package.json');
 const readme = await text('README.md');
+const storyContentSystemDoc = await text('docs/story-content-system.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
 const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
@@ -56,6 +57,20 @@ for (const command of [
 	'pnpm run lint',
 ]) {
 	assert(readme.includes(command), `README release command missing: ${command}`);
+}
+
+for (const required of [
+	'Story Content System',
+	'CampaignStage',
+	'BossContract',
+	'ChoiceOutcome',
+	'BranchConsequence',
+	'StageRunOptions',
+	'EncounterGenerator',
+	'EndlessSprawlRun',
+	'tests/e2e/story-content.spec.ts',
+]) {
+	assert(storyContentSystemDoc.includes(required), `story content system doc missing: ${required}`);
 }
 
 for (const phrase of ['v1.0 release scope', 'apps/runner', 'legacy static prototype', 'todo.md']) {
