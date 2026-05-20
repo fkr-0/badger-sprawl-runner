@@ -31,6 +31,11 @@ describe('buildStageRunSceneOptions', () => {
 			hazardIntensity: expect.any(String),
 			endingTone: expect.any(String),
 		});
+		expect(options.runtimeConfig).toMatchObject({
+			stageId: 'chrome-arcology',
+			payloadRewardId: 'algorithmic_garden_key',
+			bossPlaceholderId: 'madame-vitrine',
+		});
 		expect(options.generatedEnemyPacks?.[0]?.enemies.length).toBeGreaterThan(0);
 		expect(options.generatedSideRooms?.[0]?.platforms.length).toBeGreaterThan(0);
 	});

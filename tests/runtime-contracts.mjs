@@ -27,6 +27,7 @@ const storyProgressMigrationSource = await text('apps/runner/src/game/StoryProgr
 const endingCardsSource = await text('apps/runner/src/game/EndingCards.ts');
 const autosaveFeedbackSource = await text('apps/runner/src/storage/AutosaveFeedback.ts');
 const storyBalanceRulesSource = await text('apps/runner/src/game/StoryBalanceRules.ts');
+const stageRuntimeConfigSource = await text('apps/runner/src/game/StageRuntimeConfig.ts');
 const campaignBarrelSource = await text('apps/runner/src/game/Campaign.ts');
 const campaignSchemaSource = await text('apps/runner/src/game/campaign/schema.ts');
 const campaignDataSource = await text('apps/runner/src/game/campaign/campaignData.ts');
@@ -209,8 +210,10 @@ for (const required of [
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing StageRunScene launch/debug seam: ${required}`);
 }
 for (const required of [
-	'stageModifiers?: { id: string; label: string; kind: string }[]',
+	'stageModifiers?: StageModifier[]',
 	'stageModifiers: stage.stageModifiers?.map',
+	'type StageModifier',
+	'type StageTemplate',
 ]) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing debug stage modifier projection: ${required}`);
 }
@@ -256,6 +259,34 @@ for (const [source, required] of [
 	assert(source.includes(required), `scene return-to-title contract missing: ${required}`);
 }
 
+
+for (const required of [
+	'buildStageRuntimeConfig',
+	'cameraPressure',
+	'payloadRewardId',
+	'bossPlaceholderId',
+	'modifierRules',
+	'beat-timing',
+	'code-gate-pressure',
+]) {
+	assert(stageRuntimeConfigSource.includes(required), `StageRuntimeConfig missing runtime mapping contract: ${required}`);
+}
+for (const required of [
+	'const runtimeConfig = buildStageRuntimeConfig(stage)',
+	'runtimeConfig,',
+]) {
+	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing runtime config projection: ${required}`);
+}
+for (const required of [
+	'runtimeConfig?: StageRuntimeConfig',
+	'getRuntimeConfig',
+	'badger:stage-runtime-config',
+	'renderRuntimeConfigOverlay',
+	'Stage runtime config',
+]) {
+	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime config surface: ${required}`);
+}
+
 for (const required of [
 	'buildStageRunSceneOptions',
 	'getCurrentStage()',
@@ -270,6 +301,7 @@ for (const required of [
 	'bossPhases: stage?.boss?.phases?.map',
 	'bossPlaceholder: stage?.boss',
 	'tutorialBeats: stage?.tutorialBeats?.map',
+	'runtimeConfig,',
 ]) {
 	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
 }

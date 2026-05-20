@@ -14,6 +14,7 @@ import { CameraSystem } from '../systems/CameraSystem';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
 import type { StoryBalanceRules } from '../game/StoryBalanceRules';
+import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
 import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
 	applyPersistedPayloadPickups,
@@ -49,6 +50,7 @@ export interface StageRunSceneOptions {
 	acquiredPayloadIds?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	balanceRules?: StoryBalanceRules;
+	runtimeConfig?: StageRuntimeConfig;
 	bossPhases?: readonly RuntimeBossPhase[];
 	bossPlaceholder?: RuntimeBossPlaceholder;
 	tutorialBeats?: readonly RuntimeTutorialBeat[];
@@ -115,6 +117,17 @@ export class StageRunScene implements Scene {
 			: null;
 	}
 
+	getRuntimeConfig(): StageRuntimeConfig | null {
+		return this.options.runtimeConfig
+			? {
+					...this.options.runtimeConfig,
+					hazardIds: [...this.options.runtimeConfig.hazardIds],
+					enemyMixTags: [...this.options.runtimeConfig.enemyMixTags],
+					modifierRules: this.options.runtimeConfig.modifierRules.map((rule) => ({ ...rule })),
+				}
+			: null;
+	}
+
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
 		if (this.options.tutorialBeats?.length) {
@@ -125,6 +138,9 @@ export class StageRunScene implements Scene {
 		}
 		if (this.options.balanceRules) {
 			window.dispatchEvent(new CustomEvent('badger:story-balance', { detail: this.getBalanceRules() }));
+		}
+		if (this.options.runtimeConfig) {
+			window.dispatchEvent(new CustomEvent('badger:stage-runtime-config', { detail: this.getRuntimeConfig() }));
 		}
 		this.renderer = ctx.renderer as Renderer;
 		// Load sprite manifest if available
@@ -252,6 +268,7 @@ export class StageRunScene implements Scene {
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
 		this.renderBalanceOverlay(ctx);
+		this.renderRuntimeConfigOverlay(ctx);
 		this.renderTutorialOverlay(ctx);
 
 		ctx.restore();
@@ -279,6 +296,30 @@ export class StageRunScene implements Scene {
 		ctx.fillText(`hazards ${rules.hazardIntensity} / ending ${rules.endingTone}`, x + 12, y + 60);
 		ctx.fillStyle = '#67f3c4';
 		ctx.fillText(rules.activeReasons.slice(0, 3).join(' • ').slice(0, 42), x + 12, y + 80);
+		ctx.restore();
+	}
+
+	private renderRuntimeConfigOverlay(ctx: CanvasRenderingContext2D): void {
+		const config = this.options.runtimeConfig;
+		if (!config || config.modifierRules.length === 0) return;
+		const x = ctx.canvas.width - 310;
+		const y = 236;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.78)';
+		ctx.fillRect(x, y, 286, 104);
+		ctx.strokeStyle = '#67f3c4';
+		ctx.strokeRect(x, y, 286, 104);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText('Stage runtime config', x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(`camera ${config.cameraPressure} / hazards ${config.hazardCount}`, x + 12, y + 42);
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText(config.enemyMixTags.slice(0, 3).join(' • ').slice(0, 42), x + 12, y + 60);
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(config.modifierRules[0]?.effect.slice(0, 42) ?? '', x + 12, y + 78);
 		ctx.restore();
 	}
 

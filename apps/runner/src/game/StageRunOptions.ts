@@ -4,12 +4,14 @@ import type { StageRunSceneOptions } from '../scenes/StageRunScene';
 import { isRuntimeStageId } from '../world/stageLayoutRegistry';
 import type { GameFlow } from './GameFlow';
 import { buildStoryBalanceRules } from './StoryBalanceRules';
+import { buildStageRuntimeConfig } from './StageRuntimeConfig';
 
 export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions {
 	const stage = flow.getCurrentStage();
 	const storyProgress = flow.getStoryProgress();
 	const meta = flow.getMeta();
 	const balanceRules = buildStoryBalanceRules(meta, storyProgress);
+	const runtimeConfig = buildStageRuntimeConfig(stage);
 	const branchGameplayHooks = stage
 		? flow.getActiveBranchConsequences(stage.id).map((consequence) => consequence.gameplayHook)
 		: [];
@@ -33,6 +35,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		acquiredPayloadIds: storyProgress.acquiredPayloads,
 		branchGameplayHooks,
 		balanceRules,
+		runtimeConfig,
 		procgenSeed,
 		generatedEnemyPacks,
 		generatedSideRooms,

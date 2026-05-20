@@ -6,6 +6,8 @@ import {
 	type CampaignStage,
 	type SideQuest,
 	type StageMinigame,
+	type StageModifier,
+	type StageTemplate,
 } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
 import { createDefaultStoryProgress, migrateStoryProgress } from './StoryProgressMigration';
@@ -22,6 +24,7 @@ export interface StageSpec {
 	name: string;
 	objective: string;
 	dramaticQuestion: string;
+	primaryVerb: string;
 	rewardBlueprintShards: number;
 	actId?: string;
 	chapter: number;
@@ -32,7 +35,8 @@ export interface StageSpec {
 	boss?: BossContract;
 	resultFlag?: string;
 	tutorialBeats?: TutorialBeat[];
-	stageModifiers?: { id: string; label: string; kind: string }[];
+	stageModifiers?: StageModifier[];
+	stageTemplate?: StageTemplate;
 	choiceOutcomes?: ChoiceOutcome[];
 	traversalHazards?: TraversalHazard[];
 	sideQuests?: SideQuest[];
@@ -172,6 +176,7 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	name: stage.name,
 	objective: `${stage.primaryVerb}: ${stage.dramaticQuestion}`,
 	dramaticQuestion: stage.dramaticQuestion,
+	primaryVerb: stage.primaryVerb,
 	rewardBlueprintShards: stageRewardShards(stage),
 	actId: stage.actId,
 	chapter: stage.chapter,
@@ -186,11 +191,8 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	},
 	resultFlag: stage.resultFlag,
 	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
-	stageModifiers: stage.stageModifiers?.map((modifier) => ({
-		id: modifier.id,
-		label: modifier.label,
-		kind: modifier.kind,
-	})),
+	stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
+	stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
 	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 	sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -357,6 +359,7 @@ export class GameFlow {
 				: undefined,
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 			stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
+			stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 			sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -380,6 +383,7 @@ export class GameFlow {
 						: undefined,
 					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 					stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
+					stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
