@@ -124,7 +124,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [~] Add docs/companion-system.md explaining companion mechanics
 - [x] Add docs/dialogue-system.md explaining dialogue choices and consequences
 - [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
-- [ ] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
+- [x] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
 
 ---
 
