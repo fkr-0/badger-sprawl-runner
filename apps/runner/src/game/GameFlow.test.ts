@@ -267,6 +267,38 @@ describe('Badger Sprawl Runner game flow', () => {
 		expect(flow.getState()).toEqual({ mode: 'menu' });
 	});
 
+
+	it('appends branch-specific debrief lines from selected result flags', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
+
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		expect(flow.chooseStageChoice(1)).toMatchObject({ ok: true, resultFlag: 'lio_protected' });
+		flow.completeStage();
+
+		const debrief = flow.getCurrentDebrief();
+		expect(debrief?.lines).toEqual(
+			expect.arrayContaining([
+				'Branch echo: Lio is protected; mercy costs heat, but it keeps one channel human.',
+			])
+		);
+	});
+
+	it('appends final broadcast doctrine debrief lines before campaign completion', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'asteroid-redoubt' });
+
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		expect(flow.chooseStageChoice(2)).toMatchObject({ ok: true, resultFlag: 'broadcast_publish_tools' });
+		flow.completeStage();
+
+		expect(flow.getCurrentDebrief()?.lines).toEqual(
+			expect.arrayContaining([
+				'Ending echo: publish the tools; every kid gets the manual, not just the myth.',
+			])
+		);
+	});
+
 	it('opens versus mode and dummy training mode from the menu', () => {
 		const flow = createGameFlow();
 

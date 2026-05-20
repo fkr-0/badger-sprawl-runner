@@ -564,7 +564,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [ ] Convert stage templates/modifiers into actual `StageRunScene` configuration: hazards, enemy mix, camera pressure, payload reward, and boss placeholder.
 - [x] Implement tutorial beat rendering for parry, railgun sightlines, beat timing, code-gate pressure, lift chase, and final broadcast.
 - [x] Implement boss placeholder runtime behavior for all eight bosses using the structured phase/lesson/behavior data from story-flavour.yml.
-- [ ] Add branch-specific debrief lines for Lio, colony alignment, ledger release, cargo reversal, and final broadcast doctrine.
+- [x] Add branch-specific debrief lines for Lio, colony alignment, ledger release, cargo reversal, and final broadcast doctrine.
 - [ ] Add heat/favor balancing rules so merchant prices, ally assists, hazards, and ending text respond to player choices.
 - [ ] Add campaign-complete ending cards for all final broadcast doctrines from story-flavour.yml.
 - [ ] Implement side quest system with proper tracking and rewards as specified in YAML.

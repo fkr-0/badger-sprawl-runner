@@ -185,6 +185,19 @@ for (const required of [
 ]) {
 	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
 }
+
+for (const required of [
+	'BRANCH_DEBRIEF_LINES',
+	'buildDebriefLines',
+	'lio_protected',
+	'colony_alignment_chorus',
+	'ledger_public_dump',
+	'cargo_full_release',
+	'broadcast_publish_tools',
+]) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing branch-specific debrief contract: ${required}`);
+}
+
 for (const required of [
 	'createDefaultModeSceneFactories({',
 	'onStartStoryStage: (scene) => sceneManager.replace(scene)',

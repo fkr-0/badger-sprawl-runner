@@ -221,6 +221,33 @@ const DEBRIEFS: Record<string, DebriefSpec> = Object.fromEntries(
 	])
 );
 
+
+
+const BRANCH_DEBRIEF_LINES: Record<string, string> = {
+	lio_exposed: 'Branch echo: Lio is exposed; every ally now knows trust can become evidence.',
+	lio_protected: 'Branch echo: Lio is protected; mercy costs heat, but it keeps one channel human.',
+	lio_baited: 'Branch echo: Lio became bait; the next rooms treat loyalty like a tactical asset.',
+	colony_alignment_chorus: 'Branch echo: the colony hears itself as a chorus, not an army.',
+	colony_alignment_army: 'Branch echo: the colony hardens into ranks, shields up before songs.',
+	colony_alignment_supplier: 'Branch echo: the colony chooses supply lines, favors, and quiet exits.',
+	ledger_public_dump: 'Branch echo: the ledger went public; the city argues with receipts in hand.',
+	ledger_targeted_burn: 'Branch echo: the ledger burn is targeted; fewer sparks, sharper enemies.',
+	ledger_prisoner_trade: 'Branch echo: the ledger becomes ransom; the freed remember who paid.',
+	cargo_safe_partial: 'Branch echo: the cargo reversal is partial; safe crates move before perfect justice.',
+	cargo_full_release: 'Branch echo: the cargo opens fully; heat rises because everyone can see the theft.',
+	cargo_decoy_reversal: 'Branch echo: the decoy reversal buys time while the real route slips sideways.',
+	broadcast_abolish_skylock: 'Ending echo: abolish Skylock; no one gets to own the route again.',
+	broadcast_chorus_control: 'Ending echo: chorus control; the system survives only while the choir watches it.',
+	broadcast_publish_tools: 'Ending echo: publish the tools; every kid gets the manual, not just the myth.',
+};
+
+function buildDebriefLines(baseLines: readonly string[], resultFlags: readonly string[]): string[] {
+	const branchLines = resultFlags
+		.map((flag) => BRANCH_DEBRIEF_LINES[flag])
+		.filter((line): line is string => Boolean(line));
+	return [...baseLines, ...Array.from(new Set(branchLines))];
+}
+
 const SKILLS: SkillNode[] = [
 	{ id: 'double_swipe', name: 'Double Swipe', cost: 1, prereqs: [], unlocked: false },
 	{ id: 'parry_tooth', name: 'Parry Tooth', cost: 2, prereqs: ['double_swipe'], unlocked: false },
@@ -405,7 +432,9 @@ export class GameFlow {
 	getCurrentDebrief(): DebriefSpec | undefined {
 		if (this.state.mode !== 'debrief') return undefined;
 		const debrief = DEBRIEFS[this.state.debriefId];
-		return debrief ? { ...debrief, lines: [...debrief.lines] } : undefined;
+		return debrief
+			? { ...debrief, lines: buildDebriefLines(debrief.lines, this.storyProgress.resultFlags) }
+			: undefined;
 	}
 
 	getCurrentBossContract(): BossContract | undefined {
@@ -572,7 +601,7 @@ export class GameFlow {
 
 	advanceDebrief(): void {
 		if (this.state.mode !== 'debrief') return;
-		const debrief = DEBRIEFS[this.state.debriefId];
+		const debrief = this.getCurrentDebrief();
 		if (debrief && this.state.lineIndex < debrief.lines.length - 1) {
 			this.state = { ...this.state, lineIndex: this.state.lineIndex + 1 };
 			return;
