@@ -121,7 +121,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 
 - [x] Add docs/story-content-system.md explaining the new content systems.
 - [x] Add docs/PROCEDURAL_GENERATION.md designing optional dungeon/room and Diablo-style enemy generation.
-- [~] Add docs/companion-system.md explaining companion mechanics
+- [x] Add docs/companion-system.md explaining companion mechanics
 - [x] Add docs/dialogue-system.md explaining dialogue choices and consequences
 - [~] Update docs/campaign-schema.md with new chapter/GameFlow integration
 - [x] Add docs/story-flavour-integration.md explaining YAML-to-runtime flow
@@ -629,7 +629,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [ ] Add `docs/campaign-schema.md` explaining acts, stages, choices, branches, modifiers, boss contracts, and save fields.
 - [ ] Add `docs/release-evidence.md` summarizing the current verification gates and what each gate proves.
 - [x] Add `docs/story-content-system.md` explaining the new story content types and integration.
-- [ ] Add `docs/companion-system.md` explaining companion mechanics and trust/heat systems.
+- [x] Add `docs/companion-system.md` explaining companion mechanics and trust/heat systems.
 - [ ] Add `docs/dialogue-system.md` explaining dialogue choices, consequences, and Brechtian devices.
 - [ ] Keep `todo.md` statuses conservative: use `[~]` for skeleton/contract work when concrete runtime UI is not complete.
 
