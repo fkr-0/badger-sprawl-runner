@@ -1,6 +1,8 @@
 import {
+	BRANCH_CONSEQUENCES,
 	CAMPAIGN,
 	type BossPhase,
+	type BranchConsequence,
 	type CampaignStage,
 	type SideQuest,
 	type StageMinigame,
@@ -373,6 +375,17 @@ export class GameFlow {
 
 	getCompletedChapterIds(): string[] {
 		return [...this.storyProgress.completedChapterIds];
+	}
+
+	getActiveBranchConsequences(stageId = this.getCurrentStage()?.id): BranchConsequence[] {
+		if (!stageId) return [];
+		const resultFlags = new Set(this.storyProgress.resultFlags);
+		return BRANCH_CONSEQUENCES.filter(
+			(consequence) => resultFlags.has(consequence.resultFlag) && consequence.stageIds.includes(stageId)
+		).map((consequence) => ({
+			...consequence,
+			stageIds: [...consequence.stageIds],
+		}));
 	}
 
 	getCurrentDialogue(): DialogueSpec | undefined {

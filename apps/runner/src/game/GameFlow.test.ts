@@ -151,6 +151,26 @@ describe('Badger Sprawl Runner game flow', () => {
 		});
 	});
 
+
+	it('projects active branch consequences for later stages', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		flow.chooseStageChoice(1);
+
+		expect(flow.getActiveBranchConsequences('dub-colony')).toContainEqual(
+			expect.objectContaining({
+				resultFlag: 'lio_protected',
+				gameplayHook: 'companion_assist_ready',
+			})
+		);
+		expect(flow.getActiveBranchConsequences('lower-sprawl')).toEqual([]);
+
+		const consequences = flow.getActiveBranchConsequences('dub-colony');
+		consequences[0]?.stageIds.push('mutated-stage');
+		expect(flow.getActiveBranchConsequences('dub-colony')[0]?.stageIds).not.toContain('mutated-stage');
+	});
+
 	it('stores the Mirror Palace Lio trust branch and result flag from the selected choice', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
 

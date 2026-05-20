@@ -148,6 +148,31 @@ for (const required of [
 
 
 
+
+for (const required of [
+	'BranchConsequence',
+	'BRANCH_CONSEQUENCES',
+	'companion_assist_ready',
+	'final_broadcast_toolkit',
+]) {
+	assert(campaignSource.includes(required), `Campaign missing branch consequence contract: ${required}`);
+}
+for (const required of [
+	'type BranchConsequence',
+	'getActiveBranchConsequences',
+	'BRANCH_CONSEQUENCES.filter',
+	'resultFlags.has(consequence.resultFlag)',
+]) {
+	assert(runnerGameFlow.includes(required), `GameFlow missing active branch consequence API: ${required}`);
+}
+for (const required of [
+	'getActiveBranchConsequences(stage.id)',
+	'Branch effect:',
+	'branchConsequence.uiHint.slice',
+]) {
+	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing branch consequence panel rendering: ${required}`);
+}
+
 for (const required of ['type BossPhase', 'phases?: BossPhase[]', 'phases: stage.boss.phases?.map((phase) => ({ ...phase }))']) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing boss phase projection: ${required}`);
 }

@@ -134,9 +134,9 @@ export class StoryFlowScene implements Scene {
 		const panelY = ctx.canvas.height - 220;
 		const panelW = ctx.canvas.width - 108;
 		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
-		ctx.fillRect(panelX, panelY, panelW, 190);
+		ctx.fillRect(panelX, panelY, panelW, 204);
 		ctx.strokeStyle = '#ffb35e';
-		ctx.strokeRect(panelX, panelY, panelW, 190);
+		ctx.strokeRect(panelX, panelY, panelW, 204);
 		ctx.textAlign = 'left';
 		ctx.fillStyle = '#ffb35e';
 		ctx.font = '700 15px ui-monospace, monospace';
@@ -169,12 +169,21 @@ export class StoryFlowScene implements Scene {
 				panelY + 160
 			);
 		}
+		const branchConsequence = this.flow.getActiveBranchConsequences(stage.id)[0];
+		if (branchConsequence) {
+			ctx.fillStyle = '#67f3c4';
+			ctx.fillText(
+				`Branch effect: ${branchConsequence.label} — ${branchConsequence.uiHint.slice(0, 48)}`,
+				panelX + 22,
+				panelY + 174
+			);
+		}
 
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 174);
+		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • Space: commit selected', panelX + 22, panelY + 188);
 		if (this.lastChoiceResult) {
 			ctx.fillStyle = '#67f3c4';
-			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 174);
+			ctx.fillText(`Committed: ${this.lastChoiceResult}`, panelX + 420, panelY + 188);
 		}
 	}
 

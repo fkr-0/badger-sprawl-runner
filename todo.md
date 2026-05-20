@@ -89,7 +89,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Connect dialogue system to game scenes and UI rendering: StoryFlow dialogue/debrief panels render speaker portraits and stage choice UI.
 - [x] Implement companion system in gameplay: Naya shield mitigation, Rook enemy overlays, and Auntie contextual hints are wired into StageRunScene.
 - [x] Add trust/heat effects to merchant prices: ShopEngine now applies orbitHeat markup, dubFavor discounts, and guile discounts, and ShopScene purchases from generated offers.
-- [~] Implement branch consequences from dialogue choices: StoryFlow choice UI now calls GameFlow.chooseStageChoice, and branch meta deltas now affect shop prices through heat/favor; stage-specific gameplay consequences remain.
+- [x] Implement branch consequences from dialogue choices: choices now persist result flags, affect shop prices through heat/favor, expose active branch consequences through GameFlow, and render branch effects in StoryFlow.
 - [x] Add side quest system integration: campaign stages now expose typed side quests through GameFlow and StoryFlow renders the current stage side job.
 - [x] Connect chapter progression to actual game flow: GameFlow now exposes stage chapter ids and records completed chapter ids alongside stage progress.
 
@@ -140,6 +140,7 @@ Status key: `[ ]` not started, `[~]` in progress, `[x]` complete, `[!]` blocked 
 - [x] Add tests for campaign content completeness, story routing, and save/load progress.
 - [ ] Replace stage placeholders with bespoke layouts, bosses, dialogue choices, and final art/audio.
 - [ ] Implement playable boss phase behavior in StageRunScene/boss encounters.
+- [ ] Convert branch gameplayHook contracts into concrete per-stage gameplay modifiers.
 
 ## First three acts design
 
