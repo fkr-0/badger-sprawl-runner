@@ -1,0 +1,88 @@
+schema_version: 1.0.0
+project: badger-sprawl-runner
+source_spec: ../sprite-fan/reqs/animation.yml
+purpose: >-
+  Sprite Fan compatibility overlay for Badger Sprawl Runner generated sprite
+  sheets. This does not replace animation.yml; it maps Badger's existing
+  atlas-first production plan to the manifest fields exported by Sprite Fan.
+
+sprite_fan_contract:
+  grid_vs_individual: atlas-grid
+  transparent_background: true
+  stable_frame_size: true
+  max_prompt_grid:
+    columns: 4
+    rows: 4
+    frames: 16
+  metadata_policy: export-grid-animations-order-loop-anchor-empty-gameplay-slots
+
+runtime_targets:
+  sprite_manifest: data/sprites.json
+  animation_state: apps/runner/src/renderer/AnimationState.ts
+  sprite_renderer: apps/runner/src/renderer/SpriteRenderer.ts
+
+export_fields_required:
+  grid:
+    - columns
+    - rows
+    - padding
+    - frameWidth
+    - frameHeight
+    - cellWidth
+    - cellHeight
+    - sheetWidth
+    - sheetHeight
+  animations:
+    - order
+    - loop
+    - anchor
+    - tags
+    - events
+    - hitboxes
+    - hurtboxes
+  frames:
+    - index
+    - col
+    - row
+    - sheetRect
+    - hash
+    - bbox
+    - alphaPixels
+    - softAlphaPixels
+    - strayPixels
+    - pinholePixels
+    - issues
+
+asset_group_defaults:
+  player_moss:
+    frame_size: [48, 48]
+    default_export_columns: 4
+    animation_tags: [player, moss, postprocessed, atlas-grid]
+    anchor: { x: 24, y: 44 }
+  item_icons:
+    frame_size: [32, 32]
+    default_export_columns: 4
+    animation_tags: [item, icon, postprocessed, atlas-grid]
+    anchor: { x: 16, y: 28 }
+  items_core:
+    frame_size: [32, 32]
+    default_export_columns: 4
+    animation_tags: [item, pickup, postprocessed, atlas-grid]
+    anchor: { x: 16, y: 28 }
+  vfx_combat:
+    frame_size: [32, 32]
+    default_export_columns: 4
+    animation_tags: [vfx, combat, postprocessed, atlas-grid]
+    anchor: { x: 16, y: 16 }
+  enemies_and_bosses:
+    frame_size: [48, 48]
+    boss_frame_size: [96, 96]
+    default_export_columns: 4
+    animation_tags: [enemy, postprocessed, atlas-grid]
+    anchor: { x: 24, y: 44 }
+
+adaptation_status:
+  badger_animation_yml_mentions_runtime_contracts: true
+  sprite_fan_manifest_fields_mapped: true
+  generated_sheets_should_be_reviewed_in_sprite_fan: true
+  runtime_importer_todo: true
