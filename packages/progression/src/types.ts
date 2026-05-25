@@ -54,6 +54,8 @@ export interface SkillNode {
 	cost: number;
 	prereqs: string[];
 	unlocked: boolean;
+	track?: string;
+	effects?: Record<string, number | string | boolean>;
 }
 
 export interface RunResult {

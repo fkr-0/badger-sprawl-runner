@@ -1,18 +1,20 @@
 /**
- * Combat system: hitboxes, hurtboxes, damage, parry, dodge, combos
- * State-of-the-art combat with hitstop, screen shake, and combo tracking
+ * Combat system: deterministic hitboxes, hurtboxes, damage, parry, dodge, and combo tracking.
  */
 
 import { aabb } from '@badger/platformer-core';
 import type { Entity } from './PhysicsSystem';
+import { MeleeComboSystem, createMeleeComboState, type MeleeInput, type MeleeAttackResult } from './MeleeComboSystem';
 
 export interface CombatEntity extends Entity {
 	hp: number;
 	maxHp: number;
 	invuln: number;
 	stun: number;
+	armor?: number;
+	poise?: number;
+	faction?: 'player' | 'enemy' | 'neutral';
 
-	// Enhanced combat properties
 	parryWindow?: number;
 	parryCooldown?: number;
 	dodgeCooldown?: number;
@@ -21,6 +23,10 @@ export interface CombatEntity extends Entity {
 	comboCount?: number;
 	comboTimer?: number;
 	lastHitTime?: number;
+	meleeStyle?: number;
+	unlockedSkills?: string[];
+	itemSetEffects?: Record<string, number | string | boolean>;
+
 	rookMarked?: boolean;
 	bossPhaseLabel?: string;
 	bossPhaseMechanic?: string;
@@ -39,11 +45,16 @@ export interface HitboxSet {
 	hurt: { x: number; y: number; w: number; h: number };
 }
 
+export type CombatEventKind = 'hit' | 'kill' | 'parry' | 'dodge' | 'damage' | 'block' | 'poise-break' | 'combo-drop';
+
 export interface CombatEvent {
-	kind: 'hit' | 'kill' | 'parry' | 'dodge' | 'damage';
+	kind: CombatEventKind;
 	source?: 'player' | 'enemy';
+	targetId?: string;
 	damage?: number;
 	combo?: number;
+	time?: number;
+	moveId?: string;
 }
 
 export interface CombatEvents {
@@ -53,164 +64,286 @@ export interface CombatEvents {
 	mitigateDamage?: (amount: number) => number;
 }
 
+export interface AttackSpec {
+	id: string;
+	source: 'player' | 'enemy';
+	damage: number;
+	stun: number;
+	poiseDamage?: number;
+	knockbackX: number;
+	knockbackY?: number;
+	hitbox: { x: number; y: number; w: number; h: number };
+	parryable?: boolean;
+	pierce?: number;
+	comboGain?: number;
+}
+
+export interface AttackResolution {
+	attackId: string;
+	hits: CombatEvent[];
+	kills: number;
+	blocked: number;
+}
+
+export interface CombatStepOptions {
+	time?: number;
+	unlockedSkills?: readonly string[];
+}
+
+const DEFAULT_COMBAT_TIME = 0;
+const BASE_COMBO_WINDOW = 1.2;
+const BASE_MAX_COMBO = 9;
+
+function effectNumber(entity: CombatEntity, key: string, fallback = 0): number {
+	const value = entity.itemSetEffects?.[key];
+	return typeof value === 'number' ? value : fallback;
+}
+
+function initialize(entity: CombatEntity): void {
+	entity.invuln = Math.max(0, entity.invuln ?? 0);
+	entity.stun = Math.max(0, entity.stun ?? 0);
+	entity.armor = Math.max(0, entity.armor ?? 0);
+	entity.poise = Math.max(0, entity.poise ?? 0);
+	entity.parryWindow ??= 0;
+	entity.parryCooldown ??= 0;
+	entity.dodgeCooldown ??= 0;
+	entity.dodgeActive ??= 0;
+	entity.isDodging ??= false;
+	entity.comboCount ??= 0;
+	entity.comboTimer ??= 0;
+	entity.lastHitTime ??= 0;
+	entity.meleeStyle ??= 0;
+	entity.unlockedSkills ??= [];
+}
+
+function decayTimers(entity: CombatEntity, dt: number): void {
+	entity.invuln = Math.max(0, entity.invuln - dt);
+	entity.stun = Math.max(0, entity.stun - dt);
+	entity.parryWindow = Math.max(0, (entity.parryWindow ?? 0) - dt);
+	entity.parryCooldown = Math.max(0, (entity.parryCooldown ?? 0) - dt);
+	entity.dodgeCooldown = Math.max(0, (entity.dodgeCooldown ?? 0) - dt);
+	entity.dodgeActive = Math.max(0, (entity.dodgeActive ?? 0) - dt);
+	entity.comboTimer = Math.max(0, (entity.comboTimer ?? 0) - dt);
+	entity.isDodging = (entity.dodgeActive ?? 0) > 0;
+}
+
 export class CombatSystem {
-	private lastAction: { kind: string; time: number } | null = null;
-	private comboWindow = 1.2; // Seconds to maintain combo
-	private maxCombo = 5;
+	private lastAction: { kind: string; time: number; moveId?: string } | null = null;
+	private readonly comboWindow = BASE_COMBO_WINDOW;
+	private readonly maxCombo = BASE_MAX_COMBO;
+	private readonly meleeCombos = new WeakMap<CombatEntity, MeleeComboSystem>();
+	private clock = DEFAULT_COMBAT_TIME;
 
 	step(
 		player: CombatEntity,
 		enemies: CombatEntity[],
 		actionMap: Record<string, boolean>,
 		dt: number,
-		events?: CombatEvents
+		events?: CombatEvents,
+		options: CombatStepOptions = {}
 	): void {
-		// Initialize combat properties
-		if (player.parryWindow === undefined) player.parryWindow = 0;
-		if (player.parryCooldown === undefined) player.parryCooldown = 0;
-		if (player.dodgeCooldown === undefined) player.dodgeCooldown = 0;
-		if (player.dodgeActive === undefined) player.dodgeActive = 0;
-		if (player.isDodging === undefined) player.isDodging = false;
-		if (player.comboCount === undefined) player.comboCount = 0;
-		if (player.comboTimer === undefined) player.comboTimer = 0;
-		if (player.lastHitTime === undefined) player.lastHitTime = 0;
+		if (!Number.isFinite(dt) || dt < 0) throw new Error(`Invalid combat dt: ${dt}`);
+		this.clock = options.time ?? this.clock + dt;
 
-		// Decay timers
-		player.invuln = Math.max(0, player.invuln - dt);
-		player.stun = Math.max(0, player.stun - dt);
-		player.parryWindow = Math.max(0, player.parryWindow - dt);
-		player.parryCooldown = Math.max(0, player.parryCooldown - dt);
-		player.dodgeCooldown = Math.max(0, player.dodgeCooldown - dt);
-		player.dodgeActive = Math.max(0, player.dodgeActive - dt);
-		player.comboTimer = Math.max(0, player.comboTimer - dt);
+		initialize(player);
+		if (options.unlockedSkills) player.unlockedSkills = [...options.unlockedSkills];
+		decayTimers(player, dt);
 
-		// Update dodge state
-		player.isDodging = player.dodgeActive > 0;
-
-		// Reset combo if window expired
-		if (player.comboTimer <= 0) {
+		const comboWasActive = (player.comboCount ?? 0) > 0;
+		if ((player.comboTimer ?? 0) <= 0 && (player.comboCount ?? 0) > 0) {
+			player.comboCount = 0;
+			events?.onEvent?.({ kind: 'combo-drop', source: 'player', time: this.clock });
+		} else if ((player.comboTimer ?? 0) <= 0) {
 			player.comboCount = 0;
 		}
 
-		// Handle parry input
-		if (actionMap.parryPressed && player.parryCooldown <= 0 && !player.onGround) {
-			player.parryWindow = 0.15; // 150ms parry window
+		if (!comboWasActive && (player.comboTimer ?? 0) <= 0) player.comboCount = 0;
+
+		const parryBonus = effectNumber(player, 'parryWindowBonus');
+		if (actionMap.parryPressed && (player.parryCooldown ?? 0) <= 0) {
+			player.parryWindow = 0.15 + parryBonus;
 			player.parryCooldown = 0.4;
-			events?.onEvent?.({ kind: 'parry', source: 'player' });
+			events?.onEvent?.({ kind: 'parry', source: 'player', time: this.clock });
 		}
 
-		// Handle dodge input
-		if (actionMap.dodgePressed && player.dodgeCooldown <= 0 && player.onGround) {
-			player.dodgeActive = 0.25; // 250ms dodge duration
+		if (actionMap.dodgePressed && (player.dodgeCooldown ?? 0) <= 0 && player.onGround) {
+			player.dodgeActive = 0.25 + effectNumber(player, 'beatGrace');
 			player.dodgeCooldown = 0.5;
-			player.invuln = 0.3; // Brief invincibility
-			events?.onEvent?.({ kind: 'dodge', source: 'player' });
+			player.invuln = Math.max(player.invuln, 0.3);
+			player.isDodging = true;
+			events?.onEvent?.({ kind: 'dodge', source: 'player', time: this.clock });
 			events?.requestScreenShake?.(3);
 		}
 
 		for (const enemy of enemies) {
-			// Initialize enemy combat properties
-			if (enemy.parryWindow === undefined) enemy.parryWindow = 0;
-			if (enemy.invuln === undefined) enemy.invuln = 0;
-			if (enemy.stun === undefined) enemy.stun = 0;
-
-			enemy.invuln = Math.max(0, enemy.invuln - dt);
-			enemy.stun = Math.max(0, enemy.stun - dt);
-			enemy.parryWindow = Math.max(0, enemy.parryWindow - dt);
-
-			// Player collision with enemy
-			if (player.invuln <= 0 && enemy.stun <= 0) {
-				if (this.checkCollision(player, enemy)) {
-					// Check for parry
-					if (player.parryWindow > 0) {
-						this.parry(player, enemy, events);
-					} else if (!player.isDodging) {
-						this.damage(player, 1, events);
-					}
-				}
+			initialize(enemy);
+			decayTimers(enemy, dt);
+			if (player.invuln <= 0 && enemy.stun <= 0 && this.checkCollision(player, enemy)) {
+				if ((player.parryWindow ?? 0) > 0) this.parry(player, enemy, events);
+				else if (!player.isDodging) this.damage(player, 1, events, 'enemy');
 			}
 		}
 	}
 
-	getLastAction(): { kind: string; time: number } | null {
-		return this.lastAction;
+	getLastAction(): { kind: string; time: number; moveId?: string } | null {
+		return this.lastAction ? { ...this.lastAction } : null;
 	}
 
-	getComboCount(): number {
-		return 0; // Would return player combo count
+	getComboCount(entity?: CombatEntity): number {
+		return entity?.comboCount ?? 0;
 	}
 
-	melee(player: Entity, enemies: CombatEntity[], combo: string, events?: CombatEvents): void {
-		const hitbox = this.getMeleeHitbox(player, combo);
+	melee(player: CombatEntity, enemies: CombatEntity[], combo: string, events?: CombatEvents, time = this.clock): void {
+		const input = this.comboStringToInput(combo);
+		const result = this.meleeInput(player, enemies, input, events, time);
+		if (!result && combo === 'katana') {
+			this.resolveAttack(player, enemies, {
+				id: 'legacy_katana',
+				source: 'player',
+				damage: 2,
+				stun: 0.45,
+				knockbackX: 150,
+				hitbox: this.getMeleeHitbox(player, 'katana'),
+				comboGain: 1,
+			}, events, time);
+		}
+	}
 
-		// Record action for animation system
-		this.lastAction = { kind: 'melee', time: Date.now() };
+	meleeInput(
+		player: CombatEntity,
+		enemies: CombatEntity[],
+		input: MeleeInput,
+		events?: CombatEvents,
+		time = this.clock
+	): MeleeAttackResult | null {
+		initialize(player);
+		let combo = this.meleeCombos.get(player);
+		if (!combo) {
+			combo = new MeleeComboSystem(createMeleeComboState(player.unlockedSkills ?? []));
+			this.meleeCombos.set(player, combo);
+		}
+		combo.setUnlockedSkills(player.unlockedSkills ?? []);
+		const result = combo.attack(player, enemies, input, events);
+		if (!result) return null;
 
-		let hitCount = 0;
+		this.lastAction = { kind: 'melee', time, moveId: result.move.id };
+		player.comboCount = Math.min(this.maxCombo, Math.max(player.comboCount ?? 0, result.state.chainDepth));
+		player.comboTimer = Math.max(player.comboTimer ?? 0, result.move.comboWindow);
+		player.lastHitTime = time;
+		player.meleeStyle = result.state.style + effectNumber(player, 'meleeStyleBonus');
+		return result;
+	}
 
-		for (const enemy of enemies) {
-			if (enemy.hp > 0 && enemy.stun <= 0 && aabb(hitbox, enemy)) {
-				const damage = combo === 'katana' ? 2 : 1;
+	resolveAttack(
+		attacker: CombatEntity,
+		targets: CombatEntity[],
+		attack: AttackSpec,
+		events?: CombatEvents,
+		time = this.clock
+	): AttackResolution {
+		initialize(attacker);
+		this.lastAction = { kind: 'attack', time, moveId: attack.id };
+		const hits: CombatEvent[] = [];
+		let kills = 0;
+		let blocked = 0;
+		let pierceLeft = attack.pierce ?? Number.POSITIVE_INFINITY;
 
-				// Check enemy parry
-				if ((enemy.parryWindow ?? 0) > 0) {
-					// Enemy parried - bounce back
-					player.vx = -player.dir * 100;
-					events?.onEvent?.({ kind: 'parry', source: 'enemy' });
-					events?.requestHitstop?.(0.08);
-					continue;
-				}
+		for (const target of targets) {
+			if (pierceLeft <= 0) break;
+			initialize(target);
+			if (target.hp <= 0 || target.invuln > 0 || target.isDodging || !aabb(attack.hitbox, target)) continue;
 
-				enemy.hp -= damage;
-				enemy.stun = 0.45;
-				enemy.vx += player.dir * 150;
-				player.vx -= player.dir * 35;
-
-				hitCount++;
-
-				// Increment combo
-				if (player.comboCount !== undefined) {
-					player.comboCount = Math.min(this.maxCombo, player.comboCount + 1);
-					player.comboTimer = this.comboWindow;
-					player.lastHitTime = Date.now();
-				}
-
-				events?.onEvent?.({
-					kind: enemy.hp <= 0 ? 'kill' : 'hit',
-					source: 'player',
-					damage,
-					combo: player.comboCount,
-				});
-
-				// Hitstop and screen shake based on combo
-				const hitstopDuration = 0.04 + (player.comboCount || 0) * 0.02;
-				events?.requestHitstop?.(Math.min(hitstopDuration, 0.15));
-				events?.requestScreenShake?.(5 + (player.comboCount || 0) * 2);
+			if (attack.parryable !== false && (target.parryWindow ?? 0) > 0) {
+				blocked += 1;
+				target.parryWindow = 0;
+				attacker.stun = Math.max(attacker.stun, 0.35);
+				const event: CombatEvent = { kind: 'parry', source: target.faction === 'player' ? 'player' : 'enemy', time, moveId: attack.id };
+				hits.push(event);
+				events?.onEvent?.(event);
+				events?.requestHitstop?.(0.1);
+				continue;
 			}
+
+			const armor = Math.max(0, target.armor ?? 0);
+			const damage = Math.max(0, attack.damage - armor);
+			if (damage <= 0) {
+				blocked += 1;
+				const event: CombatEvent = { kind: 'block', source: attack.source, damage: 0, time, moveId: attack.id };
+				hits.push(event);
+				events?.onEvent?.(event);
+				continue;
+			}
+
+			target.hp -= damage;
+			target.stun = Math.max(target.stun, attack.stun);
+			target.vx += attacker.dir * attack.knockbackX;
+			target.vy += attack.knockbackY ?? 0;
+
+			const poiseDamage = attack.poiseDamage ?? damage;
+			if ((target.poise ?? 0) > 0) {
+				target.poise = Math.max(0, (target.poise ?? 0) - poiseDamage);
+				if (target.poise === 0) {
+					target.stun = Math.max(target.stun, attack.stun + 0.25);
+					events?.onEvent?.({ kind: 'poise-break', source: attack.source, damage: poiseDamage, time, moveId: attack.id });
+				}
+			}
+
+			if (attack.source === 'player') {
+				attacker.comboCount = Math.min(this.maxCombo, (attacker.comboCount ?? 0) + (attack.comboGain ?? 1));
+				attacker.comboTimer = this.comboWindow;
+				attacker.lastHitTime = time;
+			}
+
+			const kind = target.hp <= 0 ? 'kill' : 'hit';
+			if (kind === 'kill') kills += 1;
+			const event: CombatEvent = { kind, source: attack.source, damage, combo: attacker.comboCount, time, moveId: attack.id };
+			hits.push(event);
+			events?.onEvent?.(event);
+			events?.requestHitstop?.(Math.min(0.16, 0.035 + (attacker.comboCount ?? 0) * 0.012));
+			events?.requestScreenShake?.(Math.min(12, 4 + (attacker.comboCount ?? 0)));
+			pierceLeft -= 1;
 		}
 
-		// Miss penalty - reduce combo timer slightly
-		if (hitCount === 0 && player.comboCount !== undefined && player.comboCount > 0) {
-			player.comboTimer = Math.max(0, (player.comboTimer ?? 0) - 0.2);
-		}
+		return { attackId: attack.id, hits, kills, blocked };
+	}
+
+	canHit(entity: CombatEntity): boolean {
+		initialize(entity);
+		return entity.invuln <= 0 && !entity.isDodging && entity.hp > 0;
+	}
+
+	getComboMultiplier(comboCount: number): number {
+		return 1 + Math.max(0, comboCount) * 0.1;
 	}
 
 	private parry(player: CombatEntity, enemy: CombatEntity, events?: CombatEvents): void {
-		// Perfect parry - reflect damage
-		enemy.hp -= 1;
-		enemy.stun = 0.8;
+		const damage = 1 + effectNumber(player, 'parryDamageBonus');
+		enemy.hp -= damage;
+		enemy.stun = Math.max(enemy.stun, 0.8);
 		enemy.vx = player.dir * 250;
-
 		player.parryWindow = 0;
 		events?.requestHitstop?.(0.12);
 		events?.requestScreenShake?.(8);
-		events?.onEvent?.({ kind: 'hit', source: 'player', damage: 1 });
+		events?.onEvent?.({ kind: enemy.hp <= 0 ? 'kill' : 'hit', source: 'player', damage, time: this.clock, moveId: 'parry' });
 	}
 
-	private getMeleeHitbox(
-		player: Entity,
-		combo: string
-	): { x: number; y: number; w: number; h: number } {
+	private comboStringToInput(combo: string): MeleeInput {
+		switch (combo) {
+			case 'heavy':
+			case 'katana':
+				return 'heavy';
+			case 'launcher':
+				return 'launcher';
+			case 'air':
+				return 'air';
+			case 'finisher':
+				return 'finisher';
+			default:
+				return 'light';
+		}
+	}
+
+	private getMeleeHitbox(player: Entity, combo: string): { x: number; y: number; w: number; h: number } {
 		const w = combo === 'katana' ? 50 : 42;
 		const h = combo === 'katana' ? 32 : 28;
 		return {
@@ -225,30 +358,17 @@ export class CombatSystem {
 		return aabb(a, b);
 	}
 
-	private damage(entity: CombatEntity, amount: number, events?: CombatEvents): void {
-		const finalAmount = events?.mitigateDamage?.(amount) ?? amount;
+	private damage(entity: CombatEntity, amount: number, events?: CombatEvents, source: 'player' | 'enemy' = 'enemy'): void {
+		const mitigated = amount * (1 - effectNumber(entity, 'damageMitigation'));
+		const finalAmount = events?.mitigateDamage?.(mitigated) ?? mitigated;
 		if (finalAmount <= 0) {
 			entity.invuln = Math.max(entity.invuln, 0.35);
 			return;
 		}
 		entity.hp -= finalAmount;
 		entity.invuln = 1.1;
-		events?.onEvent?.({
-			kind: 'damage',
-			source: 'enemy',
-			damage: finalAmount,
-		});
+		events?.onEvent?.({ kind: 'damage', source, damage: finalAmount, time: this.clock });
 		events?.requestScreenShake?.(6);
 		events?.requestHitstop?.(0.06);
-	}
-
-	// Check if entity can be hit
-	canHit(entity: CombatEntity): boolean {
-		return entity.invuln <= 0 && !entity.isDodging;
-	}
-
-	// Get combo multiplier for damage calculations
-	getComboMultiplier(comboCount: number): number {
-		return 1 + comboCount * 0.1; // 10% bonus damage per combo level
 	}
 }

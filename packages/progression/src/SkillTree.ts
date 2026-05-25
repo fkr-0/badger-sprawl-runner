@@ -26,18 +26,24 @@ const CLAWLINE_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		name: 'Double Swipe',
 		cost: 1,
 		prereqs: [],
+		track: 'clawline',
+		effects: { unlockMove: 'claw_cross', meleeStyleBonus: 1 },
 	},
 	{
 		id: 'parry_tooth',
 		name: 'Parry Tooth',
 		cost: 2,
 		prereqs: ['double_swipe'],
+		track: 'clawline',
+		effects: { unlockMove: 'invoice_splitter', parryDamageBonus: 1 },
 	},
 	{
 		id: 'claw_rush',
 		name: 'Claw Rush',
 		cost: 2,
 		prereqs: ['parry_tooth'],
+		track: 'clawline',
+		effects: { dashCancel: true, velocity: 1 },
 	},
 ];
 
@@ -48,19 +54,87 @@ const RAIL_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		name: 'Rail Mastery',
 		cost: 2,
 		prereqs: [],
+		track: 'railgun',
+		effects: { voltage: 1, reloadGrace: 0.08 },
 	},
 	{
 		id: 'piercing_shot',
 		name: 'Piercing Shot',
 		cost: 2,
 		prereqs: ['rail_mastery'],
+		track: 'railgun',
+		effects: { pierceCount: 1 },
 	},
 	{
 		id: 'emp_blast',
 		name: 'EMP Blast',
 		cost: 3,
 		prereqs: ['piercing_shot'],
+		track: 'railgun',
+		effects: { empOnChargedShot: true },
 	},
+];
+
+const ROCKET_NODES: Omit<SkillNode, 'unlocked'>[] = [
+	{
+		id: 'fuel_sipper',
+		name: 'Fuel Sipper',
+		cost: 1,
+		prereqs: [],
+		track: 'rocket',
+		effects: { rocketFuelBonus: 1 },
+	},
+	{
+		id: 'vector_kick',
+		name: 'Vector Kick',
+		cost: 2,
+		prereqs: ['fuel_sipper'],
+		track: 'rocket',
+		effects: { airControlBonus: 0.12 },
+	},
+	{
+		id: 'badger_afterburn',
+		name: 'Badger Afterburn',
+		cost: 3,
+		prereqs: ['vector_kick'],
+		track: 'rocket',
+		effects: { burnTrailDamage: 1 },
+	},
+];
+
+const HACK_NODES: Omit<SkillNode, 'unlocked'>[] = [
+	{
+		id: 'street_syntax',
+		name: 'Street Syntax',
+		cost: 1,
+		prereqs: [],
+		track: 'hacking',
+		effects: { cortex: 1, firstHackMistakeIgnored: true },
+	},
+	{
+		id: 'black_ice_bite',
+		name: 'Black Ice Bite',
+		cost: 2,
+		prereqs: ['street_syntax'],
+		track: 'hacking',
+		effects: { hackChargesMelee: true },
+	},
+	{
+		id: 'ghost_invoice',
+		name: 'Ghost Invoice',
+		cost: 2,
+		prereqs: ['black_ice_bite'],
+		track: 'hacking',
+		effects: { traceReduction: 0.2 },
+	},
+];
+
+export const FIRST_RELEASE_SKILL_TRACKS = ['clawline', 'railgun', 'rocket', 'hacking'] as const;
+export const FIRST_RELEASE_SKILL_NODES: Omit<SkillNode, 'unlocked'>[] = [
+	...CLAWLINE_NODES,
+	...RAIL_NODES,
+	...ROCKET_NODES,
+	...HACK_NODES,
 ];
 
 export class SkillTree {
@@ -82,8 +156,8 @@ export class SkillTree {
 		};
 
 		// Initialize nodes
-		for (const node of [...CLAWLINE_NODES, ...RAIL_NODES]) {
-			this.graph.nodes.set(node.id, { ...node, unlocked: false });
+		for (const node of FIRST_RELEASE_SKILL_NODES) {
+			this.graph.nodes.set(node.id, { ...node, effects: { ...(node.effects ?? {}) }, unlocked: false });
 		}
 	}
 
