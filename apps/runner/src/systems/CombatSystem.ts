@@ -5,14 +5,25 @@
 import { aabb } from '@badger/platformer-core';
 import type { Entity } from './PhysicsSystem';
 import { MeleeComboSystem, createMeleeComboState, type MeleeInput, type MeleeAttackResult } from './MeleeComboSystem';
+import {
+	applyStatusEffect,
+	stepStatusEffects,
+	type StatusEffect,
+	type StatusEvent,
+} from './StatusEffectSystem';
+import { resolveDamagePacket, type DamagePacket, type DamageType } from './DamageModel';
 
 export interface CombatEntity extends Entity {
+	id?: string;
 	hp: number;
 	maxHp: number;
 	invuln: number;
 	stun: number;
 	armor?: number;
 	poise?: number;
+	resistances?: Partial<Record<DamageType, number>>;
+	vulnerabilities?: Partial<Record<DamageType, number>>;
+	guardMultiplier?: number;
 	faction?: 'player' | 'enemy' | 'neutral';
 
 	parryWindow?: number;
@@ -26,6 +37,7 @@ export interface CombatEntity extends Entity {
 	meleeStyle?: number;
 	unlockedSkills?: string[];
 	itemSetEffects?: Record<string, number | string | boolean>;
+	statusEffects?: StatusEffect[];
 
 	rookMarked?: boolean;
 	bossPhaseLabel?: string;
@@ -50,6 +62,7 @@ export type CombatEventKind = 'hit' | 'kill' | 'parry' | 'dodge' | 'damage' | 'b
 export interface CombatEvent {
 	kind: CombatEventKind;
 	source?: 'player' | 'enemy';
+	status?: StatusEvent;
 	targetId?: string;
 	damage?: number;
 	combo?: number;
@@ -68,6 +81,8 @@ export interface AttackSpec {
 	id: string;
 	source: 'player' | 'enemy';
 	damage: number;
+	damageType?: DamageType;
+	damagePacket?: DamagePacket;
 	stun: number;
 	poiseDamage?: number;
 	knockbackX: number;
@@ -76,6 +91,7 @@ export interface AttackSpec {
 	parryable?: boolean;
 	pierce?: number;
 	comboGain?: number;
+	statusOnHit?: StatusEffect[];
 }
 
 export interface AttackResolution {
@@ -127,6 +143,36 @@ function decayTimers(entity: CombatEntity, dt: number): void {
 	entity.isDodging = (entity.dodgeActive ?? 0) > 0;
 }
 
+function statusTarget(entity: CombatEntity, fallbackId: string): CombatEntity & { id: string } {
+	return { ...entity, id: entity.id ?? fallbackId };
+}
+
+function assignStatusTarget(entity: CombatEntity, next: ReturnType<typeof stepStatusEffects>['target']): void {
+	entity.hp = next.hp;
+	entity.stun = next.stun;
+	entity.invuln = next.invuln;
+	entity.vx = next.vx;
+	entity.vy = next.vy;
+	entity.statusEffects = next.statusEffects;
+}
+
+function stepCombatStatuses(entity: CombatEntity, dt: number, events: CombatEvents | undefined, time: number): void {
+	if (!entity.statusEffects || entity.statusEffects.length === 0) return;
+	const result = stepStatusEffects(statusTarget(entity, entity.faction ?? 'combatant'), dt);
+	assignStatusTarget(entity, result.target);
+	for (const status of result.events) {
+		events?.onEvent?.({
+			kind: status.kind === 'expired' ? 'block' : 'damage',
+			source: entity.faction === 'player' ? 'player' : 'enemy',
+			targetId: status.targetId,
+			damage: status.amount,
+			time,
+			moveId: status.effectId,
+			status,
+		});
+	}
+}
+
 export class CombatSystem {
 	private lastAction: { kind: string; time: number; moveId?: string } | null = null;
 	private readonly comboWindow = BASE_COMBO_WINDOW;
@@ -148,6 +194,7 @@ export class CombatSystem {
 		initialize(player);
 		if (options.unlockedSkills) player.unlockedSkills = [...options.unlockedSkills];
 		decayTimers(player, dt);
+		stepCombatStatuses(player, dt, events, this.clock);
 
 		const comboWasActive = (player.comboCount ?? 0) > 0;
 		if ((player.comboTimer ?? 0) <= 0 && (player.comboCount ?? 0) > 0) {
@@ -178,6 +225,7 @@ export class CombatSystem {
 		for (const enemy of enemies) {
 			initialize(enemy);
 			decayTimers(enemy, dt);
+			stepCombatStatuses(enemy, dt, events, this.clock);
 			if (player.invuln <= 0 && enemy.stun <= 0 && this.checkCollision(player, enemy)) {
 				if ((player.parryWindow ?? 0) > 0) this.parry(player, enemy, events);
 				else if (!player.isDodging) this.damage(player, 1, events, 'enemy');
@@ -264,8 +312,16 @@ export class CombatSystem {
 				continue;
 			}
 
-			const armor = Math.max(0, target.armor ?? 0);
-			const damage = Math.max(0, attack.damage - armor);
+			const damageResolution = resolveDamagePacket(
+				attack.damagePacket ?? { amount: attack.damage, type: attack.damageType ?? 'blunt' },
+				{
+					armor: Math.max(0, target.armor ?? 0),
+					resistances: target.resistances,
+					vulnerabilities: target.vulnerabilities,
+					guardMultiplier: target.guardMultiplier,
+				}
+			);
+			const damage = damageResolution.final;
 			if (damage <= 0) {
 				blocked += 1;
 				const event: CombatEvent = { kind: 'block', source: attack.source, damage: 0, time, moveId: attack.id };
@@ -288,6 +344,23 @@ export class CombatSystem {
 				}
 			}
 
+			if (attack.statusOnHit) {
+				for (const status of attack.statusOnHit) {
+					const applied = applyStatusEffect(statusTarget(target, `target-${hits.length}`), { ...status, sourceId: attack.id });
+					assignStatusTarget(target, applied.target);
+					for (const statusEvent of applied.events) {
+						events?.onEvent?.({
+							kind: 'damage',
+							source: attack.source,
+							targetId: statusEvent.targetId,
+							time,
+							moveId: attack.id,
+							status: statusEvent,
+						});
+					}
+				}
+			}
+
 			if (attack.source === 'player') {
 				attacker.comboCount = Math.min(this.maxCombo, (attacker.comboCount ?? 0) + (attack.comboGain ?? 1));
 				attacker.comboTimer = this.comboWindow;
@@ -296,7 +369,7 @@ export class CombatSystem {
 
 			const kind = target.hp <= 0 ? 'kill' : 'hit';
 			if (kind === 'kill') kills += 1;
-			const event: CombatEvent = { kind, source: attack.source, damage, combo: attacker.comboCount, time, moveId: attack.id };
+			const event: CombatEvent = { kind, source: attack.source, targetId: target.id, damage, combo: attacker.comboCount, time, moveId: attack.id };
 			hits.push(event);
 			events?.onEvent?.(event);
 			events?.requestHitstop?.(Math.min(0.16, 0.035 + (attacker.comboCount ?? 0) * 0.012));

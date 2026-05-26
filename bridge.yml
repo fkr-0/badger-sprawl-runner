@@ -4,6 +4,8 @@ defaultTrack: dev
 commands:
   test:
     run: pnpm run test
+  verify-details:
+    run: pnpm run verify:details
   serve:
     run: python3 -m http.server 8042
 agent:

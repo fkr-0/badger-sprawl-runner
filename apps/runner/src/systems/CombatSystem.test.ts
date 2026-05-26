@@ -60,6 +60,25 @@ describe('CombatSystem deterministic combat', () => {
 		expect(player.comboTimer).toBeGreaterThan(0);
 	});
 
+	it('uses typed damage packets with resistances and vulnerabilities in attack resolution', () => {
+		const system = new CombatSystem();
+		const player = entity({ faction: 'player' });
+		const drone = entity({ x: 20, hp: 10, armor: 2, resistances: { slash: 0.5 }, vulnerabilities: { slash: 0.25 } });
+
+		const result = system.resolveAttack(player, [drone], {
+			id: 'typed-slash',
+			source: 'player',
+			damage: 10,
+			damagePacket: { amount: 10, type: 'slash', armorPierce: 1, crit: true, critMultiplier: 2 },
+			stun: 0.1,
+			knockbackX: 0,
+			hitbox: { x: 0, y: 0, w: 80, h: 80 },
+		}, undefined, 6);
+
+		expect(result.hits[0]?.damage).toBe(14.25);
+		expect(drone.hp).toBe(-4.25);
+	});
+
 	it('lets parry windows block parryable attacks and stun attackers', () => {
 		const system = new CombatSystem();
 		const enemy = entity({ faction: 'enemy' });
@@ -79,6 +98,45 @@ describe('CombatSystem deterministic combat', () => {
 		expect(result.hits[0]?.kind).toBe('parry');
 		expect(enemy.stun).toBeGreaterThan(0);
 		expect(player.hp).toBe(5);
+	});
+
+	it('applies status-on-hit and ticks status damage during later combat steps', () => {
+		const system = new CombatSystem();
+		const player = entity({ faction: 'player' });
+		const drone = entity({ id: 'drone' } as Partial<CombatEntity>);
+		const statuses: string[] = [];
+
+		system.resolveAttack(player, [drone], {
+			id: 'burning-claw',
+			source: 'player',
+			damage: 1,
+			stun: 0.1,
+			knockbackX: 0,
+			hitbox: { x: -5, y: -5, w: 80, h: 80 },
+			statusOnHit: [{
+				id: 'burning-claw-dot',
+				kind: 'burn',
+				sourceId: 'player',
+				duration: 1,
+				remaining: 1,
+				stacks: 1,
+				maxStacks: 2,
+				tickInterval: 0.5,
+				tickTimer: 0.5,
+				magnitude: 1,
+			}],
+		}, { onEvent: (event) => {
+			if (event.status) statuses.push(event.status.kind);
+		} }, 4);
+
+		expect(drone.statusEffects?.[0]?.kind).toBe('burn');
+		system.step(player, [drone], {}, 0.5, { onEvent: (event) => {
+			if (event.status) statuses.push(event.status.kind);
+		} }, { time: 4.5 });
+
+		expect(drone.hp).toBe(3);
+		expect(statuses).toContain('applied');
+		expect(statuses).toContain('tick');
 	});
 
 	it('applies item set mitigation and parry bonuses during collision combat', () => {

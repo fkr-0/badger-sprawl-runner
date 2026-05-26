@@ -13,6 +13,8 @@ yarn-error.log*
 .eslintcache
 
 # Generated local tool/artifact scratch
+playwright-report/
+test-results/
 .serena/
 generated/
 llm-sprite-generation/

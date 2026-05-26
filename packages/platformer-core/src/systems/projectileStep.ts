@@ -25,10 +25,10 @@ export interface ProjectileHit {
 }
 
 export interface ProjectileStepInput {
-	projectiles: readonly ProjectileState[];
-	targets: readonly Array<Rect & { id: string }>;
+	projectiles: ReadonlyArray<ProjectileState>;
+	targets: ReadonlyArray<Rect & { id: string }>;
 	bounds: Rect;
-	platforms?: readonly Rect[];
+	platforms?: ReadonlyArray<Rect>;
 	fluid?: FluidField;
 	params: Pick<PhysicsParams, 'gravity' | 'maxFallSpeed'>;
 	dt: number;

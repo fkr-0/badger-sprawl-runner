@@ -24,7 +24,9 @@
 		"typecheck": "pnpm -r typecheck",
 		"smoke:runner": "node tests/smoke-runner.mjs",
 		"sprites:placeholder": "node scripts/generate-placeholder-sprites.mjs",
-		"sprites:check": "node tests/public-sprite-assets.mjs"
+		"sprites:check": "node tests/public-sprite-assets.mjs",
+		"test:e2e:details": "playwright test tests/e2e/details-targets.spec.ts --project=chromium --reporter=line --output=/tmp/badger-sprawl-runner-details-test-results",
+		"verify:details": "pnpm -r typecheck && pnpm -r test && pnpm run test:e2e:details && node tests/no-e2e-artifact-churn.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.3",
