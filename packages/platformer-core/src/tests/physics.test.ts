@@ -33,6 +33,7 @@ describe('platformStep', () => {
 			vx: 0,
 			vy: 100,
 			prevVy: 100,
+			dt: 1 / 60,
 			coyoteTime: defaultParams.coyote,
 			platforms: [{ x: 0, y: 494, w: 1900, h: 80 }],
 		});
@@ -40,6 +41,24 @@ describe('platformStep', () => {
 		expect(result.onGround).toBe(true);
 		expect(result.y).toBe(448);
 		expect(result.coyoteLeft).toBeGreaterThan(0);
+	});
+
+	it('uses actual dt when testing whether the player crossed the platform top', () => {
+		const result = platformStep({
+			x: 100,
+			y: 496,
+			w: 34,
+			h: 46,
+			vx: 0,
+			vy: 900,
+			prevVy: 900,
+			dt: 1 / 30,
+			coyoteTime: defaultParams.coyote,
+			platforms: [{ x: 0, y: 520, w: 1900, h: 80 }],
+		});
+
+		expect(result.onGround).toBe(true);
+		expect(result.y).toBe(474);
 	});
 });
 

@@ -4,14 +4,14 @@ import { aabb } from './aabb';
  * Snap player to platform if landing, reset coyote time
  */
 export function platformStep(input) {
-    const { x, y, w, h, vx, vy, prevVy, platforms, coyoteTime } = input;
+    const { x, y, w, h, vx, vy, prevVy, dt, platforms, coyoteTime } = input;
     const player = { x, y, w, h };
     let onGround = false;
     let coyoteLeft = 0;
     for (const p of platforms) {
         // Check if player overlaps and is falling onto platform
-        // Use prevVy to approximate previous position: y - prevVy*dt
-        const prevY = y - prevVy * 0.016;
+        // Use prevVy to approximate previous position from the caller's actual timestep.
+        const prevY = y - prevVy * dt;
         if (aabb(player, p) && vy >= 0 && prevY + h <= p.y + 6) {
             // Snap to platform
             const snappedY = p.y - h;

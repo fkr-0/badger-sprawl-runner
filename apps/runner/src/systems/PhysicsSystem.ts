@@ -153,6 +153,7 @@ export class PhysicsSystem {
 			vx: player.vx,
 			vy: player.vy,
 			prevVy,
+			dt,
 			platforms,
 			coyoteTime: defaultParams.coyote,
 		});

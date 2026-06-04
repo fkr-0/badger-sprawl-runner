@@ -63,6 +63,7 @@ describe('stepPhysicsWorld', () => {
 		const step = stepPhysicsWorld({
 			world: world({
 				actors: [actor({ y: 48, vx: 10, vy: 120, onGround: false })],
+				platforms: [],
 				materialZones: [{
 					x: -100,
 					y: 0,

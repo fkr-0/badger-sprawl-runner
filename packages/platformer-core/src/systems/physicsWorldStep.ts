@@ -120,6 +120,7 @@ function stepActor(
 		vx: next.vx,
 		vy: next.vy,
 		prevVy: actor.vy,
+		dt,
 		platforms: [...platforms],
 		coyoteTime: actorParams.coyote,
 	});

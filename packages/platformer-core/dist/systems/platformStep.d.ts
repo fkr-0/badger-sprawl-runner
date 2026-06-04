@@ -6,6 +6,7 @@ export interface PlatformStepInput {
     vx: number;
     vy: number;
     prevVy: number;
+    dt: number;
     platforms: Array<{
         x: number;
         y: number;

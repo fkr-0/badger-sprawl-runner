@@ -8,6 +8,7 @@ export interface PlatformStepInput {
 	vx: number;
 	vy: number;
 	prevVy: number;
+	dt: number;
 	platforms: Array<{ x: number; y: number; w: number; h: number }>;
 	coyoteTime: number;
 }
@@ -24,7 +25,7 @@ export interface PlatformStepOutput {
  * Snap player to platform if landing, reset coyote time
  */
 export function platformStep(input: PlatformStepInput): PlatformStepOutput {
-	const { x, y, w, h, vx, vy, prevVy, platforms, coyoteTime } = input;
+	const { x, y, w, h, vx, vy, prevVy, dt, platforms, coyoteTime } = input;
 	const player = { x, y, w, h };
 
 	let onGround = false;
@@ -32,8 +33,8 @@ export function platformStep(input: PlatformStepInput): PlatformStepOutput {
 
 	for (const p of platforms) {
 		// Check if player overlaps and is falling onto platform
-		// Use prevVy to approximate previous position: y - prevVy*dt
-		const prevY = y - prevVy * 0.016;
+		// Use prevVy to approximate previous position from the caller's actual timestep.
+		const prevY = y - prevVy * dt;
 		if (aabb(player, p) && vy >= 0 && prevY + h <= p.y + 6) {
 			// Snap to platform
 			const snappedY = p.y - h;
