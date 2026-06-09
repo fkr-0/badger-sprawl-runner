@@ -88,6 +88,13 @@ export function createEnemy(
 	);
 }
 
+export function getEnemyCost(enemyId: string): number {
+	const def = ENEMY_DEFS[enemyId];
+	if (!def) return Number.POSITIVE_INFINITY;
+	const classCost = def.class === 'turret' ? 4 : def.class === 'drone' ? 2 : 1;
+	return Math.max(1, Math.ceil(def.hp / 2) + classCost + Math.max(0, def.damage - 1));
+}
+
 export function getRandomEnemyForWave(waveNumber: number): string {
 	const sprawlEnemies = ['toll_rat_crawler', 'cable_crawler'];
 

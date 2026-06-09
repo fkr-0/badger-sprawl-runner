@@ -35,7 +35,7 @@ export class ShopScene implements Scene {
 
 	onEnter(ctx: SceneContext): void {
 		console.log('ShopScene entered');
-		this.renderer = ctx.renderer as Renderer;
+		this.renderer = ctx.renderer;
 		this.metaState = loadMeta();
 		this.refreshOffer();
 
@@ -81,8 +81,7 @@ export class ShopScene implements Scene {
 		}
 	}
 
-	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
+	render(rend: Renderer, alpha: number): void {
 		const ctx = rend.getContext();
 
 		// Semi-transparent background

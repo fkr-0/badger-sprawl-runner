@@ -3,19 +3,20 @@
  */
 
 import type { EventBus } from './EventBus';
+import type { Renderer } from '../renderer/Renderer';
 
 export interface Scene {
 	readonly name: string;
 	onEnter(ctx: SceneContext): void;
 	onExit(): void;
 	update(dt: number): void;
-	render(renderer: unknown, alpha: number): void;
+	render(renderer: Renderer, alpha: number): void;
 }
 
 export interface SceneContext {
 	eventBus: EventBus;
 	canvas: HTMLCanvasElement;
-	renderer?: unknown;
+	renderer: Renderer;
 }
 
 export class SceneManager {
@@ -56,7 +57,7 @@ export class SceneManager {
 		}
 	}
 
-	render(renderer: unknown, alpha: number): void {
+	render(renderer: Renderer, alpha: number): void {
 		const current = this.getCurrent();
 		if (current) {
 			current.render(renderer, alpha);

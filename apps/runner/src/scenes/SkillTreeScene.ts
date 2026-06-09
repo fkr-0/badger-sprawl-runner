@@ -1,3 +1,4 @@
+import type { Renderer } from '../renderer/Renderer';
 /**
  * SkillTreeScene - lightweight skill route scene for the SceneManager shell.
  */
@@ -72,7 +73,7 @@ export class SkillTreeScene implements Scene {
 		this.purchased.add(this.getSelectedSkill());
 	}
 
-	render(renderer: unknown, _alpha: number): void {
+	render(renderer: Renderer, _alpha: number): void {
 		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D };
 		const ctx = maybeRenderer.getContext?.();
 		if (!ctx) return;

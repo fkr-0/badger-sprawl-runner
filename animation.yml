@@ -148,20 +148,30 @@ asset_categories:
   items_core:
     status: encoded_draft
     frame_size: [32, 32]
+    atlas_size: [128, 704]
     required_animations:
-      rocket_backpack_pickup: { frames: 4, status: encoded }
-      railgun_pickup: { frames: 4, status: encoded }
-      stim_pack_pickup: { frames: 4, status: encoded }
-      katana_pickup: { frames: 4, status: encoded }
-      signal_jammer_pickup: { frames: 4, status: encoded }
-      dub_shield_pickup: { frames: 4, status: encoded }
-      wafer_key_pickup: { frames: 4, status: encoded }
-      elevator_seed_pickup: { frames: 4, status: encoded }
-      mirror_pass_pickup: { frames: 4, status: encoded }
-      bass_reactor_core_pickup: { frames: 4, status: encoded }
-      debt_ledger_shard_pickup: { frames: 4, status: encoded }
-      cargo_reversal_key_pickup: { frames: 4, status: encoded }
-      asteroid_transmitter_root_pickup: { frames: 4, status: encoded }
+      rocket_backpack_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      railgun_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      stim_pack_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      katana_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      signal_jammer_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      dub_shield_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      wafer_key_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      elevator_seed_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      mirror_pass_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      bass_reactor_core_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      debt_ledger_shard_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      cargo_reversal_key_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      asteroid_transmitter_root_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      claws_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      phase_pick_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      echo_cassette_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      gravity_talisman_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      nanofur_weave_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      solder_mite_swarm_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      black_ice_tooth_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      bassline_boots_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
+      contraband_seed_key_pickup: { frames: 4, status: encoded, anchor: [16, 16] }
   vfx_combat:
     status: encoded_draft
     frame_size: [32, 32]
@@ -181,16 +191,17 @@ asset_categories:
     status: encoded_draft
     frame_size: [32, 32]
     required_worlds:
-      lower_sprawl: encoded
-      chrome_arcology: encoded
-      straylight_mirage: encoded
-      dub_colony: encoded
-      antenna_barrens: encoded
-      orbital_lift: encoded
-      asteroid_redoubt: encoded
+      lower_sprawl: { tiles: 7, status: encoded }
+      chrome_arcology: { tiles: 7, status: encoded }
+      straylight_mirage: { tiles: 7, status: encoded }
+      dub_colony: { tiles: 7, status: encoded }
+      antenna_barrens: { tiles: 7, status: encoded }
+      orbital_lift: { tiles: 7, status: encoded }
+      asteroid_redoubt: { tiles: 7, status: encoded }
     rule: >-
       Every campaign world must provide a 32x32 tile atlas with solid/collision_safe,
       decorative, animated_prop, hazard, and material tags plus a 3-layer parallax atlas.
+      Each world targets 7 tile animations for visual variety.
   enemies_and_bosses:
     status: encoded_draft
     source: docs/story-flavour.yml

@@ -3,6 +3,7 @@
  */
 
 import type { Scene } from '../engine/SceneManager';
+import type { Renderer } from '../renderer/Renderer';
 import type { SceneContext } from '../engine/SceneManager';
 import { buildEndingCard, type EndingCard } from '../game/EndingCards';
 import type { MenuOption, MenuOptionId, StoryProgress } from '../game/GameFlow';
@@ -108,7 +109,7 @@ export class TitleScene implements Scene {
 		// Title screen animation
 	}
 
-	render(renderer: unknown, _alpha: number): void {
+	render(renderer: Renderer, _alpha: number): void {
 		const maybeRenderer = renderer as {
 			getContext?: () => CanvasRenderingContext2D;
 			drawBackground?: () => void;

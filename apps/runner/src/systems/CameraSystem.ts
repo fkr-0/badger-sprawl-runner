@@ -20,4 +20,8 @@ export class CameraSystem {
 	getCamera(): Camera {
 		return { ...this.camera };
 	}
+
+	getState(): Camera {
+		return this.getCamera();
+	}
 }

@@ -128,6 +128,34 @@ export class StageRunScene implements Scene {
 			: null;
 	}
 
+	getPlayerSnapshot(): {
+		x: number; y: number; vx: number; vy: number;
+		hp: number; maxHp: number; onGround: boolean;
+		hasRailgun: boolean; hasRocket: boolean; hasKatana: boolean;
+		fuel: number; stims: number; meleeTimer: number;
+	} {
+		const p = this.player;
+		return {
+			x: p.x, y: p.y, vx: p.vx, vy: p.vy,
+			hp: p.hp, maxHp: p.maxHp, onGround: p.onGround,
+			hasRailgun: p.hasRailgun, hasRocket: p.hasRocket, hasKatana: p.hasKatana,
+			fuel: p.fuel, stims: p.stims, meleeTimer: p.meleeTimer,
+		};
+	}
+
+	getEnemySnapshots(): Array<{ x: number; y: number; hp: number; maxHp: number; bossId?: string }> {
+		return this.enemies.map((e) => ({
+			x: e.x, y: e.y, hp: e.hp, maxHp: e.maxHp,
+			bossId: (e as any).bossId,
+		}));
+	}
+
+	getPickupSnapshots(): Array<{ id: string; x: number; y: number; taken: boolean; kind: string }> {
+		return this.pickups.map((p) => ({
+			id: p.id, x: p.x, y: p.y, taken: p.taken, kind: p.kind,
+		}));
+	}
+
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
 		if (this.options.tutorialBeats?.length) {
@@ -142,7 +170,7 @@ export class StageRunScene implements Scene {
 		if (this.options.runtimeConfig) {
 			window.dispatchEvent(new CustomEvent('badger:stage-runtime-config', { detail: this.getRuntimeConfig() }));
 		}
-		this.renderer = ctx.renderer as Renderer;
+		this.renderer = ctx.renderer;
 		// Load sprite manifest if available
 		this.renderer.loadSprites('/data/sprites.json').catch(() => {
 			console.log('Sprite manifest not found, using fallback rendering');
@@ -192,7 +220,7 @@ export class StageRunScene implements Scene {
 			onCoyoteJump: () => this.emitCoyoteParticles(),
 		});
 		// 4. Combat with event handlers
-		this.combat.step(this.player, this.enemies, action as unknown as Record<string, boolean>, simDt, {
+		this.combat.step(this.player, this.enemies, action, simDt, {
 			onEvent: (event) => this.handleCombatEvent(event),
 			mitigateDamage: (amount) =>
 				this.companions.mitigateDamage(amount, {
@@ -242,8 +270,7 @@ export class StageRunScene implements Scene {
 		this.input.clearPressed();
 	}
 
-	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
+	render(rend: Renderer, alpha: number): void {
 		const cam = this.camera.getCamera();
 
 		// Apply screen shake offset

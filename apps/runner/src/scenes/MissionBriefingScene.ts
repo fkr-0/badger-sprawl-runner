@@ -23,7 +23,7 @@ export class MissionBriefingScene implements Scene {
 
 	onEnter(ctx: SceneContext): void {
 		console.log('MissionBriefingScene entered');
-		this.renderer = ctx.renderer as Renderer;
+		this.renderer = ctx.renderer;
 
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			if (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape') {
@@ -47,8 +47,7 @@ export class MissionBriefingScene implements Scene {
 		// Briefing is static
 	}
 
-	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
+	render(rend: Renderer, alpha: number): void {
 		const ctx = rend.getContext();
 
 		// Dim background

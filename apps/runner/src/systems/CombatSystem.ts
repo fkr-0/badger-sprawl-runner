@@ -4,6 +4,7 @@
 
 import { aabb } from '@badger/platformer-core';
 import type { Entity } from './PhysicsSystem';
+import type { ActionMap } from './InputSystem';
 import { MeleeComboSystem, createMeleeComboState, type MeleeInput, type MeleeAttackResult } from './MeleeComboSystem';
 import {
 	applyStatusEffect,
@@ -183,7 +184,7 @@ export class CombatSystem {
 	step(
 		player: CombatEntity,
 		enemies: CombatEntity[],
-		actionMap: Record<string, boolean>,
+		actionMap: ActionMap,
 		dt: number,
 		events?: CombatEvents,
 		options: CombatStepOptions = {}

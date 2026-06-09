@@ -1,3 +1,4 @@
+import type { Renderer } from '../renderer/Renderer';
 import type { Scene, SceneContext } from '../engine/SceneManager';
 
 export type VersusSide = 'player' | 'rival';
@@ -108,7 +109,7 @@ export class VersusScene implements Scene {
 	}
 	update(_dt: number): void {}
 
-	render(renderer: unknown, _alpha: number): void {
+	render(renderer: Renderer, _alpha: number): void {
 		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D };
 		const ctx = maybeRenderer.getContext?.();
 		if (!ctx) return;

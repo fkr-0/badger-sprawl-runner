@@ -6,10 +6,12 @@
 	"genre": "2D sprite platformer / heist roguelite-lite",
 	"worlds": [
 		"Lower Sprawl",
+		"Drainmarket",
 		"Chrome Arcology",
 		"Straylight Mirage",
 		"Dub Colony",
-		"Uplink Barrens",
+		"Antenna Barrens",
+		"Orbital Lift",
 		"Asteroid Redoubt"
 	],
 	"coreItems": ["rocket_backpack", "railgun", "stim_pack", "claws", "katana"],

@@ -14,6 +14,7 @@ export interface RunnerApp {
 	stop(): void;
 	routeMode(modeId: MenuOptionId): void;
 	getCurrentScene(): Scene | undefined;
+	getRenderer(): Renderer;
 }
 
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
@@ -62,6 +63,9 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		routeMode,
 		getCurrentScene(): Scene | undefined {
 			return sceneManager.getCurrent();
+		},
+		getRenderer(): Renderer {
+			return renderer;
 		},
 	};
 }

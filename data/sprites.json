@@ -605,34 +605,63 @@
 				32,
 				32
 			],
+			"sourceImageNo": [65, 68, 69, 70],
 			"animations": {
 				"rocket_backpack_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"railgun_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"stim_pack_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"katana_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"signal_jammer_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"dub_shield_pickup": {
 					"frames": 4,
-					"fps": 8
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					]
 				},
 				"wafer_key_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -641,6 +670,10 @@
 				"elevator_seed_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -649,6 +682,10 @@
 				"mirror_pass_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -657,6 +694,10 @@
 				"bass_reactor_core_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -665,6 +706,10 @@
 				"debt_ledger_shard_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -673,6 +718,10 @@
 				"cargo_reversal_key_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
 						"pickup"
@@ -681,8 +730,120 @@
 				"asteroid_transmitter_root_pickup": {
 					"frames": 4,
 					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
 					"tags": [
 						"story_payload",
+						"pickup"
+					]
+				},
+				"claws_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"melee",
+						"pickup"
+					]
+				},
+				"phase_pick_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"utility",
+						"pickup"
+					]
+				},
+				"echo_cassette_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"boon",
+						"pickup"
+					]
+				},
+				"gravity_talisman_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"movement",
+						"pickup"
+					]
+				},
+				"nanofur_weave_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"passive",
+						"pickup"
+					]
+				},
+				"solder_mite_swarm_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"companion",
+						"pickup"
+					]
+				},
+				"black_ice_tooth_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"hack_combat",
+						"pickup"
+					]
+				},
+				"bassline_boots_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"movement",
+						"pickup"
+					]
+				},
+				"contraband_seed_key_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"meta",
 						"pickup"
 					]
 				}
@@ -695,6 +856,7 @@
 				32,
 				32
 			],
+			"sourceImageNo": 71,
 			"grid": {
 				"columns": 4,
 				"rows": 4
@@ -987,6 +1149,7 @@
 			],
 			"world": "lower_sprawl",
 			"role": "parallax",
+			"sourceImageNo": 75,
 			"grid": {
 				"columns": 3,
 				"rows": 1
@@ -1082,6 +1245,37 @@
 						"hazard",
 						"animated_prop"
 					]
+				},
+				"elevator_rail": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:chrome_arcology",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:steel_rail"
+					]
+				},
+				"security_gate": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:chrome_arcology",
+						"tile",
+						"decorative",
+						"material:laser_grid"
+					]
+				},
+				"holo_ad_flicker": {
+					"frames": 4,
+					"fps": 8,
+					"tags": [
+						"world:chrome_arcology",
+						"tile",
+						"animated_prop",
+						"decorative"
+					]
 				}
 			}
 		},
@@ -1094,6 +1288,7 @@
 			],
 			"world": "chrome_arcology",
 			"role": "parallax",
+			"sourceImageNo": 60,
 			"grid": {
 				"columns": 3,
 				"rows": 1
@@ -1189,6 +1384,37 @@
 						"hazard",
 						"animated_prop"
 					]
+				},
+				"luxury_column": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:straylight_mirage",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:marble"
+					]
+				},
+				"mirror_shard": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:straylight_mirage",
+						"tile",
+						"decorative",
+						"material:mirror_glass"
+					]
+				},
+				"zero_g_fountain": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"world:straylight_mirage",
+						"tile",
+						"animated_prop",
+						"decorative"
+					]
 				}
 			}
 		},
@@ -1201,6 +1427,7 @@
 			],
 			"world": "straylight_mirage",
 			"role": "parallax",
+			"sourceImageNo": 61,
 			"grid": {
 				"columns": 3,
 				"rows": 1
@@ -1296,6 +1523,37 @@
 						"hazard",
 						"animated_prop"
 					]
+				},
+				"speaker_stack": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:dub_colony",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:speaker_cone"
+					]
+				},
+				"solar_sail_cloth": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:dub_colony",
+						"tile",
+						"decorative",
+						"material:canvas"
+					]
+				},
+				"studio_rack": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"world:dub_colony",
+						"tile",
+						"animated_prop",
+						"decorative"
+					]
 				}
 			}
 		},
@@ -1308,6 +1566,7 @@
 			],
 			"world": "dub_colony",
 			"role": "parallax",
+			"sourceImageNo": 62,
 			"grid": {
 				"columns": 3,
 				"rows": 1
@@ -1402,6 +1661,37 @@
 						"tile",
 						"hazard",
 						"animated_prop"
+					]
+				},
+				"wire_bridge": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:antenna_barrens",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:steel_cable"
+					]
+				},
+				"satellite_dish": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:antenna_barrens",
+						"tile",
+						"decorative",
+						"material:weathered_metal"
+					]
+				},
+				"battery_tower_blink": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"world:antenna_barrens",
+						"tile",
+						"animated_prop",
+						"decorative"
 					]
 				}
 			}
@@ -1510,6 +1800,37 @@
 						"hazard",
 						"animated_prop"
 					]
+				},
+				"cargo_strap": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:orbital_lift",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:woven_nylon"
+					]
+				},
+				"vacuum_door": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:orbital_lift",
+						"tile",
+						"decorative",
+						"material:sealed_metal"
+					]
+				},
+				"counterweight_blink": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"world:orbital_lift",
+						"tile",
+						"animated_prop",
+						"decorative"
+					]
 				}
 			}
 		},
@@ -1522,6 +1843,7 @@
 			],
 			"world": "orbital_lift",
 			"role": "parallax",
+			"sourceImageNo": 74,
 			"grid": {
 				"columns": 3,
 				"rows": 1
@@ -1617,6 +1939,37 @@
 						"hazard",
 						"animated_prop"
 					]
+				},
+				"rebel_banner": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:asteroid_redoubt",
+						"tile",
+						"decorative",
+						"material:cloth"
+					]
+				},
+				"cargo_crate": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"world:asteroid_redoubt",
+						"tile",
+						"solid",
+						"collision_safe",
+						"material:reinforced_plastic"
+					]
+				},
+				"transmitter_dish_blink": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"world:asteroid_redoubt",
+						"tile",
+						"animated_prop",
+						"decorative"
+					]
 				}
 			}
 		},
@@ -1694,6 +2047,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -1702,6 +2059,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -1710,6 +2071,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -1718,6 +2083,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -1726,6 +2095,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -1735,6 +2108,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -1743,6 +2120,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -1766,6 +2147,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -1774,6 +2159,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -1782,6 +2171,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -1790,6 +2183,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -1798,6 +2195,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -1807,6 +2208,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -1815,6 +2220,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -1831,6 +2240,7 @@
 			"sourceChapter": "ch01_lower_sprawl",
 			"sourceModelName": "BOSS_CAPTAIN_GRIN_TOLLMECH",
 			"sourcePrompt": "tollbooth captain boss; smiling official in toll booth exosuit, barrier arms as weapons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 29,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -1839,6 +2249,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -1847,6 +2261,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -1855,6 +2273,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -1863,6 +2285,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -1871,6 +2297,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -1880,6 +2310,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -1888,6 +2322,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -1896,6 +2334,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -1904,6 +2346,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -1912,6 +2358,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -1920,6 +2370,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -1943,6 +2397,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -1951,6 +2409,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -1959,6 +2421,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -1967,6 +2433,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -1975,6 +2445,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -1984,6 +2458,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -1992,6 +2470,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2008,6 +2490,7 @@
 			"sourceChapter": "ch02_drainmarket",
 			"sourceModelName": "ENM_CLINIC_REPO_BRUISER",
 			"sourcePrompt": "clinic repo thug; rat bruiser with clipboard shield and medical-debt armor; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 12,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -2015,6 +2498,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2023,6 +2510,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2031,6 +2522,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2039,6 +2534,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2047,6 +2546,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2056,6 +2559,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2064,6 +2571,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2080,6 +2591,7 @@
 			"sourceChapter": "ch02_drainmarket",
 			"sourceModelName": "BOSS_KNIFE_DRONE_NEST",
 			"sourcePrompt": "knife drone nest boss; giant nest of scalpels, syringes, fan blades, clinic receipts; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 30,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -2088,6 +2600,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -2096,6 +2612,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -2104,6 +2624,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -2112,6 +2636,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -2120,6 +2648,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -2129,6 +2661,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -2137,6 +2673,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -2145,6 +2685,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -2153,6 +2697,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -2161,6 +2709,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -2169,6 +2721,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -2192,6 +2748,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2200,6 +2760,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2208,6 +2772,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2216,6 +2784,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2224,6 +2796,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2233,6 +2809,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2241,6 +2821,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2257,6 +2841,7 @@
 			"sourceChapter": "ch03_chrome_arcology",
 			"sourceModelName": "ENM_MIRROR_SENTINEL",
 			"sourcePrompt": "mirror sentinel robot; faceless reflective torso, prism spear, gold trim; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 16,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -2264,6 +2849,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2272,6 +2861,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2280,6 +2873,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2288,6 +2885,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2296,6 +2897,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2305,6 +2910,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2313,6 +2922,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2329,6 +2942,7 @@
 			"sourceChapter": "ch03_chrome_arcology",
 			"sourceModelName": "BOSS_MADAME_VITRINE_GLASSCOURT",
 			"sourcePrompt": "Madame Vitrine boss; glass-armored executive with mirror fan blades and contract ribbons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 31,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -2337,6 +2951,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -2345,6 +2963,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -2353,6 +2975,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -2361,6 +2987,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -2369,6 +2999,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -2378,6 +3012,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -2386,6 +3024,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -2394,6 +3036,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -2402,6 +3048,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -2410,6 +3060,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -2418,6 +3072,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -2441,6 +3099,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2449,6 +3111,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2457,6 +3123,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2465,6 +3135,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2473,6 +3147,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2482,6 +3160,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2490,6 +3172,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2513,6 +3199,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2521,6 +3211,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2529,6 +3223,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2537,6 +3235,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2545,6 +3247,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2554,6 +3260,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2562,6 +3272,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2578,6 +3292,7 @@
 			"sourceChapter": "ch04_straylight_mirage",
 			"sourceModelName": "BOSS_REFLECTION_JUDGE_COURT",
 			"sourcePrompt": "Reflection Judge boss; black glass judge with mask halo and cracked mirror robe; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 32,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -2586,6 +3301,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -2594,6 +3313,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -2602,6 +3325,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -2610,6 +3337,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -2618,6 +3349,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -2627,6 +3362,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -2635,6 +3374,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -2643,6 +3386,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -2651,6 +3398,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -2659,6 +3410,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -2667,6 +3422,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -2690,6 +3449,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2698,6 +3461,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2706,6 +3473,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2714,6 +3485,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2722,6 +3497,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2731,6 +3510,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2739,6 +3522,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2755,6 +3542,7 @@
 			"sourceChapter": "ch05_dub_colony",
 			"sourceModelName": "ENM_FEEDBACK_GUARD",
 			"sourcePrompt": "colony feedback guard; speaker shield, emergency badge, conflicted posture; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 22,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -2762,6 +3550,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2770,6 +3562,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2778,6 +3574,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2786,6 +3586,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2794,6 +3598,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2803,6 +3611,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2811,6 +3623,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -2827,6 +3643,7 @@
 			"sourceChapter": "ch05_dub_colony",
 			"sourceModelName": "BOSS_KING_FEEDBACK_AMPTHRONE",
 			"sourcePrompt": "King Feedback boss; speaker armor, cable crown, amp throne, anxious eyes; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 51,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -2835,6 +3652,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -2843,6 +3664,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -2851,6 +3676,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -2859,6 +3688,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -2867,6 +3700,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -2876,6 +3713,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -2884,6 +3725,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -2892,6 +3737,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -2900,6 +3749,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -2908,6 +3761,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -2916,6 +3773,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -2939,6 +3800,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -2947,6 +3812,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -2955,6 +3824,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -2963,6 +3836,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -2971,6 +3848,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -2980,6 +3861,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -2988,6 +3873,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3011,6 +3900,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -3019,6 +3912,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -3027,6 +3924,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -3035,6 +3936,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -3043,6 +3948,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -3052,6 +3961,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -3060,6 +3973,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3076,6 +3993,7 @@
 			"sourceChapter": "ch06_antenna_barrens",
 			"sourceModelName": "BOSS_BLACK_ICE_FOX_NODE",
 			"sourcePrompt": "Black-Ice Fox boss; silver fox with black crystalline code tails and frost pixels; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 50,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -3084,6 +4002,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -3092,6 +4014,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -3100,6 +4026,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -3108,6 +4038,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -3116,6 +4050,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -3125,6 +4063,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -3133,6 +4075,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -3141,6 +4087,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -3149,6 +4099,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -3157,6 +4111,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -3165,6 +4123,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -3181,6 +4143,7 @@
 			"sourceChapter": "ch07_orbital_lift",
 			"sourceModelName": "ENM_CUSTOMS_LANCER",
 			"sourcePrompt": "orbital customs lancer; white armor, blue scanner visor, long scan-lance; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 25,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -3188,6 +4151,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -3196,6 +4163,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -3204,6 +4175,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -3212,6 +4187,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -3220,6 +4199,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -3229,6 +4212,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -3237,6 +4224,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3260,6 +4251,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -3268,6 +4263,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -3276,6 +4275,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -3284,6 +4287,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -3292,6 +4299,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -3301,6 +4312,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -3309,6 +4324,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3325,6 +4344,7 @@
 			"sourceChapter": "ch07_orbital_lift",
 			"sourceModelName": "BOSS_ELEVATOR_ANGEL_COUNTERWEIGHT",
 			"sourcePrompt": "Elevator Angel boss; white-gold lift AI with cable wings and cargo hook hands; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 35,
 			"phaseCount": 3,
 			"animations": {
 				"idle": {
@@ -3333,6 +4353,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -3341,6 +4365,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -3349,6 +4377,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -3357,6 +4389,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -3365,6 +4401,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -3374,6 +4414,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -3382,6 +4426,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -3390,6 +4438,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -3398,6 +4450,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -3406,6 +4462,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -3414,6 +4474,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -3425,11 +4489,12 @@
 				48,
 				48
 			],
-			"world": "asteroid_redoubt_final_broadcast",
+			"world": "asteroid_redoubt",
 			"role": "enemy",
 			"sourceChapter": "ch08_asteroid_redoubt",
 			"sourceModelName": "ENM_VANE_AIR_BAILIFF",
 			"sourcePrompt": "air bailiff enemy; jackal officer with oxygen meter staff and gold ledger mask; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 27,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -3437,6 +4502,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -3445,6 +4514,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -3453,6 +4526,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -3461,6 +4538,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -3469,6 +4550,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -3478,6 +4563,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -3486,6 +4575,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3497,11 +4590,12 @@
 				48,
 				48
 			],
-			"world": "asteroid_redoubt_final_broadcast",
+			"world": "asteroid_redoubt",
 			"role": "enemy",
 			"sourceChapter": "ch08_asteroid_redoubt",
 			"sourceModelName": "ENM_COMMAND_LOCK_PARTISAN",
 			"sourcePrompt": "rebel command-lock enemy; emergency armor, red cable armband, worried face; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 28,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -3509,6 +4603,10 @@
 					"tags": [
 						"enemy",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"patrol_or_move": {
@@ -3517,6 +4615,10 @@
 					"tags": [
 						"enemy",
 						"movement"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"windup": {
@@ -3525,6 +4627,10 @@
 					"tags": [
 						"enemy",
 						"telegraph"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"attack": {
@@ -3533,6 +4639,10 @@
 					"tags": [
 						"enemy",
 						"attack"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hurt": {
@@ -3541,6 +4651,10 @@
 					"tags": [
 						"enemy",
 						"damage"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"stun_or_parried": {
@@ -3550,6 +4664,10 @@
 						"enemy",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death": {
@@ -3558,6 +4676,10 @@
 					"tags": [
 						"enemy",
 						"death"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3569,11 +4691,12 @@
 				96,
 				96
 			],
-			"world": "asteroid_redoubt_final_broadcast",
+			"world": "asteroid_redoubt",
 			"role": "boss",
 			"sourceChapter": "ch08_asteroid_redoubt",
 			"sourceModelName": "BOSS_DIRECTOR_VANE_SKYLOCK",
 			"sourcePrompt": "Director Vane final boss; wolf executive with air-lock halo, gold ledger spine, code ribbons; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 36,
 			"phaseCount": 5,
 			"animations": {
 				"idle": {
@@ -3582,6 +4705,10 @@
 					"tags": [
 						"boss",
 						"idle"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"patrol_or_move": {
@@ -3590,6 +4717,10 @@
 					"tags": [
 						"boss",
 						"movement"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"windup": {
@@ -3598,6 +4729,10 @@
 					"tags": [
 						"boss",
 						"telegraph"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"attack": {
@@ -3606,6 +4741,10 @@
 					"tags": [
 						"boss",
 						"attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"hurt": {
@@ -3614,6 +4753,10 @@
 					"tags": [
 						"boss",
 						"damage"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"stun_or_parried": {
@@ -3623,6 +4766,10 @@
 						"boss",
 						"stun",
 						"parry_response"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"death": {
@@ -3631,6 +4778,10 @@
 					"tags": [
 						"boss",
 						"death"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_intro": {
@@ -3639,6 +4790,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"phase_transition": {
@@ -3647,6 +4802,10 @@
 					"tags": [
 						"boss",
 						"phase"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"signature_attack": {
@@ -3655,6 +4814,10 @@
 					"tags": [
 						"boss",
 						"signature_attack"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				},
 				"defeat": {
@@ -3663,6 +4826,10 @@
 					"tags": [
 						"boss",
 						"defeat"
+					],
+					"anchor": [
+						48,
+						88
 					]
 				}
 			}
@@ -3688,6 +4855,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -3697,6 +4868,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -3706,6 +4881,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -3715,6 +4894,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -3724,6 +4907,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3741,6 +4928,7 @@
 			"sourceName": "Juno Jar",
 			"sourceRole": "pipe kid map-runner",
 			"sourcePrompt": "rat child map-runner; oversized rain poncho, chalk tube, muddy boots; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 77,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -3749,6 +4937,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -3758,6 +4950,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -3767,6 +4963,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -3776,6 +4976,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -3785,6 +4989,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3810,6 +5018,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -3819,6 +5031,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -3828,6 +5044,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -3837,6 +5057,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -3846,6 +5070,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3863,6 +5091,7 @@
 			"sourceName": "Dr. Mina Suture",
 			"sourceRole": "back-alley medic",
 			"sourcePrompt": "mole medic; headlamp goggles, patched white coat, stim belt; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 76,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -3871,6 +5100,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -3880,6 +5113,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -3889,6 +5126,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -3898,6 +5139,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -3907,6 +5152,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3932,6 +5181,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -3941,6 +5194,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -3950,6 +5207,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -3959,6 +5220,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -3968,6 +5233,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -3993,6 +5262,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4002,6 +5275,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4011,6 +5288,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4020,6 +5301,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4029,6 +5314,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4054,6 +5343,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4063,6 +5356,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4072,6 +5369,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4081,6 +5382,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4090,6 +5395,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4107,6 +5416,7 @@
 			"sourceName": "Madame Vitrine",
 			"sourceRole": "arcology contract boss",
 			"sourcePrompt": "mink executive boss; mirror-glass gown armor, gold contract fans; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 52,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4115,6 +5425,10 @@
 						"npc_boss_context",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4124,6 +5438,10 @@
 						"npc_boss_context",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4133,6 +5451,10 @@
 						"npc_boss_context",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4142,6 +5464,10 @@
 						"npc_boss_context",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4151,6 +5477,10 @@
 						"npc_boss_context",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4168,6 +5498,7 @@
 			"sourceName": "Lio",
 			"sourceRole": "old ally, pressured betrayer",
 			"sourcePrompt": "fox courier in banquet mask; scarf hiding debt collar, formal jacket over torn courier gear; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 47,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4176,6 +5507,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4185,6 +5520,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4194,6 +5533,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4203,6 +5546,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4212,6 +5559,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4237,6 +5588,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4246,6 +5601,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4255,6 +5614,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4264,6 +5627,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4273,6 +5640,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4290,6 +5661,7 @@
 			"sourceName": "Reflection Judge",
 			"sourceRole": "courtroom boss",
 			"sourcePrompt": "black glass judge boss; orbiting witness masks, gavel sword, constellation halo; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 32,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4298,6 +5670,10 @@
 						"npc_boss_context",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4307,6 +5683,10 @@
 						"npc_boss_context",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4316,6 +5696,10 @@
 						"npc_boss_context",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4325,6 +5709,10 @@
 						"npc_boss_context",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4334,6 +5722,10 @@
 						"npc_boss_context",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4359,6 +5751,10 @@
 						"companion",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4368,6 +5764,10 @@
 						"companion",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4377,6 +5777,10 @@
 						"companion",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4386,6 +5790,10 @@
 						"companion",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4395,6 +5803,10 @@
 						"companion",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4412,6 +5824,7 @@
 			"sourceName": "King Feedback",
 			"sourceRole": "security leader and rebel boss",
 			"sourcePrompt": "rebel amp commander; speaker armor, cable crown, microphone mace; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 51,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4420,6 +5833,10 @@
 						"npc_boss_context",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4429,6 +5846,10 @@
 						"npc_boss_context",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4438,6 +5859,10 @@
 						"npc_boss_context",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4447,6 +5872,10 @@
 						"npc_boss_context",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4456,6 +5885,10 @@
 						"npc_boss_context",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4473,6 +5906,7 @@
 			"sourceName": "Little Ix",
 			"sourceRole": "child tinkerer",
 			"sourcePrompt": "squirrel child tinkerer; goggles, soldering toy robot, oversize headphones; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 49,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4481,6 +5915,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4490,6 +5928,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4499,6 +5941,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4508,6 +5954,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4517,6 +5967,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4534,6 +5988,7 @@
 			"sourceName": "Mara Modulo",
 			"sourceRole": "public cryptography teacher",
 			"sourcePrompt": "lizard squat hacker; sun-faded hoodie, chalkboard backpack, antenna piercings; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 78,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4542,6 +5997,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4551,6 +6010,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4560,6 +6023,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4569,6 +6036,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4578,6 +6049,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4595,6 +6070,7 @@
 			"sourceName": "Black-Ice Fox",
 			"sourceRole": "elite hacker boss",
 			"sourcePrompt": "silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 50,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4603,6 +6079,10 @@
 						"npc_boss_context",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4612,6 +6092,10 @@
 						"npc_boss_context",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4621,6 +6105,10 @@
 						"npc_boss_context",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4630,6 +6118,10 @@
 						"npc_boss_context",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4639,6 +6131,10 @@
 						"npc_boss_context",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4664,6 +6160,10 @@
 						"merchant",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4673,6 +6173,10 @@
 						"merchant",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4682,6 +6186,10 @@
 						"merchant",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4691,6 +6199,10 @@
 						"merchant",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4700,6 +6212,10 @@
 						"merchant",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4717,6 +6233,7 @@
 			"sourceName": "Elevator Angel",
 			"sourceRole": "obedient logistics boss",
 			"sourcePrompt": "white gold lift machine; cable wings, scanner halo, cargo-hook hands; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 35,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4725,6 +6242,10 @@
 						"npc_boss_context",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4734,6 +6255,10 @@
 						"npc_boss_context",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4743,6 +6268,10 @@
 						"npc_boss_context",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4752,6 +6281,10 @@
 						"npc_boss_context",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4761,6 +6294,10 @@
 						"npc_boss_context",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4772,12 +6309,13 @@
 				48,
 				48
 			],
-			"world": "asteroid_redoubt_final_broadcast",
+			"world": "asteroid_redoubt",
 			"role": "npc",
 			"sourceChapter": "ch08_asteroid_redoubt",
 			"sourceName": "Director Vane",
 			"sourceRole": "final antagonist",
 			"sourcePrompt": "wolf executive final boss; black-white orbital suit, gold ledger spine, air-lock halo; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 53,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4786,6 +6324,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4795,6 +6337,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4804,6 +6350,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4813,6 +6363,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4822,6 +6376,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}
@@ -4833,12 +6391,13 @@
 				48,
 				48
 			],
-			"world": "asteroid_redoubt_final_broadcast",
+			"world": "asteroid_redoubt",
 			"role": "npc",
 			"sourceChapter": "ch08_asteroid_redoubt",
 			"sourceName": "Command Lock Faction",
 			"sourceRole": "internal rebel antagonist",
 			"sourcePrompt": "worried rebel faction; emergency armor, red cable armbands, speaker badges; 2D side-scrolling platformer asset; strong readable silhouette; chunky pixel-paint texture; cyber-noir dub-punk palette; game-ready; transparent background unless a background.",
+			"sourceImageNo": 54,
 			"animations": {
 				"idle": {
 					"frames": 4,
@@ -4847,6 +6406,10 @@
 						"npc",
 						"character",
 						"idle"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"talk": {
@@ -4856,6 +6419,10 @@
 						"npc",
 						"character",
 						"dialogue"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"assist": {
@@ -4865,6 +6432,10 @@
 						"npc",
 						"character",
 						"assist"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"react": {
@@ -4874,6 +6445,10 @@
 						"npc",
 						"character",
 						"react"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"exit": {
@@ -4883,6 +6458,10 @@
 						"npc",
 						"character",
 						"exit"
+					],
+					"anchor": [
+						24,
+						44
 					]
 				}
 			}

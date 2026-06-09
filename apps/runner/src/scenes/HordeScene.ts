@@ -42,7 +42,7 @@ export class HordeScene implements Scene {
 
 	onEnter(ctx: SceneContext): void {
 		console.log('HordeScene entered');
-		this.renderer = ctx.renderer as Renderer;
+		this.renderer = ctx.renderer;
 
 		// Start first wave after brief delay
 		setTimeout(() => {
@@ -127,8 +127,7 @@ export class HordeScene implements Scene {
 		this.input.clearPressed();
 	}
 
-	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
+	render(rend: Renderer, alpha: number): void {
 		const cam = this.camera.getState();
 
 		// Render scene

@@ -203,8 +203,8 @@ export class StoryFlowScene implements Scene {
 
 	update(_dt: number): void {}
 
-	render(renderer: unknown, _alpha: number): void {
-		const maybeRenderer = renderer as Renderer;
+	render(renderer: Renderer, _alpha: number): void {
+		const maybeRenderer = renderer;
 		const ctx = maybeRenderer.getContext?.();
 		if (!ctx) return;
 

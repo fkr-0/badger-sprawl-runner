@@ -68,9 +68,9 @@ function drawFrame(pixels, width, height, sheet, label, frame, x, y) {
 	const [fw, fh] = sheet.frameSize;
 	const fill = colorFor(`${sheet.id}:${label}:${frame}`);
 	fillRect(pixels, width, height, x, y, fw, fh, fill);
-	strokeRect(pixels, width, height, x, y, fw, fh, [255, 255, 255, 130]);
-	fillRect(pixels, width, height, x + 2, y + 2, Math.min(12, fw - 4), Math.min(12, fh - 4), [255, 255, 255, 80]);
-	fillRect(pixels, width, height, x + fw - 5, y + fh - 5, 3, 3, [0, 0, 0, 180]);
+	strokeRect(pixels, width, height, x, y, fw, fh, [255, 255, 255, 60]);
+	fillRect(pixels, width, height, x + 2, y + 2, Math.min(12, fw - 4), Math.min(12, fh - 4), [255, 255, 255, 40]);
+	fillRect(pixels, width, height, x + fw - 5, y + fh - 5, 3, 3, [0, 0, 0, 120]);
 }
 
 function encodePng(width, height, pixels) {

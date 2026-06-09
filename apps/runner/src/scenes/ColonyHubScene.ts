@@ -22,7 +22,7 @@ export class ColonyHubScene implements Scene {
 
 	onEnter(ctx: SceneContext): void {
 		console.log('ColonyHubScene entered');
-		this.renderer = ctx.renderer as Renderer;
+		this.renderer = ctx.renderer;
 		this.metaState = loadMeta();
 
 		// Initialize fresh state if none exists
@@ -74,8 +74,7 @@ export class ColonyHubScene implements Scene {
 		// Hub interaction is handled in render via keyboard events
 	}
 
-	render(renderer: unknown, alpha: number): void {
-		const rend = renderer as Renderer;
+	render(rend: Renderer, alpha: number): void {
 		const ctx = rend.getContext();
 
 		// Clear and draw background

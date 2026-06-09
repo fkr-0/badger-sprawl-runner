@@ -1,3 +1,4 @@
+import type { Renderer } from '../renderer/Renderer';
 /**
  * TrainingScene - lightweight practice mode scene backed by TrainingMode state.
  */
@@ -56,7 +57,7 @@ export class TrainingScene implements Scene {
 		this.training.recordHit({ action, damage });
 	}
 
-	render(renderer: unknown, _alpha: number): void {
+	render(renderer: Renderer, _alpha: number): void {
 		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D };
 		const ctx = maybeRenderer.getContext?.();
 		if (!ctx) return;

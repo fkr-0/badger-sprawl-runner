@@ -94,3 +94,4 @@ badger-sprawl-runner/
 - `docs/MINIGAMES.md` — code gate and heist minigame design.
 - `docs/ROADMAP.md` — broader post-v1 project roadmap.
 - `docs/story-flavour.yml` — comprehensive story content pack with dialogue, characters, chapters, and sprite generation prompts.
+- `docs/visual-soundscapes/` — ambient lo-fi soundtrack sub-project deriving a half-hour suite from the main Badger/Moss motif.
