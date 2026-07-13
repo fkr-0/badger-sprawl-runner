@@ -59,9 +59,19 @@ import {
 	type LowerSprawlHazardSnapshot,
 	LowerSprawlHazardSystem,
 } from '../systems/LowerSprawlHazardSystem';
+import {
+	type LowerSprawlEnemyEvent,
+	LowerSprawlEnemySystem,
+} from '../systems/LowerSprawlEnemySystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import type { Platform } from '../systems/PhysicsSystem';
 import { applyRuntimeItemEffectsToCombatEntity } from '../systems/RuntimeItemApplier';
+import {
+	LOWER_SPRAWL_CHECKPOINTS,
+	StageCheckpointSystem,
+	type StageCheckpointEvent,
+	type StageCheckpointSnapshot,
+} from '../systems/StageCheckpointSystem';
 import { type RuntimeStageId, cloneStageLayout } from '../world/stageLayoutRegistry';
 
 export interface RuntimeTutorialBeat {
@@ -107,6 +117,8 @@ export class StageRunScene implements Scene {
 	private bossPhases: BossPhaseSystem;
 	private readonly captainGrin: CaptainGrinController | null;
 	private readonly lowerSprawlHazards: LowerSprawlHazardSystem | null;
+	private readonly lowerSprawlEnemies: LowerSprawlEnemySystem | null;
+	private readonly checkpoints: StageCheckpointSystem | null;
 	private encounterGenerator = new EncounterGenerator();
 	private inventory = new InventorySystem(FIRST_RELEASE_ITEM_CATALOG);
 	private loadoutSummary: LoadoutSummary = this.inventory.buildLoadoutSummary();
@@ -148,6 +160,12 @@ export class StageRunScene implements Scene {
 		this.captainGrin = options.stageId === 'lower-sprawl' ? new CaptainGrinController() : null;
 		this.lowerSprawlHazards =
 			options.stageId === 'lower-sprawl' ? new LowerSprawlHazardSystem() : null;
+		this.lowerSprawlEnemies =
+			options.stageId === 'lower-sprawl' ? new LowerSprawlEnemySystem() : null;
+		this.checkpoints =
+			options.stageId === 'lower-sprawl'
+				? new StageCheckpointSystem(LOWER_SPRAWL_CHECKPOINTS)
+				: null;
 		this.player = createPlayer();
 		this.player.unlockedSkills = [...(options.unlockedSkills ?? [])];
 		// Initialize animation state
@@ -157,7 +175,11 @@ export class StageRunScene implements Scene {
 		this.inventory.addItem('claws');
 		this.inventory.equip('claws');
 		this.refreshLoadout();
+		this.player.checkpointLabel = this.checkpoints?.getSnapshot().activeLabel;
+		this.player.hudToast = options.stageId === 'lower-sprawl' ? 'Follow the public route' : undefined;
+		this.player.hudToastTimer = options.stageId === 'lower-sprawl' ? 2.6 : 0;
 		this.initWorld();
+		this.updateGameplayHints();
 	}
 
 	private collectLoadoutPickup(pickup: Pickup): void {

@@ -4,7 +4,7 @@
  */
 
 import type { Entity } from '../systems/PhysicsSystem';
-import type { CombatEntity, CombatSystem } from '../systems/CombatSystem';
+import type { CombatEntity, CombatEvents, CombatSystem } from '../systems/CombatSystem';
 import type { ActionMap } from '../systems/InputSystem';
 import type { AnimationState } from '../renderer/AnimationState';
 
@@ -28,6 +28,14 @@ export interface Player extends Entity, CombatEntity {
 	comboCount?: number;
 	comboTimer?: number;
 	animState?: AnimationState;
+	hudToast?: string;
+	hudToastTimer?: number;
+	objectiveHint?: string;
+	loadoutHint?: string;
+	checkpointLabel?: string;
+	contextHint?: string;
+	damageFlash?: number;
+	healFlash?: number;
 }
 
 export function createPlayer(): Player {
@@ -72,24 +80,27 @@ export function processMossInput(
 	actionMap: ActionMap,
 	dt: number,
 	combatSystem: Pick<CombatSystem, 'melee'>,
-	enemies: CombatEntity[] = []
+	enemies: CombatEntity[] = [],
+	combatEvents?: CombatEvents
 ): void {
+	const canAct = player.stun <= 0;
+
 	// Melee
-	if (actionMap.meleePressed && player.meleeTimer <= 0) {
+	if (canAct && actionMap.meleePressed && player.meleeTimer <= 0) {
 		player.meleeTimer = player.hasKatana ? 0.28 : 0.18;
 		player.combo = player.hasKatana ? 'katana' : 'claws';
-		combatSystem.melee(player, enemies, player.combo);
+		combatSystem.melee(player, enemies, player.combo, combatEvents);
 	}
 
 	// Shoot
-	if (actionMap.shootPressed && player.hasRailgun && player.shootCd <= 0) {
+	if (canAct && actionMap.shootPressed && player.hasRailgun && player.shootCd <= 0) {
 		player.shootCd = 0.72;
 		// Create projectile
 		console.log('Railgun fired');
 	}
 
 	// Item use
-	if (actionMap.itemPressed) {
+	if (canAct && actionMap.itemPressed) {
 		if (player.hasRocket && player.fuel > 0 && player.boostCd <= 0) {
 			player.fuel--;
 			player.boostCd = 0.35;

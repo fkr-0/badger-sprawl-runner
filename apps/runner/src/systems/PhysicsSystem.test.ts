@@ -66,4 +66,51 @@ describe('PhysicsSystem grounded support', () => {
 		}
 		expect(player.x).toBeGreaterThan(100);
 	});
+
+	it('applies jump release only once for a controllable short hop', () => {
+		const physics = new PhysicsSystem();
+		const player = groundedPlayer();
+		const platforms: Platform[] = [{ x: 0, y: 494, w: 400, h: 80 }];
+		physics.step(
+			player,
+			platforms,
+			{ ...IDLE_ACTION, jump: true, jumpPressed: true },
+			1 / 60
+		);
+		expect(player.onGround).toBe(false);
+
+		physics.step(player, platforms, IDLE_ACTION, 1 / 60);
+		const firstReleaseVy = player.vy;
+		physics.step(player, platforms, IDLE_ACTION, 1 / 60);
+
+		expect(player.jumpCutApplied).toBe(true);
+		expect(firstReleaseVy).toBeGreaterThanOrEqual(-250);
+		expect(player.vy).toBeLessThan(-150);
+	});
+
+	it('uses a reduced gravity band around the jump apex', () => {
+		const physics = new PhysicsSystem();
+		const player = groundedPlayer();
+		Object.assign(player, { y: 300, vy: 0, onGround: false });
+
+		physics.step(player, [], IDLE_ACTION, 1 / 60);
+
+		expect(player.nearApex).toBe(true);
+		expect(player.vy).toBeGreaterThan(0);
+		expect(player.vy).toBeLessThan(25);
+	});
+
+	it('brakes quickly when reversing direction on the ground', () => {
+		const physics = new PhysicsSystem();
+		const player = groundedPlayer();
+		player.vx = 285;
+		physics.step(
+			player,
+			[{ x: 0, y: 494, w: 400, h: 80 }],
+			{ ...IDLE_ACTION, moveLeft: true },
+			1 / 60
+		);
+
+		expect(player.vx).toBeLessThan(170);
+	});
 });

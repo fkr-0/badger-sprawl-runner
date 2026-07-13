@@ -1,11 +1,10 @@
 /**
- * Physics system: integrates platformer-core package with game entities
- * State-of-the-art platformer physics with coyote time, jump buffering,
- * variable jump height, air control, and squash/stretch
+ * Physics system: integrates platformer-core package with game entities.
+ * Adds game-feel tuning around the deterministic core: buffered/coyote jumps,
+ * one-shot jump cutting, apex hang, responsive direction changes and dodge momentum.
  */
 
-import { aabb, coyoteStep, gravityStep, movementStep, platformStep } from '@badger/platformer-core';
-import { defaultParams } from '@badger/platformer-core';
+import { coyoteStep, defaultParams, gravityStep, movementStep, platformStep } from '@badger/platformer-core';
 import type { ActionMap } from './InputSystem';
 
 export interface Entity {
@@ -37,13 +36,15 @@ export interface Entity {
 	airControlMultiplier?: number;
 	maxFallSpeedBonus?: number;
 
-	// Visual juice properties
+	// Game-feel and presentation state.
 	scaleX?: number;
 	scaleY?: number;
 	squashTime?: number;
 	wasOnGround?: boolean;
 	justJumped?: boolean;
 	justLanded?: boolean;
+	jumpCutApplied?: boolean;
+	nearApex?: boolean;
 }
 
 export interface Platform {
@@ -57,11 +58,26 @@ export interface PhysicsEvents {
 	onJump?: () => void;
 	onLand?: (fallDistance: number) => void;
 	onCoyoteJump?: () => void;
+	onApex?: () => void;
+}
+
+const SUPPORT_EPSILON = 2;
+const APEX_VELOCITY = 92;
+const APEX_GRAVITY_MULTIPLIER = 0.58;
+const FALL_GRAVITY_MULTIPLIER = 1.08;
+const TURN_ACCEL_MULTIPLIER_GROUND = 1.38;
+const TURN_ACCEL_MULTIPLIER_AIR = 1.18;
+const JUMP_CUT_MULTIPLIER = 0.48;
+const JUMP_CUT_MIN_UPWARD_SPEED = -250;
+const DODGE_MAX_SPEED = 440;
+const DODGE_FRICTION = 850;
+
+function stunTime(entity: Entity): number {
+	return (entity as Entity & { stun?: number }).stun ?? 0;
 }
 
 export class PhysicsSystem {
 	private maxHeightY = 0;
-	private static readonly SUPPORT_EPSILON = 2;
 
 	step(
 		player: Entity,
@@ -70,36 +86,66 @@ export class PhysicsSystem {
 		dt: number,
 		events?: PhysicsEvents
 	): void {
+		if (!Number.isFinite(dt) || dt < 0) throw new Error(`Invalid physics dt: ${dt}`);
 		const wasOnGround = player.onGround;
-		const prevY = player.y;
+		const wasNearApex = player.nearApex ?? false;
 
-		// Initialize juice properties
-		if (player.scaleX === undefined) player.scaleX = 1;
-		if (player.scaleY === undefined) player.scaleY = 1;
-		if (player.squashTime === undefined) player.squashTime = 0;
-		if (player.wasOnGround === undefined) player.wasOnGround = wasOnGround;
-		if (player.justJumped === undefined) player.justJumped = false;
-		if (player.justLanded === undefined) player.justLanded = false;
-
-		// Reset flags
+		this.initializeFeelState(player, wasOnGround);
 		player.justJumped = false;
 		player.justLanded = false;
 
-		// Jump buffering - small window to queue jump input
-		if (action.jumpPressed) {
+		const stunned = stunTime(player) > 0;
+		if (action.jumpPressed && !stunned) {
 			player.jumpBuffered = defaultParams.jumpBuffer;
 		}
 
-		// Horizontal input with deadzone for precision
-		const axisInput = (action.moveRight ? 1 : 0) - (action.moveLeft ? 1 : 0);
+		const rawAxisInput = (action.moveRight ? 1 : 0) - (action.moveLeft ? 1 : 0);
+		const axisInput = stunned || player.isDodging ? 0 : rawAxisInput;
 		if (axisInput !== 0) player.dir = axisInput;
 
-		// Enhanced movement with better air control
+		const canCoyoteJump = player.coyoteLeft > 0 && !player.onGround;
+		if (player.jumpBuffered > 0 && (player.onGround || canCoyoteJump) && !stunned) {
+			player.vy = defaultParams.jumpVelocity;
+			player.onGround = false;
+			player.coyoteLeft = 0;
+			player.jumpBuffered = 0;
+			player.jumpCutApplied = false;
+			player.justJumped = true;
+			player.scaleX = 0.76;
+			player.scaleY = 1.34;
+			player.squashTime = 0.12;
+			this.maxHeightY = player.y;
+			if (canCoyoteJump) events?.onCoyoteJump?.();
+			else events?.onJump?.();
+		}
+
+		const reversing = axisInput !== 0 && Math.sign(player.vx) !== 0 && Math.sign(player.vx) !== axisInput;
+		if (reversing) player.vx *= player.onGround ? 0.86 : 0.95;
+
+		const nearApex = !player.onGround && Math.abs(player.vy) <= APEX_VELOCITY;
+		player.nearApex = nearApex;
+		if (nearApex && !wasNearApex) events?.onApex?.();
+
+		const gravityMultiplier = nearApex
+			? APEX_GRAVITY_MULTIPLIER
+			: player.vy > 0
+				? FALL_GRAVITY_MULTIPLIER
+				: 1;
 		const runtimeParams = {
 			...defaultParams,
-			runAccelAir: defaultParams.runAccelAir * (player.airControlMultiplier ?? 1),
+			gravity: defaultParams.gravity * gravityMultiplier,
+			runAccelGround:
+				defaultParams.runAccelGround * (reversing ? TURN_ACCEL_MULTIPLIER_GROUND : 1),
+			runAccelAir:
+				defaultParams.runAccelAir *
+				(player.airControlMultiplier ?? 1) *
+				(reversing ? TURN_ACCEL_MULTIPLIER_AIR : 1),
+			friction: player.isDodging ? DODGE_FRICTION : defaultParams.friction,
+			maxRunSpeed: player.isDodging ? DODGE_MAX_SPEED : defaultParams.maxRunSpeed,
 			maxFallSpeed: defaultParams.maxFallSpeed + (player.maxFallSpeedBonus ?? 0),
 		};
+
+		const travelVy = player.vy;
 		const movementResult = movementStep({
 			vx: player.vx,
 			vy: player.vy,
@@ -107,54 +153,26 @@ export class PhysicsSystem {
 			y: player.y,
 			onGround: player.onGround,
 			axisInput,
-			isFastFalling: action.fastFall,
+			isFastFalling: action.fastFall && !stunned,
 			params: runtimeParams,
 			dt,
 		});
 		Object.assign(player, movementResult);
-
-		// Gravity
 		player.vy = gravityStep(player.vy, runtimeParams, dt);
 
-		// Coyote jump - can jump shortly after leaving platform
-		const canCoyoteJump = player.coyoteLeft > 0 && !player.onGround;
-
-		// Execute jump
-		if (player.jumpBuffered > 0 && (player.onGround || canCoyoteJump)) {
-			player.vy = defaultParams.jumpVelocity;
-			player.onGround = false;
-			player.coyoteLeft = 0;
-			player.jumpBuffered = 0;
-			player.justJumped = true;
-
-			// Jump squash and stretch
-			player.scaleX = 0.75;
-			player.scaleY = 1.35;
-			player.squashTime = 0.12;
-
-			if (canCoyoteJump) {
-				events?.onCoyoteJump?.();
-			} else {
-				events?.onJump?.();
-			}
-
-			// Track max height for fall damage calculation
-			this.maxHeightY = player.y;
+		if (
+			!action.jump &&
+			player.vy < JUMP_CUT_MIN_UPWARD_SPEED &&
+			!player.jumpCutApplied &&
+			!player.onGround
+		) {
+			player.vy = Math.max(player.vy * JUMP_CUT_MULTIPLIER, JUMP_CUT_MIN_UPWARD_SPEED);
+			player.jumpCutApplied = true;
 		}
 
-		// Variable jump height - holding jump goes higher
-		const jumpReleaseThreshold = defaultParams.jumpVelocity * defaultParams.variableJumpCut;
-		if (!action.jump && player.vy < jumpReleaseThreshold) {
-			player.vy *= 0.52; // Quick velocity cut for snappy feel
-		}
+		if (!player.onGround && !player.isDodging) player.vx *= 0.994;
 
-		// Air damping - slight horizontal resistance in air for control
-		if (!player.onGround) {
-			player.vx *= 0.992;
-		}
-
-		// Platform collision with one-way support
-		const prevVy = player.vy - defaultParams.gravity * dt;
+		const impactVelocity = player.vy;
 		const platformResult = platformStep({
 			x: player.x,
 			y: player.y,
@@ -162,7 +180,7 @@ export class PhysicsSystem {
 			h: player.h,
 			vx: player.vx,
 			vy: player.vy,
-			prevVy,
+			prevVy: travelVy,
 			dt,
 			platforms,
 			coyoteTime: defaultParams.coyote,
@@ -175,40 +193,34 @@ export class PhysicsSystem {
 			return (
 				horizontallySupported &&
 				player.vy >= 0 &&
-				Math.abs(bottom - platform.y) <= PhysicsSystem.SUPPORT_EPSILON
+				Math.abs(bottom - platform.y) <= SUPPORT_EPSILON
 			);
 		});
 
 		if (platformResult.onGround || support) {
-			if (!player.onGround) {
-				// Just landed
-				const fallDistance = player.y - this.maxHeightY;
+			if (!wasOnGround) {
+				const fallDistance = Math.max(0, player.y - this.maxHeightY);
 				player.justLanded = true;
-
-				// Landing squash based on impact velocity
-				const impactForce = Math.min(Math.abs(prevVy) / 400, 1);
-				if (impactForce > 0.1) {
-					player.scaleX = 1.2 + impactForce * 0.15;
-					player.scaleY = 0.8 - impactForce * 0.1;
-					player.squashTime = 0.14 + impactForce * 0.08;
+				const impactForce = Math.min(Math.abs(impactVelocity) / 520, 1);
+				if (impactForce > 0.08) {
+					player.scaleX = 1.16 + impactForce * 0.14;
+					player.scaleY = 0.84 - impactForce * 0.1;
+					player.squashTime = 0.12 + impactForce * 0.08;
 					events?.onLand?.(fallDistance);
 				}
 			}
-
 			player.y = support ? support.y - player.h : platformResult.y;
 			player.vy = 0;
 			player.onGround = true;
 			player.coyoteLeft = platformResult.coyoteLeft;
-			this.maxHeightY = player.y; // Reset max height
+			player.jumpCutApplied = false;
+			player.nearApex = false;
+			this.maxHeightY = player.y;
 		} else {
 			player.onGround = false;
-			// Track highest point (lowest Y value)
-			if (player.y < this.maxHeightY) {
-				this.maxHeightY = player.y;
-			}
+			if (player.y < this.maxHeightY) this.maxHeightY = player.y;
 		}
 
-		// Coyote and jump buffer decay
 		const coyoteResult = coyoteStep({
 			onGround: player.onGround,
 			coyoteLeft: player.coyoteLeft,
@@ -219,42 +231,44 @@ export class PhysicsSystem {
 		player.coyoteLeft = coyoteResult.coyoteLeft;
 		player.jumpBuffered = coyoteResult.jumpBuffered;
 
-		// Animate squash and stretch recovery
-		if (player.squashTime > 0) {
-			player.squashTime -= dt;
-			const recovery = player.squashTime / 0.12; // Normalized recovery
-
-			if (player.justJumped) {
-				// Stretch to squash recovery
-				player.scaleX = 0.75 + (1 - recovery) * 0.25;
-				player.scaleY = 1.35 - (1 - recovery) * 0.35;
-			} else if (player.justLanded || player.squashTime > 0) {
-				// Squash recovery
-				player.scaleX = 1 + recovery * 0.2;
-				player.scaleY = 1 - recovery * 0.2;
-			} else {
-				player.scaleX = 1;
-				player.scaleY = 1;
-			}
-		} else {
-			player.scaleX = 1;
-			player.scaleY = 1;
-		}
-
-		// Store previous ground state
+		this.recoverSquash(player, dt);
 		player.wasOnGround = player.onGround;
-
-		// World bounds
 		player.x = Math.max(0, player.x);
 	}
 
-	// Check if entity is in valid state (not fallen off world)
 	isAlive(entity: Entity, worldHeight: number): boolean {
 		return entity.y < worldHeight + 200;
 	}
 
-	// Get current fall distance for damage calculations
 	getFallDistance(entity: Entity): number {
 		return entity.y - this.maxHeightY;
+	}
+
+	private initializeFeelState(player: Entity, wasOnGround: boolean): void {
+		player.scaleX ??= 1;
+		player.scaleY ??= 1;
+		player.squashTime ??= 0;
+		player.wasOnGround ??= wasOnGround;
+		player.justJumped ??= false;
+		player.justLanded ??= false;
+		player.jumpCutApplied ??= false;
+		player.nearApex ??= false;
+	}
+
+	private recoverSquash(player: Entity, dt: number): void {
+		if ((player.squashTime ?? 0) <= 0) {
+			player.scaleX = 1;
+			player.scaleY = 1;
+			return;
+		}
+		player.squashTime = Math.max(0, (player.squashTime ?? 0) - dt);
+		const recovery = Math.min(1, (player.squashTime ?? 0) / 0.14);
+		if (player.justJumped) {
+			player.scaleX = 0.76 + (1 - recovery) * 0.24;
+			player.scaleY = 1.34 - (1 - recovery) * 0.34;
+		} else {
+			player.scaleX = 1 + recovery * 0.2;
+			player.scaleY = 1 - recovery * 0.18;
+		}
 	}
 }

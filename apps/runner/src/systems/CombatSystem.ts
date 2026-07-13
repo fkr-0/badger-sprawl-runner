@@ -58,6 +58,8 @@ export interface CombatEntity extends Entity {
 	bossAction?: string;
 	bossAnimation?: string;
 	bossTelegraph?: number;
+	aiState?: string;
+	attackTelegraph?: number;
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
@@ -245,6 +247,8 @@ export class CombatSystem {
 			player.dodgeCooldown = 0.5;
 			player.invuln = Math.max(player.invuln, 0.3);
 			player.isDodging = true;
+			player.vx = player.dir * Math.max(430, Math.abs(player.vx));
+			player.vy = Math.min(player.vy, -35);
 			events?.onEvent?.({ kind: 'dodge', source: 'player', time: this.clock });
 			events?.requestScreenShake?.(3);
 		}
