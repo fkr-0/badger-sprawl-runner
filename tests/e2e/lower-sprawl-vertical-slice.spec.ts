@@ -8,6 +8,7 @@ interface E2EBadgerHarness
 		BadgerTestHarness,
 		| 'getAnimation'
 		| 'getCaptainGrin'
+		| 'getCheckpoint'
 		| 'getEnemies'
 		| 'getLoadout'
 		| 'getLowerSprawlHazards'
@@ -17,6 +18,7 @@ interface E2EBadgerHarness
 	> {
 	getAnimation: () => Present<ReturnType<BadgerTestHarness['getAnimation']>>;
 	getCaptainGrin: () => Present<ReturnType<BadgerTestHarness['getCaptainGrin']>>;
+	getCheckpoint: () => Present<ReturnType<BadgerTestHarness['getCheckpoint']>>;
 	getEnemies: () => Present<ReturnType<BadgerTestHarness['getEnemies']>>;
 	getLoadout: () => Present<ReturnType<BadgerTestHarness['getLoadout']>>;
 	getLowerSprawlHazards: () => Present<ReturnType<BadgerTestHarness['getLowerSprawlHazards']>>;
@@ -147,6 +149,64 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 		await expect
 			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getAnimation()?.currentAnim))
 			.toBe('melee_claws');
+	});
+
+	test('keeps movement responsive and restores Moss at first-world checkpoints', async ({
+		page,
+	}) => {
+		await enterLowerSprawl(page);
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.objectiveHint))
+			.toContain('Scan toll meters');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getCheckpoint().activeId))
+			.toBe('sprawl-entry');
+
+		await teleportTo(page, 100, 448);
+		const beforeMove = await page.evaluate(
+			() => (window as E2EWindow).__badger.getPlayer()?.x ?? 0
+		);
+		await page.keyboard.down('KeyD');
+		await page.waitForTimeout(220);
+		await page.keyboard.up('KeyD');
+		const afterMove = await page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.x ?? 0);
+		expect(afterMove).toBeGreaterThan(beforeMove + 12);
+
+		await teleportTo(page, 850, 448);
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getCheckpoint().activeId))
+			.toBe('market-relay');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.checkpointLabel))
+			.toBe('Market relay');
+
+		await page.evaluate(() => (window as E2EWindow).__badger.setPlayerHp(0));
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()))
+			.toMatchObject({ hp: 5, x: 820, y: 448, checkpointLabel: 'Market relay' });
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.hudToast))
+			.toContain('Signal restored');
+	});
+
+	test('telegraphs first-world enemy attacks before applying damage', async ({ page }) => {
+		await enterLowerSprawl(page);
+		const patrol = await page.evaluate(() =>
+			(window as E2EWindow).__badger.getEnemies().find((enemy) => enemy.role === 'patrol')
+		);
+		expect(patrol).toBeTruthy();
+		await teleportTo(page, patrol.x + 45, patrol.y + 20);
+
+		await expect
+			.poll(() =>
+				page.evaluate((id) => {
+					const enemy = (window as E2EWindow).__badger
+						.getEnemies()
+						.find((candidate) => candidate.id === id);
+					return enemy?.aiState;
+				}, patrol.id)
+			)
+			.toMatch(/windup|attack|recovery/);
 	});
 
 	test('runs production hazards, Captain Grin patterns, and the complete Burrowbreaker route', async ({

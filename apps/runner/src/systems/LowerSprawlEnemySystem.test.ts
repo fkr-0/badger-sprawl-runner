@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createPlayer } from '../actors/MossBadger';
 import type { CombatEntity } from './CombatSystem';
 import { CombatSystem } from './CombatSystem';
-import { LowerSprawlEnemySystem, type LowerSprawlEnemyEvent } from './LowerSprawlEnemySystem';
+import { type LowerSprawlEnemyEvent, LowerSprawlEnemySystem } from './LowerSprawlEnemySystem';
 
 function enemy(role: string, x = 100): CombatEntity {
 	return {

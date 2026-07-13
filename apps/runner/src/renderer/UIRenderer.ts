@@ -46,7 +46,8 @@ export class UIRenderer {
 	private renderScreenFeedback(ctx: CanvasRenderingContext2D, player: Player): void {
 		const healthRatio = player.maxHp > 0 ? player.hp / player.maxHp : 0;
 		const damageAlpha = Math.min(0.34, player.damageFlash ?? 0);
-		const lowHealthAlpha = healthRatio <= 0.4 ? 0.08 + Math.sin(performance.now() / 180) * 0.025 : 0;
+		const lowHealthAlpha =
+			healthRatio <= 0.4 ? 0.08 + Math.sin(performance.now() / 180) * 0.025 : 0;
 		if (damageAlpha > 0 || lowHealthAlpha > 0) {
 			const gradient = ctx.createRadialGradient(
 				ctx.canvas.width / 2,
@@ -92,11 +93,22 @@ export class UIRenderer {
 
 		ctx.font = '10px ui-monospace, monospace';
 		ctx.fillStyle = MUTED;
-		ctx.fillText(`CHECKPOINT // ${(player.checkpointLabel ?? 'SPRAWL ENTRY').toUpperCase()}`, x + 16, y + 84);
+		ctx.fillText(
+			`CHECKPOINT // ${(player.checkpointLabel ?? 'SPRAWL ENTRY').toUpperCase()}`,
+			x + 16,
+			y + 84
+		);
 		ctx.restore();
 	}
 
-	private renderHealthBar(ctx: CanvasRenderingContext2D, player: Player, x: number, y: number, width: number, height: number): void {
+	private renderHealthBar(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		x: number,
+		y: number,
+		width: number,
+		height: number
+	): void {
 		const gap = 4;
 		const segmentWidth = (width - gap * (player.maxHp - 1)) / player.maxHp;
 		ctx.font = '700 10px ui-monospace, monospace';
@@ -111,10 +123,21 @@ export class UIRenderer {
 		}
 	}
 
-	private renderFuelBar(ctx: CanvasRenderingContext2D, player: Player, x: number, y: number, width: number, height: number): void {
+	private renderFuelBar(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		x: number,
+		y: number,
+		width: number,
+		height: number
+	): void {
 		ctx.font = '700 9px ui-monospace, monospace';
 		ctx.fillStyle = player.hasRocket ? AMBER : MUTED;
-		ctx.fillText(player.hasRocket ? `ROCKET ${player.fuel.toFixed(1)}/${player.maxFuel}` : 'ROCKET // OFFLINE', x, y - 4);
+		ctx.fillText(
+			player.hasRocket ? `ROCKET ${player.fuel.toFixed(1)}/${player.maxFuel}` : 'ROCKET // OFFLINE',
+			x,
+			y - 4
+		);
 		ctx.fillStyle = '#202633';
 		ctx.fillRect(x, y, width, height);
 		if (player.hasRocket && player.maxFuel > 0) {
@@ -162,7 +185,8 @@ export class UIRenderer {
 			ctx.fillText(slot.label.slice(0, 3).toUpperCase(), x + 5, y + 20);
 		}
 
-		const ratio = slot.cooldownMax && slot.cooldown ? Math.min(1, slot.cooldown / slot.cooldownMax) : 0;
+		const ratio =
+			slot.cooldownMax && slot.cooldown ? Math.min(1, slot.cooldown / slot.cooldownMax) : 0;
 		if (ratio > 0) {
 			ctx.globalAlpha = 0.72;
 			ctx.fillStyle = '#080a12';

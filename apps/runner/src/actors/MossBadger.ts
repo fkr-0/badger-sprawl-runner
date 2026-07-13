@@ -3,10 +3,10 @@
  * Composes all player capabilities into a single entity
  */
 
-import type { Entity } from '../systems/PhysicsSystem';
+import type { AnimationState } from '../renderer/AnimationState';
 import type { CombatEntity, CombatEvents, CombatSystem } from '../systems/CombatSystem';
 import type { ActionMap } from '../systems/InputSystem';
-import type { AnimationState } from '../renderer/AnimationState';
+import type { Entity } from '../systems/PhysicsSystem';
 
 export interface Player extends Entity, CombatEntity {
 	fuel: number;
@@ -99,18 +99,21 @@ export function processMossInput(
 		console.log('Railgun fired');
 	}
 
-	// Item use
+	// Context-sensitive item use: grounded recovery takes priority, airborne E remains a boost.
 	if (canAct && actionMap.itemPressed) {
-		if (player.hasRocket && player.fuel > 0 && player.boostCd <= 0) {
-			player.fuel--;
-			player.boostCd = 0.35;
-			// Rocket boost
-			player.vy = -400;
-			player.onGround = false;
-		} else if (player.stims > 0 && player.hp < player.maxHp) {
+		if (player.stims > 0 && player.hp < player.maxHp && player.onGround) {
 			player.stims--;
 			player.hp = Math.min(player.maxHp, player.hp + 2);
 			player.focus = 1.5;
+			player.healFlash = 0.42;
+			player.hudToast = 'Stim applied // focus window';
+			player.hudToastTimer = 1.5;
+		} else if (player.hasRocket && player.fuel > 0 && player.boostCd <= 0) {
+			player.fuel--;
+			player.boostCd = 0.35;
+			player.vy = Math.min(player.vy, -420);
+			player.vx += player.dir * 45;
+			player.onGround = false;
 		}
 	}
 

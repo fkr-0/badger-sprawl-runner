@@ -22,6 +22,7 @@ export interface BadgerTestHarness {
 	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
 	getCaptainGrin: () => ReturnType<StageRunScene['getCaptainGrinSnapshot']> | null;
 	getLowerSprawlHazards: () => ReturnType<StageRunScene['getLowerSprawlHazardSnapshot']> | null;
+	getCheckpoint: () => ReturnType<StageRunScene['getCheckpointSnapshot']> | null;
 	getLoadout: () => ReturnType<StageRunScene['getLoadoutSnapshot']> | null;
 	getStoryState: () => ReturnType<RunnerApp['getFlow']>['getState'] extends () => infer T
 		? T
@@ -33,6 +34,7 @@ export interface BadgerTestHarness {
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
 	teleportPlayer: (x: number, y: number) => void;
 	setBossHp: (hp: number) => void;
+	setPlayerHp: (hp: number) => void;
 	routeMode: (modeId: MenuOptionId) => void;
 	getLoadedSheetIds: () => string[];
 	hasSheet: (sheetId: string) => boolean;
@@ -74,6 +76,12 @@ function installTestHarness(app: RunnerApp): void {
 				? (s as StageRunScene).getLowerSprawlHazardSnapshot()
 				: null;
 		},
+		getCheckpoint: () => {
+			const s = app.getCurrentScene();
+			return s && 'getCheckpointSnapshot' in s
+				? (s as StageRunScene).getCheckpointSnapshot()
+				: null;
+		},
 		getLoadout: () => {
 			const s = app.getCurrentScene();
 			return s && 'getLoadoutSnapshot' in s ? (s as StageRunScene).getLoadoutSnapshot() : null;
@@ -110,6 +118,10 @@ function installTestHarness(app: RunnerApp): void {
 		setBossHp: (hp) => {
 			const s = app.getCurrentScene();
 			if (s && 'debugSetBossHp' in s) (s as StageRunScene).debugSetBossHp(hp);
+		},
+		setPlayerHp: (hp) => {
+			const s = app.getCurrentScene();
+			if (s && 'debugSetPlayerHp' in s) (s as StageRunScene).debugSetPlayerHp(hp);
 		},
 		routeMode: (modeId) => app.routeMode(modeId),
 		getLoadedSheetIds: () => {

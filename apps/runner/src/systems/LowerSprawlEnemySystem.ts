@@ -136,7 +136,17 @@ export class LowerSprawlEnemySystem {
 		if (runtime.state === 'attack') {
 			enemy.vx = enemy.dir * 245;
 			enemy.x += enemy.vx * dt;
-			this.resolveMelee(enemy, player, runtime, combat, combatEvents, 'receipt-lunge', 1.25, 220, -105);
+			this.resolveMelee(
+				enemy,
+				player,
+				runtime,
+				combat,
+				combatEvents,
+				'receipt-lunge',
+				1.25,
+				220,
+				-105
+			);
 			if (runtime.timer === 0) this.enterRecovery(runtime, 0.62);
 			return;
 		}

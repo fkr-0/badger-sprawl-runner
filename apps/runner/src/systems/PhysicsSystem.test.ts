@@ -71,12 +71,7 @@ describe('PhysicsSystem grounded support', () => {
 		const physics = new PhysicsSystem();
 		const player = groundedPlayer();
 		const platforms: Platform[] = [{ x: 0, y: 494, w: 400, h: 80 }];
-		physics.step(
-			player,
-			platforms,
-			{ ...IDLE_ACTION, jump: true, jumpPressed: true },
-			1 / 60
-		);
+		physics.step(player, platforms, { ...IDLE_ACTION, jump: true, jumpPressed: true }, 1 / 60);
 		expect(player.onGround).toBe(false);
 
 		physics.step(player, platforms, IDLE_ACTION, 1 / 60);

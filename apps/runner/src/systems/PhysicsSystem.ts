@@ -4,7 +4,13 @@
  * one-shot jump cutting, apex hang, responsive direction changes and dodge momentum.
  */
 
-import { coyoteStep, defaultParams, gravityStep, movementStep, platformStep } from '@badger/platformer-core';
+import {
+	coyoteStep,
+	defaultParams,
+	gravityStep,
+	movementStep,
+	platformStep,
+} from '@badger/platformer-core';
 import type { ActionMap } from './InputSystem';
 
 export interface Entity {
@@ -119,7 +125,8 @@ export class PhysicsSystem {
 			else events?.onJump?.();
 		}
 
-		const reversing = axisInput !== 0 && Math.sign(player.vx) !== 0 && Math.sign(player.vx) !== axisInput;
+		const reversing =
+			axisInput !== 0 && Math.sign(player.vx) !== 0 && Math.sign(player.vx) !== axisInput;
 		if (reversing) player.vx *= player.onGround ? 0.86 : 0.95;
 
 		const nearApex = !player.onGround && Math.abs(player.vy) <= APEX_VELOCITY;
@@ -134,8 +141,7 @@ export class PhysicsSystem {
 		const runtimeParams = {
 			...defaultParams,
 			gravity: defaultParams.gravity * gravityMultiplier,
-			runAccelGround:
-				defaultParams.runAccelGround * (reversing ? TURN_ACCEL_MULTIPLIER_GROUND : 1),
+			runAccelGround: defaultParams.runAccelGround * (reversing ? TURN_ACCEL_MULTIPLIER_GROUND : 1),
 			runAccelAir:
 				defaultParams.runAccelAir *
 				(player.airControlMultiplier ?? 1) *
@@ -191,9 +197,7 @@ export class PhysicsSystem {
 			const horizontallySupported =
 				player.x + player.w > platform.x && player.x < platform.x + platform.w;
 			return (
-				horizontallySupported &&
-				player.vy >= 0 &&
-				Math.abs(bottom - platform.y) <= SUPPORT_EPSILON
+				horizontallySupported && player.vy >= 0 && Math.abs(bottom - platform.y) <= SUPPORT_EPSILON
 			);
 		});
 

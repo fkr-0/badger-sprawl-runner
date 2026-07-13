@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CombatSystem, type AttackSpec, type CombatEntity } from './CombatSystem';
+import { type AttackSpec, type CombatEntity, CombatSystem } from './CombatSystem';
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
 	return {
@@ -50,7 +50,13 @@ describe('CombatSystem deterministic combat', () => {
 			comboGain: 2,
 		};
 
-		const result = system.resolveAttack(player, [armored], attack, { onEvent: (event) => events.push(event.kind) }, 3);
+		const result = system.resolveAttack(
+			player,
+			[armored],
+			attack,
+			{ onEvent: (event) => events.push(event.kind) },
+			3
+		);
 
 		expect(result.hits.map((hit) => hit.kind)).toContain('hit');
 		expect(events).toContain('poise-break');
@@ -63,17 +69,29 @@ describe('CombatSystem deterministic combat', () => {
 	it('uses typed damage packets with resistances and vulnerabilities in attack resolution', () => {
 		const system = new CombatSystem();
 		const player = entity({ faction: 'player' });
-		const drone = entity({ x: 20, hp: 10, armor: 2, resistances: { slash: 0.5 }, vulnerabilities: { slash: 0.25 } });
+		const drone = entity({
+			x: 20,
+			hp: 10,
+			armor: 2,
+			resistances: { slash: 0.5 },
+			vulnerabilities: { slash: 0.25 },
+		});
 
-		const result = system.resolveAttack(player, [drone], {
-			id: 'typed-slash',
-			source: 'player',
-			damage: 10,
-			damagePacket: { amount: 10, type: 'slash', armorPierce: 1, crit: true, critMultiplier: 2 },
-			stun: 0.1,
-			knockbackX: 0,
-			hitbox: { x: 0, y: 0, w: 80, h: 80 },
-		}, undefined, 6);
+		const result = system.resolveAttack(
+			player,
+			[drone],
+			{
+				id: 'typed-slash',
+				source: 'player',
+				damage: 10,
+				damagePacket: { amount: 10, type: 'slash', armorPierce: 1, crit: true, critMultiplier: 2 },
+				stun: 0.1,
+				knockbackX: 0,
+				hitbox: { x: 0, y: 0, w: 80, h: 80 },
+			},
+			undefined,
+			6
+		);
 
 		expect(result.hits[0]?.damage).toBe(14.25);
 		expect(drone.hp).toBe(-4.25);
@@ -106,33 +124,52 @@ describe('CombatSystem deterministic combat', () => {
 		const drone = entity({ id: 'drone' } as Partial<CombatEntity>);
 		const statuses: string[] = [];
 
-		system.resolveAttack(player, [drone], {
-			id: 'burning-claw',
-			source: 'player',
-			damage: 1,
-			stun: 0.1,
-			knockbackX: 0,
-			hitbox: { x: -5, y: -5, w: 80, h: 80 },
-			statusOnHit: [{
-				id: 'burning-claw-dot',
-				kind: 'burn',
-				sourceId: 'player',
-				duration: 1,
-				remaining: 1,
-				stacks: 1,
-				maxStacks: 2,
-				tickInterval: 0.5,
-				tickTimer: 0.5,
-				magnitude: 1,
-			}],
-		}, { onEvent: (event) => {
-			if (event.status) statuses.push(event.status.kind);
-		} }, 4);
+		system.resolveAttack(
+			player,
+			[drone],
+			{
+				id: 'burning-claw',
+				source: 'player',
+				damage: 1,
+				stun: 0.1,
+				knockbackX: 0,
+				hitbox: { x: -5, y: -5, w: 80, h: 80 },
+				statusOnHit: [
+					{
+						id: 'burning-claw-dot',
+						kind: 'burn',
+						sourceId: 'player',
+						duration: 1,
+						remaining: 1,
+						stacks: 1,
+						maxStacks: 2,
+						tickInterval: 0.5,
+						tickTimer: 0.5,
+						magnitude: 1,
+					},
+				],
+			},
+			{
+				onEvent: (event) => {
+					if (event.status) statuses.push(event.status.kind);
+				},
+			},
+			4
+		);
 
 		expect(drone.statusEffects?.[0]?.kind).toBe('burn');
-		system.step(player, [drone], {}, 0.5, { onEvent: (event) => {
-			if (event.status) statuses.push(event.status.kind);
-		} }, { time: 4.5 });
+		system.step(
+			player,
+			[drone],
+			{},
+			0.5,
+			{
+				onEvent: (event) => {
+					if (event.status) statuses.push(event.status.kind);
+				},
+			},
+			{ time: 4.5 }
+		);
 
 		expect(drone.hp).toBe(3);
 		expect(statuses).toContain('applied');
@@ -155,5 +192,17 @@ describe('CombatSystem deterministic combat', () => {
 		player.parryCooldown = 1;
 		system.step(player, [enemy], {}, 0.016, undefined, { time: 2 });
 		expect(player.hp).toBe(4.25);
+	});
+
+	it('turns a grounded dodge into a fast invulnerable movement burst', () => {
+		const system = new CombatSystem();
+		const player = entity({ faction: 'player', dir: -1, vx: 20 });
+
+		system.step(player, [], { dodgePressed: true }, 0.016, undefined, { time: 3 });
+
+		expect(player.isDodging).toBe(true);
+		expect(player.invuln).toBeGreaterThanOrEqual(0.3);
+		expect(player.vx).toBeLessThanOrEqual(-430);
+		expect(player.vy).toBeLessThan(0);
 	});
 });

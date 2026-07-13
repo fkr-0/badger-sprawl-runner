@@ -130,8 +130,11 @@ export class Renderer {
 		const scaleX = player.scaleX ?? 1;
 		const scaleY = player.scaleY ?? 1;
 
+		this.ctx.save();
+		if ((player.damageFlash ?? 0) > 0 && Math.floor(performance.now() / 55) % 2 === 0) {
+			this.ctx.globalAlpha = 0.48;
+		}
 		if (this.spriteRenderer.hasSheet('moss_badger')) {
-			// Use sprite rendering with squash/stretch
 			if (player.animState) {
 				this.spriteRenderer.drawEntity(
 					'moss_badger',
@@ -144,10 +147,10 @@ export class Renderer {
 				);
 			}
 		} else {
-			// Fallback vector rendering with squash/stretch
 			const fallback = this.spriteRenderer.getFallbackDraw();
 			fallback(this.ctx, player, x, y);
 		}
+		this.ctx.restore();
 	}
 
 	renderEnemies(enemies: CombatEntity[], cameraX: number): void {
@@ -158,7 +161,22 @@ export class Renderer {
 				continue;
 			}
 
-			// Stun flash
+			if ((enemy.attackTelegraph ?? 0) > 0) {
+				const telegraph = Math.max(0, Math.min(1, enemy.attackTelegraph ?? 0));
+				this.ctx.save();
+				this.ctx.globalAlpha = 0.35 + telegraph * 0.55;
+				this.ctx.strokeStyle = '#ffb35e';
+				this.ctx.lineWidth = 2 + telegraph * 2;
+				this.ctx.beginPath();
+				this.ctx.arc(x + enemy.w / 2, enemy.y + enemy.h / 2, 20 + telegraph * 13, 0, Math.PI * 2);
+				this.ctx.stroke();
+				if (enemy.procgenRole === 'turret') {
+					this.ctx.fillStyle = 'rgba(255, 94, 122, 0.18)';
+					this.ctx.fillRect(enemy.dir > 0 ? x + enemy.w : x - 300, enemy.y + 7, 300, enemy.h - 14);
+				}
+				this.ctx.restore();
+			}
+
 			if (enemy.stun > 0) {
 				this.ctx.fillStyle = '#ffb35e';
 				this.ctx.fillRect(x - 2, enemy.y - 2, enemy.w + 4, enemy.h + 4);
@@ -184,9 +202,18 @@ export class Renderer {
 				this.ctx.strokeRect(x - 7, enemy.y - 7, enemy.w + 14, enemy.h + 14);
 			}
 
-			// Eye
-			this.ctx.fillStyle = enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';
-			this.ctx.fillRect(x + (enemy.vx > 0 ? 22 : 6), enemy.y + 8, 6, 6);
+			// Eye and state tell.
+			this.ctx.fillStyle =
+				enemy.aiState === 'windup' ? '#ffb35e' : enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';
+			this.ctx.fillRect(x + (enemy.dir > 0 ? enemy.w - 12 : 6), enemy.y + 8, 6, 6);
+			if (enemy.hp < enemy.maxHp && enemy.hp > 0) {
+				const width = Math.max(28, enemy.w + 8);
+				const ratio = Math.max(0, enemy.hp / enemy.maxHp);
+				this.ctx.fillStyle = 'rgba(4, 6, 12, 0.88)';
+				this.ctx.fillRect(x + enemy.w / 2 - width / 2, enemy.y - 10, width, 5);
+				this.ctx.fillStyle = enemy.procgenRole === 'bruiser' ? '#ff5e7a' : '#67f3c4';
+				this.ctx.fillRect(x + enemy.w / 2 - width / 2 + 1, enemy.y - 9, (width - 2) * ratio, 3);
+			}
 		}
 	}
 

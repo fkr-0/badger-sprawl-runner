@@ -55,22 +55,22 @@ import {
 	validateLoadoutBudget,
 } from '../systems/LoadoutBudgetSystem';
 import {
+	type LowerSprawlEnemyEvent,
+	LowerSprawlEnemySystem,
+} from '../systems/LowerSprawlEnemySystem';
+import {
 	type LowerSprawlHazardEvent,
 	type LowerSprawlHazardSnapshot,
 	LowerSprawlHazardSystem,
 } from '../systems/LowerSprawlHazardSystem';
-import {
-	type LowerSprawlEnemyEvent,
-	LowerSprawlEnemySystem,
-} from '../systems/LowerSprawlEnemySystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import type { Platform } from '../systems/PhysicsSystem';
 import { applyRuntimeItemEffectsToCombatEntity } from '../systems/RuntimeItemApplier';
 import {
 	LOWER_SPRAWL_CHECKPOINTS,
-	StageCheckpointSystem,
 	type StageCheckpointEvent,
 	type StageCheckpointSnapshot,
+	StageCheckpointSystem,
 } from '../systems/StageCheckpointSystem';
 import { type RuntimeStageId, cloneStageLayout } from '../world/stageLayoutRegistry';
 
@@ -176,22 +176,145 @@ export class StageRunScene implements Scene {
 		this.inventory.equip('claws');
 		this.refreshLoadout();
 		this.player.checkpointLabel = this.checkpoints?.getSnapshot().activeLabel;
-		this.player.hudToast = options.stageId === 'lower-sprawl' ? 'Follow the public route' : undefined;
+		this.player.hudToast =
+			options.stageId === 'lower-sprawl' ? 'Follow the public route' : undefined;
 		this.player.hudToastTimer = options.stageId === 'lower-sprawl' ? 2.6 : 0;
 		this.initWorld();
 		this.updateGameplayHints();
 	}
 
 	private collectLoadoutPickup(pickup: Pickup): void {
-		if (!pickup.itemId || !getFirstReleaseItem(pickup.itemId)) return;
+		if (!pickup.itemId) return;
+		const item = getFirstReleaseItem(pickup.itemId);
+		if (!item) {
+			if (pickup.kind === 'stim') this.showToast('Stim cached // use E while grounded and hurt');
+			if (pickup.persistence === 'story_payload') this.showToast('Wafer key secured', 2.4);
+			return;
+		}
 		if (!this.inventory.has(pickup.itemId)) this.inventory.addItem(pickup.itemId);
 		this.inventory.equip(pickup.itemId);
 		this.refreshLoadout();
+		const latestBonus = this.loadoutSummary.activeBonuses.at(-1);
+		this.showToast(
+			latestBonus ? `${item.name} online // ${latestBonus.label}` : `${item.name} online`,
+			2.4
+		);
 		window.dispatchEvent(
 			new CustomEvent('badger:loadout-updated', {
 				detail: { itemId: pickup.itemId, loadout: this.getLoadoutSnapshot() },
 			})
 		);
+	}
+
+	private showToast(message: string, duration = 1.8): void {
+		this.player.hudToast = message;
+		this.player.hudToastTimer = duration;
+	}
+
+	private handleCheckpointEvents(events: StageCheckpointEvent[]): void {
+		for (const event of events) {
+			this.player.checkpointLabel = event.checkpoint.label;
+			if (event.kind === 'checkpoint-activated') {
+				this.player.hp = Math.min(this.player.maxHp, this.player.hp + 1);
+				this.showToast(`Checkpoint // ${event.checkpoint.label}`, 2.1);
+				this.renderer?.emitVFX(this.player.x, this.player.y + this.player.h, 'emp', 8, 48);
+			} else {
+				this.showToast(`Signal restored // ${event.checkpoint.label}`, 2.3);
+				this.player.damageFlash = 0.2;
+			}
+			window.dispatchEvent(new CustomEvent('badger:checkpoint', { detail: event }));
+		}
+	}
+
+	private handleEnemyEvents(events: LowerSprawlEnemyEvent[]): void {
+		for (const event of events) {
+			const enemy = this.enemies.find((candidate) => candidate.id === event.enemyId);
+			if (event.kind === 'enemy-telegraph' && enemy) {
+				this.renderer?.emitVFX(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, 'muzzle', 4, 28);
+			}
+			window.dispatchEvent(new CustomEvent('badger:lower-sprawl-enemy', { detail: event }));
+		}
+	}
+
+	private updateFeedbackTimers(dt: number): void {
+		this.player.hudToastTimer = Math.max(0, (this.player.hudToastTimer ?? 0) - dt);
+		this.player.damageFlash = Math.max(0, (this.player.damageFlash ?? 0) - dt * 1.6);
+		this.player.healFlash = Math.max(0, (this.player.healFlash ?? 0) - dt * 1.25);
+	}
+
+	private updateGameplayHints(): void {
+		const snapshot = this.lowerSprawlObjectives?.getSnapshot();
+		if (!snapshot) return;
+		const scanned = snapshot.meters.filter((meter) => meter.scanned).length;
+		if (scanned < snapshot.meters.length) {
+			this.player.objectiveHint = `Scan toll meters // ${scanned}/${snapshot.meters.length}`;
+		} else if (snapshot.puzzleStatus !== 'solved') {
+			this.player.objectiveHint = 'Synchronize the toll gate';
+		} else if (!snapshot.bossDefeated) {
+			this.player.objectiveHint = 'Break Captain Grin’s toll claim';
+		} else if (!snapshot.payloadCollected) {
+			this.player.objectiveHint = 'Secure the wafer key';
+		} else {
+			this.player.objectiveHint = 'Route liberated';
+		}
+
+		const rigPieces = this.loadoutSummary.equippedItemIds.filter((itemId) =>
+			['rocket_backpack', 'bassline_boots', 'gravity_talisman'].includes(itemId)
+		).length;
+		const activeBonus = this.loadoutSummary.activeBonuses.at(-1)?.label;
+		this.player.loadoutHint = `Burrowbreaker ${rigPieces}/3${activeBonus ? ` // ${activeBonus}` : ''}`;
+
+		this.player.contextHint = undefined;
+		const captain = this.captainGrin?.getSnapshot();
+		if (captain?.action === 'windup') {
+			this.player.contextHint = 'L parry // Shift dodge';
+			return;
+		}
+		if (this.player.hp <= 2 && this.player.stims > 0 && this.player.onGround) {
+			this.player.contextHint = 'E use stim';
+			return;
+		}
+		const centerX = this.player.x + this.player.w / 2;
+		const centerY = this.player.y + this.player.h / 2;
+		const distance = (x: number, y: number): number => Math.hypot(centerX - x, centerY - y);
+		const nearbyMeter = snapshot.meters.find(
+			(meter) => !meter.scanned && distance(meter.x, meter.y) < 82
+		);
+		if (nearbyMeter) {
+			this.player.contextHint = 'M scan public toll record';
+			return;
+		}
+		if (snapshot.puzzleStatus !== 'solved' && distance(snapshot.gate.x, snapshot.gate.y) < 88) {
+			this.player.contextHint =
+				snapshot.puzzleStatus === 'active'
+					? `${snapshot.expectedInput ?? 'listen'} // stay on beat`
+					: 'M synchronize toll gate';
+			return;
+		}
+		const nearbyPickup = this.pickups.find(
+			(pickup) => !pickup.taken && distance(pickup.x + 14, pickup.y + 14) < 74
+		);
+		if (nearbyPickup) {
+			this.player.contextHint =
+				nearbyPickup.persistence === 'story_payload' ? 'Secure payload' : 'Gear cache';
+			return;
+		}
+		if (
+			this.enemies.some(
+				(enemy) => enemy.hp > 0 && Math.abs(centerX - (enemy.x + enemy.w / 2)) < 150
+			)
+		) {
+			this.player.contextHint = 'J strike // L parry // Shift dodge';
+		}
+	}
+
+	private recoverPlayerIfNeeded(): void {
+		if (!this.checkpoints) return;
+		this.handleCheckpointEvents(this.checkpoints.step(this.player.x));
+		if (this.player.hp > 0 && this.physics.isAlive(this.player, 600)) return;
+		this.handleCheckpointEvents([this.checkpoints.respawn(this.player)]);
+		this.hitstopRemaining = 0.18;
+		this.screenShakeIntensity = 9;
 	}
 
 	private refreshLoadout(): void {
@@ -335,6 +458,23 @@ export class StageRunScene implements Scene {
 			ctx.fillText(meter.scanned ? 'SCANNED' : 'M: SCAN', x, meter.y - 42);
 		}
 
+		for (const [index, checkpoint] of (
+			this.checkpoints?.getSnapshot().checkpoints ?? []
+		).entries()) {
+			const checkpointX = checkpoint.x - cameraX;
+			const activeIndex = this.checkpoints?.getSnapshot().activeIndex ?? 0;
+			const active = index <= activeIndex;
+			ctx.fillStyle = active ? '#67f3c4' : '#364457';
+			ctx.fillRect(checkpointX - 3, checkpoint.y - 58, 6, 58);
+			ctx.beginPath();
+			ctx.arc(checkpointX, checkpoint.y - 62, active ? 8 : 5, 0, Math.PI * 2);
+			ctx.fill();
+			if (index === activeIndex) {
+				ctx.fillStyle = '#67f3c4';
+				ctx.fillText('RELAY ACTIVE', checkpointX, checkpoint.y - 76);
+			}
+		}
+
 		const gateX = snapshot.gate.x - cameraX;
 		ctx.strokeStyle = snapshot.puzzleStatus === 'solved' ? '#67f3c4' : '#ff5e7a';
 		ctx.lineWidth = 4;
@@ -440,6 +580,10 @@ export class StageRunScene implements Scene {
 		return this.lowerSprawlHazards?.getSnapshot() ?? [];
 	}
 
+	getCheckpointSnapshot(): StageCheckpointSnapshot | null {
+		return this.checkpoints?.getSnapshot() ?? null;
+	}
+
 	getLoadoutSnapshot(): LoadoutSummary & { budget: LoadoutBudgetReport } {
 		return {
 			...this.loadoutSummary,
@@ -470,6 +614,10 @@ export class StageRunScene implements Scene {
 	debugSetBossHp(hp: number): void {
 		const boss = this.enemies.find((enemy) => enemy.bossId === this.options.bossPlaceholder?.id);
 		if (boss) boss.hp = Math.max(0, Math.min(boss.maxHp, hp));
+	}
+
+	debugSetPlayerHp(hp: number): void {
+		this.player.hp = Math.max(0, Math.min(this.player.maxHp, hp));
 	}
 
 	getTutorialOverlayBeats(): RuntimeTutorialBeat[] {
@@ -517,6 +665,10 @@ export class StageRunScene implements Scene {
 		meleeTimer: number;
 		airControlMultiplier: number;
 		maxFallSpeedBonus: number;
+		checkpointLabel?: string;
+		objectiveHint?: string;
+		contextHint?: string;
+		hudToast?: string;
 	} {
 		const p = this.player;
 		return {
@@ -536,16 +688,34 @@ export class StageRunScene implements Scene {
 			meleeTimer: p.meleeTimer,
 			airControlMultiplier: p.airControlMultiplier ?? 1,
 			maxFallSpeedBonus: p.maxFallSpeedBonus ?? 0,
+			checkpointLabel: p.checkpointLabel,
+			objectiveHint: p.objectiveHint,
+			contextHint: p.contextHint,
+			hudToast: p.hudToast,
 		};
 	}
 
-	getEnemySnapshots(): Array<{ x: number; y: number; hp: number; maxHp: number; bossId?: string }> {
+	getEnemySnapshots(): Array<{
+		id?: string;
+		x: number;
+		y: number;
+		hp: number;
+		maxHp: number;
+		bossId?: string;
+		role?: string;
+		aiState?: string;
+		attackTelegraph?: number;
+	}> {
 		return this.enemies.map((e) => ({
+			id: e.id,
 			x: e.x,
 			y: e.y,
 			hp: e.hp,
 			maxHp: e.maxHp,
 			bossId: 'bossId' in e && typeof e.bossId === 'string' ? e.bossId : undefined,
+			role: e.procgenRole,
+			aiState: e.aiState,
+			attackTelegraph: e.attackTelegraph,
 		}));
 	}
 
@@ -592,7 +762,7 @@ export class StageRunScene implements Scene {
 			if (event.code === 'Escape') {
 				this.options.onReturnToTitle?.();
 				event.preventDefault();
-			} else if (event.code === 'KeyD') {
+			} else if (event.code === 'F3') {
 				this.debugOverlayVisible = !this.debugOverlayVisible;
 				event.preventDefault();
 			}
@@ -616,6 +786,7 @@ export class StageRunScene implements Scene {
 		if (!input) return;
 		const action = input.snapshot();
 		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
+		this.updateFeedbackTimers(dt);
 		this.handleLowerSprawlEvents(this.lowerSprawlObjectives?.step(simDt) ?? []);
 		this.handleLowerSprawlEvents(
 			this.lowerSprawlObjectives?.observeAction(this.player, action) ?? []
@@ -654,6 +825,10 @@ export class StageRunScene implements Scene {
 		this.handleHazardEvents(
 			this.lowerSprawlHazards?.step(this.player, simDt, this.combat, combatEvents) ?? []
 		);
+		this.handleEnemyEvents(
+			this.lowerSprawlEnemies?.step(this.enemies, this.player, simDt, this.combat, combatEvents) ??
+				[]
+		);
 		// 6-8. Hack, Enemy, Companion
 		this.companions.step(this.player, this.enemies, simDt, {
 			onHint: (message) => {
@@ -683,14 +858,16 @@ export class StageRunScene implements Scene {
 			) ?? []
 		);
 		// 9-11. Beat, WaveDirector, Camera
-		this.camera.step(this.player.x, 0, 990, simDt);
+		this.camera.step(this.player.x, 0, 990, simDt, this.player.vx);
 
 		// Player input processing
-		processMossInput(this.player, action, simDt, this.combat, this.enemies);
+		processMossInput(this.player, action, simDt, this.combat, this.enemies, combatEvents);
 
-		// Update animation state
+		// Update animation and stage experience state
 		this.updateAnimation(simDt);
 		this.updateLowerSprawlCompletion();
+		this.recoverPlayerIfNeeded();
+		this.updateGameplayHints();
 
 		// Clear edge detection
 		input.clearPressed();
@@ -725,9 +902,9 @@ export class StageRunScene implements Scene {
 			this.renderBalanceOverlay(ctx);
 			this.renderRuntimeConfigOverlay(ctx);
 			this.renderTutorialOverlay(ctx);
+			this.renderLowerSprawlObjectivePanel(ctx);
+			this.renderLoadoutPanel(ctx);
 		}
-		this.renderLowerSprawlObjectivePanel(ctx);
-		this.renderLoadoutPanel(ctx);
 
 		ctx.restore();
 	}
@@ -978,28 +1155,61 @@ export class StageRunScene implements Scene {
 	}
 
 	private handleCombatEvent(event: CombatEvent): void {
-		if (!this.renderer) return;
+		const incomingHit =
+			event.source === 'enemy' && (event.kind === 'hit' || event.kind === 'damage');
+		if (incomingHit) {
+			this.player.damageFlash = 0.34;
+			if (this.player.hp <= 2) this.showToast('Integrity critical // find space to stim', 1.5);
+		}
+		if (event.kind === 'parry' && event.source === 'player') {
+			this.showToast('Perfect parry // counter now', 0.85);
+		}
+		if (event.kind === 'kill' && event.source === 'player') {
+			this.showToast(`Target cleared // chain ${this.player.comboCount ?? 0}`, 0.9);
+		}
+
+		const renderer = this.renderer;
+		if (!renderer) return;
 
 		switch (event.kind) {
 			case 'hit':
-				if (event.source === 'player' && this.player.hasRocket) {
-					const refund = this.player.itemSetEffects?.fuelRefundOnCombo;
-					if (typeof refund === 'number' && refund > 0) {
-						this.player.fuel = Math.min(this.player.maxFuel, this.player.fuel + refund);
+				if (event.source === 'player') {
+					if (this.player.hasRocket) {
+						const refund = this.player.itemSetEffects?.fuelRefundOnCombo;
+						if (typeof refund === 'number' && refund > 0) {
+							this.player.fuel = Math.min(this.player.maxFuel, this.player.fuel + refund);
+						}
 					}
+					renderer.emitVFX(
+						this.player.x + this.player.w / 2 + this.player.dir * 30,
+						this.player.y + 20,
+						'muzzle',
+						5,
+						50
+					);
+				} else {
+					renderer.emitVFX(
+						this.player.x + this.player.w / 2,
+						this.player.y + this.player.h / 2,
+						'blood',
+						7,
+						46
+					);
 				}
-				// Hit spark
-				this.renderer.emitVFX(
-					this.player.x + this.player.w / 2 + this.player.dir * 30,
-					this.player.y + 20,
-					'muzzle',
-					5,
-					50
-				);
+				break;
+			case 'damage':
+				if (event.source === 'enemy') {
+					renderer.emitVFX(
+						this.player.x + this.player.w / 2,
+						this.player.y + this.player.h / 2,
+						'blood',
+						6,
+						42
+					);
+				}
 				break;
 			case 'kill':
-				// Death explosion
-				this.renderer.emitVFX(
+				renderer.emitVFX(
 					this.player.x + this.player.w / 2 + this.player.dir * 30,
 					this.player.y + 20,
 					'blood',
@@ -1008,8 +1218,7 @@ export class StageRunScene implements Scene {
 				);
 				break;
 			case 'parry':
-				// Parry flash
-				this.renderer.emitVFX(
+				renderer.emitVFX(
 					this.player.x + this.player.w / 2,
 					this.player.y + this.player.h / 2,
 					'emp',
@@ -1018,13 +1227,12 @@ export class StageRunScene implements Scene {
 				);
 				break;
 			case 'dodge':
-				// Dodge trail
-				this.renderer.emitVFX(
+				renderer.emitVFX(
 					this.player.x + this.player.w / 2,
 					this.player.y + this.player.h / 2,
 					'dust',
-					4,
-					30
+					6,
+					46
 				);
 				break;
 		}
@@ -1055,6 +1263,11 @@ export class StageRunScene implements Scene {
 			...sideRooms.flatMap((room) => room.enemyPacks.flatMap((pack) => pack.enemies)),
 			...(bossPlaceholder ? [bossPlaceholder] : []),
 		];
+		for (const enemy of this.enemies) {
+			if (['patrol', 'turret', 'bruiser'].includes(enemy.procgenRole ?? '')) {
+				enemy.usesPatternController = true;
+			}
+		}
 	}
 
 	private createBossPlaceholder(stageId: string): CombatEntity | null {

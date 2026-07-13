@@ -43,7 +43,9 @@ export class StageCheckpointSystem {
 		return [{ kind: 'checkpoint-activated', checkpoint: { ...this.getActiveCheckpoint() } }];
 	}
 
-	respawn(player: Entity & Pick<CombatEntity, 'hp' | 'maxHp' | 'invuln' | 'stun'>): StageCheckpointEvent {
+	respawn(
+		player: Entity & Pick<CombatEntity, 'hp' | 'maxHp' | 'invuln' | 'stun'>
+	): StageCheckpointEvent {
 		const checkpoint = this.getActiveCheckpoint();
 		player.x = checkpoint.x;
 		player.y = checkpoint.y;
