@@ -159,7 +159,7 @@ export const CAMPAIGN: CampaignDefinition = {
 					teaches: 'Follow placards and visible machinery to understand who owns the route.',
 				},
 			],
-			todo: ['replace interim Tollbooth Captain visuals and movement patterns with production art'],
+			todo: ['add final Captain Grin audio cues and accessibility tuning for attack telegraphs'],
 			skeleton: skeleton('market-runner'),
 		},
 		{

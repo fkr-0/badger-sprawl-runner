@@ -2,16 +2,16 @@
  * Renderer - central canvas context wrapper and render coordination
  */
 
-import { SpriteRenderer } from './SpriteRenderer';
-import { VFXPool } from './VFXPool';
-import { ParallaxRenderer } from './ParallaxLayer';
-import { TitleCardRenderer } from './TitleCardRenderer';
-import { UIRenderer } from './UIRenderer';
-import { DialoguePortraitRenderer } from './DialoguePortraitRenderer';
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
 import type { CombatEntity } from '../systems/CombatSystem';
 import type { Pickup } from '../systems/ItemSystem';
+import { DialoguePortraitRenderer } from './DialoguePortraitRenderer';
+import { ParallaxRenderer } from './ParallaxLayer';
+import { SpriteRenderer } from './SpriteRenderer';
+import { TitleCardRenderer } from './TitleCardRenderer';
+import { UIRenderer } from './UIRenderer';
+import { VFXPool } from './VFXPool';
 
 export class Renderer {
 	private spriteRenderer: SpriteRenderer;
@@ -79,6 +79,44 @@ export class Renderer {
 		}
 	}
 
+	private renderBoss(enemy: CombatEntity, x: number): void {
+		const sheetId = enemy.bossSpriteSheetId;
+		if (!sheetId) return;
+		const animationName = enemy.bossAnimation ?? 'idle';
+		const animation = this.spriteRenderer.getSheet(sheetId)?.sheet.animations[animationName];
+		const frame = animation
+			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
+			: 0;
+		const spriteX = x + enemy.w / 2 - 48;
+		const spriteY = enemy.y + enemy.h - 88;
+
+		this.ctx.save();
+		if ((enemy.bossTelegraph ?? 0) > 0) {
+			const pulse = 10 + (enemy.bossTelegraph ?? 0) * 24;
+			this.ctx.strokeStyle = '#ff5e7a';
+			this.ctx.lineWidth = 3;
+			this.ctx.globalAlpha = 0.45 + (enemy.bossTelegraph ?? 0) * 0.45;
+			this.ctx.beginPath();
+			this.ctx.arc(x + enemy.w / 2, enemy.y + enemy.h / 2, pulse, 0, Math.PI * 2);
+			this.ctx.stroke();
+		}
+		this.ctx.globalAlpha = enemy.hp <= 0 ? 0.72 : 1;
+		this.spriteRenderer.drawFrame(sheetId, animationName, frame, spriteX, spriteY, enemy.dir > 0);
+		this.ctx.globalAlpha = 1;
+
+		const barW = 118;
+		const ratio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
+		this.ctx.fillStyle = 'rgba(4, 6, 12, 0.85)';
+		this.ctx.fillRect(x + enemy.w / 2 - barW / 2, enemy.y - 25, barW, 12);
+		this.ctx.fillStyle = ratio > 0.5 ? '#ffb35e' : '#ff5e7a';
+		this.ctx.fillRect(x + enemy.w / 2 - barW / 2 + 2, enemy.y - 23, (barW - 4) * ratio, 8);
+		this.ctx.fillStyle = '#eaf2ff';
+		this.ctx.font = '700 9px ui-monospace, monospace';
+		this.ctx.textAlign = 'center';
+		this.ctx.fillText(enemy.bossName ?? 'CAPTAIN GRIN', x + enemy.w / 2, enemy.y - 30);
+		this.ctx.restore();
+	}
+
 	renderPlayer(
 		player: Player & {
 			animState?: { currentAnim: string; frame: number };
@@ -115,6 +153,10 @@ export class Renderer {
 	renderEnemies(enemies: CombatEntity[], cameraX: number): void {
 		for (const enemy of enemies) {
 			const x = enemy.x - cameraX;
+			if (enemy.bossSpriteSheetId && this.spriteRenderer.hasSheet(enemy.bossSpriteSheetId)) {
+				this.renderBoss(enemy, x);
+				continue;
+			}
 
 			// Stun flash
 			if (enemy.stun > 0) {
@@ -123,7 +165,12 @@ export class Renderer {
 			}
 
 			// Body
-			this.ctx.fillStyle = '#1a1d26';
+			this.ctx.fillStyle =
+				enemy.procgenRole === 'bruiser'
+					? '#3b2638'
+					: enemy.procgenRole === 'turret'
+						? '#202b3c'
+						: '#1a1d26';
 			this.ctx.fillRect(x, enemy.y, enemy.w, enemy.h);
 
 			if (enemy.rookMarked) {
@@ -220,6 +267,8 @@ export class Renderer {
 				return '#ff5e7a';
 			case 'katana':
 				return '#eaf2ff';
+			case 'set_piece':
+				return '#ffe06b';
 			case 'pickup':
 				return '#ffe06b';
 			default:

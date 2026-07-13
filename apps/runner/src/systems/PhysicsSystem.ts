@@ -22,6 +22,8 @@ export interface Entity {
 	hasRocket?: boolean;
 	hasRailgun?: boolean;
 	hasKatana?: boolean;
+	fuel?: number;
+	maxFuel?: number;
 	stims?: number;
 	comboCount?: number;
 	comboTimer?: number;
@@ -32,6 +34,8 @@ export interface Entity {
 	companionShield?: number;
 	rookOverlayActive?: boolean;
 	bossPhaseHint?: string;
+	airControlMultiplier?: number;
+	maxFallSpeedBonus?: number;
 
 	// Visual juice properties
 	scaleX?: number;
@@ -91,6 +95,11 @@ export class PhysicsSystem {
 		if (axisInput !== 0) player.dir = axisInput;
 
 		// Enhanced movement with better air control
+		const runtimeParams = {
+			...defaultParams,
+			runAccelAir: defaultParams.runAccelAir * (player.airControlMultiplier ?? 1),
+			maxFallSpeed: defaultParams.maxFallSpeed + (player.maxFallSpeedBonus ?? 0),
+		};
 		const movementResult = movementStep({
 			vx: player.vx,
 			vy: player.vy,
@@ -99,13 +108,13 @@ export class PhysicsSystem {
 			onGround: player.onGround,
 			axisInput,
 			isFastFalling: action.fastFall,
-			params: defaultParams,
+			params: runtimeParams,
 			dt,
 		});
 		Object.assign(player, movementResult);
 
 		// Gravity
-		player.vy = gravityStep(player.vy, defaultParams, dt);
+		player.vy = gravityStep(player.vy, runtimeParams, dt);
 
 		// Coyote jump - can jump shortly after leaving platform
 		const canCoyoteJump = player.coyoteLeft > 0 && !player.onGround;

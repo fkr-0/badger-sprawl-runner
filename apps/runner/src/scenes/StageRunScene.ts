@@ -28,18 +28,40 @@ import {
 	type RuntimeBossPhase,
 } from '../systems/BossPhaseSystem';
 import { CameraSystem } from '../systems/CameraSystem';
+import {
+	CaptainGrinController,
+	type CaptainGrinEvent,
+	type CaptainGrinSnapshot,
+} from '../systems/CaptainGrinController';
 import { CombatSystem } from '../systems/CombatSystem';
-import type { CombatEntity, CombatEvent } from '../systems/CombatSystem';
+import type { CombatEntity, CombatEvent, CombatEvents } from '../systems/CombatSystem';
 import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
+import {
+	FIRST_RELEASE_ITEM_CATALOG,
+	getFirstReleaseItem,
+} from '../systems/FirstReleaseItemCatalog';
 import { InputSystem } from '../systems/InputSystem';
+import { InventorySystem, type LoadoutSummary } from '../systems/InventorySystem';
+import { resolveRuntimeItemEffects } from '../systems/ItemEffectResolver';
 import {
 	ItemSystem,
 	type Pickup,
 	applyPersistedPayloadPickups,
 	getCollectedStoryPayloadIds,
 } from '../systems/ItemSystem';
+import {
+	FIRST_RELEASE_BUDGET_RULE,
+	type LoadoutBudgetReport,
+	validateLoadoutBudget,
+} from '../systems/LoadoutBudgetSystem';
+import {
+	type LowerSprawlHazardEvent,
+	type LowerSprawlHazardSnapshot,
+	LowerSprawlHazardSystem,
+} from '../systems/LowerSprawlHazardSystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import type { Platform } from '../systems/PhysicsSystem';
+import { applyRuntimeItemEffectsToCombatEntity } from '../systems/RuntimeItemApplier';
 import { type RuntimeStageId, cloneStageLayout } from '../world/stageLayoutRegistry';
 
 export interface RuntimeTutorialBeat {
@@ -83,10 +105,20 @@ export class StageRunScene implements Scene {
 	private camera = new CameraSystem();
 	private companions: CompanionSystem;
 	private bossPhases: BossPhaseSystem;
+	private readonly captainGrin: CaptainGrinController | null;
+	private readonly lowerSprawlHazards: LowerSprawlHazardSystem | null;
 	private encounterGenerator = new EncounterGenerator();
+	private inventory = new InventorySystem(FIRST_RELEASE_ITEM_CATALOG);
+	private loadoutSummary: LoadoutSummary = this.inventory.buildLoadoutSummary();
+	private loadoutBudget: LoadoutBudgetReport = validateLoadoutBudget(
+		this.loadoutSummary,
+		FIRST_RELEASE_ITEM_CATALOG,
+		FIRST_RELEASE_BUDGET_RULE
+	);
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
+			this.collectLoadoutPickup(pickup);
 			if (pickup.persistence === 'story_payload' && pickup.itemId) {
 				this.options.onStoryPayloadCollected?.(pickup.itemId);
 			}
@@ -105,6 +137,7 @@ export class StageRunScene implements Scene {
 	private lastAnimationFrame = 0;
 	private readonly lowerSprawlObjectives: LowerSprawlObjectives | null;
 	private stageCompletionDispatched = false;
+	private debugOverlayVisible = false;
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.companions = new CompanionSystem(
@@ -112,13 +145,119 @@ export class StageRunScene implements Scene {
 			resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])
 		);
 		this.bossPhases = new BossPhaseSystem(options.bossPhases ?? []);
+		this.captainGrin = options.stageId === 'lower-sprawl' ? new CaptainGrinController() : null;
+		this.lowerSprawlHazards =
+			options.stageId === 'lower-sprawl' ? new LowerSprawlHazardSystem() : null;
 		this.player = createPlayer();
 		this.player.unlockedSkills = [...(options.unlockedSkills ?? [])];
 		// Initialize animation state
 		this.player.animState = createAnimationState();
 		this.lowerSprawlObjectives =
 			options.stageId === 'lower-sprawl' ? new LowerSprawlObjectives() : null;
+		this.inventory.addItem('claws');
+		this.inventory.equip('claws');
+		this.refreshLoadout();
 		this.initWorld();
+	}
+
+	private collectLoadoutPickup(pickup: Pickup): void {
+		if (!pickup.itemId || !getFirstReleaseItem(pickup.itemId)) return;
+		if (!this.inventory.has(pickup.itemId)) this.inventory.addItem(pickup.itemId);
+		this.inventory.equip(pickup.itemId);
+		this.refreshLoadout();
+		window.dispatchEvent(
+			new CustomEvent('badger:loadout-updated', {
+				detail: { itemId: pickup.itemId, loadout: this.getLoadoutSnapshot() },
+			})
+		);
+	}
+
+	private refreshLoadout(): void {
+		this.loadoutSummary = this.inventory.buildLoadoutSummary();
+		this.loadoutBudget = validateLoadoutBudget(
+			this.loadoutSummary,
+			FIRST_RELEASE_ITEM_CATALOG,
+			FIRST_RELEASE_BUDGET_RULE
+		);
+		const effects = resolveRuntimeItemEffects(this.loadoutSummary);
+		const combatant = applyRuntimeItemEffectsToCombatEntity(this.player, effects);
+		this.player.airControlMultiplier = effects.physics.airControlMultiplier;
+		this.player.maxFallSpeedBonus = effects.physics.maxFallSpeedBonus;
+		this.player.itemSetEffects = combatant.itemSetEffects;
+	}
+
+	private getCombatEvents(): CombatEvents {
+		return {
+			onEvent: (event) => this.handleCombatEvent(event),
+			mitigateDamage: (amount) =>
+				this.companions.mitigateDamage(amount, {
+					onShield: (blocked) =>
+						this.renderer?.emitVFX(this.player.x, this.player.y, 'emp', blocked + 3, 30),
+				}),
+			requestHitstop: (duration) => {
+				this.hitstopRemaining = duration;
+			},
+			requestScreenShake: (intensity) => {
+				this.screenShakeIntensity = intensity;
+			},
+		};
+	}
+
+	private handleHazardEvents(events: LowerSprawlHazardEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'hazard-warning') {
+				this.renderer?.emitVFX(this.player.x, this.player.y + this.player.h, 'dust', 2, 20);
+			}
+			if (event.kind === 'hazard-hit') {
+				this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 7);
+			}
+			window.dispatchEvent(new CustomEvent('badger:lower-sprawl-hazard', { detail: event }));
+		}
+	}
+
+	private handleCaptainEvents(events: CaptainGrinEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'boss-telegraph') {
+				this.renderer?.emitVFX(1510, 450, 'muzzle', 6, 45);
+			}
+			if (event.kind === 'boss-phase-transition') {
+				this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 10);
+				this.renderer?.emitVFX(1510, 450, 'emp', 14, 90);
+			}
+			window.dispatchEvent(new CustomEvent('badger:captain-grin-pattern', { detail: event }));
+		}
+	}
+
+	private triggerLandingShockwave(): void {
+		if (this.player.itemSetEffects?.landingShockwave !== true) return;
+		this.combat.resolveAttack(
+			this.player,
+			this.enemies,
+			{
+				id: 'burrowbreaker:landing-shockwave',
+				source: 'player',
+				damage: 0.75,
+				damageType: 'blunt',
+				stun: 0.28,
+				knockbackX: 85,
+				knockbackY: -90,
+				hitbox: {
+					x: this.player.x - 44,
+					y: this.player.y + this.player.h - 24,
+					w: this.player.w + 88,
+					h: 42,
+				},
+				parryable: false,
+			},
+			this.getCombatEvents()
+		);
+		this.renderer?.emitVFX(
+			this.player.x + this.player.w / 2,
+			this.player.y + this.player.h,
+			'emp',
+			10,
+			70
+		);
 	}
 
 	private handleLowerSprawlEvents(events: LowerSprawlObjectiveEvent[]): void {
@@ -188,6 +327,24 @@ export class StageRunScene implements Scene {
 			gateX,
 			snapshot.gate.y - 94
 		);
+
+		for (const hazard of this.lowerSprawlHazards?.getSnapshot() ?? []) {
+			const hazardX = hazard.x - cameraX;
+			ctx.fillStyle = hazard.state === 'active' ? '#ff5e7a' : '#364457';
+			ctx.fillRect(hazardX, hazard.y + hazard.h - 10, hazard.w, 10);
+			if (hazard.state !== 'idle') {
+				ctx.globalAlpha = hazard.state === 'active' ? 0.72 : 0.28;
+				ctx.fillStyle = hazard.state === 'active' ? '#eaf2ff' : '#ffb35e';
+				ctx.fillRect(hazardX + 8, hazard.y, hazard.w - 16, hazard.h - 8);
+				ctx.globalAlpha = 1;
+				ctx.fillStyle = '#eaf2ff';
+				ctx.fillText(
+					hazard.state === 'active' ? 'STEAM' : 'HISS…',
+					hazardX + hazard.w / 2,
+					hazard.y - 6
+				);
+			}
+		}
 		ctx.restore();
 	}
 
@@ -253,6 +410,34 @@ export class StageRunScene implements Scene {
 		return this.bossPhases.getState();
 	}
 
+	getCaptainGrinSnapshot(): CaptainGrinSnapshot | null {
+		return this.captainGrin?.getSnapshot() ?? null;
+	}
+
+	getLowerSprawlHazardSnapshot(): LowerSprawlHazardSnapshot[] {
+		return this.lowerSprawlHazards?.getSnapshot() ?? [];
+	}
+
+	getLoadoutSnapshot(): LoadoutSummary & { budget: LoadoutBudgetReport } {
+		return {
+			...this.loadoutSummary,
+			activeBonuses: this.loadoutSummary.activeBonuses.map((bonus) => ({
+				...bonus,
+				effects: { ...bonus.effects },
+			})),
+			effects: { ...this.loadoutSummary.effects },
+			missingSetPieces: this.loadoutSummary.missingSetPieces.map((set) => ({
+				...set,
+				missingItemIds: [...set.missingItemIds],
+			})),
+			budget: {
+				...this.loadoutBudget,
+				violations: [...this.loadoutBudget.violations],
+				counts: { ...this.loadoutBudget.counts },
+			},
+		};
+	}
+
 	debugTeleportPlayer(x: number, y: number): void {
 		this.player.x = x;
 		this.player.y = y;
@@ -305,8 +490,11 @@ export class StageRunScene implements Scene {
 		hasRocket: boolean;
 		hasKatana: boolean;
 		fuel: number;
+		maxFuel: number;
 		stims: number;
 		meleeTimer: number;
+		airControlMultiplier: number;
+		maxFallSpeedBonus: number;
 	} {
 		const p = this.player;
 		return {
@@ -321,8 +509,11 @@ export class StageRunScene implements Scene {
 			hasRocket: p.hasRocket,
 			hasKatana: p.hasKatana,
 			fuel: p.fuel,
+			maxFuel: p.maxFuel,
 			stims: p.stims,
 			meleeTimer: p.meleeTimer,
+			airControlMultiplier: p.airControlMultiplier ?? 1,
+			maxFallSpeedBonus: p.maxFallSpeedBonus ?? 0,
 		};
 	}
 
@@ -379,6 +570,9 @@ export class StageRunScene implements Scene {
 			if (event.code === 'Escape') {
 				this.options.onReturnToTitle?.();
 				event.preventDefault();
+			} else if (event.code === 'KeyD') {
+				this.debugOverlayVisible = !this.debugOverlayVisible;
+				event.preventDefault();
 			}
 		};
 		window.addEventListener('keydown', handleKeyDown);
@@ -422,28 +616,22 @@ export class StageRunScene implements Scene {
 		// 1. Input snapshot - done above
 		// 2. Replay recording (not implemented)
 		// 3. Physics
+		const combatEvents = this.getCombatEvents();
 		this.physics.step(this.player, this.platforms, action, simDt, {
 			onJump: () => this.emitJumpParticles(),
-			onLand: (fallDistance) => this.emitLandingParticles(fallDistance),
+			onLand: (fallDistance) => {
+				this.emitLandingParticles(fallDistance);
+				this.triggerLandingShockwave();
+			},
 			onCoyoteJump: () => this.emitCoyoteParticles(),
 		});
 		// 4. Combat with event handlers
-		this.combat.step(this.player, this.enemies, action, simDt, {
-			onEvent: (event) => this.handleCombatEvent(event),
-			mitigateDamage: (amount) =>
-				this.companions.mitigateDamage(amount, {
-					onShield: (blocked) =>
-						this.renderer?.emitVFX(this.player.x, this.player.y, 'emp', blocked + 3, 30),
-				}),
-			requestHitstop: (duration) => {
-				this.hitstopRemaining = duration;
-			},
-			requestScreenShake: (intensity) => {
-				this.screenShakeIntensity = intensity;
-			},
-		});
-		// 5. Items
+		this.combat.step(this.player, this.enemies, action, simDt, combatEvents);
+		// 5. Items and hazards
 		this.items.step(this.player, action, this.pickups, simDt);
+		this.handleHazardEvents(
+			this.lowerSprawlHazards?.step(this.player, simDt, this.combat, combatEvents) ?? []
+		);
 		// 6-8. Hack, Enemy, Companion
 		this.companions.step(this.player, this.enemies, simDt, {
 			onHint: (message) => {
@@ -461,6 +649,17 @@ export class StageRunScene implements Scene {
 		this.player.bossPhaseHint = bossPhaseState
 			? `Boss ${bossPhaseState.phaseIndex + 1}/${bossPhaseState.phaseCount}: ${bossPhaseState.activePhaseLabel}`
 			: undefined;
+		const captain = this.enemies.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
+		this.handleCaptainEvents(
+			this.captainGrin?.step(
+				captain,
+				this.player,
+				bossPhaseState,
+				simDt,
+				this.combat,
+				combatEvents
+			) ?? []
+		);
 		// 9-11. Beat, WaveDirector, Camera
 		this.camera.step(this.player.x, 0, 990, simDt);
 
@@ -500,11 +699,61 @@ export class StageRunScene implements Scene {
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
-		this.renderBalanceOverlay(ctx);
-		this.renderRuntimeConfigOverlay(ctx);
-		this.renderTutorialOverlay(ctx);
+		if (this.debugOverlayVisible) {
+			this.renderBalanceOverlay(ctx);
+			this.renderRuntimeConfigOverlay(ctx);
+			this.renderTutorialOverlay(ctx);
+		}
 		this.renderLowerSprawlObjectivePanel(ctx);
+		this.renderLoadoutPanel(ctx);
 
+		ctx.restore();
+	}
+
+	private renderLoadoutPanel(ctx: CanvasRenderingContext2D): void {
+		if (this.options.stageId !== 'lower-sprawl') return;
+		const x = ctx.canvas.width - 344;
+		const y = ctx.canvas.height - 122;
+		const burrowbreaker = this.loadoutSummary.activeBonuses.filter(
+			(bonus) => bonus.setId === 'burrowbreaker-rig'
+		);
+		const equippedPieces = this.loadoutSummary.equippedItemIds.filter((itemId) =>
+			['rocket_backpack', 'bassline_boots', 'gravity_talisman'].includes(itemId)
+		).length;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.86)';
+		ctx.fillRect(x, y, 320, 98);
+		ctx.strokeStyle = burrowbreaker.length >= 2 ? '#67f3c4' : '#92a4be';
+		ctx.strokeRect(x, y, 320, 98);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(`BURROWBREAKER RIG ${equippedPieces}/3`, x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(
+			this.loadoutSummary.equippedItemIds
+				.filter((itemId) => itemId !== 'claws')
+				.join(' • ')
+				.slice(0, 44) || 'Find movement gear on the high route',
+			x + 12,
+			y + 42
+		);
+		ctx.fillStyle = burrowbreaker.length > 0 ? '#ffb35e' : '#92a4be';
+		ctx.fillText(
+			burrowbreaker.map((bonus) => `${bonus.pieces}p ${bonus.label}`).join(' • ') ||
+				'2p: landing shockwave',
+			x + 12,
+			y + 62
+		);
+		ctx.fillStyle = this.loadoutBudget.valid ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(
+			`budget ${this.loadoutBudget.totalCost}/${FIRST_RELEASE_BUDGET_RULE.maxBudget} • ${
+				this.loadoutBudget.valid ? 'valid' : this.loadoutBudget.violations[0]
+			}`,
+			x + 12,
+			y + 80
+		);
 		ctx.restore();
 	}
 
@@ -711,6 +960,12 @@ export class StageRunScene implements Scene {
 
 		switch (event.kind) {
 			case 'hit':
+				if (event.source === 'player' && this.player.hasRocket) {
+					const refund = this.player.itemSetEffects?.fuelRefundOnCombo;
+					if (typeof refund === 'number' && refund > 0) {
+						this.player.fuel = Math.min(this.player.maxFuel, this.player.fuel + refund);
+					}
+				}
 				// Hit spark
 				this.renderer.emitVFX(
 					this.player.x + this.player.w / 2 + this.player.dir * 30,

@@ -3,16 +3,21 @@
  */
 
 import { aabb } from '@badger/platformer-core';
-import type { Entity } from './PhysicsSystem';
+import { type DamagePacket, type DamageType, resolveDamagePacket } from './DamageModel';
 import type { ActionMap } from './InputSystem';
-import { MeleeComboSystem, createMeleeComboState, type MeleeInput, type MeleeAttackResult } from './MeleeComboSystem';
 import {
-	applyStatusEffect,
-	stepStatusEffects,
+	type MeleeAttackResult,
+	MeleeComboSystem,
+	type MeleeInput,
+	createMeleeComboState,
+} from './MeleeComboSystem';
+import type { Entity } from './PhysicsSystem';
+import {
 	type StatusEffect,
 	type StatusEvent,
+	applyStatusEffect,
+	stepStatusEffects,
 } from './StatusEffectSystem';
-import { resolveDamagePacket, type DamagePacket, type DamageType } from './DamageModel';
 
 export interface CombatEntity extends Entity {
 	id?: string;
@@ -48,6 +53,11 @@ export interface CombatEntity extends Entity {
 	bossName?: string;
 	bossArgument?: string;
 	isBossPlaceholder?: boolean;
+	usesPatternController?: boolean;
+	bossSpriteSheetId?: string;
+	bossAction?: string;
+	bossAnimation?: string;
+	bossTelegraph?: number;
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
@@ -58,7 +68,15 @@ export interface HitboxSet {
 	hurt: { x: number; y: number; w: number; h: number };
 }
 
-export type CombatEventKind = 'hit' | 'kill' | 'parry' | 'dodge' | 'damage' | 'block' | 'poise-break' | 'combo-drop';
+export type CombatEventKind =
+	| 'hit'
+	| 'kill'
+	| 'parry'
+	| 'dodge'
+	| 'damage'
+	| 'block'
+	| 'poise-break'
+	| 'combo-drop';
 
 export interface CombatEvent {
 	kind: CombatEventKind;
@@ -148,7 +166,10 @@ function statusTarget(entity: CombatEntity, fallbackId: string): CombatEntity & 
 	return { ...entity, id: entity.id ?? fallbackId };
 }
 
-function assignStatusTarget(entity: CombatEntity, next: ReturnType<typeof stepStatusEffects>['target']): void {
+function assignStatusTarget(
+	entity: CombatEntity,
+	next: ReturnType<typeof stepStatusEffects>['target']
+): void {
 	entity.hp = next.hp;
 	entity.stun = next.stun;
 	entity.invuln = next.invuln;
@@ -157,7 +178,12 @@ function assignStatusTarget(entity: CombatEntity, next: ReturnType<typeof stepSt
 	entity.statusEffects = next.statusEffects;
 }
 
-function stepCombatStatuses(entity: CombatEntity, dt: number, events: CombatEvents | undefined, time: number): void {
+function stepCombatStatuses(
+	entity: CombatEntity,
+	dt: number,
+	events: CombatEvents | undefined,
+	time: number
+): void {
 	if (!entity.statusEffects || entity.statusEffects.length === 0) return;
 	const result = stepStatusEffects(statusTarget(entity, entity.faction ?? 'combatant'), dt);
 	assignStatusTarget(entity, result.target);
@@ -227,7 +253,12 @@ export class CombatSystem {
 			initialize(enemy);
 			decayTimers(enemy, dt);
 			stepCombatStatuses(enemy, dt, events, this.clock);
-			if (player.invuln <= 0 && enemy.stun <= 0 && this.checkCollision(player, enemy)) {
+			if (
+				!enemy.usesPatternController &&
+				player.invuln <= 0 &&
+				enemy.stun <= 0 &&
+				this.checkCollision(player, enemy)
+			) {
 				if ((player.parryWindow ?? 0) > 0) this.parry(player, enemy, events);
 				else if (!player.isDodging) this.damage(player, 1, events, 'enemy');
 			}
@@ -242,19 +273,31 @@ export class CombatSystem {
 		return entity?.comboCount ?? 0;
 	}
 
-	melee(player: CombatEntity, enemies: CombatEntity[], combo: string, events?: CombatEvents, time = this.clock): void {
+	melee(
+		player: CombatEntity,
+		enemies: CombatEntity[],
+		combo: string,
+		events?: CombatEvents,
+		time = this.clock
+	): void {
 		const input = this.comboStringToInput(combo);
 		const result = this.meleeInput(player, enemies, input, events, time);
 		if (!result && combo === 'katana') {
-			this.resolveAttack(player, enemies, {
-				id: 'legacy_katana',
-				source: 'player',
-				damage: 2,
-				stun: 0.45,
-				knockbackX: 150,
-				hitbox: this.getMeleeHitbox(player, 'katana'),
-				comboGain: 1,
-			}, events, time);
+			this.resolveAttack(
+				player,
+				enemies,
+				{
+					id: 'legacy_katana',
+					source: 'player',
+					damage: 2,
+					stun: 0.45,
+					knockbackX: 150,
+					hitbox: this.getMeleeHitbox(player, 'katana'),
+					comboGain: 1,
+				},
+				events,
+				time
+			);
 		}
 	}
 
@@ -276,7 +319,10 @@ export class CombatSystem {
 		if (!result) return null;
 
 		this.lastAction = { kind: 'melee', time, moveId: result.move.id };
-		player.comboCount = Math.min(this.maxCombo, Math.max(player.comboCount ?? 0, result.state.chainDepth));
+		player.comboCount = Math.min(
+			this.maxCombo,
+			Math.max(player.comboCount ?? 0, result.state.chainDepth)
+		);
 		player.comboTimer = Math.max(player.comboTimer ?? 0, result.move.comboWindow);
 		player.lastHitTime = time;
 		player.meleeStyle = result.state.style + effectNumber(player, 'meleeStyleBonus');
@@ -300,13 +346,19 @@ export class CombatSystem {
 		for (const target of targets) {
 			if (pierceLeft <= 0) break;
 			initialize(target);
-			if (target.hp <= 0 || target.invuln > 0 || target.isDodging || !aabb(attack.hitbox, target)) continue;
+			if (target.hp <= 0 || target.invuln > 0 || target.isDodging || !aabb(attack.hitbox, target))
+				continue;
 
 			if (attack.parryable !== false && (target.parryWindow ?? 0) > 0) {
 				blocked += 1;
 				target.parryWindow = 0;
 				attacker.stun = Math.max(attacker.stun, 0.35);
-				const event: CombatEvent = { kind: 'parry', source: target.faction === 'player' ? 'player' : 'enemy', time, moveId: attack.id };
+				const event: CombatEvent = {
+					kind: 'parry',
+					source: target.faction === 'player' ? 'player' : 'enemy',
+					time,
+					moveId: attack.id,
+				};
 				hits.push(event);
 				events?.onEvent?.(event);
 				events?.requestHitstop?.(0.1);
@@ -325,7 +377,13 @@ export class CombatSystem {
 			const damage = damageResolution.final;
 			if (damage <= 0) {
 				blocked += 1;
-				const event: CombatEvent = { kind: 'block', source: attack.source, damage: 0, time, moveId: attack.id };
+				const event: CombatEvent = {
+					kind: 'block',
+					source: attack.source,
+					damage: 0,
+					time,
+					moveId: attack.id,
+				};
 				hits.push(event);
 				events?.onEvent?.(event);
 				continue;
@@ -341,13 +399,22 @@ export class CombatSystem {
 				target.poise = Math.max(0, (target.poise ?? 0) - poiseDamage);
 				if (target.poise === 0) {
 					target.stun = Math.max(target.stun, attack.stun + 0.25);
-					events?.onEvent?.({ kind: 'poise-break', source: attack.source, damage: poiseDamage, time, moveId: attack.id });
+					events?.onEvent?.({
+						kind: 'poise-break',
+						source: attack.source,
+						damage: poiseDamage,
+						time,
+						moveId: attack.id,
+					});
 				}
 			}
 
 			if (attack.statusOnHit) {
 				for (const status of attack.statusOnHit) {
-					const applied = applyStatusEffect(statusTarget(target, `target-${hits.length}`), { ...status, sourceId: attack.id });
+					const applied = applyStatusEffect(statusTarget(target, `target-${hits.length}`), {
+						...status,
+						sourceId: attack.id,
+					});
 					assignStatusTarget(target, applied.target);
 					for (const statusEvent of applied.events) {
 						events?.onEvent?.({
@@ -363,14 +430,25 @@ export class CombatSystem {
 			}
 
 			if (attack.source === 'player') {
-				attacker.comboCount = Math.min(this.maxCombo, (attacker.comboCount ?? 0) + (attack.comboGain ?? 1));
+				attacker.comboCount = Math.min(
+					this.maxCombo,
+					(attacker.comboCount ?? 0) + (attack.comboGain ?? 1)
+				);
 				attacker.comboTimer = this.comboWindow;
 				attacker.lastHitTime = time;
 			}
 
 			const kind = target.hp <= 0 ? 'kill' : 'hit';
 			if (kind === 'kill') kills += 1;
-			const event: CombatEvent = { kind, source: attack.source, targetId: target.id, damage, combo: attacker.comboCount, time, moveId: attack.id };
+			const event: CombatEvent = {
+				kind,
+				source: attack.source,
+				targetId: target.id,
+				damage,
+				combo: attacker.comboCount,
+				time,
+				moveId: attack.id,
+			};
 			hits.push(event);
 			events?.onEvent?.(event);
 			events?.requestHitstop?.(Math.min(0.16, 0.035 + (attacker.comboCount ?? 0) * 0.012));
@@ -398,7 +476,13 @@ export class CombatSystem {
 		player.parryWindow = 0;
 		events?.requestHitstop?.(0.12);
 		events?.requestScreenShake?.(8);
-		events?.onEvent?.({ kind: enemy.hp <= 0 ? 'kill' : 'hit', source: 'player', damage, time: this.clock, moveId: 'parry' });
+		events?.onEvent?.({
+			kind: enemy.hp <= 0 ? 'kill' : 'hit',
+			source: 'player',
+			damage,
+			time: this.clock,
+			moveId: 'parry',
+		});
 	}
 
 	private comboStringToInput(combo: string): MeleeInput {
@@ -417,7 +501,10 @@ export class CombatSystem {
 		}
 	}
 
-	private getMeleeHitbox(player: Entity, combo: string): { x: number; y: number; w: number; h: number } {
+	private getMeleeHitbox(
+		player: Entity,
+		combo: string
+	): { x: number; y: number; w: number; h: number } {
 		const w = combo === 'katana' ? 50 : 42;
 		const h = combo === 'katana' ? 32 : 28;
 		return {
@@ -432,7 +519,12 @@ export class CombatSystem {
 		return aabb(a, b);
 	}
 
-	private damage(entity: CombatEntity, amount: number, events?: CombatEvents, source: 'player' | 'enemy' = 'enemy'): void {
+	private damage(
+		entity: CombatEntity,
+		amount: number,
+		events?: CombatEvents,
+		source: 'player' | 'enemy' = 'enemy'
+	): void {
 		const mitigated = amount * (1 - effectNumber(entity, 'damageMitigation'));
 		const finalAmount = events?.mitigateDamage?.(mitigated) ?? mitigated;
 		if (finalAmount <= 0) {

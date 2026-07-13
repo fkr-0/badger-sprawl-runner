@@ -6,10 +6,20 @@ type Present<T> = Exclude<T, null>;
 interface E2EBadgerHarness
 	extends Omit<
 		BadgerTestHarness,
-		'getAnimation' | 'getEnemies' | 'getLowerSprawlObjectives' | 'getPickups' | 'getSkillTree'
+		| 'getAnimation'
+		| 'getCaptainGrin'
+		| 'getEnemies'
+		| 'getLoadout'
+		| 'getLowerSprawlHazards'
+		| 'getLowerSprawlObjectives'
+		| 'getPickups'
+		| 'getSkillTree'
 	> {
 	getAnimation: () => Present<ReturnType<BadgerTestHarness['getAnimation']>>;
+	getCaptainGrin: () => Present<ReturnType<BadgerTestHarness['getCaptainGrin']>>;
 	getEnemies: () => Present<ReturnType<BadgerTestHarness['getEnemies']>>;
+	getLoadout: () => Present<ReturnType<BadgerTestHarness['getLoadout']>>;
+	getLowerSprawlHazards: () => Present<ReturnType<BadgerTestHarness['getLowerSprawlHazards']>>;
 	getLowerSprawlObjectives: () => Present<
 		ReturnType<BadgerTestHarness['getLowerSprawlObjectives']>
 	>;
@@ -139,6 +149,80 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 			.toBe('melee_claws');
 	});
 
+	test('runs production hazards, Captain Grin patterns, and the complete Burrowbreaker route', async ({
+		page,
+	}) => {
+		await enterLowerSprawl(page);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					(window as E2EWindow).__badger.hasSheet('boss_boss_captain_grin_tollmech')
+				)
+			)
+			.toBe(true);
+
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getCaptainGrin().attackCount))
+			.toBeGreaterThan(0);
+		const hazards = await page.evaluate(() =>
+			(window as E2EWindow).__badger.getLowerSprawlHazards()
+		);
+		expect(hazards.map((hazard) => hazard.id)).toEqual(['west-steam-vent', 'market-steam-vent']);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					(window as E2EWindow).__badger
+						.getLowerSprawlHazards()
+						.some((hazard) => hazard.state !== 'idle')
+				)
+			)
+			.toBe(true);
+
+		const pickupIds = ['rocket_backpack', 'bassline_boots_route', 'gravity_talisman_route'];
+		for (const pickupId of pickupIds) {
+			const pickup = await page.evaluate(
+				(id) => (window as E2EWindow).__badger.getPickups().find((entry) => entry.id === id),
+				pickupId
+			);
+			expect(pickup).toBeTruthy();
+			await teleportTo(page, pickup.x + 14, pickup.y + 14);
+			await expect
+				.poll(() =>
+					page.evaluate(
+						(id) => (window as E2EWindow).__badger.getLoadout().equippedItemIds.includes(id),
+						pickupId === 'bassline_boots_route'
+							? 'bassline_boots'
+							: pickupId === 'gravity_talisman_route'
+								? 'gravity_talisman'
+								: pickupId
+					)
+				)
+				.toBe(true);
+		}
+
+		const loadout = await page.evaluate(() => (window as E2EWindow).__badger.getLoadout());
+		expect(loadout.activeBonuses).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ setId: 'burrowbreaker-rig', pieces: 2 }),
+				expect.objectContaining({ setId: 'burrowbreaker-rig', pieces: 3 }),
+			])
+		);
+		expect(loadout.effects).toMatchObject({
+			landingShockwave: true,
+			fuelRefundOnCombo: 1,
+			maxFallSpeedBonus: 120,
+		});
+		expect(loadout.budget.valid).toBe(true);
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()))
+			.toMatchObject({
+				hasRocket: true,
+				maxFuel: 3,
+				airControlMultiplier: 1.1,
+				maxFallSpeedBonus: 120,
+			});
+	});
+
 	test('completes every first-world objective, debrief, save checkpoint, and skill purchase', async ({
 		page,
 	}) => {
@@ -232,9 +316,14 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 				phaseCount: 2,
 			});
 		await page.evaluate(() => (window as E2EWindow).__badger.setBossHp(1));
+		const currentBoss = await page.evaluate(() =>
+			(window as E2EWindow).__badger
+				.getEnemies()
+				.find((enemy) => enemy.bossId === 'tollbooth-captain-grin')
+		);
 		await page.evaluate(
 			([x, y]) => (window as E2EWindow).__badger.teleportPlayer(x - 40, y),
-			[boss.x, boss.y]
+			[currentBoss.x, currentBoss.y]
 		);
 		await page.waitForTimeout(80);
 		await page.keyboard.press('KeyJ');

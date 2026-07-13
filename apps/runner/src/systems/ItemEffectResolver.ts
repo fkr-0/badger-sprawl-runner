@@ -6,6 +6,7 @@ export interface RuntimeItemEffects {
 		airControlMultiplier: number;
 		maxFallSpeedBonus: number;
 		fuelRefundOnCombo: number;
+		landingShockwave: boolean;
 	};
 	combat: {
 		damageMitigation: number;
@@ -27,6 +28,7 @@ export const EMPTY_RUNTIME_ITEM_EFFECTS: RuntimeItemEffects = {
 		airControlMultiplier: 1,
 		maxFallSpeedBonus: 0,
 		fuelRefundOnCombo: 0,
+		landingShockwave: false,
 	},
 	combat: {
 		damageMitigation: 0,
@@ -91,6 +93,7 @@ export function resolveRuntimeItemEffects(summary: LoadoutSummary): RuntimeItemE
 			airControlMultiplier: 1 + numberEffect(effects, 'airControlBonus'),
 			maxFallSpeedBonus: numberEffect(effects, 'maxFallSpeedBonus'),
 			fuelRefundOnCombo: numberEffect(effects, 'fuelRefundOnCombo'),
+			landingShockwave: boolEffect(effects, 'landingShockwave'),
 		},
 		combat: {
 			damageMitigation: numberEffect(effects, 'damageMitigation'),
@@ -108,11 +111,14 @@ export function resolveRuntimeItemEffects(summary: LoadoutSummary): RuntimeItemE
 	};
 }
 
-export function flattenRuntimeItemEffects(resolved: RuntimeItemEffects): Record<string, number | boolean> {
+export function flattenRuntimeItemEffects(
+	resolved: RuntimeItemEffects
+): Record<string, number | boolean> {
 	return {
 		airControlMultiplier: resolved.physics.airControlMultiplier,
 		maxFallSpeedBonus: resolved.physics.maxFallSpeedBonus,
 		fuelRefundOnCombo: resolved.physics.fuelRefundOnCombo,
+		landingShockwave: resolved.physics.landingShockwave,
 		damageMitigation: resolved.combat.damageMitigation,
 		parryWindowBonus: resolved.combat.parryWindowBonus,
 		meleeStyleBonus: resolved.combat.meleeStyleBonus,

@@ -26,7 +26,10 @@ The first campaign world is playable as a complete vertical slice:
 - three-way story choice
 - Meter Maidens' Ledger side quest using three toll-meter scans
 - toll-gate rhythm puzzle using melee, parry, and shoot beats
-- two-phase Tollbooth Captain Grin encounter
+- deterministic steam-vent hazards with warning and active phases
+- broader patrol, turret, and bruiser enemy mix
+- production-sprite Tollbooth Captain Grin with charge and receipt-burst patterns
+- three-piece Burrowbreaker Rig route with live set bonuses
 - wafer-key payload pickup
 - debrief and Drainmarket unlock
 - persistent quest/puzzle rewards and first skill-tree purchase
@@ -71,6 +74,7 @@ python3 -m http.server 8042
 | Use active item | E |
 | Select item | 1, 2, 3 |
 | Start selected story stage | R |
+| Toggle developer overlays | D |
 | Return to title | Escape |
 
 ## Release commands

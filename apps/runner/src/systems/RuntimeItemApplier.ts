@@ -1,6 +1,6 @@
 import type { PhysicsActorState } from '@badger/platformer-core';
 import type { CombatEntity } from './CombatSystem';
-import { flattenRuntimeItemEffects, type RuntimeItemEffects } from './ItemEffectResolver';
+import { type RuntimeItemEffects, flattenRuntimeItemEffects } from './ItemEffectResolver';
 
 export interface RuntimeAppliedState {
 	actor: PhysicsActorState;
@@ -36,6 +36,7 @@ export function applyRuntimeItemEffectsToCombatEntity(
 			traceReduction: effects.hacking.traceReduction,
 			beatGrace: effects.hacking.beatGrace,
 			fuelRefundOnCombo: effects.physics.fuelRefundOnCombo,
+			landingShockwave: effects.physics.landingShockwave,
 		},
 	};
 }

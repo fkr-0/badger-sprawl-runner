@@ -5,7 +5,12 @@
 import type { ActionMap } from './InputSystem';
 import type { Entity } from './PhysicsSystem';
 
-export type PickupVisualState = 'available' | 'magnetized' | 'collecting' | 'collected' | 'respawn_pending';
+export type PickupVisualState =
+	| 'available'
+	| 'magnetized'
+	| 'collecting'
+	| 'collected'
+	| 'respawn_pending';
 export type PickupPersistence = 'ephemeral' | 'story_payload' | 'saved_once';
 
 export interface Pickup {
@@ -92,6 +97,8 @@ export class ItemSystem {
 		switch (pickup.kind) {
 			case 'rocket':
 				player.hasRocket = true;
+				player.maxFuel = Math.max(player.maxFuel ?? 0, 3);
+				player.fuel = Math.max(player.fuel ?? 0, player.maxFuel);
 				break;
 			case 'railgun':
 				player.hasRailgun = true;

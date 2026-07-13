@@ -20,6 +20,9 @@ export interface BadgerTestHarness {
 		StageRunScene['getLowerSprawlObjectiveSnapshot']
 	> | null;
 	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
+	getCaptainGrin: () => ReturnType<StageRunScene['getCaptainGrinSnapshot']> | null;
+	getLowerSprawlHazards: () => ReturnType<StageRunScene['getLowerSprawlHazardSnapshot']> | null;
+	getLoadout: () => ReturnType<StageRunScene['getLoadoutSnapshot']> | null;
 	getStoryState: () => ReturnType<RunnerApp['getFlow']>['getState'] extends () => infer T
 		? T
 		: never;
@@ -58,6 +61,22 @@ function installTestHarness(app: RunnerApp): void {
 		getBossPhase: () => {
 			const s = app.getCurrentScene();
 			return s && 'getBossPhaseSnapshot' in s ? (s as StageRunScene).getBossPhaseSnapshot() : null;
+		},
+		getCaptainGrin: () => {
+			const s = app.getCurrentScene();
+			return s && 'getCaptainGrinSnapshot' in s
+				? (s as StageRunScene).getCaptainGrinSnapshot()
+				: null;
+		},
+		getLowerSprawlHazards: () => {
+			const s = app.getCurrentScene();
+			return s && 'getLowerSprawlHazardSnapshot' in s
+				? (s as StageRunScene).getLowerSprawlHazardSnapshot()
+				: null;
+		},
+		getLoadout: () => {
+			const s = app.getCurrentScene();
+			return s && 'getLoadoutSnapshot' in s ? (s as StageRunScene).getLoadoutSnapshot() : null;
 		},
 		getEnemies: () => {
 			const s = app.getCurrentScene();

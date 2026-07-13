@@ -1,6 +1,25 @@
-import { getActiveItemSetBonuses, mergeItemSetEffects, type ItemSetBonus, type ItemSetDefinition, FIRST_RELEASE_ITEM_SETS } from './ItemSetSystem';
+import {
+	FIRST_RELEASE_ITEM_SETS,
+	type ItemSetBonus,
+	type ItemSetDefinition,
+	getActiveItemSetBonuses,
+	mergeItemSetEffects,
+} from './ItemSetSystem';
 
-export type ItemSlot = 'active' | 'weapon' | 'consumable' | 'melee' | 'melee_upgrade' | 'utility' | 'defense' | 'boon' | 'movement' | 'passive' | 'companion' | 'hack_combat' | 'meta';
+export type ItemSlot =
+	| 'active'
+	| 'weapon'
+	| 'consumable'
+	| 'melee'
+	| 'melee_upgrade'
+	| 'utility'
+	| 'defense'
+	| 'boon'
+	| 'movement'
+	| 'passive'
+	| 'companion'
+	| 'hack_combat'
+	| 'meta';
 
 export interface ItemDefinition {
 	id: string;
@@ -40,7 +59,8 @@ export class InventorySystem {
 	}
 
 	addItem(itemId: string, quantity = 1): InventoryEntry {
-		if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Invalid item quantity: ${quantity}`);
+		if (!Number.isInteger(quantity) || quantity <= 0)
+			throw new Error(`Invalid item quantity: ${quantity}`);
 		const definition = this.catalog.get(itemId);
 		const maxStack = definition?.maxStack ?? (definition?.slot === 'consumable' ? 99 : 1);
 		const existing = this.entries.get(itemId) ?? { itemId, quantity: 0, equipped: false };
@@ -66,7 +86,10 @@ export class InventorySystem {
 
 		for (const [candidateId, candidate] of this.entries) {
 			const candidateDefinition = this.catalog.get(candidateId);
-			if (candidateDefinition?.slot === definition.slot && !this.canMultiEquipSlot(definition.slot)) {
+			if (
+				candidateDefinition?.slot === definition.slot &&
+				!this.canMultiEquipSlot(definition.slot)
+			) {
 				this.entries.set(candidateId, { ...candidate, equipped: false });
 			}
 		}
@@ -91,14 +114,22 @@ export class InventorySystem {
 	}
 
 	getOwnedItemIds(): string[] {
-		return this.getEntries().filter((entry) => entry.quantity > 0).map((entry) => entry.itemId).sort();
+		return this.getEntries()
+			.filter((entry) => entry.quantity > 0)
+			.map((entry) => entry.itemId)
+			.sort();
 	}
 
 	getEquippedItemIds(): string[] {
-		return this.getEntries().filter((entry) => entry.equipped && entry.quantity > 0).map((entry) => entry.itemId).sort();
+		return this.getEntries()
+			.filter((entry) => entry.equipped && entry.quantity > 0)
+			.map((entry) => entry.itemId)
+			.sort();
 	}
 
-	buildLoadoutSummary(sets: readonly ItemSetDefinition[] = FIRST_RELEASE_ITEM_SETS): LoadoutSummary {
+	buildLoadoutSummary(
+		sets: readonly ItemSetDefinition[] = FIRST_RELEASE_ITEM_SETS
+	): LoadoutSummary {
 		const ownedItemIds = this.getOwnedItemIds();
 		const equippedItemIds = this.getEquippedItemIds();
 		const activeBonuses = getActiveItemSetBonuses(equippedItemIds, sets);
@@ -111,7 +142,10 @@ export class InventorySystem {
 		};
 	}
 
-	private getMissingSetPieces(equippedItemIds: readonly string[], sets: readonly ItemSetDefinition[]) {
+	private getMissingSetPieces(
+		equippedItemIds: readonly string[],
+		sets: readonly ItemSetDefinition[]
+	) {
 		const equipped = new Set(equippedItemIds);
 		return sets
 			.map((set) => ({
@@ -123,6 +157,12 @@ export class InventorySystem {
 	}
 
 	private canMultiEquipSlot(slot: ItemSlot): boolean {
-		return slot === 'boon' || slot === 'passive' || slot === 'companion' || slot === 'consumable';
+		return (
+			slot === 'boon' ||
+			slot === 'passive' ||
+			slot === 'companion' ||
+			slot === 'consumable' ||
+			slot === 'movement'
+		);
 	}
 }
