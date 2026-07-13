@@ -1,0 +1,352 @@
+import { type Page, expect, test } from '@playwright/test';
+import type { BadgerTestHarness } from '../../apps/runner/src/main';
+
+type Present<T> = Exclude<T, null>;
+
+interface E2EBadgerHarness
+	extends Omit<
+		BadgerTestHarness,
+		'getAnimation' | 'getEnemies' | 'getLowerSprawlObjectives' | 'getPickups' | 'getSkillTree'
+	> {
+	getAnimation: () => Present<ReturnType<BadgerTestHarness['getAnimation']>>;
+	getEnemies: () => Present<ReturnType<BadgerTestHarness['getEnemies']>>;
+	getLowerSprawlObjectives: () => Present<
+		ReturnType<BadgerTestHarness['getLowerSprawlObjectives']>
+	>;
+	getPickups: () => Present<ReturnType<BadgerTestHarness['getPickups']>>;
+	getSkillTree: () => Present<ReturnType<BadgerTestHarness['getSkillTree']>>;
+}
+
+interface E2EWindow extends Window {
+	__badger: E2EBadgerHarness;
+	__lowerSprawlEvents: unknown[];
+	__stageCompletions: unknown[];
+	__autosaves: Array<{ reason: string }>;
+	__skillPurchases: unknown[];
+}
+
+async function waitForScene(page: Page, name: string): Promise<void> {
+	await page.waitForFunction(
+		(expected) => (window as E2EWindow).__badger?.getSceneName() === expected,
+		name,
+		{ timeout: 10_000 }
+	);
+}
+
+async function enterLowerSprawl(page: Page): Promise<void> {
+	await page.goto('/');
+	await waitForScene(page, 'TitleScene');
+	await page.locator('#game').click();
+	await page.keyboard.press('Enter');
+	await waitForScene(page, 'StoryFlowScene');
+
+	for (let safety = 0; safety < 8; safety += 1) {
+		const mode = await page.evaluate(() => (window as E2EWindow).__badger.getStoryState().mode);
+		if (mode === 'stage') break;
+		await page.keyboard.press('Enter');
+		await page.waitForTimeout(35);
+	}
+	await expect
+		.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getStoryState().mode))
+		.toBe('stage');
+
+	await page.keyboard.press('2');
+	await expect
+		.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getStoryProgress().resultFlags))
+		.toContain('wafer_broadcast');
+	await page.keyboard.press('KeyR');
+	await waitForScene(page, 'StageRunScene');
+	await page.waitForFunction(() => (window as E2EWindow).__badger?.hasSheet('moss_badger'), null, {
+		timeout: 10_000,
+	});
+}
+
+async function teleportTo(page: Page, x: number, y: number): Promise<void> {
+	await page.evaluate(
+		([targetX, targetY]) =>
+			(window as E2EWindow).__badger.teleportPlayer(targetX - 17, targetY - 23),
+		[x, y]
+	);
+	await page.waitForTimeout(40);
+}
+
+test.describe('Lower Sprawl complete vertical slice', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			if (!sessionStorage.getItem('badger-e2e-initialized')) {
+				localStorage.clear();
+				sessionStorage.setItem('badger-e2e-initialized', 'true');
+			}
+			const e2eWindow = window as E2EWindow;
+			e2eWindow.__lowerSprawlEvents = [];
+			e2eWindow.__stageCompletions = [];
+			e2eWindow.__autosaves = [];
+			e2eWindow.__skillPurchases = [];
+			window.addEventListener('badger:lower-sprawl-progress', (event) => {
+				e2eWindow.__lowerSprawlEvents.push((event as CustomEvent).detail);
+			});
+			window.addEventListener('badger:stage-complete', (event) => {
+				e2eWindow.__stageCompletions.push((event as CustomEvent).detail);
+			});
+			window.addEventListener('badger:autosave-feedback', (event) => {
+				e2eWindow.__autosaves.push((event as CustomEvent).detail);
+			});
+			window.addEventListener('badger:skill-purchased', (event) => {
+				e2eWindow.__skillPurchases.push((event as CustomEvent).detail);
+			});
+		});
+	});
+
+	test('drives idle, run, jump, and melee animations from gameplay state', async ({ page }) => {
+		await enterLowerSprawl(page);
+		await teleportTo(page, 100, 448);
+		await page.waitForTimeout(350);
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getAnimation()?.currentAnim))
+			.toBe('idle');
+
+		await page.keyboard.down('ArrowRight');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getAnimation()?.currentAnim))
+			.toBe('run');
+		const observedRunFrames = await page.evaluate(
+			() =>
+				new Promise<number[]>((resolve) => {
+					const frames = new Set<number>();
+					const started = performance.now();
+					const sample = (): void => {
+						const animation = (window as E2EWindow).__badger.getAnimation();
+						if (typeof animation?.frame === 'number') frames.add(animation.frame);
+						if (performance.now() - started >= 350) resolve([...frames]);
+						else requestAnimationFrame(sample);
+					};
+					requestAnimationFrame(sample);
+				})
+		);
+		await page.keyboard.up('ArrowRight');
+		expect(observedRunFrames.length).toBeGreaterThan(1);
+
+		await page.keyboard.press('Space');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getAnimation()?.currentAnim))
+			.toBe('jump_up');
+
+		await teleportTo(page, 100, 448);
+		await page.waitForTimeout(100);
+		await page.keyboard.press('KeyJ');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getAnimation()?.currentAnim))
+			.toBe('melee_claws');
+	});
+
+	test('completes every first-world objective, debrief, save checkpoint, and skill purchase', async ({
+		page,
+	}) => {
+		await enterLowerSprawl(page);
+
+		await page.keyboard.press('Space');
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (window as E2EWindow).__badger.getLowerSprawlObjectives()?.tutorials.jumpCoyote
+				)
+			)
+			.toBe(true);
+		const initial = await page.evaluate(() =>
+			(window as E2EWindow).__badger.getLowerSprawlObjectives()
+		);
+
+		for (const meter of initial.meters) {
+			await teleportTo(page, meter.x, meter.y);
+			await page.keyboard.press('KeyM');
+			await expect
+				.poll(() =>
+					page.evaluate(
+						(id) =>
+							(window as E2EWindow).__badger
+								.getLowerSprawlObjectives()
+								?.meters.find((entry) => entry.id === id)?.scanned,
+						meter.id
+					)
+				)
+				.toBe(true);
+		}
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (window as E2EWindow).__badger.getLowerSprawlObjectives()?.questComplete
+				)
+			)
+			.toBe(true);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						(window as E2EWindow).__badger.getLowerSprawlObjectives()?.tutorials.publicRouteReading
+				)
+			)
+			.toBe(true);
+
+		const gate = await page.evaluate(
+			() => (window as E2EWindow).__badger.getLowerSprawlObjectives().gate
+		);
+		await teleportTo(page, gate.x, gate.y);
+		await page.keyboard.press('KeyM');
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (window as E2EWindow).__badger.getLowerSprawlObjectives()?.expectedInput
+				)
+			)
+			.toBe('melee');
+		await page.keyboard.press('KeyJ');
+		await page.waitForTimeout(50);
+		await page.keyboard.press('KeyL');
+		await page.waitForTimeout(50);
+		await page.keyboard.press('KeyK');
+		await expect
+			.poll(() =>
+				page.evaluate(() => (window as E2EWindow).__badger.getLowerSprawlObjectives()?.puzzleStatus)
+			)
+			.toBe('solved');
+
+		const boss = await page.evaluate(() =>
+			(window as E2EWindow).__badger
+				.getEnemies()
+				.find((enemy) => enemy.bossId === 'tollbooth-captain-grin')
+		);
+		expect(boss).toBeTruthy();
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getBossPhase()))
+			.toMatchObject({
+				activePhaseId: 'receipt-wall',
+				phaseIndex: 0,
+				phaseCount: 2,
+			});
+		await page.evaluate((hp) => (window as E2EWindow).__badger.setBossHp(hp), boss.maxHp * 0.49);
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getBossPhase()))
+			.toMatchObject({
+				activePhaseId: 'compound-interest',
+				phaseIndex: 1,
+				phaseCount: 2,
+			});
+		await page.evaluate(() => (window as E2EWindow).__badger.setBossHp(1));
+		await page.evaluate(
+			([x, y]) => (window as E2EWindow).__badger.teleportPlayer(x - 40, y),
+			[boss.x, boss.y]
+		);
+		await page.waitForTimeout(80);
+		await page.keyboard.press('KeyJ');
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const current = (window as E2EWindow).__badger
+						.getEnemies()
+						.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
+					return current?.hp ?? 0;
+				})
+			)
+			.toBeLessThanOrEqual(0);
+
+		const payload = await page.evaluate(() =>
+			(window as E2EWindow).__badger.getPickups().find((pickup) => pickup.kind === 'story_payload')
+		);
+		await teleportTo(page, payload.x + 14, payload.y + 14);
+		await waitForScene(page, 'StoryFlowScene');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getStoryState().mode))
+			.toBe('debrief');
+
+		const completion = await page.evaluate(() => (window as E2EWindow).__stageCompletions.at(-1));
+		expect(completion).toEqual({
+			stageId: 'lower-sprawl',
+			completedQuestIds: ['meter-maidens-ledger'],
+			completedMinigameIds: ['toll-gate-rhythm'],
+			completedTutorialIds: ['jump-coyote', 'public-route-reading'],
+		});
+
+		const progress = await page.evaluate(() => (window as E2EWindow).__badger.getStoryProgress());
+		expect(progress.completedStageIds).toContain('lower-sprawl');
+		expect(progress.acquiredPayloads).toContain('wafer_key');
+		expect(progress.resultFlags).toEqual(
+			expect.arrayContaining([
+				'wafer_broadcast',
+				'quest_meter_maidens_ledger',
+				'puzzle_toll_gate_rhythm',
+				'tutorial_jump_coyote',
+				'tutorial_public_route_reading',
+			])
+		);
+		const earnedMeta = await page.evaluate(() => (window as E2EWindow).__badger.getMeta());
+		expect(earnedMeta).toMatchObject({
+			credchips: 25,
+			blueprintShards: 1,
+			dubFavor: 3,
+			orbitHeat: 1,
+		});
+
+		while (
+			(await page.evaluate(() => (window as E2EWindow).__badger.getStoryState().mode)) === 'debrief'
+		) {
+			await page.keyboard.press('Enter');
+			await page.waitForTimeout(40);
+		}
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getStoryState()))
+			.toMatchObject({
+				mode: 'title-card',
+				stageId: 'drainmarket',
+			});
+
+		await page.keyboard.press('Escape');
+		await waitForScene(page, 'TitleScene');
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('Enter');
+		await waitForScene(page, 'SkillTreeScene');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getSkillTree()))
+			.toMatchObject({
+				selectedSkillId: 'double_swipe',
+				blueprintShards: 1,
+				purchasedSkills: [],
+				skills: expect.arrayContaining([
+					expect.objectContaining({ id: 'double_swipe', cost: 1, prereqs: [] }),
+					expect.objectContaining({ id: 'parry_tooth', cost: 2, prereqs: ['double_swipe'] }),
+				]),
+			});
+		await page.keyboard.press('Enter');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getSkillTree()))
+			.toMatchObject({
+				blueprintShards: 0,
+				purchasedSkills: ['double_swipe'],
+				message: 'Double Swipe unlocked',
+			});
+
+		const autosaveReasons = await page.evaluate(() =>
+			(window as E2EWindow).__autosaves.map((entry) => entry.reason)
+		);
+		expect(autosaveReasons).toEqual(
+			expect.arrayContaining(['branch-choice', 'stage-complete', 'skill-purchase'])
+		);
+
+		await page.reload();
+		await waitForScene(page, 'TitleScene');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getMeta()))
+			.toMatchObject({
+				blueprintShards: 0,
+				purchasedSkills: ['double_swipe'],
+			});
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getStoryProgress()))
+			.toMatchObject({
+				currentStageId: 'drainmarket',
+				completedStageIds: ['lower-sprawl'],
+				acquiredPayloads: ['wafer_key'],
+			});
+	});
+});
