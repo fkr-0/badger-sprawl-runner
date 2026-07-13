@@ -37,6 +37,7 @@ export class UIRenderer {
 		void camera;
 		this.renderScreenFeedback(ctx, player);
 		this.renderVitals(ctx, player, spriteRenderer);
+		this.renderCompanionStatus(ctx, player, 432, 18);
 		this.renderObjective(ctx, player);
 		this.renderCombatReadout(ctx, player);
 		this.renderToast(ctx, player);
@@ -204,6 +205,38 @@ export class UIRenderer {
 			ctx.fillRect(x + 19, y + 19, 15, 14);
 			ctx.fillStyle = TEXT;
 			ctx.fillText(String(slot.count), x + 23, y + 30);
+		}
+		ctx.restore();
+	}
+
+	private renderCompanionStatus(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		x: number,
+		y: number
+	): void {
+		const lines: Array<{ text: string; color: string }> = [];
+		if ((player.companionShield ?? 0) > 0) {
+			lines.push({ text: `Naya shield ${Math.floor(player.companionShield ?? 0)}`, color: MINT });
+		}
+		if (player.rookOverlayActive) {
+			lines.push({ text: 'Rook overlay active', color: AMBER });
+		}
+		if (player.companionHint) {
+			lines.push({ text: player.companionHint.slice(0, 28), color: MUTED });
+		}
+		if (lines.length === 0) return;
+
+		const width = 154;
+		const height = 12 + lines.length * 16;
+		ctx.save();
+		ctx.fillStyle = PANEL;
+		ctx.fillRect(x, y, width, height);
+		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.textAlign = 'left';
+		for (const [index, line] of lines.entries()) {
+			ctx.fillStyle = line.color;
+			ctx.fillText(line.text.toUpperCase(), x + 9, y + 15 + index * 16);
 		}
 		ctx.restore();
 	}
