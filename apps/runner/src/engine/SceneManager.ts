@@ -2,8 +2,8 @@
  * Scene management with push/pop/replace transitions
  */
 
-import type { EventBus } from './EventBus';
 import type { Renderer } from '../renderer/Renderer';
+import type { EventBus } from './EventBus';
 
 export interface Scene {
 	readonly name: string;
@@ -27,6 +27,12 @@ export class SceneManager {
 	push(scene: Scene): void {
 		this.stack.push(scene);
 		scene.onEnter(this.context);
+	}
+
+	clear(): void {
+		while (this.stack.length > 0) {
+			this.stack.pop()?.onExit();
+		}
 	}
 
 	pop(): Scene | undefined {

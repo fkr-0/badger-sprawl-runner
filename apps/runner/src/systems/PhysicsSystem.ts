@@ -4,7 +4,7 @@
  * variable jump height, air control, and squash/stretch
  */
 
-import { gravityStep, movementStep, platformStep, coyoteStep, aabb } from '@badger/platformer-core';
+import { aabb, coyoteStep, gravityStep, movementStep, platformStep } from '@badger/platformer-core';
 import { defaultParams } from '@badger/platformer-core';
 import type { ActionMap } from './InputSystem';
 
@@ -57,6 +57,7 @@ export interface PhysicsEvents {
 
 export class PhysicsSystem {
 	private maxHeightY = 0;
+	private static readonly SUPPORT_EPSILON = 2;
 
 	step(
 		player: Entity,
@@ -158,7 +159,18 @@ export class PhysicsSystem {
 			coyoteTime: defaultParams.coyote,
 		});
 
-		if (platformResult.onGround) {
+		const support = platforms.find((platform) => {
+			const bottom = player.y + player.h;
+			const horizontallySupported =
+				player.x + player.w > platform.x && player.x < platform.x + platform.w;
+			return (
+				horizontallySupported &&
+				player.vy >= 0 &&
+				Math.abs(bottom - platform.y) <= PhysicsSystem.SUPPORT_EPSILON
+			);
+		});
+
+		if (platformResult.onGround || support) {
 			if (!player.onGround) {
 				// Just landed
 				const fallDistance = player.y - this.maxHeightY;
@@ -174,7 +186,7 @@ export class PhysicsSystem {
 				}
 			}
 
-			player.y = platformResult.y;
+			player.y = support ? support.y - player.h : platformResult.y;
 			player.vy = 0;
 			player.onGround = true;
 			player.coyoteLeft = platformResult.coyoteLeft;

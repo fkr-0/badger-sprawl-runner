@@ -18,7 +18,22 @@ v1.0 contains:
 - tests: data validation, package tests, runner smoke checks, and runtime contracts.
 ```
 
-Deferred after v1.0: final production art/audio, browser-driven end-to-end gameplay tests, CI-hosted artifacts, and an npm publishing decision for workspace packages.
+### Playable Lower Sprawl slice
+
+The first campaign world is playable as a complete vertical slice:
+
+- briefing placard and dialogue
+- three-way story choice
+- Meter Maidens' Ledger side quest using three toll-meter scans
+- toll-gate rhythm puzzle using melee, parry, and shoot beats
+- two-phase Tollbooth Captain Grin encounter
+- wafer-key payload pickup
+- debrief and Drainmarket unlock
+- persistent quest/puzzle rewards and first skill-tree purchase
+
+The route is covered by `tests/e2e/lower-sprawl-vertical-slice.spec.ts`, including save/reload and player animation transitions.
+
+Deferred after v1.0: final production art/audio, CI-hosted artifacts, and an npm publishing decision for workspace packages.
 
 ## Requirements
 
@@ -51,11 +66,12 @@ python3 -m http.server 8042
 | Fast fall | S or Arrow Down |
 | Melee | J |
 | Shoot | K |
+| Parry | L |
+| Scan meter / synchronize toll gate | M |
 | Use active item | E |
 | Select item | 1, 2, 3 |
-| Open/close code gate minigame | M |
-| In code gate | type the shown command, Enter to submit |
-| Restart prototype | R |
+| Start selected story stage | R |
+| Return to title | Escape |
 
 ## Release commands
 

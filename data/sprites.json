@@ -605,7 +605,12 @@
 				32,
 				32
 			],
-			"sourceImageNo": [65, 68, 69, 70],
+			"sourceImageNo": [
+				65,
+				68,
+				69,
+				70
+			],
 			"animations": {
 				"rocket_backpack_pickup": {
 					"frames": 4,
@@ -1197,6 +1202,92 @@
 			}
 		},
 		{
+			"id": "drainmarket_tiles",
+			"file": "assets/sprites/worlds/drainmarket_tiles.png",
+			"frameSize": [
+				32,
+				32
+			],
+			"animations": {
+				"sump_brick": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"collision_safe",
+						"material:sump_brick",
+						"solid",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"clinic_floor": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"collision_safe",
+						"material:wet_clinic_tile",
+						"solid",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"medicine_sign": {
+					"frames": 4,
+					"fps": 6,
+					"tags": [
+						"animated_prop",
+						"decorative",
+						"material:neon",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"hanging_tubes": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"decorative",
+						"material:medical_tubing",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"sump_grate": {
+					"frames": 1,
+					"fps": 1,
+					"tags": [
+						"decorative",
+						"material:rusted_metal",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"vendor_tarp": {
+					"frames": 2,
+					"fps": 4,
+					"tags": [
+						"decorative",
+						"material:patched_canvas",
+						"tile",
+						"world:drainmarket"
+					]
+				},
+				"leaking_valve": {
+					"frames": 4,
+					"fps": 10,
+					"tags": [
+						"animated_prop",
+						"hazard",
+						"material:chemical_leak",
+						"tile",
+						"world:drainmarket"
+					]
+				}
+			},
+			"world": "drainmarket",
+			"role": "tiles"
+		},
+		{
 			"id": "chrome_arcology_tiles",
 			"file": "assets/sprites/worlds/chrome_arcology_tiles.png",
 			"frameSize": [
@@ -1275,6 +1366,61 @@
 						"tile",
 						"animated_prop",
 						"decorative"
+					]
+				}
+			}
+		},
+		{
+			"id": "drainmarket_parallax",
+			"file": "assets/sprites/worlds/drainmarket_parallax.png",
+			"frameSize": [
+				320,
+				180
+			],
+			"world": "drainmarket",
+			"role": "parallax",
+			"grid": {
+				"columns": 3,
+				"rows": 1
+			},
+			"animations": {
+				"back_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						0
+					],
+					"loop": false,
+					"tags": [
+						"world:drainmarket",
+						"parallax",
+						"back"
+					]
+				},
+				"mid_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						1
+					],
+					"loop": false,
+					"tags": [
+						"world:drainmarket",
+						"parallax",
+						"mid"
+					]
+				},
+				"front_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						2
+					],
+					"loop": false,
+					"tags": [
+						"world:drainmarket",
+						"parallax",
+						"front"
 					]
 				}
 			}

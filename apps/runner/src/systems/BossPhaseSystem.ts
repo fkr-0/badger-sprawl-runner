@@ -21,7 +21,10 @@ export class BossPhaseSystem {
 	constructor(private readonly phases: readonly RuntimeBossPhase[] = []) {}
 
 	step(_player: Player, enemies: CombatEntity[], _dt: number): BossPhaseRuntimeState | null {
-		const boss = enemies.find((enemy) => enemy.hp > 0 && enemy.maxHp > 1);
+		const boss =
+			enemies.find(
+				(enemy) => enemy.hp > 0 && typeof enemy.bossId === 'string' && enemy.bossId.length > 0
+			) ?? enemies.find((enemy) => enemy.hp > 0 && enemy.maxHp > 1);
 		if (!boss || this.phases.length === 0) {
 			this.state = null;
 			return null;
@@ -52,13 +55,20 @@ export class BossPhaseSystem {
 		return this.state ? { ...this.state } : null;
 	}
 
-	private applyPhasePressure(boss: CombatEntity, phase: RuntimeBossPhase, phaseIndex: number): void {
+	private applyPhasePressure(
+		boss: CombatEntity,
+		phase: RuntimeBossPhase,
+		phaseIndex: number
+	): void {
 		boss.bossPhaseLabel = phase.label;
 		boss.bossPhaseMechanic = phase.mechanic;
 		boss.bossPhaseIndex = phaseIndex;
 		if (phaseIndex > 0) boss.vx += boss.dir * (8 + phaseIndex * 4);
-		if (/parry|mirror|counter/i.test(phase.mechanic)) boss.parryWindow = Math.max(boss.parryWindow ?? 0, 0.08);
-		if (/laser|static|signal|broadcast|surge/i.test(phase.mechanic)) boss.stun = Math.max(0, boss.stun - 0.03);
-		if (/summon|drone|cargo|container/i.test(phase.mechanic)) boss.invuln = Math.max(boss.invuln, 0.05);
+		if (/parry|mirror|counter/i.test(phase.mechanic))
+			boss.parryWindow = Math.max(boss.parryWindow ?? 0, 0.08);
+		if (/laser|static|signal|broadcast|surge/i.test(phase.mechanic))
+			boss.stun = Math.max(0, boss.stun - 0.03);
+		if (/summon|drone|cargo|container/i.test(phase.mechanic))
+			boss.invuln = Math.max(boss.invuln, 0.05);
 	}
 }

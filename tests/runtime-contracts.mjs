@@ -238,7 +238,8 @@ for (const required of [
 for (const required of [
 	'StageRunScene',
 	'onStartStage: (stageOptions) =>',
-	'const scene = new StageRunScene({ ...stageOptions, onReturnToTitle: options.onReturnToTitle })',
+	'const scene = new StageRunScene({',
+	'onStageComplete: options.onCompleteStoryStage',
 	'options.onStartStoryStage?.(scene)',
 ]) {
 	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
@@ -270,7 +271,9 @@ for (const [source, required] of [
 	[modeSceneFactoriesSource, 'onReturnToTitle?: () => void'],
 	[modeSceneFactoriesSource, 'new TrainingScene({ onReturnToTitle: options.onReturnToTitle })'],
 	[modeSceneFactoriesSource, 'new VersusScene({ onReturnToTitle: options.onReturnToTitle })'],
-	[modeSceneFactoriesSource, 'new SkillTreeScene({ onReturnToTitle: options.onReturnToTitle })'],
+	[modeSceneFactoriesSource, 'new SkillTreeScene({'],
+	[modeSceneFactoriesSource, 'flow: storyFlow'],
+	[modeSceneFactoriesSource, 'onAutosave: options.onAutosave'],
 	[stageRunSceneSource, 'onReturnToTitle?: () => void'],
 	[stageRunSceneSource, "event.code === 'Escape'"],
 ]) {
@@ -434,7 +437,7 @@ for (const required of [
 	assert(autosaveFeedbackSource.includes(required), `AutosaveFeedback missing visible autosave contract: ${required}`);
 }
 for (const required of [
-	"onAutosave?: (reason: 'branch-choice')",
+	'onAutosave?: (reason: AutosaveReason)',
 	'getLastAutosaveFeedback',
 	'renderAutosaveFeedback',
 	"this.options.onAutosave?.('branch-choice')",

@@ -126,6 +126,19 @@ export const CAMPAIGN: CampaignDefinition = {
 				name: 'Tollbooth Captain Grin',
 				phaseCount: 2,
 				argument: 'Fees are civilization with a receipt.',
+				phases: [
+					{
+						id: 'receipt-wall',
+						label: 'Receipt Wall',
+						mechanic: 'telegraphed toll-arm swipes reward patient movement and parry timing',
+					},
+					{
+						id: 'compound-interest',
+						label: 'Compound Interest',
+						mechanic:
+							'accelerating receipt surge turns the public route into a final pressure lane',
+					},
+				],
 			},
 			debrief: {
 				speaker: 'Sister Version',
@@ -146,11 +159,7 @@ export const CAMPAIGN: CampaignDefinition = {
 					teaches: 'Follow placards and visible machinery to understand who owns the route.',
 				},
 			],
-			todo: [
-				'connect placard intro to TitleCardRenderer',
-				'route stage completion into colony debrief',
-				'replace placeholder toll captain with boss contract',
-			],
+			todo: ['replace interim Tollbooth Captain visuals and movement patterns with production art'],
 			skeleton: skeleton('market-runner'),
 		},
 		{

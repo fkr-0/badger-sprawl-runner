@@ -1,9 +1,9 @@
 import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
 import { type Scene, SceneManager } from './engine/SceneManager';
-import type { MenuOptionId } from './game/GameFlow';
-import { Renderer } from './renderer/Renderer';
+import type { GameFlow, MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
+import { Renderer } from './renderer/Renderer';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
 import { autosaveGameFlow } from './storage/AutosaveFeedback';
@@ -15,6 +15,7 @@ export interface RunnerApp {
 	routeMode(modeId: MenuOptionId): void;
 	getCurrentScene(): Scene | undefined;
 	getRenderer(): Renderer;
+	getFlow(): GameFlow;
 }
 
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
@@ -30,6 +31,12 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		storyFlow: flow,
 		onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason),
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
+		onCompleteStoryStage: (result) => {
+			flow.recordStageRuntimeResult(result);
+			flow.completeStage();
+			autosaveGameFlow(saveDriver, flow, 'stage-complete');
+			sceneManager.replace(factories.story());
+		},
 		onReturnToTitle: () => sceneManager.replace(createTitleScene()),
 	});
 	const gameLoop = new GameLoop(
@@ -59,6 +66,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		},
 		stop(): void {
 			gameLoop.stop();
+			sceneManager.clear();
 		},
 		routeMode,
 		getCurrentScene(): Scene | undefined {
@@ -66,6 +74,9 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		},
 		getRenderer(): Renderer {
 			return renderer;
+		},
+		getFlow(): GameFlow {
+			return flow;
 		},
 	};
 }

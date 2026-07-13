@@ -2,24 +2,23 @@
  * HordeScene - horde mode gameplay with wave director
  */
 
-import type { Scene } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
+import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
+import type { Scene, SceneContext } from '../engine/SceneManager';
+import type { Renderer } from '../renderer/Renderer';
+import { CameraSystem } from '../systems/CameraSystem';
+import { CombatSystem } from '../systems/CombatSystem';
+import type { CombatEntity, CombatEvent } from '../systems/CombatSystem';
+import { EnemySystem } from '../systems/EnemySystem';
 import { InputSystem } from '../systems/InputSystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
-import { CombatSystem } from '../systems/CombatSystem';
-import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
-import { CameraSystem } from '../systems/CameraSystem';
-import { EnemySystem } from '../systems/EnemySystem';
 import { WaveDirector } from '../systems/WaveDirector';
-import { createPlayer, processMossInput, type Player } from '../actors/MossBadger';
-import type { Renderer } from '../renderer/Renderer';
 
 const HORDE_ARENA_WIDTH = 2000;
 
 export class HordeScene implements Scene {
 	readonly name = 'HordeScene';
 
-	private input = new InputSystem();
+	private input: InputSystem | null = null;
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
@@ -31,6 +30,7 @@ export class HordeScene implements Scene {
 	private renderer: Renderer | null = null;
 
 	private waveTransitionTimer = 0;
+	private waveStartTimer: ReturnType<typeof setTimeout> | null = null;
 	private gameOver = false;
 	private victory = false;
 
@@ -43,16 +43,26 @@ export class HordeScene implements Scene {
 	onEnter(ctx: SceneContext): void {
 		console.log('HordeScene entered');
 		this.renderer = ctx.renderer;
+		this.input?.destroy();
+		this.input = new InputSystem();
 
 		// Start first wave after brief delay
-		setTimeout(() => {
+		this.waveStartTimer = setTimeout(() => {
+			this.waveStartTimer = null;
 			this.waveDirector.startWave(1);
 		}, 1000);
 	}
 
 	onExit(): void {
 		console.log('HordeScene exited');
+		if (this.waveStartTimer !== null) {
+			clearTimeout(this.waveStartTimer);
+			this.waveStartTimer = null;
+		}
+		this.input?.destroy();
+		this.input = null;
 		this.waveDirector.reset();
+		this.renderer = null;
 	}
 
 	update(dt: number): void {
@@ -61,7 +71,9 @@ export class HordeScene implements Scene {
 			return;
 		}
 
-		const action = this.input.snapshot();
+		const input = this.input;
+		if (!input) return;
+		const action = input.snapshot();
 
 		// Physics
 		this.physics.step(this.player, this.platforms, action, dt, {
@@ -81,7 +93,7 @@ export class HordeScene implements Scene {
 		});
 
 		// Player input
-		processMossInput(this.player, action, dt, this.combat);
+		processMossInput(this.player, action, dt, this.combat, this.enemySystem.getEnemies());
 
 		// Enemy system
 		this.enemySystem.step(this.enemySystem.getEnemies(), this.player, this.platforms, dt);
@@ -119,12 +131,7 @@ export class HordeScene implements Scene {
 		// Camera
 		this.camera.step(this.player.x, 0, HORDE_ARENA_WIDTH, dt);
 
-		// Update VFX
-		if (this.renderer) {
-			this.renderer.updateVFX(dt);
-		}
-
-		this.input.clearPressed();
+		input.clearPressed();
 	}
 
 	render(rend: Renderer, alpha: number): void {

@@ -1,8 +1,8 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
-import type { AutosaveFeedback } from '../storage/AutosaveFeedback';
 import { buildStageRunSceneOptions } from '../game/StageRunOptions';
 import type { Renderer } from '../renderer/Renderer';
+import type { AutosaveFeedback, AutosaveReason } from '../storage/AutosaveFeedback';
 import type { StageRunSceneOptions } from './StageRunScene';
 
 function formatSigned(value: number): string {
@@ -11,7 +11,8 @@ function formatSigned(value: number): string {
 
 export interface StoryFlowSceneOptions {
 	onStartStage?: (options: StageRunSceneOptions) => void;
-	onAutosave?: (reason: 'branch-choice') => AutosaveFeedback | undefined;
+	onAutosave?: (reason: AutosaveReason) => AutosaveFeedback | undefined;
+	onReturnToTitle?: () => void;
 }
 
 export interface BranchChoiceRecap {
@@ -92,6 +93,11 @@ export class StoryFlowScene implements Scene {
 	}
 
 	private handleKeyDown(event: KeyboardEvent): void {
+		if (event.code === 'Escape') {
+			event.preventDefault();
+			this.options.onReturnToTitle?.();
+			return;
+		}
 		const state = this.flow.getState();
 		if (state.mode === 'title-card') {
 			if (event.key === 'Enter' || event.key === ' ') {
@@ -111,6 +117,9 @@ export class StoryFlowScene implements Scene {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
 				this.flow.advanceDebrief();
+				if (this.flow.getState().mode !== 'debrief') {
+					this.options.onAutosave?.('stage-complete');
+				}
 			}
 			return;
 		}
@@ -147,7 +156,9 @@ export class StoryFlowScene implements Scene {
 		this.debugPanelVisible = !this.debugPanelVisible;
 		this.lastDebugDetail = this.debugPanelVisible ? this.buildStageDebugDetail() : null;
 		if (this.lastDebugDetail) {
-			window.dispatchEvent(new CustomEvent('badger:stage-debug-detail', { detail: this.lastDebugDetail }));
+			window.dispatchEvent(
+				new CustomEvent('badger:stage-debug-detail', { detail: this.lastDebugDetail })
+			);
 		}
 	}
 
@@ -185,7 +196,9 @@ export class StoryFlowScene implements Scene {
 			this.lastChoiceRecap = this.buildChoiceRecap(stage.id, outcome);
 			const autosaveFeedback = this.options.onAutosave?.('branch-choice');
 			this.lastAutosaveFeedback = autosaveFeedback ? { ...autosaveFeedback } : null;
-			window.dispatchEvent(new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap }));
+			window.dispatchEvent(
+				new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap })
+			);
 		}
 	}
 
@@ -218,12 +231,22 @@ export class StoryFlowScene implements Scene {
 		if (state.mode === 'dialogue') {
 			const dialogue = this.flow.getCurrentDialogue();
 			if (dialogue) {
-				this.renderDialoguePanel(ctx, maybeRenderer, dialogue.speaker, dialogue.lines[state.lineIndex] ?? '');
+				this.renderDialoguePanel(
+					ctx,
+					maybeRenderer,
+					dialogue.speaker,
+					dialogue.lines[state.lineIndex] ?? ''
+				);
 			}
 		} else if (state.mode === 'debrief') {
 			const debrief = this.flow.getCurrentDebrief();
 			if (debrief) {
-				this.renderDialoguePanel(ctx, maybeRenderer, debrief.speaker, debrief.lines[state.lineIndex] ?? '');
+				this.renderDialoguePanel(
+					ctx,
+					maybeRenderer,
+					debrief.speaker,
+					debrief.lines[state.lineIndex] ?? ''
+				);
 			}
 		} else if (state.mode === 'stage') {
 			this.renderStageChoicePanel(ctx);
@@ -283,7 +306,11 @@ export class StoryFlowScene implements Scene {
 		const sideQuest = stage.sideQuests?.[0];
 		if (sideQuest) {
 			ctx.fillStyle = '#92a4be';
-			ctx.fillText(`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`, panelX + 22, panelY + 132);
+			ctx.fillText(
+				`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`,
+				panelX + 22,
+				panelY + 132
+			);
 		}
 		const minigame = stage.minigames?.[0];
 		if (minigame) {
@@ -310,11 +337,14 @@ export class StoryFlowScene implements Scene {
 		}
 
 		ctx.fillStyle = '#8d94a7';
-		ctx.fillText('Arrow keys: select • 1-3/Enter: commit branch • D: debug • R: run stage', panelX + 22, panelY + 188);
+		ctx.fillText(
+			'Arrow keys: select • 1-3/Enter: commit branch • D: debug • R: run stage',
+			panelX + 22,
+			panelY + 188
+		);
 		this.renderChoiceRecap(ctx, panelX + 22, panelY + 204, panelW - 44);
 		this.renderAutosaveFeedback(ctx, panelX + panelW - 272, panelY + 204);
 	}
-
 
 	private renderStageDebugPanel(ctx: CanvasRenderingContext2D): void {
 		if (!this.debugPanelVisible) return;
@@ -354,7 +384,12 @@ export class StoryFlowScene implements Scene {
 		ctx.fillText(`✓ ${feedback.label}`, x, y);
 	}
 
-	private renderChoiceRecap(ctx: CanvasRenderingContext2D, x: number, y: number, maxWidth: number): void {
+	private renderChoiceRecap(
+		ctx: CanvasRenderingContext2D,
+		x: number,
+		y: number,
+		maxWidth: number
+	): void {
 		const recap = this.lastChoiceRecap;
 		if (!recap) {
 			if (!this.lastChoiceResult) return;
@@ -367,6 +402,10 @@ export class StoryFlowScene implements Scene {
 		ctx.fillStyle = '#cfeee4';
 		ctx.fillText(recap.consequence.slice(0, Math.max(24, Math.floor(maxWidth / 8))), x, y + 16);
 		ctx.fillStyle = '#ffb35e';
-		ctx.fillText(`Heat ${formatSigned(recap.orbitHeatDelta)} / Favor ${formatSigned(recap.dubFavorDelta)}`, x, y + 32);
+		ctx.fillText(
+			`Heat ${formatSigned(recap.orbitHeatDelta)} / Favor ${formatSigned(recap.dubFavorDelta)}`,
+			x,
+			y + 32
+		);
 	}
 }

@@ -108,7 +108,7 @@ export function getRandomEnemyForWave(waveNumber: number): string {
 		sprawlEnemies.push('bass_turret_stub');
 	}
 
-	return sprawlEnemies[Math.floor(Math.random() * sprawlEnemies.length)];
+	return sprawlEnemies[Math.floor(Math.random() * sprawlEnemies.length)] ?? 'toll_rat_crawler';
 }
 
 export function getEnemySpawnPoints(

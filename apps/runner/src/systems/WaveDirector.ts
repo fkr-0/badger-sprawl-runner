@@ -2,9 +2,14 @@
  * WaveDirector - manages horde mode wave spawning and progression
  */
 
+import {
+	createEnemy,
+	getEnemyCost,
+	getEnemySpawnPoints,
+	getRandomEnemyForWave,
+} from '../actors/EnemyFactory';
 import type { EnemyEntity } from './EnemySystem';
 import type { EnemySystem } from './EnemySystem';
-import { getRandomEnemyForWave, getEnemySpawnPoints, getEnemyCost } from '../actors/EnemyFactory';
 
 export interface WaveConfig {
 	waveNumber: number;
@@ -13,11 +18,18 @@ export interface WaveConfig {
 	spawnDelay: number;
 }
 
+interface QueuedSpawn {
+	enemyId: string;
+	delay: number;
+	x: number;
+	y: number;
+}
+
 export class WaveDirector {
 	private waveNumber = 0;
 	private enemiesRemaining: EnemyEntity[] = [];
 	private waveActive = false;
-	private spawnQueue: Array<{ enemyId: string; delay: number }> = [];
+	private spawnQueue: QueuedSpawn[] = [];
 	private spawnTimer = 0;
 	private waveTimer = 0;
 	private arenaWidth = 1600;
@@ -45,9 +57,15 @@ export class WaveDirector {
 			const cost = getEnemyCost(enemyId);
 
 			if (budget >= cost) {
+				const spawnPoint = spawnPoints[pointIndex] ?? {
+					x: Math.floor(this.arenaWidth / 2),
+					y: 400,
+				};
 				this.spawnQueue.push({
 					enemyId,
 					delay: Math.random() * 2, // Stagger spawns
+					x: spawnPoint.x,
+					y: spawnPoint.y,
 				});
 				budget -= cost;
 				pointIndex++;
@@ -75,7 +93,7 @@ export class WaveDirector {
 		return { current: this.waveNumber, total: 10 };
 	}
 
-	step(dt: number, playerX: number): void {
+	step(dt: number, _playerX: number): void {
 		if (!this.waveActive) return;
 
 		this.spawnTimer += dt;
@@ -85,27 +103,11 @@ export class WaveDirector {
 		while (this.spawnQueue.length > 0 && this.spawnTimer >= this.spawnQueue[0].delay) {
 			const spawn = this.spawnQueue.shift();
 			if (!spawn) break;
-			const enemy = this.enemySystem.spawnEnemy(
-				{
-					id: spawn.enemyId,
-					class: spawn.enemyId.includes('drone')
-						? 'drone'
-						: spawn.enemyId.includes('turret')
-							? 'turret'
-							: 'crawler',
-					hp: 2,
-					speed: 40,
-					damage: 1,
-					stun: 0.3,
-					attackRange: 200,
-					attackCd: 1.2,
-					ai: { kind: 'patrol', patrolSpeed: 30, turnAtEdge: true },
-				},
-				playerX + 400 + Math.random() * 200, // Spawn ahead of player
-				420
-			);
-			this.enemiesRemaining.push(enemy);
-			this.spawnTimer = 0;
+			this.spawnTimer -= spawn.delay;
+			const enemy = createEnemy(this.enemySystem, spawn.enemyId, spawn.x, spawn.y);
+			if (enemy) {
+				this.enemiesRemaining.push(enemy);
+			}
 		}
 
 		// Check for dead enemies

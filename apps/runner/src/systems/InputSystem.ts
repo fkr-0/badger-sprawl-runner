@@ -26,13 +26,30 @@ export interface ActionMap {
 	debugToggle: boolean;
 }
 
+export interface KeyboardInputTarget {
+	addEventListener(type: 'keydown' | 'keyup', listener: (event: KeyboardEvent) => void): void;
+	removeEventListener(type: 'keydown' | 'keyup', listener: (event: KeyboardEvent) => void): void;
+}
+
 export class InputSystem {
 	private keys = new Set<string>();
 	private pressed = new Set<string>();
+	private readonly keyDownListener = (event: KeyboardEvent): void => this.onKeyDown(event);
+	private readonly keyUpListener = (event: KeyboardEvent): void => this.onKeyUp(event);
+	private destroyed = false;
 
-	constructor() {
-		window.addEventListener('keydown', this.onKeyDown.bind(this));
-		window.addEventListener('keyup', this.onKeyUp.bind(this));
+	constructor(private readonly target: KeyboardInputTarget = window) {
+		this.target.addEventListener('keydown', this.keyDownListener);
+		this.target.addEventListener('keyup', this.keyUpListener);
+	}
+
+	destroy(): void {
+		if (this.destroyed) return;
+		this.destroyed = true;
+		this.target.removeEventListener('keydown', this.keyDownListener);
+		this.target.removeEventListener('keyup', this.keyUpListener);
+		this.keys.clear();
+		this.pressed.clear();
 	}
 
 	private onKeyDown(e: KeyboardEvent): void {

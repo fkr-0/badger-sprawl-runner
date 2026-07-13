@@ -3,8 +3,8 @@ import { SideRoomGenerator } from '../procgen/SideRoomGenerator';
 import type { StageRunSceneOptions } from '../scenes/StageRunScene';
 import { isRuntimeStageId } from '../world/stageLayoutRegistry';
 import type { GameFlow } from './GameFlow';
-import { buildStoryBalanceRules } from './StoryBalanceRules';
 import { buildStageRuntimeConfig } from './StageRuntimeConfig';
+import { buildStoryBalanceRules } from './StoryBalanceRules';
 
 export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions {
 	const stage = flow.getCurrentStage();
@@ -19,7 +19,10 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 	const stageId = stage && isRuntimeStageId(stage.id) ? stage.id : undefined;
 	const procgenSeed = `${stageId ?? 'lower-sprawl'}:${storyProgress.completedStageIds.length}:${storyProgress.resultFlags.join('|')}`;
 	const generatedEnemyPacks = stageId
-		? new EncounterGenerator().generatePacks({ stageId, seed: procgenSeed, gameplayHooks: branchGameplayHooks }, 1)
+		? new EncounterGenerator().generatePacks(
+				{ stageId, seed: procgenSeed, gameplayHooks: branchGameplayHooks },
+				1
+			)
 		: [];
 	const generatedSideRooms = stageId
 		? new SideRoomGenerator().generateSideRooms({
@@ -37,6 +40,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		balanceRules,
 		runtimeConfig,
 		procgenSeed,
+		unlockedSkills: meta.purchasedSkills,
 		generatedEnemyPacks,
 		generatedSideRooms,
 		bossPhases: stage?.boss?.phases?.map((phase) => ({ ...phase })) ?? [],

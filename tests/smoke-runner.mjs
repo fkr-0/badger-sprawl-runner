@@ -40,4 +40,14 @@ assert(
 	'runner bundle is missing concrete route status text'
 );
 
-console.log('badger-sprawl-runner smoke ok');
+const spriteManifestPath = join(distRoot, 'data/sprites.json');
+assert(await exists(spriteManifestPath), 'runner build is missing data/sprites.json');
+const spriteManifest = JSON.parse(await readFile(spriteManifestPath, 'utf8'));
+for (const sheet of spriteManifest.spriteSheets) {
+	assert(
+		await exists(join(distRoot, sheet.file)),
+		`runner build is missing sprite sheet: ${sheet.file}`
+	);
+}
+
+console.log(`badger-sprawl-runner smoke ok (${spriteManifest.spriteSheets.length} sprite sheets)`);

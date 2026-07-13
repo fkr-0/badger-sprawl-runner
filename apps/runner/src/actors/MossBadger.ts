@@ -71,13 +71,14 @@ export function processMossInput(
 	player: Player,
 	actionMap: ActionMap,
 	dt: number,
-	combatSystem: Pick<CombatSystem, 'melee'>
+	combatSystem: Pick<CombatSystem, 'melee'>,
+	enemies: CombatEntity[] = []
 ): void {
 	// Melee
 	if (actionMap.meleePressed && player.meleeTimer <= 0) {
 		player.meleeTimer = player.hasKatana ? 0.28 : 0.18;
 		player.combo = player.hasKatana ? 'katana' : 'claws';
-		combatSystem.melee(player, [], player.combo);
+		combatSystem.melee(player, enemies, player.combo);
 	}
 
 	// Shoot

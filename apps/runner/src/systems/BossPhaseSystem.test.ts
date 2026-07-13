@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPlayer } from '../actors/MossBadger';
-import type { CombatEntity } from './CombatSystem';
 import { BossPhaseSystem } from './BossPhaseSystem';
+import type { CombatEntity } from './CombatSystem';
 
 function boss(overrides: Partial<CombatEntity> = {}): CombatEntity {
 	return {
@@ -32,9 +32,13 @@ const phases = [
 describe('BossPhaseSystem', () => {
 	it('selects phase by boss health ratio', () => {
 		const system = new BossPhaseSystem(phases);
-		expect(system.step(createPlayer(), [boss({ hp: 6 })], 0.016)?.activePhaseId).toBe('display-window');
+		expect(system.step(createPlayer(), [boss({ hp: 6 })], 0.016)?.activePhaseId).toBe(
+			'display-window'
+		);
 		expect(system.step(createPlayer(), [boss({ hp: 3 })], 0.016)?.activePhaseId).toBe('laser-tax');
-		expect(system.step(createPlayer(), [boss({ hp: 1 })], 0.016)?.activePhaseId).toBe('drone-contract');
+		expect(system.step(createPlayer(), [boss({ hp: 1 })], 0.016)?.activePhaseId).toBe(
+			'drone-contract'
+		);
 	});
 
 	it('applies readable phase metadata and combat pressure to boss entities', () => {
@@ -54,5 +58,15 @@ describe('BossPhaseSystem', () => {
 		system.step(createPlayer(), [boss({ hp: 6 })], 0.016);
 		expect(system.step(createPlayer(), [boss({ hp: 0 })], 0.016)).toBeNull();
 		expect(system.getState()).toBeNull();
+	});
+
+	it('prefers the explicitly tagged boss over ordinary multi-hit enemies', () => {
+		const ordinary = boss({ hp: 2, maxHp: 2 });
+		const captain = boss({ hp: 3, maxHp: 6, bossId: 'captain-grin' });
+		const state = new BossPhaseSystem(phases).step(createPlayer(), [ordinary, captain], 0.016);
+
+		expect(state?.activePhaseId).toBe('laser-tax');
+		expect(captain.bossPhaseLabel).toBe('Laser Tax');
+		expect(ordinary.bossPhaseLabel).toBeUndefined();
 	});
 });

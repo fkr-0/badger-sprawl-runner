@@ -122,4 +122,18 @@ describe('RunnerApp scene shell', () => {
 		expect(renderSpy).toHaveBeenCalledOnce();
 		expect(ctx.clearRect).toHaveBeenCalledWith(0, 0, 960, 540);
 	});
+
+	it('exits the active scene when the application stops', () => {
+		installWindowStub();
+		const app = createRunnerApp(createCanvasStub());
+		app.start();
+		const scene = app.getCurrentScene();
+		if (!scene) throw new Error('expected current scene after start');
+		const exitSpy = vi.spyOn(scene, 'onExit');
+
+		app.stop();
+
+		expect(exitSpy).toHaveBeenCalledOnce();
+		expect(app.getCurrentScene()).toBeUndefined();
+	});
 });

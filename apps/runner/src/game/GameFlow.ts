@@ -1,8 +1,8 @@
 import {
 	BRANCH_CONSEQUENCES,
-	CAMPAIGN,
 	type BossPhase,
 	type BranchConsequence,
+	CAMPAIGN,
 	type CampaignStage,
 	type SideQuest,
 	type StageMinigame,
@@ -136,6 +136,13 @@ export interface SkillNode {
 	unlocked: boolean;
 }
 
+export interface StageRuntimeResult {
+	stageId: string;
+	completedQuestIds: string[];
+	completedMinigameIds: string[];
+	completedTutorialIds: string[];
+}
+
 export type SkillPurchaseFailure =
 	| 'unknown-skill'
 	| 'already-unlocked'
@@ -192,7 +199,9 @@ const STAGES: StageSpec[] = CAMPAIGN.stages.map((stage) => ({
 	resultFlag: stage.resultFlag,
 	tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 	stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
-	stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
+	stageTemplate: stage.stageTemplate
+		? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] }
+		: undefined,
 	choiceOutcomes: stage.choice.outcomes?.map((outcome) => ({ ...outcome })),
 	traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 	sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -223,24 +232,28 @@ const DEBRIEFS: Record<string, DebriefSpec> = Object.fromEntries(
 	])
 );
 
-
-
 const BRANCH_DEBRIEF_LINES: Record<string, string> = {
 	lio_exposed: 'Branch echo: Lio is exposed; every ally now knows trust can become evidence.',
 	lio_protected: 'Branch echo: Lio is protected; mercy costs heat, but it keeps one channel human.',
 	lio_baited: 'Branch echo: Lio became bait; the next rooms treat loyalty like a tactical asset.',
 	colony_alignment_chorus: 'Branch echo: the colony hears itself as a chorus, not an army.',
 	colony_alignment_army: 'Branch echo: the colony hardens into ranks, shields up before songs.',
-	colony_alignment_supplier: 'Branch echo: the colony chooses supply lines, favors, and quiet exits.',
+	colony_alignment_supplier:
+		'Branch echo: the colony chooses supply lines, favors, and quiet exits.',
 	ledger_public_dump: 'Branch echo: the ledger went public; the city argues with receipts in hand.',
 	ledger_targeted_burn: 'Branch echo: the ledger burn is targeted; fewer sparks, sharper enemies.',
 	ledger_prisoner_trade: 'Branch echo: the ledger becomes ransom; the freed remember who paid.',
-	cargo_safe_partial: 'Branch echo: the cargo reversal is partial; safe crates move before perfect justice.',
-	cargo_full_release: 'Branch echo: the cargo opens fully; heat rises because everyone can see the theft.',
-	cargo_decoy_reversal: 'Branch echo: the decoy reversal buys time while the real route slips sideways.',
+	cargo_safe_partial:
+		'Branch echo: the cargo reversal is partial; safe crates move before perfect justice.',
+	cargo_full_release:
+		'Branch echo: the cargo opens fully; heat rises because everyone can see the theft.',
+	cargo_decoy_reversal:
+		'Branch echo: the decoy reversal buys time while the real route slips sideways.',
 	broadcast_abolish_skylock: 'Ending echo: abolish Skylock; no one gets to own the route again.',
-	broadcast_chorus_control: 'Ending echo: chorus control; the system survives only while the choir watches it.',
-	broadcast_publish_tools: 'Ending echo: publish the tools; every kid gets the manual, not just the myth.',
+	broadcast_chorus_control:
+		'Ending echo: chorus control; the system survives only while the choir watches it.',
+	broadcast_publish_tools:
+		'Ending echo: publish the tools; every kid gets the manual, not just the myth.',
 };
 
 function buildDebriefLines(baseLines: readonly string[], resultFlags: readonly string[]): string[] {
@@ -327,7 +340,10 @@ export class GameFlow {
 
 	constructor(meta: Partial<MetaState> = {}, storyProgress: Partial<StoryProgress> = {}) {
 		this.meta = { ...createDefaultMetaState(), ...meta };
-		this.storyProgress = migrateStoryProgress({ ...createDefaultStoryProgress(), ...storyProgress }).progress;
+		this.storyProgress = migrateStoryProgress({
+			...createDefaultStoryProgress(),
+			...storyProgress,
+		}).progress;
 		this.skills = createSkillMap(this.meta.purchasedSkills);
 	}
 
@@ -347,19 +363,29 @@ export class GameFlow {
 		return MENU_OPTIONS.map((option) => ({ ...option }));
 	}
 
+	getSkills(): SkillNode[] {
+		return SKILLS.map((skill) => ({
+			...skill,
+			prereqs: [...skill.prereqs],
+			unlocked: Boolean(this.skills.get(skill.id)?.unlocked),
+		}));
+	}
+
 	getStages(): StageSpec[] {
 		return STAGES.map((stage) => ({
 			...stage,
 			boss: stage.boss
 				? {
-					...stage.boss,
-					lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
-					phases: stage.boss.phases?.map((phase) => ({ ...phase })),
-				}
+						...stage.boss,
+						lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
+						phases: stage.boss.phases?.map((phase) => ({ ...phase })),
+					}
 				: undefined,
 			tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 			stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
-			stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
+			stageTemplate: stage.stageTemplate
+				? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] }
+				: undefined,
 			choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 			traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 			sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -376,14 +402,16 @@ export class GameFlow {
 					...stage,
 					boss: stage.boss
 						? {
-					...stage.boss,
-					lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
-					phases: stage.boss.phases?.map((phase) => ({ ...phase })),
-				}
+								...stage.boss,
+								lessons: stage.boss.lessons?.map((lesson) => ({ ...lesson })),
+								phases: stage.boss.phases?.map((phase) => ({ ...phase })),
+							}
 						: undefined,
 					tutorialBeats: stage.tutorialBeats?.map((beat) => ({ ...beat })),
 					stageModifiers: stage.stageModifiers?.map((modifier) => ({ ...modifier })),
-					stageTemplate: stage.stageTemplate ? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] } : undefined,
+					stageTemplate: stage.stageTemplate
+						? { ...stage.stageTemplate, segments: [...stage.stageTemplate.segments] }
+						: undefined,
 					choiceOutcomes: stage.choiceOutcomes?.map((outcome) => ({ ...outcome })),
 					traversalHazards: stage.traversalHazards?.map((hazard) => ({ ...hazard })),
 					sideQuests: stage.sideQuests?.map((quest) => ({ ...quest })),
@@ -418,7 +446,8 @@ export class GameFlow {
 		if (!stageId) return [];
 		const resultFlags = new Set(this.storyProgress.resultFlags);
 		return BRANCH_CONSEQUENCES.filter(
-			(consequence) => resultFlags.has(consequence.resultFlag) && consequence.stageIds.includes(stageId)
+			(consequence) =>
+				resultFlags.has(consequence.resultFlag) && consequence.stageIds.includes(stageId)
 		).map((consequence) => ({
 			...consequence,
 			stageIds: [...consequence.stageIds],
@@ -654,6 +683,54 @@ export class GameFlow {
 		const result = purchaseSkill(this.skills, this.meta, skillId);
 		this.meta = result.state;
 		return result;
+	}
+
+	recordStageRuntimeResult(result: StageRuntimeResult): void {
+		const currentStage = this.getCurrentStage();
+		if (!currentStage || currentStage.id !== result.stageId) return;
+
+		const existingFlags = new Set(this.storyProgress.resultFlags);
+		let dubFavorDelta = 0;
+		let credchipDelta = 0;
+		const nextBoons = new Set(this.meta.unlockedBoons);
+
+		for (const questId of result.completedQuestIds) {
+			const flag = `quest_${questId.replaceAll('-', '_')}`;
+			if (!existingFlags.has(flag)) {
+				existingFlags.add(flag);
+				if (questId === 'meter-maidens-ledger') {
+					dubFavorDelta += 1;
+					credchipDelta += 25;
+					nextBoons.add('safer_route_rumor');
+				}
+			}
+		}
+
+		for (const minigameId of result.completedMinigameIds) {
+			const flag = `puzzle_${minigameId.replaceAll('-', '_')}`;
+			if (!existingFlags.has(flag)) {
+				existingFlags.add(flag);
+				if (minigameId === 'toll-gate-rhythm') {
+					dubFavorDelta += 1;
+					nextBoons.add('lower_sprawl_route_safety');
+				}
+			}
+		}
+
+		for (const tutorialId of result.completedTutorialIds) {
+			existingFlags.add(`tutorial_${tutorialId.replaceAll('-', '_')}`);
+		}
+
+		this.storyProgress = {
+			...this.storyProgress,
+			resultFlags: [...existingFlags],
+		};
+		this.meta = {
+			...this.meta,
+			credchips: this.meta.credchips + credchipDelta,
+			dubFavor: this.meta.dubFavor + dubFavorDelta,
+			unlockedBoons: [...nextBoons],
+		};
 	}
 
 	returnToMenu(): void {

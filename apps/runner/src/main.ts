@@ -1,4 +1,6 @@
-import { createRunnerApp, type RunnerApp } from './RunnerApp';
+import { type RunnerApp, createRunnerApp } from './RunnerApp';
+import type { MenuOptionId } from './game/GameFlow';
+import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
 
 export interface RunnerBootstrapResult {
@@ -13,20 +15,49 @@ export interface BadgerTestHarness {
 	getPlayer: () => ReturnType<StageRunScene['getPlayerSnapshot']> | null;
 	getEnemies: () => ReturnType<StageRunScene['getEnemySnapshots']> | null;
 	getPickups: () => ReturnType<StageRunScene['getPickupSnapshots']> | null;
-	routeMode: (modeId: string) => void;
+	getAnimation: () => ReturnType<StageRunScene['getAnimationSnapshot']> | null;
+	getLowerSprawlObjectives: () => ReturnType<
+		StageRunScene['getLowerSprawlObjectiveSnapshot']
+	> | null;
+	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
+	getStoryState: () => ReturnType<RunnerApp['getFlow']>['getState'] extends () => infer T
+		? T
+		: never;
+	getMeta: () => ReturnType<RunnerApp['getFlow']>['getMeta'] extends () => infer T ? T : never;
+	getStoryProgress: () => ReturnType<RunnerApp['getFlow']>['getStoryProgress'] extends () => infer T
+		? T
+		: never;
+	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
+	teleportPlayer: (x: number, y: number) => void;
+	setBossHp: (hp: number) => void;
+	routeMode: (modeId: MenuOptionId) => void;
 	getLoadedSheetIds: () => string[];
 	hasSheet: (sheetId: string) => boolean;
 }
 
+interface RunnerWindow extends Window {
+	__app?: RunnerApp;
+	__badger?: BadgerTestHarness;
+}
+
+interface SpriteRendererWithSheetMap {
+	sheets?: Map<string, unknown>;
+}
+
 function installTestHarness(app: RunnerApp): void {
+	const runnerWindow = window as RunnerWindow;
 	// Expose app for advanced test access
-	(window as any).__app = app;
+	runnerWindow.__app = app;
 
 	const h: BadgerTestHarness = {
 		getSceneName: () => app.getCurrentScene()?.name ?? 'none',
 		getPlayer: () => {
 			const s = app.getCurrentScene();
 			return s && 'getPlayerSnapshot' in s ? (s as StageRunScene).getPlayerSnapshot() : null;
+		},
+		getBossPhase: () => {
+			const s = app.getCurrentScene();
+			return s && 'getBossPhaseSnapshot' in s ? (s as StageRunScene).getBossPhaseSnapshot() : null;
 		},
 		getEnemies: () => {
 			const s = app.getCurrentScene();
@@ -36,13 +67,38 @@ function installTestHarness(app: RunnerApp): void {
 			const s = app.getCurrentScene();
 			return s && 'getPickupSnapshots' in s ? (s as StageRunScene).getPickupSnapshots() : null;
 		},
-		routeMode: (modeId: string) => app.routeMode(modeId as any),
+		getAnimation: () => {
+			const s = app.getCurrentScene();
+			return s && 'getAnimationSnapshot' in s ? (s as StageRunScene).getAnimationSnapshot() : null;
+		},
+		getLowerSprawlObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getLowerSprawlObjectiveSnapshot' in s
+				? (s as StageRunScene).getLowerSprawlObjectiveSnapshot()
+				: null;
+		},
+		getStoryState: () => app.getFlow().getState(),
+		getMeta: () => app.getFlow().getMeta(),
+		getStoryProgress: () => app.getFlow().getStoryProgress(),
+		getSkillTree: () => {
+			const s = app.getCurrentScene();
+			return s && 'getSnapshot' in s ? (s as SkillTreeScene).getSnapshot() : null;
+		},
+		teleportPlayer: (x, y) => {
+			const s = app.getCurrentScene();
+			if (s && 'debugTeleportPlayer' in s) (s as StageRunScene).debugTeleportPlayer(x, y);
+		},
+		setBossHp: (hp) => {
+			const s = app.getCurrentScene();
+			if (s && 'debugSetBossHp' in s) (s as StageRunScene).debugSetBossHp(hp);
+		},
+		routeMode: (modeId) => app.routeMode(modeId),
 		getLoadedSheetIds: () => {
 			const renderer = app.getRenderer?.();
 			const spriteRenderer = renderer?.getSpriteRenderer?.();
 			if (!spriteRenderer) return [];
 			// Access internal sheets map via reflection
-			const sheets = (spriteRenderer as any).sheets;
+			const sheets = (spriteRenderer as unknown as SpriteRendererWithSheetMap).sheets;
 			return sheets ? Array.from(sheets.keys()) : [];
 		},
 		hasSheet: (sheetId: string) => {
@@ -51,7 +107,7 @@ function installTestHarness(app: RunnerApp): void {
 			return spriteRenderer?.hasSheet(sheetId) ?? false;
 		},
 	};
-	(window as any).__badger = h;
+	runnerWindow.__badger = h;
 }
 
 export function bootstrapRunnerApp(doc: Document = document): RunnerBootstrapResult | null {

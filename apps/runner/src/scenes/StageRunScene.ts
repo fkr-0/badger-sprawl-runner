@@ -3,33 +3,44 @@
  * Hosts all systems and the game loop tick order
  */
 
+import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
-import { InputSystem } from '../systems/InputSystem';
-import { PhysicsSystem } from '../systems/PhysicsSystem';
-import { CombatSystem } from '../systems/CombatSystem';
-import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
-import type { CombatEvent, CombatEntity } from '../systems/CombatSystem';
-import { CameraSystem } from '../systems/CameraSystem';
+import type { StageRuntimeResult } from '../game/GameFlow';
+import {
+	type LowerSprawlObjectiveEvent,
+	type LowerSprawlObjectiveSnapshot,
+	LowerSprawlObjectives,
+} from '../game/LowerSprawlObjectives';
+import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
+import type { StoryBalanceRules } from '../game/StoryBalanceRules';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
-import type { StoryBalanceRules } from '../game/StoryBalanceRules';
-import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
-import { BossPhaseSystem, type RuntimeBossPhase } from '../systems/BossPhaseSystem';
 import {
-	applyPersistedPayloadPickups,
-	ItemSystem,
-	type Pickup,
-} from '../systems/ItemSystem';
-import { cloneStageLayout, type RuntimeStageId } from '../world/stageLayoutRegistry';
-import { createPlayer, processMossInput, type Player } from '../actors/MossBadger';
-import type { Platform } from '../systems/PhysicsSystem';
+	type AnimationState,
+	createAnimationState,
+	playAnimation,
+} from '../renderer/AnimationState';
 import type { Renderer } from '../renderer/Renderer';
 import {
-	playAnimation,
-	createAnimationState,
-	type AnimationState,
-} from '../renderer/AnimationState';
+	type BossPhaseRuntimeState,
+	BossPhaseSystem,
+	type RuntimeBossPhase,
+} from '../systems/BossPhaseSystem';
+import { CameraSystem } from '../systems/CameraSystem';
+import { CombatSystem } from '../systems/CombatSystem';
+import type { CombatEntity, CombatEvent } from '../systems/CombatSystem';
+import { CompanionSystem, resolveCompanionGameplayModifiers } from '../systems/CompanionSystem';
+import { InputSystem } from '../systems/InputSystem';
+import {
+	ItemSystem,
+	type Pickup,
+	applyPersistedPayloadPickups,
+	getCollectedStoryPayloadIds,
+} from '../systems/ItemSystem';
+import { PhysicsSystem } from '../systems/PhysicsSystem';
+import type { Platform } from '../systems/PhysicsSystem';
+import { type RuntimeStageId, cloneStageLayout } from '../world/stageLayoutRegistry';
 
 export interface RuntimeTutorialBeat {
 	id: string;
@@ -57,14 +68,16 @@ export interface StageRunSceneOptions {
 	generatedEnemyPacks?: readonly GeneratedEnemyPack[];
 	generatedSideRooms?: readonly GeneratedSideRoom[];
 	procgenSeed?: string;
+	unlockedSkills?: readonly string[];
 	onStoryPayloadCollected?: (payloadId: string) => void;
+	onStageComplete?: (result: StageRuntimeResult) => void;
 	onReturnToTitle?: () => void;
 }
 
 export class StageRunScene implements Scene {
 	readonly name = 'StageRunScene';
 
-	private input = new InputSystem();
+	private input: InputSystem | null = null;
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
 	private camera = new CameraSystem();
@@ -90,6 +103,8 @@ export class StageRunScene implements Scene {
 	private hitstopRemaining = 0;
 	private screenShakeIntensity = 0;
 	private lastAnimationFrame = 0;
+	private readonly lowerSprawlObjectives: LowerSprawlObjectives | null;
+	private stageCompletionDispatched = false;
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.companions = new CompanionSystem(
@@ -98,9 +113,156 @@ export class StageRunScene implements Scene {
 		);
 		this.bossPhases = new BossPhaseSystem(options.bossPhases ?? []);
 		this.player = createPlayer();
+		this.player.unlockedSkills = [...(options.unlockedSkills ?? [])];
 		// Initialize animation state
 		this.player.animState = createAnimationState();
+		this.lowerSprawlObjectives =
+			options.stageId === 'lower-sprawl' ? new LowerSprawlObjectives() : null;
 		this.initWorld();
+	}
+
+	private handleLowerSprawlEvents(events: LowerSprawlObjectiveEvent[]): void {
+		if (events.length === 0 || !this.lowerSprawlObjectives) return;
+		for (const event of events) {
+			if (event.kind === 'meter-scanned') {
+				this.renderer?.emitVFX(this.player.x + this.player.w / 2, this.player.y + 12, 'emp', 5, 26);
+			} else if (event.kind === 'puzzle-step' || event.kind === 'puzzle-complete') {
+				this.renderer?.emitVFX(
+					this.player.x + this.player.w / 2,
+					this.player.y + 18,
+					'pickup',
+					6,
+					32
+				);
+			}
+			window.dispatchEvent(
+				new CustomEvent('badger:lower-sprawl-progress', {
+					detail: { event, snapshot: this.lowerSprawlObjectives.getSnapshot() },
+				})
+			);
+		}
+	}
+
+	private updateLowerSprawlCompletion(): void {
+		const objectives = this.lowerSprawlObjectives;
+		if (!objectives || this.stageCompletionDispatched) return;
+		const payloadCollected = getCollectedStoryPayloadIds(this.pickups).includes('wafer_key');
+		const boss = this.enemies.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
+		this.handleLowerSprawlEvents(
+			objectives.observeWorld(payloadCollected, Boolean(boss && boss.hp <= 0))
+		);
+		const result = objectives.claimCompletion();
+		if (!result) return;
+		this.stageCompletionDispatched = true;
+		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
+		this.options.onStageComplete?.(result);
+	}
+
+	private renderLowerSprawlWorld(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const snapshot = this.lowerSprawlObjectives?.getSnapshot();
+		if (!snapshot) return;
+		ctx.save();
+		ctx.textAlign = 'center';
+		ctx.font = '10px ui-monospace, monospace';
+		for (const meter of snapshot.meters) {
+			const x = meter.x - cameraX;
+			ctx.fillStyle = meter.scanned ? '#67f3c4' : '#ffb35e';
+			ctx.fillRect(x - 8, meter.y - 34, 16, 34);
+			ctx.fillStyle = '#0b1020';
+			ctx.fillRect(x - 4, meter.y - 29, 8, 8);
+			ctx.fillStyle = meter.scanned ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(meter.scanned ? 'SCANNED' : 'M: SCAN', x, meter.y - 42);
+		}
+
+		const gateX = snapshot.gate.x - cameraX;
+		ctx.strokeStyle = snapshot.puzzleStatus === 'solved' ? '#67f3c4' : '#ff5e7a';
+		ctx.lineWidth = 4;
+		ctx.strokeRect(gateX - 26, snapshot.gate.y - 86, 52, 86);
+		ctx.fillStyle = snapshot.puzzleStatus === 'active' ? '#ffb35e' : '#eaf2ff';
+		ctx.fillText(
+			snapshot.puzzleStatus === 'idle' || snapshot.puzzleStatus === 'failed'
+				? 'M: SYNC TOLL'
+				: snapshot.puzzleStatus === 'active'
+					? `BEAT: ${snapshot.expectedInput?.toUpperCase()}`
+					: 'ROUTE OPEN',
+			gateX,
+			snapshot.gate.y - 94
+		);
+		ctx.restore();
+	}
+
+	private renderLowerSprawlObjectivePanel(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.lowerSprawlObjectives?.getSnapshot();
+		if (!snapshot) return;
+		const scanned = snapshot.meters.filter((meter) => meter.scanned).length;
+		const x = 24;
+		const y = ctx.canvas.height - 122;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.86)';
+		ctx.fillRect(x, y, 430, 98);
+		ctx.strokeStyle = snapshot.readyToComplete ? '#67f3c4' : '#ffb35e';
+		ctx.strokeRect(x, y, 430, 98);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText('LOWER SPRAWL OBJECTIVES', x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = snapshot.questComplete ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Side job: toll meters ${scanned}/3`, x + 12, y + 40);
+		ctx.fillStyle = snapshot.puzzleStatus === 'solved' ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(
+			`Toll rhythm: ${snapshot.puzzleStatus}${snapshot.expectedInput ? ` • ${snapshot.expectedInput}` : ''}`,
+			x + 12,
+			y + 57
+		);
+		ctx.fillStyle = snapshot.payloadCollected ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Wafer key: ${snapshot.payloadCollected ? 'secured' : 'missing'}`, x + 12, y + 74);
+		ctx.fillStyle = snapshot.bossDefeated ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(`Captain Grin: ${snapshot.bossDefeated ? 'defeated' : 'active'}`, x + 220, y + 74);
+		ctx.restore();
+	}
+
+	getAnimationSnapshot(): {
+		currentAnim: string;
+		frame: number;
+		timer: number;
+		loop: boolean;
+		frames: number;
+		fps: number;
+	} | null {
+		const state = this.player.animState;
+		if (!state) return null;
+		const animation = this.renderer?.getSpriteRenderer().getSheet('moss_badger')?.sheet.animations[
+			state.currentAnim
+		];
+		return {
+			currentAnim: state.currentAnim,
+			frame: state.frame,
+			timer: state.timer,
+			loop: state.loop,
+			frames: animation?.frames ?? 0,
+			fps: animation?.fps ?? 0,
+		};
+	}
+
+	getLowerSprawlObjectiveSnapshot(): LowerSprawlObjectiveSnapshot | null {
+		return this.lowerSprawlObjectives?.getSnapshot() ?? null;
+	}
+
+	getBossPhaseSnapshot(): BossPhaseRuntimeState | null {
+		return this.bossPhases.getState();
+	}
+
+	debugTeleportPlayer(x: number, y: number): void {
+		this.player.x = x;
+		this.player.y = y;
+		this.player.vx = 0;
+		this.player.vy = 0;
+	}
+
+	debugSetBossHp(hp: number): void {
+		const boss = this.enemies.find((enemy) => enemy.bossId === this.options.bossPlaceholder?.id);
+		if (boss) boss.hp = Math.max(0, Math.min(boss.maxHp, hp));
 	}
 
 	getTutorialOverlayBeats(): RuntimeTutorialBeat[] {
@@ -113,7 +275,10 @@ export class StageRunScene implements Scene {
 
 	getBalanceRules(): StoryBalanceRules | null {
 		return this.options.balanceRules
-			? { ...this.options.balanceRules, activeReasons: [...this.options.balanceRules.activeReasons] }
+			? {
+					...this.options.balanceRules,
+					activeReasons: [...this.options.balanceRules.activeReasons],
+				}
 			: null;
 	}
 
@@ -129,46 +294,81 @@ export class StageRunScene implements Scene {
 	}
 
 	getPlayerSnapshot(): {
-		x: number; y: number; vx: number; vy: number;
-		hp: number; maxHp: number; onGround: boolean;
-		hasRailgun: boolean; hasRocket: boolean; hasKatana: boolean;
-		fuel: number; stims: number; meleeTimer: number;
+		x: number;
+		y: number;
+		vx: number;
+		vy: number;
+		hp: number;
+		maxHp: number;
+		onGround: boolean;
+		hasRailgun: boolean;
+		hasRocket: boolean;
+		hasKatana: boolean;
+		fuel: number;
+		stims: number;
+		meleeTimer: number;
 	} {
 		const p = this.player;
 		return {
-			x: p.x, y: p.y, vx: p.vx, vy: p.vy,
-			hp: p.hp, maxHp: p.maxHp, onGround: p.onGround,
-			hasRailgun: p.hasRailgun, hasRocket: p.hasRocket, hasKatana: p.hasKatana,
-			fuel: p.fuel, stims: p.stims, meleeTimer: p.meleeTimer,
+			x: p.x,
+			y: p.y,
+			vx: p.vx,
+			vy: p.vy,
+			hp: p.hp,
+			maxHp: p.maxHp,
+			onGround: p.onGround,
+			hasRailgun: p.hasRailgun,
+			hasRocket: p.hasRocket,
+			hasKatana: p.hasKatana,
+			fuel: p.fuel,
+			stims: p.stims,
+			meleeTimer: p.meleeTimer,
 		};
 	}
 
 	getEnemySnapshots(): Array<{ x: number; y: number; hp: number; maxHp: number; bossId?: string }> {
 		return this.enemies.map((e) => ({
-			x: e.x, y: e.y, hp: e.hp, maxHp: e.maxHp,
-			bossId: (e as any).bossId,
+			x: e.x,
+			y: e.y,
+			hp: e.hp,
+			maxHp: e.maxHp,
+			bossId: 'bossId' in e && typeof e.bossId === 'string' ? e.bossId : undefined,
 		}));
 	}
 
 	getPickupSnapshots(): Array<{ id: string; x: number; y: number; taken: boolean; kind: string }> {
 		return this.pickups.map((p) => ({
-			id: p.id, x: p.x, y: p.y, taken: p.taken, kind: p.kind,
+			id: p.id,
+			x: p.x,
+			y: p.y,
+			taken: p.taken,
+			kind: p.kind,
 		}));
 	}
 
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
+		this.input?.destroy();
+		this.input = new InputSystem();
 		if (this.options.tutorialBeats?.length) {
-			window.dispatchEvent(new CustomEvent('badger:tutorial-overlay', { detail: this.getTutorialOverlayBeats() }));
+			window.dispatchEvent(
+				new CustomEvent('badger:tutorial-overlay', { detail: this.getTutorialOverlayBeats() })
+			);
 		}
 		if (this.options.bossPlaceholder) {
-			window.dispatchEvent(new CustomEvent('badger:boss-placeholder', { detail: this.getBossPlaceholder() }));
+			window.dispatchEvent(
+				new CustomEvent('badger:boss-placeholder', { detail: this.getBossPlaceholder() })
+			);
 		}
 		if (this.options.balanceRules) {
-			window.dispatchEvent(new CustomEvent('badger:story-balance', { detail: this.getBalanceRules() }));
+			window.dispatchEvent(
+				new CustomEvent('badger:story-balance', { detail: this.getBalanceRules() })
+			);
 		}
 		if (this.options.runtimeConfig) {
-			window.dispatchEvent(new CustomEvent('badger:stage-runtime-config', { detail: this.getRuntimeConfig() }));
+			window.dispatchEvent(
+				new CustomEvent('badger:stage-runtime-config', { detail: this.getRuntimeConfig() })
+			);
 		}
 		this.renderer = ctx.renderer;
 		// Load sprite manifest if available
@@ -187,6 +387,8 @@ export class StageRunScene implements Scene {
 
 	onExit(): void {
 		console.log('StageRunScene exited');
+		this.input?.destroy();
+		this.input = null;
 		if (this.keyHandler) {
 			window.removeEventListener('keydown', this.keyHandler);
 			this.keyHandler = null;
@@ -194,8 +396,14 @@ export class StageRunScene implements Scene {
 	}
 
 	update(dt: number): void {
-		const action = this.input.snapshot();
+		const input = this.input;
+		if (!input) return;
+		const action = input.snapshot();
 		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
+		this.handleLowerSprawlEvents(this.lowerSprawlObjectives?.step(simDt) ?? []);
+		this.handleLowerSprawlEvents(
+			this.lowerSprawlObjectives?.observeAction(this.player, action) ?? []
+		);
 
 		// Handle hitstop - freeze game briefly for impact
 		if (this.hitstopRemaining > 0) {
@@ -224,7 +432,8 @@ export class StageRunScene implements Scene {
 			onEvent: (event) => this.handleCombatEvent(event),
 			mitigateDamage: (amount) =>
 				this.companions.mitigateDamage(amount, {
-					onShield: (blocked) => this.renderer?.emitVFX(this.player.x, this.player.y, 'emp', blocked + 3, 30),
+					onShield: (blocked) =>
+						this.renderer?.emitVFX(this.player.x, this.player.y, 'emp', blocked + 3, 30),
 				}),
 			requestHitstop: (duration) => {
 				this.hitstopRemaining = duration;
@@ -256,18 +465,14 @@ export class StageRunScene implements Scene {
 		this.camera.step(this.player.x, 0, 990, simDt);
 
 		// Player input processing
-		processMossInput(this.player, action, simDt, this.combat);
+		processMossInput(this.player, action, simDt, this.combat, this.enemies);
 
 		// Update animation state
 		this.updateAnimation(simDt);
-
-		// Update VFX
-		if (this.renderer) {
-			this.renderer.updateVFX(simDt);
-		}
+		this.updateLowerSprawlCompletion();
 
 		// Clear edge detection
-		this.input.clearPressed();
+		input.clearPressed();
 	}
 
 	render(rend: Renderer, alpha: number): void {
@@ -289,6 +494,7 @@ export class StageRunScene implements Scene {
 		rend.drawBackground();
 		rend.renderParallax(cam.x);
 		rend.renderPlatforms(this.platforms, cam.x);
+		this.renderLowerSprawlWorld(ctx, cam.x);
 		rend.renderPickups(this.pickups, cam.x);
 		rend.renderPlayer(this.player, cam.x);
 		rend.renderEnemies(this.enemies, cam.x);
@@ -297,10 +503,10 @@ export class StageRunScene implements Scene {
 		this.renderBalanceOverlay(ctx);
 		this.renderRuntimeConfigOverlay(ctx);
 		this.renderTutorialOverlay(ctx);
+		this.renderLowerSprawlObjectivePanel(ctx);
 
 		ctx.restore();
 	}
-
 
 	private renderBalanceOverlay(ctx: CanvasRenderingContext2D): void {
 		const rules = this.options.balanceRules;
@@ -318,7 +524,11 @@ export class StageRunScene implements Scene {
 		ctx.fillText('Story balance', x + 12, y + 20);
 		ctx.font = '11px ui-monospace, monospace';
 		ctx.fillStyle = '#eaf2ff';
-		ctx.fillText(`merchant x${rules.merchantPriceModifier.toFixed(2)} / assist ${rules.allyAssistLevel}`, x + 12, y + 42);
+		ctx.fillText(
+			`merchant x${rules.merchantPriceModifier.toFixed(2)} / assist ${rules.allyAssistLevel}`,
+			x + 12,
+			y + 42
+		);
 		ctx.fillStyle = '#92a4be';
 		ctx.fillText(`hazards ${rules.hazardIntensity} / ending ${rules.endingTone}`, x + 12, y + 60);
 		ctx.fillStyle = '#67f3c4';
@@ -395,8 +605,7 @@ export class StageRunScene implements Scene {
 		}
 
 		// Check for attack animation
-		const lastAction = this.combat.getLastAction();
-		if (lastAction?.kind === 'melee' && Date.now() - lastAction.time < 200) {
+		if (this.player.meleeTimer > 0) {
 			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
 		}
 
@@ -429,10 +638,18 @@ export class StageRunScene implements Scene {
 	private emitAnimationEvents(animName: string, frame: number): void {
 		const renderer = this.renderer;
 		if (!renderer) return;
-		for (const event of renderer.getSpriteRenderer().getAnimationEvents('moss_badger', animName, frame)) {
+		for (const event of renderer
+			.getSpriteRenderer()
+			.getAnimationEvents('moss_badger', animName, frame)) {
 			switch (event.kind) {
 				case 'footstep':
-					renderer.emitVFX(this.player.x + this.player.w / 2, this.player.y + this.player.h, 'dust', 2, 18);
+					renderer.emitVFX(
+						this.player.x + this.player.w / 2,
+						this.player.y + this.player.h,
+						'dust',
+						2,
+						18
+					);
 					break;
 				case 'vfx': {
 					const payload = event.payload ?? {};
@@ -541,7 +758,8 @@ export class StageRunScene implements Scene {
 		this.platforms = layout.platforms;
 		this.pickups = layout.pickups;
 		applyPersistedPayloadPickups(this.pickups, this.options.acquiredPayloadIds ?? []);
-		const generatedPacks = this.options.generatedEnemyPacks ??
+		const generatedPacks =
+			this.options.generatedEnemyPacks ??
 			this.encounterGenerator.generatePacks(
 				{
 					stageId: this.options.stageId ?? layout.id,
@@ -561,8 +779,6 @@ export class StageRunScene implements Scene {
 			...(bossPlaceholder ? [bossPlaceholder] : []),
 		];
 	}
-
-
 
 	private createBossPlaceholder(stageId: string): CombatEntity | null {
 		const boss = this.options.bossPlaceholder;

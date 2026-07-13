@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
+import { type Scene, type SceneContext, SceneManager } from './SceneManager';
 
 function collectTsFiles(dir: string): string[] {
 	const out: string[] = [];
@@ -32,5 +33,26 @@ describe('SceneManager renderer boundary', () => {
 		});
 
 		expect(offenders).toEqual([]);
+	});
+});
+
+describe('SceneManager lifecycle', () => {
+	it('exits every stacked scene from top to bottom when cleared', () => {
+		const exitOrder: string[] = [];
+		const scene = (name: string): Scene => ({
+			name,
+			onEnter: vi.fn(),
+			onExit: () => exitOrder.push(name),
+			update: vi.fn(),
+			render: vi.fn(),
+		});
+		const manager = new SceneManager({} as SceneContext);
+
+		manager.push(scene('base'));
+		manager.push(scene('overlay'));
+		manager.clear();
+
+		expect(exitOrder).toEqual(['overlay', 'base']);
+		expect(manager.getCurrent()).toBeUndefined();
 	});
 });

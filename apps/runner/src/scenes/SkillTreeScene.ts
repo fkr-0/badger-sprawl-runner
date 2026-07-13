@@ -4,12 +4,17 @@ import type { Renderer } from '../renderer/Renderer';
  */
 
 import type { Scene, SceneContext } from '../engine/SceneManager';
-
-const SKILL_IDS = ['double_swipe', 'parry_tooth', 'rail_mastery'] as const;
-
-type SkillId = (typeof SKILL_IDS)[number];
+import {
+	type GameFlow,
+	type SkillNode,
+	type SkillPurchaseFailure,
+	createGameFlow,
+} from '../game/GameFlow';
+import type { AutosaveFeedback, AutosaveReason } from '../storage/AutosaveFeedback';
 
 export interface SkillTreeSceneOptions {
+	flow?: GameFlow;
+	onAutosave?: (reason: AutosaveReason) => AutosaveFeedback | undefined;
 	onReturnToTitle?: () => void;
 }
 
@@ -17,17 +22,50 @@ export class SkillTreeScene implements Scene {
 	readonly name = 'SkillTreeScene';
 
 	private selectedIndex = 0;
-	private purchased = new Set<SkillId>();
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
+	private readonly flow: GameFlow;
+	private message = '';
+	private lastAutosaveFeedback: AutosaveFeedback | null = null;
 
-	constructor(private readonly options: SkillTreeSceneOptions = {}) {}
-
-	getSelectedSkill(): SkillId {
-		return SKILL_IDS[this.selectedIndex] ?? 'double_swipe';
+	constructor(private readonly options: SkillTreeSceneOptions = {}) {
+		this.flow = options.flow ?? createGameFlow();
 	}
 
-	getPurchasedSkills(): SkillId[] {
-		return [...this.purchased];
+	getSelectedSkill(): SkillNode {
+		return (
+			this.getSkills()[this.selectedIndex] ??
+			this.getSkills()[0] ?? {
+				id: 'double_swipe',
+				name: 'Double Swipe',
+				cost: 1,
+				prereqs: [],
+				unlocked: false,
+			}
+		);
+	}
+
+	getPurchasedSkills(): string[] {
+		return [...this.flow.getMeta().purchasedSkills];
+	}
+
+	getSkills(): SkillNode[] {
+		return this.flow.getSkills();
+	}
+
+	getSnapshot(): {
+		selectedSkillId: string;
+		blueprintShards: number;
+		purchasedSkills: string[];
+		skills: SkillNode[];
+		message: string;
+	} {
+		return {
+			selectedSkillId: this.getSelectedSkill().id,
+			blueprintShards: this.flow.getMeta().blueprintShards,
+			purchasedSkills: this.getPurchasedSkills(),
+			skills: this.getSkills(),
+			message: this.message,
+		};
 	}
 
 	onEnter(_ctx: SceneContext): void {
@@ -66,11 +104,25 @@ export class SkillTreeScene implements Scene {
 	update(_dt: number): void {}
 
 	moveSelection(delta: number): void {
-		this.selectedIndex = (this.selectedIndex + delta + SKILL_IDS.length) % SKILL_IDS.length;
+		const count = this.getSkills().length;
+		if (count === 0) return;
+		this.selectedIndex = (this.selectedIndex + delta + count) % count;
 	}
 
 	purchaseSelectedSkill(): void {
-		this.purchased.add(this.getSelectedSkill());
+		const selected = this.getSelectedSkill();
+		const result = this.flow.purchaseSkill(selected.id);
+		if (result.ok) {
+			this.message = `${result.node.name} unlocked`;
+			this.lastAutosaveFeedback = this.options.onAutosave?.('skill-purchase') ?? null;
+			window.dispatchEvent(
+				new CustomEvent('badger:skill-purchased', {
+					detail: { skill: result.node, meta: result.state, autosave: this.lastAutosaveFeedback },
+				})
+			);
+			return;
+		}
+		this.message = this.describeFailure(result.reason);
 	}
 
 	render(renderer: Renderer, _alpha: number): void {
@@ -85,13 +137,53 @@ export class SkillTreeScene implements Scene {
 		ctx.font = '700 28px ui-monospace, monospace';
 		ctx.textAlign = 'center';
 		ctx.fillText('SKILL TREE', ctx.canvas.width / 2, 90);
+		const skills = this.getSkills();
+		const meta = this.flow.getMeta();
 		ctx.font = '16px ui-monospace, monospace';
-		ctx.fillText(`selected: ${this.getSelectedSkill()}`, ctx.canvas.width / 2, 135);
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(`Blueprint shards: ${meta.blueprintShards}`, ctx.canvas.width / 2, 132);
+		ctx.textAlign = 'left';
+		for (const [index, skill] of skills.entries()) {
+			const y = 178 + index * 42;
+			const selected = index === this.selectedIndex;
+			ctx.fillStyle = skill.unlocked ? '#67f3c4' : selected ? '#ffb35e' : '#eaf2ff';
+			ctx.fillText(
+				`${selected ? '>' : ' '} ${skill.name} • ${skill.cost} shard${skill.cost === 1 ? '' : 's'}${skill.unlocked ? ' • UNLOCKED' : ''}`,
+				ctx.canvas.width / 2 - 250,
+				y
+			);
+			ctx.fillStyle = '#92a4be';
+			ctx.font = '12px ui-monospace, monospace';
+			ctx.fillText(
+				`prereqs: ${skill.prereqs.join(', ') || 'none'}`,
+				ctx.canvas.width / 2 - 220,
+				y + 17
+			);
+			ctx.font = '16px ui-monospace, monospace';
+		}
+		ctx.textAlign = 'center';
+		ctx.fillStyle = this.message.includes('unlocked') ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(this.message, ctx.canvas.width / 2, ctx.canvas.height - 66);
+		ctx.fillStyle = '#92a4be';
+		ctx.font = '12px ui-monospace, monospace';
 		ctx.fillText(
-			`purchased: ${this.getPurchasedSkills().join(', ') || 'none'}`,
+			'↑/↓ select • Enter purchase • Esc return',
 			ctx.canvas.width / 2,
-			170
+			ctx.canvas.height - 34
 		);
 		ctx.restore();
+	}
+
+	private describeFailure(reason: SkillPurchaseFailure): string {
+		switch (reason) {
+			case 'already-unlocked':
+				return 'Already unlocked';
+			case 'missing-prerequisite':
+				return 'Missing prerequisite';
+			case 'insufficient-shards':
+				return 'Not enough blueprint shards';
+			case 'unknown-skill':
+				return 'Unknown skill';
+		}
 	}
 }
