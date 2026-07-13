@@ -1039,22 +1039,26 @@ export class StageRunScene implements Scene {
 		const animState = this.player.animState as AnimationState;
 		if (!animState) return;
 
-		// Determine animation based on state
-		if (!this.player.onGround) {
-			if (this.player.vy < 0) {
-				playAnimation(animState, 'jump_up');
-			} else {
-				playAnimation(animState, 'fall');
-			}
+		if (this.player.hp <= 0) {
+			playAnimation(animState, 'death_or_down', false);
+		} else if (this.player.stun > 0) {
+			playAnimation(animState, 'hit', false);
+		} else if ((this.player.parryWindow ?? 0) > 0) {
+			playAnimation(animState, 'parry', false);
+		} else if (this.player.meleeTimer > 0) {
+			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
+		} else if (this.player.boostCd > 0.18 && !this.player.onGround) {
+			playAnimation(animState, 'rocket_boost', false);
+		} else if (this.player.justLanded) {
+			playAnimation(animState, 'land', false);
+		} else if (this.player.isDodging) {
+			playAnimation(animState, 'skid', false);
+		} else if (!this.player.onGround) {
+			playAnimation(animState, this.player.vy < 0 ? 'jump_up' : 'fall');
 		} else if (Math.abs(this.player.vx) > 10) {
 			playAnimation(animState, 'run');
 		} else {
 			playAnimation(animState, 'idle');
-		}
-
-		// Check for attack animation
-		if (this.player.meleeTimer > 0) {
-			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
 		}
 
 		this.advanceAnimationFrames(animState, dt);

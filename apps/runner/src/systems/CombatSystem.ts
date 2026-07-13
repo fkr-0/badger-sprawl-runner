@@ -394,6 +394,7 @@ export class CombatSystem {
 			}
 
 			target.hp -= damage;
+			if (attack.source === 'enemy') target.invuln = Math.max(target.invuln, 0.5);
 			target.stun = Math.max(target.stun, attack.stun);
 			target.vx += attacker.dir * attack.knockbackX;
 			target.vy += attack.knockbackY ?? 0;

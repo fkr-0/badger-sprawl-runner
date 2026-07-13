@@ -205,4 +205,26 @@ describe('CombatSystem deterministic combat', () => {
 		expect(player.vx).toBeLessThanOrEqual(-430);
 		expect(player.vy).toBeLessThan(0);
 	});
+
+	it('grants brief damage grace after an explicit enemy attack', () => {
+		const system = new CombatSystem();
+		const attacker = entity({ faction: 'enemy' });
+		const player = entity({ faction: 'player' });
+		const attack: AttackSpec = {
+			id: 'toll-swipe',
+			source: 'enemy',
+			damage: 1,
+			stun: 0.2,
+			knockbackX: 40,
+			hitbox: { x: -10, y: -10, w: 80, h: 80 },
+		};
+
+		const first = system.resolveAttack(attacker, [player], attack);
+		const second = system.resolveAttack(attacker, [player], attack);
+
+		expect(first.hits).toHaveLength(1);
+		expect(player.invuln).toBeGreaterThanOrEqual(0.5);
+		expect(second.hits).toHaveLength(0);
+		expect(player.hp).toBe(4);
+	});
 });
