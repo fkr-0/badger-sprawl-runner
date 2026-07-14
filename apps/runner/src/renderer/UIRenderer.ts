@@ -39,9 +39,49 @@ export class UIRenderer {
 		this.renderVitals(ctx, player, spriteRenderer);
 		this.renderCompanionStatus(ctx, player, 432, 18);
 		this.renderObjective(ctx, player);
+		this.renderGearLoadout(ctx, player, spriteRenderer);
 		this.renderCombatReadout(ctx, player);
 		this.renderToast(ctx, player);
 		this.renderContextHint(ctx, player);
+	}
+
+	private renderGearLoadout(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		spriteRenderer: SpriteRenderer | undefined
+	): void {
+		const slots = player.gearIconSlots ?? [];
+		if (slots.length === 0) return;
+		const gap = 7;
+		const width = 20 + slots.length * (HUD_ICON_SIZE + gap);
+		const x = ctx.canvas.width - width - 18;
+		const y = 90;
+		ctx.save();
+		ctx.fillStyle = PANEL;
+		ctx.fillRect(x, y, width, 54);
+		ctx.fillStyle = MINT;
+		ctx.fillRect(x + width - 3, y, 3, 54);
+		ctx.textAlign = 'left';
+		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.fillStyle = MUTED;
+		ctx.fillText('EQUIPPED SIGNAL', x + 9, y + 12);
+		for (const [index, slot] of slots.entries()) {
+			const iconX = x + 9 + index * (HUD_ICON_SIZE + gap);
+			const iconY = y + 17;
+			ctx.fillStyle = 'rgba(103, 243, 196, 0.1)';
+			ctx.fillRect(iconX - 1, iconY - 1, HUD_ICON_SIZE + 2, HUD_ICON_SIZE + 2);
+			ctx.strokeStyle = MINT;
+			ctx.strokeRect(iconX - 1, iconY - 1, HUD_ICON_SIZE + 2, HUD_ICON_SIZE + 2);
+			if (spriteRenderer?.hasSheet(slot.sheetId)) {
+				spriteRenderer.drawFrame(slot.sheetId, slot.animation, 0, iconX, iconY);
+			} else {
+				ctx.fillStyle = '#1a1d26';
+				ctx.fillRect(iconX, iconY, HUD_ICON_SIZE, HUD_ICON_SIZE);
+				ctx.fillStyle = TEXT;
+				ctx.fillText(slot.label.slice(0, 3).toUpperCase(), iconX + 5, iconY + 20);
+			}
+		}
+		ctx.restore();
 	}
 
 	private renderScreenFeedback(ctx: CanvasRenderingContext2D, player: Player): void {

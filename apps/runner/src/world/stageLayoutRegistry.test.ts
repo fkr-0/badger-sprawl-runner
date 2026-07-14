@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cloneStageLayout, RUNTIME_STAGE_IDS } from './stageLayoutRegistry';
+import { RUNTIME_STAGE_IDS, cloneStageLayout } from './stageLayoutRegistry';
 
 describe('stageLayoutRegistry', () => {
 	it('clones a distinct runtime layout for every campaign stage id', () => {
@@ -10,6 +10,22 @@ describe('stageLayoutRegistry', () => {
 			expect(layout.pickups.some((pickup) => pickup.persistence === 'story_payload')).toBe(true);
 			expect(layout.enemies.length).toBeGreaterThan(0);
 		}
+	});
+
+	it('uses the authored Chrome Arcology railgun layout and production enemy families', () => {
+		const layout = cloneStageLayout('chrome-arcology');
+		expect(layout.id).toBe('chrome-arcology-runtime');
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'elevator_seed')).toBe(true);
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'railgun')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'chrome_bellhop')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'mirror_sentinel')).toBe(true);
+	});
+
+	it('uses the authored Drainmarket combat layout instead of a shifted Lower Sprawl clone', () => {
+		const layout = cloneStageLayout('drainmarket');
+		expect(layout.id).toBe('drainmarket-runtime');
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'stim_cache')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'knife_drone')).toBe(true);
 	});
 
 	it('maps story payload pickups to the requested stage payload', () => {

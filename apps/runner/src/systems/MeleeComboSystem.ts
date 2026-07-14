@@ -1,6 +1,6 @@
+import { aabb } from '@badger/platformer-core';
 import type { CombatEntity, CombatEvents } from './CombatSystem';
 import type { Entity } from './PhysicsSystem';
-import { aabb } from '@badger/platformer-core';
 
 export type MeleeInput = 'light' | 'heavy' | 'launcher' | 'air' | 'finisher';
 
@@ -61,6 +61,7 @@ export const MELEE_MOVES: Record<string, MeleeMove> = {
 		knockbackY: 0,
 		hitbox: { x: 30, y: 6, w: 46, h: 30 },
 		chainsTo: ['tail_hook', 'invoice_splitter'],
+		requiresSkill: 'double_swipe',
 		comboWindow: 0.46,
 		styleGain: 1,
 	},
@@ -159,9 +160,10 @@ export function resolveNextMeleeMove(
 	input: MeleeInput,
 	player: Pick<Entity, 'onGround'>
 ): MeleeMove | null {
-	const candidates = state.activeMoveId && state.comboTimer > 0
-		? MELEE_MOVES[state.activeMoveId]?.chainsTo ?? []
-		: [...STARTER_MOVE_IDS];
+	const candidates =
+		state.activeMoveId && state.comboTimer > 0
+			? (MELEE_MOVES[state.activeMoveId]?.chainsTo ?? [])
+			: [...STARTER_MOVE_IDS];
 
 	for (const moveId of candidates) {
 		const move = MELEE_MOVES[moveId];
@@ -176,7 +178,10 @@ export function resolveNextMeleeMove(
 
 function worldHitbox(player: Pick<Entity, 'x' | 'y' | 'w' | 'dir'>, move: MeleeMove) {
 	return {
-		x: player.dir >= 0 ? player.x + player.w + move.hitbox.x - 26 : player.x - move.hitbox.x - move.hitbox.w + 26,
+		x:
+			player.dir >= 0
+				? player.x + player.w + move.hitbox.x - 26
+				: player.x - move.hitbox.x - move.hitbox.w + 26,
 		y: player.y + move.hitbox.y,
 		w: move.hitbox.w,
 		h: move.hitbox.h,
@@ -198,7 +203,12 @@ export class MeleeComboSystem {
 		this.state = decayMeleeCombo(this.state, dt);
 	}
 
-	attack(player: Entity, enemies: CombatEntity[], input: MeleeInput, events?: CombatEvents): MeleeAttackResult | null {
+	attack(
+		player: Entity,
+		enemies: CombatEntity[],
+		input: MeleeInput,
+		events?: CombatEvents
+	): MeleeAttackResult | null {
 		const move = resolveNextMeleeMove(this.state, input, player);
 		if (!move) return null;
 
@@ -212,7 +222,11 @@ export class MeleeComboSystem {
 			enemy.vx += player.dir * move.knockbackX;
 			enemy.vy += move.knockbackY;
 			hits.push({ enemy, damage: move.damage, killed: enemy.hp <= 0 });
-			events?.onEvent?.({ kind: enemy.hp <= 0 ? 'kill' : 'hit', source: 'player', damage: move.damage });
+			events?.onEvent?.({
+				kind: enemy.hp <= 0 ? 'kill' : 'hit',
+				source: 'player',
+				damage: move.damage,
+			});
 		}
 
 		this.state = {

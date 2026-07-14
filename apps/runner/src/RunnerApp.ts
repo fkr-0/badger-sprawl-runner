@@ -4,6 +4,7 @@ import { type Scene, SceneManager } from './engine/SceneManager';
 import type { GameFlow, MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
 import { Renderer } from './renderer/Renderer';
+import { resolveRuntimeAssetUrl } from './runtime/RuntimeEnvironment';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
 import { autosaveGameFlow } from './storage/AutosaveFeedback';
@@ -61,6 +62,12 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 
 	return {
 		start(): void {
+			renderer
+				.loadSprites(resolveRuntimeAssetUrl('data/sprites.json'))
+				.then(() => window.dispatchEvent(new CustomEvent('badger:sprites-ready')))
+				.catch((error: unknown) => {
+					console.error('Sprite manifest failed to load', error);
+				});
 			sceneManager.replace(createTitleScene());
 			gameLoop.start();
 		},

@@ -25,6 +25,18 @@ export const LOWER_SPRAWL_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
 	{ id: 'toll-approach', label: 'Toll approach', x: 1320, y: 448 },
 ];
 
+export const CHROME_ARCOLOGY_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
+	{ id: 'arcology-lobby', label: 'Arcology lobby', x: 60, y: 448 },
+	{ id: 'service-guts', label: 'Service guts', x: 920, y: 448 },
+	{ id: 'seed-vault', label: 'Seed vault approach', x: 1700, y: 448 },
+];
+
+export const DRAINMARKET_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
+	{ id: 'drain-entry', label: 'Drainmarket entry', x: 60, y: 448 },
+	{ id: 'clinic-crossing', label: 'Clinic crossing', x: 900, y: 448 },
+	{ id: 'nest-approach', label: 'Nest approach', x: 1490, y: 448 },
+];
+
 export class StageCheckpointSystem {
 	private activeIndex = 0;
 

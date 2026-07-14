@@ -525,6 +525,163 @@
 			}
 		},
 		{
+			"id": "moss_badger_production",
+			"file": "assets/sprites/moss_badger_production.png",
+			"frameSize": [
+				48,
+				48
+			],
+			"grid": {
+				"columns": 4,
+				"rows": 2
+			},
+			"animations": {
+				"idle": {
+					"frames": 1,
+					"fps": 6,
+					"order": [
+						0
+					]
+				},
+				"run": {
+					"frames": 8,
+					"fps": 14,
+					"order": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					],
+					"events": [
+						{
+							"frame": 1,
+							"kind": "footstep",
+							"name": "left"
+						},
+						{
+							"frame": 5,
+							"kind": "footstep",
+							"name": "right"
+						}
+					]
+				},
+				"skid": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						1
+					]
+				},
+				"jump_up": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						2
+					]
+				},
+				"fall": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						6
+					]
+				},
+				"land": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						1
+					]
+				},
+				"melee_claws": {
+					"frames": 1,
+					"fps": 14,
+					"order": [
+						4
+					]
+				},
+				"melee_katana": {
+					"frames": 1,
+					"fps": 14,
+					"order": [
+						4
+					]
+				},
+				"shoot_railgun": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						5
+					]
+				},
+				"rocket_boost": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						5
+					]
+				},
+				"hit": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						7
+					]
+				},
+				"hack": {
+					"frames": 1,
+					"fps": 10,
+					"order": [
+						3
+					]
+				},
+				"victory": {
+					"frames": 1,
+					"fps": 8,
+					"order": [
+						0
+					]
+				},
+				"pickup_react": {
+					"frames": 1,
+					"fps": 10,
+					"order": [
+						1
+					]
+				},
+				"interact": {
+					"frames": 1,
+					"fps": 10,
+					"order": [
+						3
+					]
+				},
+				"death_or_down": {
+					"frames": 1,
+					"fps": 8,
+					"order": [
+						7
+					]
+				},
+				"parry": {
+					"frames": 1,
+					"fps": 12,
+					"order": [
+						3
+					]
+				}
+			},
+			"source": {
+				"tool": "ComfyUI API + production normalization",
+				"sourceSheet": "generated/sprites/comfy_badger_run/badger_running_grid_4x2_1024x512.png",
+				"note": "Background-cleaned and normalized to the 48x48 runtime contract."
+			}
+		},
+		{
 			"id": "lower_sprawl_tiles",
 			"file": "assets/sprites/lower_sprawl_tiles.png",
 			"frameSize": [
@@ -1045,6 +1202,551 @@
 					"tags": [
 						"ui",
 						"icon"
+					]
+				}
+			}
+		},
+		{
+			"id": "items_extended",
+			"file": "assets/sprites/items_extended.png",
+			"frameSize": [
+				32,
+				32
+			],
+			"role": "pickup",
+			"animations": {
+				"capacitor_coil_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"railgun",
+						"charge"
+					]
+				},
+				"phase_mantle_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"dodge",
+						"guard"
+					]
+				},
+				"ledger_lens_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"combo",
+						"evidence"
+					]
+				},
+				"echo_spurs_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"air",
+						"beat"
+					]
+				},
+				"rail_heat_sink_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"railgun",
+						"cooldown"
+					]
+				},
+				"rootkit_badge_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"hack",
+						"solidarity"
+					]
+				},
+				"shock_fern_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"emp",
+						"garden"
+					]
+				},
+				"mirror_thread_pickup": {
+					"frames": 4,
+					"fps": 8,
+					"anchor": [
+						16,
+						16
+					],
+					"tags": [
+						"pickup",
+						"gear",
+						"parry",
+						"decoy"
+					]
+				}
+			}
+		},
+		{
+			"id": "item_icons_extended",
+			"file": "assets/sprites/item_icons_extended.png",
+			"frameSize": [
+				32,
+				32
+			],
+			"grid": {
+				"columns": 4,
+				"rows": 2
+			},
+			"role": "ui_icons",
+			"animations": {
+				"capacitor_coil_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						0
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"railgun",
+						"charge"
+					]
+				},
+				"phase_mantle_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						1
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"dodge",
+						"guard"
+					]
+				},
+				"ledger_lens_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						2
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"combo",
+						"evidence"
+					]
+				},
+				"echo_spurs_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						3
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"air",
+						"beat"
+					]
+				},
+				"rail_heat_sink_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						4
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"railgun",
+						"cooldown"
+					]
+				},
+				"rootkit_badge_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						5
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"hack",
+						"solidarity"
+					]
+				},
+				"shock_fern_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						6
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"emp",
+						"garden"
+					]
+				},
+				"mirror_thread_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						7
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"icon",
+						"parry",
+						"decoy"
+					]
+				}
+			}
+		},
+		{
+			"id": "skill_icons",
+			"file": "assets/sprites/skill_icons.png",
+			"frameSize": [
+				32,
+				32
+			],
+			"grid": {
+				"columns": 5,
+				"rows": 4
+			},
+			"role": "skill_ui",
+			"animations": {
+				"double_swipe_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						0
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:0",
+						"tier:1"
+					]
+				},
+				"parry_tooth_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						1
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:0",
+						"tier:2"
+					]
+				},
+				"claw_rush_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						2
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:0",
+						"tier:3"
+					]
+				},
+				"undercut_audit_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						3
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:0",
+						"tier:4"
+					]
+				},
+				"peoples_finisher_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						4
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:0",
+						"tier:5"
+					]
+				},
+				"rail_mastery_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						5
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:1",
+						"tier:1"
+					]
+				},
+				"piercing_shot_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						6
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:1",
+						"tier:2"
+					]
+				},
+				"capacitor_ritual_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						7
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:1",
+						"tier:3"
+					]
+				},
+				"chain_conductor_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						8
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:1",
+						"tier:4"
+					]
+				},
+				"public_record_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						9
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:1",
+						"tier:5"
+					]
+				},
+				"fuel_sipper_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						10
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:2",
+						"tier:1"
+					]
+				},
+				"vector_kick_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						11
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:2",
+						"tier:2"
+					]
+				},
+				"badger_afterburn_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						12
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:2",
+						"tier:3"
+					]
+				},
+				"skyline_reversal_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						13
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:2",
+						"tier:4"
+					]
+				},
+				"communal_thrust_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						14
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:2",
+						"tier:5"
+					]
+				},
+				"street_syntax_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						15
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:3",
+						"tier:1"
+					]
+				},
+				"black_ice_bite_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						16
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:3",
+						"tier:2"
+					]
+				},
+				"ghost_invoice_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						17
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:3",
+						"tier:3"
+					]
+				},
+				"remote_arc_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						18
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:3",
+						"tier:4"
+					]
+				},
+				"public_exploit_icon": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						19
+					],
+					"loop": false,
+					"tags": [
+						"ui",
+						"skill",
+						"track:3",
+						"tier:5"
 					]
 				}
 			}
@@ -6610,6 +7312,33 @@
 						44
 					]
 				}
+			}
+		},
+		{
+			"id": "lower_sprawl_backdrop",
+			"file": "assets/sprites/worlds/lower_sprawl_backdrop.png",
+			"frameSize": [
+				960,
+				540
+			],
+			"grid": {
+				"columns": 1,
+				"rows": 1
+			},
+			"world": "lower_sprawl",
+			"role": "backdrop",
+			"animations": {
+				"background": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						0
+					]
+				}
+			},
+			"source": {
+				"tool": "generated urban atlas normalization",
+				"sourceSheet": "generated/urbanatlas/parallax1.png"
 			}
 		}
 	]

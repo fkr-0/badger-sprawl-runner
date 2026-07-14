@@ -1,28 +1,20 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Badger Sprawl Runner</title>
-  <link rel="stylesheet" href="src/game.css" />
-</head>
-<body>
-  <main class="shell">
-    <header class="hud-panel">
-      <div>
-        <h1>Badger Sprawl Runner</h1>
-        <p>Clean physics prototype: jump, slash, shoot, item-use, type-code gate.</p>
-      </div>
-      <div class="kbd-row">
-        <kbd>A/D</kbd><span>move</span><kbd>Space</kbd><span>jump</span><kbd>J</kbd><span>melee</span><kbd>K</kbd><span>shoot</span><kbd>E</kbd><span>item</span><kbd>M</kbd><span>code gate</span>
-      </div>
-    </header>
-    <canvas id="game" width="960" height="540" aria-label="Badger Sprawl Runner playable canvas"></canvas>
-    <section class="status-grid">
-      <div id="status"></div>
-      <div id="minigame"></div>
-    </section>
-  </main>
-  <script type="module" src="src/main.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="0; url=./apps/runner/dist/index.html" />
+    <title>Badger Sprawl Runner</title>
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; background: #05070d; }
+    </style>
+  </head>
+  <body>
+    <script>
+      const target = new URL('./apps/runner/dist/index.html', window.location.href);
+      target.search = window.location.search;
+      target.hash = window.location.hash;
+      window.location.replace(target.href);
+    </script>
+  </body>
 </html>

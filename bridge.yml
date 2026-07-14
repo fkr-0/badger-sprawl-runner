@@ -2,19 +2,91 @@ name: badger-sprawl-runner
 description: Sprite-first cyber-badger 2D platformer prototype and design artifact.
 defaultTrack: dev
 commands:
+  build:
+    run: pnpm run build
+    description: Build workspace packages, the Vite runner, and publish the Artifact Lab dist bundle.
+    timeoutMs: 120000
+    track: build
   test:
     run: pnpm run test
+    description: Run data, runtime, sprite, package, and runner unit contracts.
+    timeoutMs: 120000
+    track: test
+  typecheck:
+    run: pnpm run typecheck
+    description: Typecheck all workspace packages and the runner app.
+    timeoutMs: 120000
+    track: test
+  lint:
+    run: pnpm run lint
+    description: Run the Biome source-quality gate.
+    timeoutMs: 120000
+    track: test
+  e2e-drainmarket:
+    run: pnpm run test:e2e:drainmarket
+    description: Run the complete Drainmarket vertical slice in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
+  e2e-progression:
+    run: pnpm run test:e2e:progression
+    description: Run the expanded sprite-backed item and four-track skill-tree acceptance flow in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
+  e2e-chrome-arcology:
+    run: pnpm run test:e2e:chrome-arcology
+    description: Run the complete Chrome Arcology vertical slice in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
+  e2e-chromium:
+    run: pnpm exec playwright test --project=chromium
+    description: Run the complete browser acceptance catalog in Chromium.
+    timeoutMs: 300000
+    track: test
+  smoke-artifact:
+    run: pnpm run smoke:runner && pnpm run smoke:artifact
+    description: Validate the published static bundle and its actual sprite-backed canvas rendering.
+    timeoutMs: 120000
+    track: test
+  validate-release:
+    run: pnpm run verify:release
+    description: Build, test, typecheck, lint, smoke, and E2E-validate the deployable artifact.
+    timeoutMs: 600000
+    track: test
+  stage-release:
+    run: pnpm run stage:artifact-lab
+    description: Validate the release and materialize the complete Artifact Lab deployment stage.
+    timeoutMs: 600000
+    track: build
+  deploy-release-dry-run:
+    run: pnpm run deploy:artifact-lab:dry-run
+    description: Validate the release and preview the Artifact Lab deployment without transferring files.
+    timeoutMs: 600000
+    track: deploy
+  deploy-release:
+    run: pnpm run deploy:artifact-lab
+    description: Validate the release, rebuild the deployment stage, and deploy it through artifacts-deploy.
+    timeoutMs: 600000
+    track: deploy
   verify-details:
     run: pnpm run verify:details
+    description: Run the detailed mechanics acceptance contract.
+    timeoutMs: 180000
+    track: test
   serve:
-    run: python3 -m http.server 8042
+    run: pnpm run build && python3 -m http.server 8042 --directory .
+    description: Build and serve the exact Artifact Lab-facing bundle locally.
+    timeoutMs: 120000
+    track: dev
 agent:
   notes:
     - Keep this original; avoid direct use of protected cyberpunk novel canon.
-    - The prototype is dependency-free browser canvas JS.
+    - The user-facing artifact is the Vite production build published to dist/.
     - Data manifests are intended to survive extraction into a standalone library.
   tasks:
-    - Replace placeholder vector drawing with real sprite-sheet loader.
+    - Continue replacing remaining generated fallback sheets with authored production animation sheets.
     - Split minigame engine into its own package when API stabilizes.
   changelog:
-    - 2026-05-05: Initial design artifact and playable prototype scaffold.
+    - "2026-07-14: Expanded progression to 23 items, six item sets, 20 skill nodes, and generated pickup/item/skill sprite sheets."
+    - "2026-07-14: Added Chrome Arcology railgun gameplay, Madame Vitrine phases, focused cross-browser E2E, and staged artifact validation."
+    - "2026-07-14: Added gated Artifact Lab build, validation, staging, dry-run deploy, and deploy actions."
+    - "2026-05-05: Initial design artifact and playable prototype scaffold."

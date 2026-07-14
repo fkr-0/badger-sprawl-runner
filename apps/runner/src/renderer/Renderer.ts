@@ -13,6 +13,11 @@ import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
 import { VFXPool } from './VFXPool';
 
+export const PLAYER_SPRITE_SHEET_ID = 'moss_badger_production';
+export const LOWER_SPRAWL_BACKDROP_SHEET_ID = 'lower_sprawl_backdrop';
+export const DRAINMARKET_PARALLAX_SHEET_ID = 'drainmarket_parallax';
+export const CHROME_ARCOLOGY_PARALLAX_SHEET_ID = 'chrome_arcology_parallax';
+
 export class Renderer {
 	private spriteRenderer: SpriteRenderer;
 	private vfxPool: VFXPool;
@@ -54,6 +59,51 @@ export class Renderer {
 		this.parallaxRenderer.render(this.ctx, cameraX, this.width, this.height);
 	}
 
+	renderStageBackdrop(sheetId: string): boolean {
+		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
+		this.spriteRenderer.drawFrame(sheetId, 'background', 0, 0, 0);
+		const shade = this.ctx.createLinearGradient(0, 0, 0, this.height);
+		shade.addColorStop(0, 'rgba(4, 7, 16, 0.10)');
+		shade.addColorStop(0.65, 'rgba(4, 7, 16, 0.20)');
+		shade.addColorStop(1, 'rgba(4, 7, 16, 0.48)');
+		this.ctx.fillStyle = shade;
+		this.ctx.fillRect(0, 0, this.width, this.height);
+		return true;
+	}
+
+	renderStageParallax(sheetId: string, cameraX: number): boolean {
+		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
+		const layers = [
+			{ animation: 'back_plate', speed: 0.035, alpha: 1 },
+			{ animation: 'mid_plate', speed: 0.09, alpha: 0.84 },
+			{ animation: 'front_plate', speed: 0.16, alpha: 0.66 },
+		];
+		for (const layer of layers) {
+			const offset = -((cameraX * layer.speed) % this.width);
+			this.ctx.save();
+			this.ctx.globalAlpha = layer.alpha;
+			this.spriteRenderer.drawFrame(sheetId, layer.animation, 0, offset, 0, false, 3, 3);
+			this.spriteRenderer.drawFrame(
+				sheetId,
+				layer.animation,
+				0,
+				offset + this.width,
+				0,
+				false,
+				3,
+				3
+			);
+			this.ctx.restore();
+		}
+		const shade = this.ctx.createLinearGradient(0, 0, 0, this.height);
+		shade.addColorStop(0, 'rgba(8, 5, 14, 0.08)');
+		shade.addColorStop(0.62, 'rgba(8, 5, 14, 0.18)');
+		shade.addColorStop(1, 'rgba(8, 5, 14, 0.52)');
+		this.ctx.fillStyle = shade;
+		this.ctx.fillRect(0, 0, this.width, this.height);
+		return true;
+	}
+
 	renderPlatforms(
 		platforms: Array<{ x: number; y: number; w: number; h: number }>,
 		cameraX: number
@@ -77,6 +127,30 @@ export class Renderer {
 				this.ctx.fillRect(sx + 12, p.y + p.h - 4, 12, 4);
 			}
 		}
+	}
+
+	private renderEnemySprite(enemy: CombatEntity, x: number): boolean {
+		const sheetId = enemy.spriteSheetId;
+		if (!sheetId || !this.spriteRenderer.hasSheet(sheetId)) return false;
+		const animationName = enemy.hp <= 0 ? 'death' : (enemy.spriteAnimation ?? 'idle');
+		const animation = this.spriteRenderer.getSheet(sheetId)?.sheet.animations[animationName];
+		const frame = animation
+			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
+			: 0;
+		this.ctx.save();
+		if (enemy.invuln > 0 && Math.floor(performance.now() / 70) % 2 === 0) {
+			this.ctx.globalAlpha = 0.46;
+		}
+		this.spriteRenderer.drawFrame(
+			sheetId,
+			animationName,
+			frame,
+			x + enemy.w / 2 - 24,
+			enemy.y + enemy.h - 48,
+			enemy.dir > 0
+		);
+		this.ctx.restore();
+		return true;
 	}
 
 	private renderBoss(enemy: CombatEntity, x: number): void {
@@ -131,13 +205,30 @@ export class Renderer {
 		const scaleY = player.scaleY ?? 1;
 
 		this.ctx.save();
+		if (
+			(player.decoyTimer ?? 0) > 0 &&
+			player.animState &&
+			this.spriteRenderer.hasSheet(PLAYER_SPRITE_SHEET_ID)
+		) {
+			this.ctx.globalAlpha = Math.min(0.34, (player.decoyTimer ?? 0) * 0.48);
+			this.spriteRenderer.drawEntity(
+				PLAYER_SPRITE_SHEET_ID,
+				player.animState,
+				x - player.dir * 24,
+				y + 2,
+				player.dir < 0,
+				scaleX,
+				scaleY
+			);
+			this.ctx.globalAlpha = 1;
+		}
 		if ((player.damageFlash ?? 0) > 0 && Math.floor(performance.now() / 55) % 2 === 0) {
 			this.ctx.globalAlpha = 0.48;
 		}
-		if (this.spriteRenderer.hasSheet('moss_badger')) {
+		if (this.spriteRenderer.hasSheet(PLAYER_SPRITE_SHEET_ID)) {
 			if (player.animState) {
 				this.spriteRenderer.drawEntity(
-					'moss_badger',
+					PLAYER_SPRITE_SHEET_ID,
 					player.animState,
 					x,
 					y,
@@ -182,14 +273,18 @@ export class Renderer {
 				this.ctx.fillRect(x - 2, enemy.y - 2, enemy.w + 4, enemy.h + 4);
 			}
 
-			// Body
-			this.ctx.fillStyle =
-				enemy.procgenRole === 'bruiser'
-					? '#3b2638'
-					: enemy.procgenRole === 'turret'
-						? '#202b3c'
-						: '#1a1d26';
-			this.ctx.fillRect(x, enemy.y, enemy.w, enemy.h);
+			const renderedSprite = this.renderEnemySprite(enemy, x);
+
+			if (!renderedSprite) {
+				// Fallback body for enemies without a loaded authored sheet.
+				this.ctx.fillStyle =
+					enemy.procgenRole === 'bruiser'
+						? '#3b2638'
+						: enemy.procgenRole === 'turret'
+							? '#202b3c'
+							: '#1a1d26';
+				this.ctx.fillRect(x, enemy.y, enemy.w, enemy.h);
+			}
 
 			if (enemy.rookMarked) {
 				this.ctx.strokeStyle = '#67f3c4';
@@ -202,10 +297,12 @@ export class Renderer {
 				this.ctx.strokeRect(x - 7, enemy.y - 7, enemy.w + 14, enemy.h + 14);
 			}
 
-			// Eye and state tell.
-			this.ctx.fillStyle =
-				enemy.aiState === 'windup' ? '#ffb35e' : enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';
-			this.ctx.fillRect(x + (enemy.dir > 0 ? enemy.w - 12 : 6), enemy.y + 8, 6, 6);
+			if (!renderedSprite) {
+				// Eye and state tell.
+				this.ctx.fillStyle =
+					enemy.aiState === 'windup' ? '#ffb35e' : enemy.invuln > 0 ? '#ff5e7a' : '#67f3c4';
+				this.ctx.fillRect(x + (enemy.dir > 0 ? enemy.w - 12 : 6), enemy.y + 8, 6, 6);
+			}
 			if (enemy.hp < enemy.maxHp && enemy.hp > 0) {
 				const width = Math.max(28, enemy.w + 8);
 				const ratio = Math.max(0, enemy.hp / enemy.maxHp);
@@ -230,9 +327,10 @@ export class Renderer {
 			this.ctx.shadowColor = color;
 			this.ctx.shadowBlur = p.visualState === 'collecting' ? 24 : 16;
 
-			if (this.spriteRenderer.hasSheet('items_core') && p.animation) {
+			const spriteSheetId = p.spriteSheetId ?? 'items_core';
+			if (this.spriteRenderer.hasSheet(spriteSheetId) && p.animation) {
 				const frame = Math.floor(Date.now() / 125) % 4;
-				this.spriteRenderer.drawFrame('items_core', p.animation, frame, x - 16, p.y + bob - 16);
+				this.spriteRenderer.drawFrame(spriteSheetId, p.animation, frame, x - 16, p.y + bob - 16);
 			} else {
 				this.ctx.translate(x, p.y + bob);
 				this.ctx.scale(scale, scale);

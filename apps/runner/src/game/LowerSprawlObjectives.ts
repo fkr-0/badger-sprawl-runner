@@ -1,4 +1,9 @@
 import type { ActionMap } from '../systems/InputSystem';
+import {
+	type ProgressionPuzzlePlayer,
+	consumeHackMistakeShield,
+	puzzleStepSeconds,
+} from './ProgressionPuzzleModifiers';
 
 export type LowerSprawlRhythmInput = 'melee' | 'shoot' | 'parry';
 export type LowerSprawlPuzzleStatus = 'idle' | 'active' | 'solved' | 'failed';
@@ -44,6 +49,7 @@ export type LowerSprawlObjectiveEvent =
 	| { kind: 'puzzle-started'; id: 'toll-gate-rhythm' }
 	| { kind: 'puzzle-step'; input: LowerSprawlRhythmInput; step: number }
 	| { kind: 'puzzle-failed'; id: 'toll-gate-rhythm' }
+	| { kind: 'hack-mistake-ignored'; id: 'toll-gate-rhythm' }
 	| { kind: 'puzzle-complete'; id: 'toll-gate-rhythm' }
 	| { kind: 'tutorial-complete'; id: 'jump-coyote' | 'public-route-reading' }
 	| { kind: 'stage-ready'; id: 'lower-sprawl' };
@@ -96,9 +102,9 @@ export class LowerSprawlObjectives {
 	private readyEventEmitted = false;
 	private completed = false;
 
-	step(dt: number): LowerSprawlObjectiveEvent[] {
+	step(dt: number, player?: ProgressionPuzzlePlayer): LowerSprawlObjectiveEvent[] {
 		if (this.puzzleStatus !== 'active') return [];
-		this.beatRemaining = Math.max(0, this.beatRemaining - Math.max(0, dt));
+		this.beatRemaining = Math.max(0, this.beatRemaining - puzzleStepSeconds(dt, player));
 		if (this.beatRemaining > 0) return [];
 		this.puzzleStatus = 'failed';
 		this.puzzleStep = 0;
@@ -107,7 +113,7 @@ export class LowerSprawlObjectives {
 	}
 
 	observeAction(
-		player: { x: number; y: number; w: number; h: number },
+		player: { x: number; y: number; w: number; h: number } & ProgressionPuzzlePlayer,
 		action: ActionMap
 	): LowerSprawlObjectiveEvent[] {
 		const events: LowerSprawlObjectiveEvent[] = [];
@@ -164,6 +170,11 @@ export class LowerSprawlObjectives {
 					this.beatRemaining = BEAT_WINDOW_SECONDS;
 				}
 			} else {
+				if (consumeHackMistakeShield(player)) {
+					this.beatRemaining = BEAT_WINDOW_SECONDS;
+					events.push({ kind: 'hack-mistake-ignored', id: 'toll-gate-rhythm' });
+					return events;
+				}
 				this.puzzleStatus = 'failed';
 				this.puzzleStep = 0;
 				this.beatRemaining = 0;

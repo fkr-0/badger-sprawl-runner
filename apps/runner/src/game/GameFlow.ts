@@ -1,3 +1,4 @@
+import { FIRST_RELEASE_SKILL_NODES } from '@badger/progression';
 import {
 	BRANCH_CONSEQUENCES,
 	type BossPhase,
@@ -134,6 +135,11 @@ export interface SkillNode {
 	cost: number;
 	prereqs: string[];
 	unlocked: boolean;
+	track?: string;
+	tier?: number;
+	description?: string;
+	iconAnimation?: string;
+	effects?: Record<string, number | string | boolean>;
 }
 
 export interface StageRuntimeResult {
@@ -263,20 +269,12 @@ function buildDebriefLines(baseLines: readonly string[], resultFlags: readonly s
 	return [...baseLines, ...Array.from(new Set(branchLines))];
 }
 
-const SKILLS: SkillNode[] = [
-	{ id: 'double_swipe', name: 'Double Swipe', cost: 1, prereqs: [], unlocked: false },
-	{ id: 'parry_tooth', name: 'Parry Tooth', cost: 2, prereqs: ['double_swipe'], unlocked: false },
-	{ id: 'claw_rush', name: 'Claw Rush', cost: 2, prereqs: ['parry_tooth'], unlocked: false },
-	{ id: 'rail_mastery', name: 'Rail Mastery', cost: 2, prereqs: [], unlocked: false },
-	{
-		id: 'piercing_shot',
-		name: 'Piercing Shot',
-		cost: 2,
-		prereqs: ['rail_mastery'],
-		unlocked: false,
-	},
-	{ id: 'emp_blast', name: 'EMP Blast', cost: 3, prereqs: ['piercing_shot'], unlocked: false },
-];
+const SKILLS: SkillNode[] = FIRST_RELEASE_SKILL_NODES.map((skill) => ({
+	...skill,
+	prereqs: [...skill.prereqs],
+	effects: skill.effects ? { ...skill.effects } : undefined,
+	unlocked: false,
+}));
 
 function createDefaultMetaState(): MetaState {
 	return {
@@ -290,7 +288,16 @@ function createDefaultMetaState(): MetaState {
 }
 
 function createSkillMap(purchasedSkills: readonly string[]): Map<string, SkillNode> {
-	const nodes = new Map(SKILLS.map((skill) => [skill.id, { ...skill }]));
+	const nodes = new Map(
+		SKILLS.map((skill) => [
+			skill.id,
+			{
+				...skill,
+				prereqs: [...skill.prereqs],
+				effects: skill.effects ? { ...skill.effects } : undefined,
+			},
+		])
+	);
 	for (const skillId of purchasedSkills) {
 		const node = nodes.get(skillId);
 		if (node) node.unlocked = true;
@@ -367,6 +374,7 @@ export class GameFlow {
 		return SKILLS.map((skill) => ({
 			...skill,
 			prereqs: [...skill.prereqs],
+			effects: skill.effects ? { ...skill.effects } : undefined,
 			unlocked: Boolean(this.skills.get(skill.id)?.unlocked),
 		}));
 	}

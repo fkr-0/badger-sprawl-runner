@@ -21,6 +21,9 @@ const storyFlavourIntegrationDoc = await text('docs/story-flavour-integration.md
 const companionSystemDoc = await text('docs/companion-system.md');
 const runnerMain = await text('apps/runner/src/main.ts');
 const runnerApp = await text('apps/runner/src/RunnerApp.ts');
+const runnerIndex = await text('apps/runner/index.html');
+const rootIndex = await text('index.html');
+const runtimeEnvironmentSource = await text('apps/runner/src/runtime/RuntimeEnvironment.ts');
 const modeMenuSource = await text('apps/runner/src/game/ModeMenu.ts');
 const titleSceneSource = await text('apps/runner/src/scenes/TitleScene.ts');
 const storyProgressSummarySource = await text('apps/runner/src/game/StoryProgressSummary.ts');
@@ -138,14 +141,49 @@ for (const required of [
 	assert(companionSystemDoc.includes(required), `companion system doc missing: ${required}`);
 }
 
-for (const phrase of ['v1.0 release scope', 'apps/runner', 'legacy static prototype', 'todo.md']) {
-	assert(readme.includes(phrase), `README missing v1 release phrase: ${phrase}`);
+for (const phrase of [
+	'v1.0 release scope',
+	'apps/runner',
+	'legacy static prototype',
+	'pnpm run verify:release',
+	'pnpm run stage:artifact-lab',
+	'deploy-release-dry-run',
+]) {
+	assert(readme.includes(phrase), `README missing release/deploy phrase: ${phrase}`);
 }
 
-for (const required of ['createRunnerApp', 'app.start()', 'SceneManager shell']) {
+for (const script of [
+	'verify:release',
+	'test:e2e:drainmarket',
+	'test:e2e:chrome-arcology',
+	'test:e2e:progression',
+	'stage:artifact-lab',
+	'deploy:artifact-lab:dry-run',
+	'deploy:artifact-lab',
+]) {
+	assert(rootPackage.scripts[script], `root package is missing gated release script: ${script}`);
+}
+
+for (const required of ['createRunnerApp', 'app.start()', 'runtimeToolsEnabled']) {
 	assert(
 		runnerMain.includes(required),
-		`runner entrypoint missing SceneManager shell surface: ${required}`
+		`runner entrypoint missing clean production bootstrap surface: ${required}`
+	);
+}
+assert(!runnerMain.includes('SceneManager shell'), 'runner entrypoint must not expose legacy debug copy');
+assert(!runnerIndex.includes('hud-panel'), 'runner index must not expose the legacy header shell');
+assert(!runnerIndex.includes('status-grid'), 'runner index must not expose legacy status panels');
+assert(
+	rootIndex.includes('./apps/runner/dist/index.html'),
+	'root artifact entry must redirect to the built runner'
+);
+for (const required of ['resolveRuntimeAssetUrl', 'data/sprites.json', 'badger:sprites-ready']) {
+	assert(runnerApp.includes(required), `RunnerApp missing production sprite bootstrap: ${required}`);
+}
+for (const required of ["assetPath.replace(/^\\/+/, '')", "searchParams.get('debug') === '1'"]) {
+	assert(
+		runtimeEnvironmentSource.includes(required),
+		`runtime environment missing mount-safe production rule: ${required}`
 	);
 }
 
@@ -705,7 +743,7 @@ for (const required of [
 for (const required of [
 	'advanceAnimationFrames',
 	'emitAnimationEvents',
-	"getAnimationEvents('moss_badger'",
+	'getAnimationEvents(PLAYER_SPRITE_SHEET_ID',
 	"case 'footstep'",
 	"case 'vfx'",
 ]) {

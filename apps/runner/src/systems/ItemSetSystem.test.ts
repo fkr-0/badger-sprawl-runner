@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { FIRST_RELEASE_ITEM_SETS, getActiveItemSetBonuses, mergeItemSetEffects } from './ItemSetSystem';
 
 describe('ItemSetSystem', () => {
-	it('defines first-release item sets for movement, melee, and dub-defense loops', () => {
+	it('defines six release item sets across movement, melee, defense, rail, ghost, and garden loops', () => {
 		expect(FIRST_RELEASE_ITEM_SETS.map((set) => set.id)).toEqual([
 			'burrowbreaker-rig',
 			'invoice-cutter-kit',
 			'dub-safehouse-loop',
+			'arcology-conductor-array',
+			'service-ghost-kit',
+			'sporeline-circuit',
 		]);
 		for (const set of FIRST_RELEASE_ITEM_SETS) {
 			expect(set.itemIds.length).toBeGreaterThanOrEqual(3);

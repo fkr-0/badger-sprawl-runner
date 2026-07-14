@@ -50,6 +50,25 @@ describe('LowerSprawlObjectives', () => {
 		});
 	});
 
+	it('uses Street Syntax once and slows puzzle trace with hacking progression', () => {
+		const objectives = new LowerSprawlObjectives();
+		const player = {
+			...playerAt(LOWER_SPRAWL_TOLL_GATE.x, LOWER_SPRAWL_TOLL_GATE.y),
+			itemSetEffects: { firstHackMistakeIgnored: true, traceReduction: 0.5 },
+		};
+		objectives.observeAction(player, action({ hackPressed: true }));
+
+		const ignored = objectives.observeAction(player, action({ shootPressed: true }));
+		expect(ignored).toContainEqual({ kind: 'hack-mistake-ignored', id: 'toll-gate-rhythm' });
+		expect(player.hackMistakeShieldAvailable).toBe(false);
+		expect(objectives.getSnapshot()).toMatchObject({ puzzleStatus: 'active', mistakes: 0 });
+
+		objectives.step(1, player);
+		expect(objectives.getSnapshot().beatRemaining).toBeCloseTo(0.85);
+		objectives.observeAction(player, action({ shootPressed: true }));
+		expect(objectives.getSnapshot()).toMatchObject({ puzzleStatus: 'failed', mistakes: 1 });
+	});
+
 	it('solves the toll rhythm sequence and exposes expected input progression', () => {
 		const objectives = new LowerSprawlObjectives();
 		const player = playerAt(LOWER_SPRAWL_TOLL_GATE.x, LOWER_SPRAWL_TOLL_GATE.y);

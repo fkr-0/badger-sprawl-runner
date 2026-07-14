@@ -12,7 +12,9 @@ export {
 	createSkillTree,
 	hydrateSkillTree,
 	purchaseSkillWithMeta,
+	resolveSkillEffects,
 } from './SkillTree';
+export type { ResolvedSkillEffects } from './SkillTree';
 export { BoonPool, createBoonPool, PREDEFINED_BOONS } from './BoonPool';
 
 export { computeDerivedStats } from './derivedStats';

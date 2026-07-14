@@ -23,8 +23,16 @@ export const FIRST_RELEASE_ITEM_SETS: ItemSetDefinition[] = [
 		name: 'Burrowbreaker Rig',
 		itemIds: ['rocket_backpack', 'bassline_boots', 'gravity_talisman'],
 		bonuses: [
-			{ pieces: 2, label: 'Cleaner landings', effects: { landingShockwave: true, airControlBonus: 0.1 } },
-			{ pieces: 3, label: 'Sprawl flight line', effects: { fuelRefundOnCombo: 1, maxFallSpeedBonus: 120 } },
+			{
+				pieces: 2,
+				label: 'Cleaner landings',
+				effects: { landingShockwave: true, airControlBonus: 0.1 },
+			},
+			{
+				pieces: 3,
+				label: 'Sprawl flight line',
+				effects: { fuelRefundOnCombo: 1, maxFallSpeedBonus: 120 },
+			},
 		],
 	},
 	{
@@ -42,7 +50,62 @@ export const FIRST_RELEASE_ITEM_SETS: ItemSetDefinition[] = [
 		itemIds: ['dub_shield', 'echo_cassette', 'signal_jammer'],
 		bonuses: [
 			{ pieces: 2, label: 'Beat shelter', effects: { damageMitigation: 0.15, beatGrace: 0.08 } },
-			{ pieces: 3, label: 'Ghost in the bassline', effects: { decoyOnPerfectDodge: true, traceReduction: 0.25 } },
+			{
+				pieces: 3,
+				label: 'Ghost in the bassline',
+				effects: { decoyOnPerfectDodge: true, traceReduction: 0.25 },
+			},
+		],
+	},
+	{
+		id: 'arcology-conductor-array',
+		name: 'Arcology Conductor Array',
+		itemIds: ['capacitor_coil', 'rail_heat_sink', 'mirror_thread'],
+		bonuses: [
+			{
+				pieces: 2,
+				label: 'Quiet chamber',
+				effects: { railCooldownReduction: 0.08, railRecoilReduction: 0.2 },
+			},
+			{
+				pieces: 3,
+				label: 'Public current',
+				effects: { empOnChargedShot: true, railPierceBonus: 1, railDamageBonus: 0.2 },
+			},
+		],
+	},
+	{
+		id: 'service-ghost-kit',
+		name: 'Service Ghost Kit',
+		itemIds: ['phase_mantle', 'ledger_lens', 'rootkit_badge'],
+		bonuses: [
+			{
+				pieces: 2,
+				label: 'Hidden shift',
+				effects: { damageMitigation: 0.08, comboWindowBonus: 0.08 },
+			},
+			{
+				pieces: 3,
+				label: 'Ghost payroll',
+				effects: { decoyOnPerfectDodge: true, traceReduction: 0.2, parryWindowBonus: 0.02 },
+			},
+		],
+	},
+	{
+		id: 'sporeline-circuit',
+		name: 'Sporeline Circuit',
+		itemIds: ['echo_spurs', 'shock_fern', 'solder_mite_swarm'],
+		bonuses: [
+			{
+				pieces: 2,
+				label: 'Living recharge',
+				effects: { fuelRechargeBonus: 0.25, airControlBonus: 0.06 },
+			},
+			{
+				pieces: 3,
+				label: 'Garden discharge',
+				effects: { empOnChargedShot: true, fuelRefundOnCombo: 0.5 },
+			},
 		],
 	},
 ];
@@ -72,7 +135,9 @@ export function getActiveItemSetBonuses(
 	return bonuses;
 }
 
-export function mergeItemSetEffects(bonuses: readonly ItemSetBonus[]): Record<string, number | string | boolean> {
+export function mergeItemSetEffects(
+	bonuses: readonly ItemSetBonus[]
+): Record<string, number | string | boolean> {
 	const merged: Record<string, number | string | boolean> = {};
 
 	for (const bonus of bonuses) {

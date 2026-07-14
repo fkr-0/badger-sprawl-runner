@@ -18,7 +18,7 @@ const stageProfiles = await json('data/procgen/stage-profiles.json');
 const roomChunks = await json('data/procgen/room-chunks.json');
 
 assert(manifest.title === 'Badger Sprawl Runner', 'manifest title mismatch');
-assert(Array.isArray(items.items) && items.items.length >= 10, 'expected at least 10 items');
+assert(Array.isArray(items.items) && items.items.length >= 23, 'expected the expanded 23-item catalog');
 assert(
 	Array.isArray(progression.currencies) && progression.currencies.length >= 4,
 	'expected progression currencies'
@@ -35,6 +35,16 @@ assert(Array.isArray(roomChunks.chunks) && roomChunks.chunks.length >= 3, 'expec
 const itemIds = new Set(items.items.map((item) => item.id));
 for (const id of manifest.coreItems) {
 	assert(itemIds.has(id), `manifest core item missing from items.json: ${id}`);
+}
+
+const spriteSheetIds = new Set(sprites.spriteSheets.map((sheet) => sheet.id));
+for (const item of items.items) {
+	assert(item.iconAnimation, `item is missing iconAnimation: ${item.id}`);
+	assert(spriteSheetIds.has(item.iconSheetId ?? 'item_icons'), `item references missing icon sheet: ${item.id}`);
+	if (item.pickupSheetId) {
+		assert(spriteSheetIds.has(item.pickupSheetId), `item references missing pickup sheet: ${item.id}`);
+		assert(item.pickupAnimation, `item references pickup sheet without animation: ${item.id}`);
+	}
 }
 
 for (const family of enemyFamilies.families) {

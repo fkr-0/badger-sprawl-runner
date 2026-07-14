@@ -123,21 +123,69 @@ assert(Array.isArray(lowerSprawlLayout.pickups) && lowerSprawlLayout.pickups.len
 assert(Array.isArray(lowerSprawlLayout.enemies) && lowerSprawlLayout.enemies.length >= 2, 'expected enemies in stage layout');
 
 const iconSheet = sheetById.get('item_icons');
+const extendedIconSheet = sheetById.get('item_icons_extended');
+const skillIconSheet = sheetById.get('skill_icons');
 assert(iconSheet, 'data/sprites.json missing item_icons sheet');
+assert(extendedIconSheet, 'data/sprites.json missing item_icons_extended sheet');
+assert(skillIconSheet, 'data/sprites.json missing skill_icons sheet');
 assert(iconSheet.frameSize?.[0] === 32 && iconSheet.frameSize?.[1] === 32, 'item_icons must use 32x32 frames');
 assert(iconSheet.grid?.columns === 4 && iconSheet.grid?.rows === 4, 'item_icons must reserve a 4x4 grid for current item set');
+assert(
+	extendedIconSheet.grid?.columns === 4 && extendedIconSheet.grid?.rows === 2,
+	'item_icons_extended must use a 4x2 grid',
+);
+assert(skillIconSheet.grid?.columns === 5 && skillIconSheet.grid?.rows === 4, 'skill_icons must use a 5x4 graph grid');
 
-for (const [index, item] of items.items.entries()) {
+for (const item of items.items) {
 	assert(item.iconAnimation === `${item.id}_icon`, `item ${item.id} must declare deterministic iconAnimation`);
-	const iconAnimation = iconSheet.animations?.[item.iconAnimation];
-	assert(iconAnimation, `item_icons missing icon animation for item ${item.id}: ${item.iconAnimation}`);
+	const itemIconSheetId = item.iconSheetId ?? 'item_icons';
+	const itemIconSheet = sheetById.get(itemIconSheetId);
+	assert(itemIconSheet, `item ${item.id} references missing icon sheet: ${itemIconSheetId}`);
+	const iconAnimation = itemIconSheet.animations?.[item.iconAnimation];
+	assert(iconAnimation, `${itemIconSheetId} missing icon animation for item ${item.id}: ${item.iconAnimation}`);
 	assert(iconAnimation.frames === 1, `item icon must be one frame: ${item.iconAnimation}`);
-	assert(iconAnimation.order?.[0] === index, `item icon order should map to item index: ${item.iconAnimation}`);
+	const sheetIndex = items.items
+		.filter((candidate) => (candidate.iconSheetId ?? 'item_icons') === itemIconSheetId)
+		.findIndex((candidate) => candidate.id === item.id);
+	assert(iconAnimation.order?.[0] === sheetIndex, `item icon order should map within ${itemIconSheetId}: ${item.iconAnimation}`);
 	assert(iconAnimation.tags?.includes('ui'), `item icon must be tagged ui: ${item.iconAnimation}`);
 	assert(iconAnimation.tags?.includes('icon'), `item icon must be tagged icon: ${item.iconAnimation}`);
 }
 
 const itemSheetAnimations = sheetById.get('items_core')?.animations ?? {};
+const extendedItemAnimations = sheetById.get('items_extended')?.animations ?? {};
+for (const item of items.items.filter((candidate) => candidate.pickupSheetId === 'items_extended')) {
+	assert(item.pickupAnimation, `extended item ${item.id} must declare pickupAnimation`);
+	assert(
+		extendedItemAnimations[item.pickupAnimation],
+		`items_extended missing pickup animation: ${item.pickupAnimation}`,
+	);
+}
+
+for (const skillId of [
+	'double_swipe',
+	'parry_tooth',
+	'claw_rush',
+	'undercut_audit',
+	'peoples_finisher',
+	'rail_mastery',
+	'piercing_shot',
+	'capacitor_ritual',
+	'chain_conductor',
+	'public_record',
+	'fuel_sipper',
+	'vector_kick',
+	'badger_afterburn',
+	'skyline_reversal',
+	'communal_thrust',
+	'street_syntax',
+	'black_ice_bite',
+	'ghost_invoice',
+	'remote_arc',
+	'public_exploit',
+]) {
+	assert(skillIconSheet.animations?.[`${skillId}_icon`], `skill_icons missing ${skillId}_icon`);
+}
 for (const storyPayloadAnimation of [
 	'wafer_key_pickup',
 	'elevator_seed_pickup',
@@ -291,7 +339,7 @@ for (const state of ['available', 'magnetized', 'collecting', 'collected', 'resp
 for (const required of ['collectTimer', 'COLLECT_ANIMATION_SECONDS', 'onCollect?.(pickup)']) {
 	assert(itemSystem.includes(required), `ItemSystem missing collection-state hook: ${required}`);
 }
-for (const required of ['items_core', 'p.animation', "p.visualState === 'collecting'"]) {
+for (const required of ['items_core', 'p.animation', 'p.spriteSheetId', "p.visualState === 'collecting'"]) {
 	assert(renderer.includes(required), `Renderer missing pickup animation rendering hook: ${required}`);
 }
 

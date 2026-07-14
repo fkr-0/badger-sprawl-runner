@@ -2,8 +2,8 @@
  * SkillTree - manages skill nodes and progression
  */
 
-import type { SkillNode, DerivedStats } from './types';
 import { computeDerivedStats } from './derivedStats';
+import type { DerivedStats, SkillNode } from './types';
 
 export interface SkillGraph {
 	nodes: Map<string, SkillNode>;
@@ -27,6 +27,9 @@ const CLAWLINE_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 1,
 		prereqs: [],
 		track: 'clawline',
+		tier: 1,
+		description: 'Unlock the cross-claw follow-up and begin building style faster.',
+		iconAnimation: 'double_swipe_icon',
 		effects: { unlockMove: 'claw_cross', meleeStyleBonus: 1 },
 	},
 	{
@@ -35,7 +38,10 @@ const CLAWLINE_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['double_swipe'],
 		track: 'clawline',
-		effects: { unlockMove: 'invoice_splitter', parryDamageBonus: 1 },
+		tier: 2,
+		description: 'Turn a clean parry into a harder counter and unlock Invoice Splitter.',
+		iconAnimation: 'parry_tooth_icon',
+		effects: { unlockMove: 'invoice_splitter', parryDamageBonus: 0.75 },
 	},
 	{
 		id: 'claw_rush',
@@ -43,9 +49,73 @@ const CLAWLINE_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['parry_tooth'],
 		track: 'clawline',
-		effects: { dashCancel: true, velocity: 1 },
+		tier: 3,
+		description: 'Cancel recovery into a short pursuit dash.',
+		iconAnimation: 'claw_rush_icon',
+		effects: { dashCancel: true, velocity: 1, dodgeCooldownReduction: 0.06 },
+	},
+	{
+		id: 'undercut_audit',
+		name: 'Undercut Audit',
+		cost: 3,
+		prereqs: ['claw_rush'],
+		track: 'clawline',
+		tier: 4,
+		description: 'Keep melee chains alive longer and sharpen finishers.',
+		iconAnimation: 'undercut_audit_icon',
+		effects: { comboWindowBonus: 0.16, finisherDamageBonus: 0.5 },
+	},
+	{
+		id: 'peoples_finisher',
+		name: "People's Finisher",
+		cost: 4,
+		prereqs: ['undercut_audit'],
+		track: 'clawline',
+		tier: 5,
+		description: 'Finishers discharge an EMP and parry counters hit harder.',
+		iconAnimation: 'peoples_finisher_icon',
+		effects: { finisherEmp: true, parryDamageBonus: 0.5 },
 	},
 ];
+
+export interface ResolvedSkillEffects {
+	effects: Record<string, number | string | boolean>;
+	trackRanks: Record<(typeof FIRST_RELEASE_SKILL_TRACKS)[number], number>;
+}
+
+function mergeEffect(
+	target: Record<string, number | string | boolean>,
+	key: string,
+	value: number | string | boolean
+): void {
+	const previous = target[key];
+	if (typeof value === 'number' && typeof previous === 'number') target[key] = previous + value;
+	else if (typeof value === 'boolean' && typeof previous === 'boolean')
+		target[key] = previous || value;
+	else target[key] = value;
+}
+
+export function resolveSkillEffects(skillIds: readonly string[]): ResolvedSkillEffects {
+	const unlocked = new Set(skillIds);
+	const effects: Record<string, number | string | boolean> = {};
+	const trackRanks: ResolvedSkillEffects['trackRanks'] = {
+		clawline: 0,
+		railgun: 0,
+		rocket: 0,
+		hacking: 0,
+	};
+
+	for (const node of FIRST_RELEASE_SKILL_NODES) {
+		if (!unlocked.has(node.id)) continue;
+		if (node.track && node.track in trackRanks) {
+			const track = node.track as keyof typeof trackRanks;
+			trackRanks[track] += 1;
+		}
+		for (const [key, value] of Object.entries(node.effects ?? {})) mergeEffect(effects, key, value);
+	}
+
+	return { effects, trackRanks };
+}
 
 // Rail skill tree
 const RAIL_NODES: Omit<SkillNode, 'unlocked'>[] = [
@@ -55,7 +125,10 @@ const RAIL_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: [],
 		track: 'railgun',
-		effects: { voltage: 1, reloadGrace: 0.08 },
+		tier: 1,
+		description: 'Tune the rail chamber for stronger shots and a quicker cycling cadence.',
+		iconAnimation: 'rail_mastery_icon',
+		effects: { voltage: 1, railDamageBonus: 0.25, railCooldownReduction: 0.06 },
 	},
 	{
 		id: 'piercing_shot',
@@ -63,15 +136,43 @@ const RAIL_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['rail_mastery'],
 		track: 'railgun',
-		effects: { pierceCount: 1 },
+		tier: 2,
+		description: 'Punch through one additional aligned target.',
+		iconAnimation: 'piercing_shot_icon',
+		effects: { railPierceBonus: 1 },
 	},
 	{
-		id: 'emp_blast',
-		name: 'EMP Blast',
+		id: 'capacitor_ritual',
+		name: 'Capacitor Ritual',
 		cost: 3,
 		prereqs: ['piercing_shot'],
 		track: 'railgun',
-		effects: { empOnChargedShot: true },
+		tier: 3,
+		description: 'Bleed recoil into the capacitor and shorten the recovery cycle.',
+		iconAnimation: 'capacitor_ritual_icon',
+		effects: { railRecoilReduction: 0.35, railCooldownReduction: 0.08 },
+	},
+	{
+		id: 'chain_conductor',
+		name: 'Chain Conductor',
+		cost: 3,
+		prereqs: ['capacitor_ritual'],
+		track: 'railgun',
+		tier: 4,
+		description: 'Every aligned hit strengthens the public arc.',
+		iconAnimation: 'chain_conductor_icon',
+		effects: { railDamageBonus: 0.35, railPierceBonus: 1 },
+	},
+	{
+		id: 'public_record',
+		name: 'Public Record',
+		cost: 4,
+		prereqs: ['chain_conductor'],
+		track: 'railgun',
+		tier: 5,
+		description: 'Rail hits carry an EMP record through the entire sightline.',
+		iconAnimation: 'public_record_icon',
+		effects: { empOnChargedShot: true, railPierceBonus: 2 },
 	},
 ];
 
@@ -82,7 +183,10 @@ const ROCKET_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 1,
 		prereqs: [],
 		track: 'rocket',
-		effects: { rocketFuelBonus: 1 },
+		tier: 1,
+		description: 'Add one fuel cell and improve grounded recharge.',
+		iconAnimation: 'fuel_sipper_icon',
+		effects: { rocketFuelBonus: 1, fuelRechargeBonus: 0.25 },
 	},
 	{
 		id: 'vector_kick',
@@ -90,7 +194,10 @@ const ROCKET_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['fuel_sipper'],
 		track: 'rocket',
-		effects: { airControlBonus: 0.12 },
+		tier: 2,
+		description: 'Steer harder in the air and recover boost sooner.',
+		iconAnimation: 'vector_kick_icon',
+		effects: { airControlBonus: 0.12, boostCooldownReduction: 0.05 },
 	},
 	{
 		id: 'badger_afterburn',
@@ -98,7 +205,32 @@ const ROCKET_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 3,
 		prereqs: ['vector_kick'],
 		track: 'rocket',
-		effects: { burnTrailDamage: 1 },
+		tier: 3,
+		description: 'Boosting primes the next strike with a burn trace.',
+		iconAnimation: 'badger_afterburn_icon',
+		effects: { burnTrailDamage: 0.25 },
+	},
+	{
+		id: 'skyline_reversal',
+		name: 'Skyline Reversal',
+		cost: 3,
+		prereqs: ['badger_afterburn'],
+		track: 'rocket',
+		tier: 4,
+		description: 'Reverse falling momentum and dodge again sooner after landing.',
+		iconAnimation: 'skyline_reversal_icon',
+		effects: { maxFallSpeedBonus: 90, dodgeCooldownReduction: 0.08 },
+	},
+	{
+		id: 'communal_thrust',
+		name: 'Communal Thrust',
+		cost: 4,
+		prereqs: ['skyline_reversal'],
+		track: 'rocket',
+		tier: 5,
+		description: 'Combat chains feed the shared fuel line.',
+		iconAnimation: 'communal_thrust_icon',
+		effects: { rocketFuelBonus: 1, fuelRefundOnCombo: 0.5, fuelRechargeBonus: 0.25 },
 	},
 ];
 
@@ -109,7 +241,10 @@ const HACK_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 1,
 		prereqs: [],
 		track: 'hacking',
-		effects: { cortex: 1, firstHackMistakeIgnored: true },
+		tier: 1,
+		description: 'Forgive the first syntax error and reduce ambient trace.',
+		iconAnimation: 'street_syntax_icon',
+		effects: { cortex: 1, firstHackMistakeIgnored: true, traceReduction: 0.05 },
 	},
 	{
 		id: 'black_ice_bite',
@@ -117,7 +252,10 @@ const HACK_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['street_syntax'],
 		track: 'hacking',
-		effects: { hackChargesMelee: true },
+		tier: 2,
+		description: 'Successful code work charges the next close-range counter.',
+		iconAnimation: 'black_ice_bite_icon',
+		effects: { hackChargesMelee: true, parryDamageBonus: 0.25 },
 	},
 	{
 		id: 'ghost_invoice',
@@ -125,7 +263,32 @@ const HACK_NODES: Omit<SkillNode, 'unlocked'>[] = [
 		cost: 2,
 		prereqs: ['black_ice_bite'],
 		track: 'hacking',
+		tier: 3,
+		description: 'Erase a larger share of accumulated trace.',
+		iconAnimation: 'ghost_invoice_icon',
 		effects: { traceReduction: 0.2 },
+	},
+	{
+		id: 'remote_arc',
+		name: 'Remote Arc',
+		cost: 3,
+		prereqs: ['ghost_invoice'],
+		track: 'hacking',
+		tier: 4,
+		description: 'Route terminal charge into railgun EMP payloads.',
+		iconAnimation: 'remote_arc_icon',
+		effects: { empOnChargedShot: true, railDamageBonus: 0.15 },
+	},
+	{
+		id: 'public_exploit',
+		name: 'Public Exploit',
+		cost: 4,
+		prereqs: ['remote_arc'],
+		track: 'hacking',
+		tier: 5,
+		description: 'Share the exploit: broader timing grace and a thin defensive checksum.',
+		iconAnimation: 'public_exploit_icon',
+		effects: { beatGrace: 0.06, damageMitigation: 0.08, traceReduction: 0.1 },
 	},
 ];
 
@@ -157,7 +320,11 @@ export class SkillTree {
 
 		// Initialize nodes
 		for (const node of FIRST_RELEASE_SKILL_NODES) {
-			this.graph.nodes.set(node.id, { ...node, effects: { ...(node.effects ?? {}) }, unlocked: false });
+			this.graph.nodes.set(node.id, {
+				...node,
+				effects: { ...(node.effects ?? {}) },
+				unlocked: false,
+			});
 		}
 	}
 
@@ -264,8 +431,8 @@ export class SkillTree {
 			case 'piercing_shot':
 				// Pierce effect
 				break;
-			case 'emp_blast':
-				// EMP effect
+			case 'public_record':
+				// EMP rail capstone
 				break;
 		}
 	}

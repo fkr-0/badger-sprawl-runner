@@ -1,7 +1,7 @@
 /**
  * SkillTree - manages skill nodes and progression
  */
-import type { SkillNode, DerivedStats } from './types';
+import type { DerivedStats, SkillNode } from './types';
 export interface SkillGraph {
     nodes: Map<string, SkillNode>;
     attributes: {
@@ -15,6 +15,11 @@ export interface SkillGraph {
     };
     skillPoints: number;
 }
+export interface ResolvedSkillEffects {
+    effects: Record<string, number | string | boolean>;
+    trackRanks: Record<(typeof FIRST_RELEASE_SKILL_TRACKS)[number], number>;
+}
+export declare function resolveSkillEffects(skillIds: readonly string[]): ResolvedSkillEffects;
 export declare const FIRST_RELEASE_SKILL_TRACKS: readonly ["clawline", "railgun", "rocket", "hacking"];
 export declare const FIRST_RELEASE_SKILL_NODES: Omit<SkillNode, 'unlocked'>[];
 export declare class SkillTree {

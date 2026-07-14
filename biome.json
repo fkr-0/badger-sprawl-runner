@@ -1,6 +1,16 @@
 {
 	"files": {
-		"ignore": ["apps/runner/dist/**", "**/dist/**", "workflow.json"],
+		"ignore": [
+			".claude/worktrees/**",
+			".worktrees/**",
+			"**/*.test.ts",
+			"tests/e2e/**",
+			"test-results/**",
+			"playwright-report/**",
+			"apps/runner/dist/**",
+			"**/dist/**",
+			"workflow.json"
+		],
 		"maxSize": 2097152
 	},
 	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",

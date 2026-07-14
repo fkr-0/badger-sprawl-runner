@@ -10,13 +10,18 @@ function assertPath(platform) {
 }
 function samplePath(platform, time) {
     assertPath(platform);
-    const duration = platform.path[platform.path.length - 1].time;
+    const lastPoint = platform.path.at(-1);
+    if (!lastPoint)
+        throw new Error(`Moving platform ${platform.id} has no path points`);
+    const duration = lastPoint.time;
     let t = platform.loop ? time % duration : Math.min(time, duration);
     if (t < 0)
         t += duration;
     for (let index = 1; index < platform.path.length; index += 1) {
         const prev = platform.path[index - 1];
         const next = platform.path[index];
+        if (!prev || !next)
+            continue;
         if (t <= next.time) {
             const alpha = (t - prev.time) / (next.time - prev.time);
             return {
@@ -25,8 +30,7 @@ function samplePath(platform, time) {
             };
         }
     }
-    const last = platform.path[platform.path.length - 1];
-    return { x: last.x, y: last.y };
+    return { x: lastPoint.x, y: lastPoint.y };
 }
 function isStandingOn(body, platform) {
     const feet = { x: body.x, y: body.y + body.h, w: body.w, h: 2 };
@@ -56,14 +60,22 @@ export function stepMovingPlatforms(platforms, bodies, dt) {
     const nextBodies = [...bodies]
         .sort((a, b) => a.id.localeCompare(b.id))
         .map((body) => {
-        const standingPlatform = nextPlatforms.find((platform) => body.standingOnId === platform.id || isStandingOn(body, previousById.get(platform.id) ?? platform));
+        const standingPlatform = nextPlatforms.find((platform) => body.standingOnId === platform.id ||
+            isStandingOn(body, previousById.get(platform.id) ?? platform));
         if (!standingPlatform)
             return { ...body, standingOnId: undefined };
         const previous = previousById.get(standingPlatform.id);
         const next = nextById.get(standingPlatform.id);
+        if (!previous || !next)
+            return { ...body, standingOnId: undefined };
         const dx = next.x - previous.x;
         const dy = next.y - previous.y;
-        carryEvents.push({ bodyId: body.id, platformId: standingPlatform.id, dx: Number(dx.toFixed(6)), dy: Number(dy.toFixed(6)) });
+        carryEvents.push({
+            bodyId: body.id,
+            platformId: standingPlatform.id,
+            dx: Number(dx.toFixed(6)),
+            dy: Number(dy.toFixed(6)),
+        });
         return {
             ...body,
             x: body.x + dx,

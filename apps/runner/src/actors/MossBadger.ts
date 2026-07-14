@@ -8,6 +8,15 @@ import type { CombatEntity, CombatEvents, CombatSystem } from '../systems/Combat
 import type { ActionMap } from '../systems/InputSystem';
 import type { Entity } from '../systems/PhysicsSystem';
 
+function effectNumber(player: Player, key: string, fallback = 0): number {
+	const value = player.itemSetEffects?.[key];
+	return typeof value === 'number' ? value : fallback;
+}
+
+function effectBool(player: Player, key: string): boolean {
+	return player.itemSetEffects?.[key] === true;
+}
+
 export interface Player extends Entity, CombatEntity {
 	fuel: number;
 	maxFuel: number;
@@ -36,6 +45,17 @@ export interface Player extends Entity, CombatEntity {
 	contextHint?: string;
 	damageFlash?: number;
 	healFlash?: number;
+	railgunFlash?: number;
+	railgunAnimationTimer?: number;
+	railgunHitCount?: number;
+	skillTrackRanks?: Record<'clawline' | 'railgun' | 'rocket' | 'hacking', number>;
+	gearIconSlots?: Array<{
+		itemId: string;
+		label: string;
+		sheetId: string;
+		animation: string;
+	}>;
+	hackMistakeShieldAvailable?: boolean;
 }
 
 export function createPlayer(): Player {
@@ -72,6 +92,9 @@ export function createPlayer(): Player {
 		isDodging: false,
 		comboCount: 0,
 		comboTimer: 0,
+		railgunFlash: 0,
+		railgunAnimationTimer: 0,
+		railgunHitCount: 0,
 	};
 }
 
@@ -79,7 +102,7 @@ export function processMossInput(
 	player: Player,
 	actionMap: ActionMap,
 	dt: number,
-	combatSystem: Pick<CombatSystem, 'melee'>,
+	combatSystem: Pick<CombatSystem, 'melee' | 'resolveAttack'>,
 	enemies: CombatEntity[] = [],
 	combatEvents?: CombatEvents
 ): void {
@@ -94,9 +117,61 @@ export function processMossInput(
 
 	// Shoot
 	if (canAct && actionMap.shootPressed && player.hasRailgun && player.shootCd <= 0) {
-		player.shootCd = 0.72;
-		// Create projectile
-		console.log('Railgun fired');
+		const damage = 1.6 + effectNumber(player, 'railDamageBonus');
+		const pierce = 4 + Math.max(0, Math.floor(effectNumber(player, 'railPierceBonus')));
+		const cooldown = Math.max(0.32, 0.72 - effectNumber(player, 'railCooldownReduction'));
+		const recoilReduction = Math.min(
+			0.85,
+			Math.max(0, effectNumber(player, 'railRecoilReduction'))
+		);
+		player.shootCd = cooldown;
+		player.railgunFlash = 0.14;
+		player.railgunAnimationTimer = 0.34;
+		player.vx -= player.dir * 38 * (1 - recoilReduction);
+		const muzzleX = player.dir > 0 ? player.x + player.w : player.x - 560;
+		const empStatus = effectBool(player, 'empOnChargedShot')
+			? [
+					{
+						id: 'railgun-public-emp',
+						kind: 'emp' as const,
+						sourceId: 'moss:railgun-pierce',
+						duration: 1.1,
+						remaining: 1.1,
+						stacks: 1,
+						maxStacks: 2,
+						tickInterval: 0.35,
+						tickTimer: 0.35,
+						magnitude: 0.22,
+					},
+				]
+			: undefined;
+		const resolution = combatSystem.resolveAttack(
+			player,
+			enemies,
+			{
+				id: 'moss:railgun-pierce',
+				source: 'player',
+				damage,
+				damageType: 'pierce',
+				damagePacket: { amount: damage, type: 'pierce', armorPierce: 0.7 },
+				stun: 0.34,
+				poiseDamage: 1.4,
+				knockbackX: 190,
+				knockbackY: -55,
+				hitbox: {
+					x: muzzleX,
+					y: player.y + 14,
+					w: 560,
+					h: 18,
+				},
+				parryable: false,
+				pierce,
+				comboGain: 1,
+				statusOnHit: empStatus,
+			},
+			combatEvents
+		);
+		player.railgunHitCount = resolution.hits.length;
 	}
 
 	// Context-sensitive item use: grounded recovery takes priority, airborne E remains a boost.
@@ -110,7 +185,7 @@ export function processMossInput(
 			player.hudToastTimer = 1.5;
 		} else if (player.hasRocket && player.fuel > 0 && player.boostCd <= 0) {
 			player.fuel--;
-			player.boostCd = 0.35;
+			player.boostCd = Math.max(0.16, 0.35 - effectNumber(player, 'boostCooldownReduction'));
 			player.vy = Math.min(player.vy, -420);
 			player.vx += player.dir * 45;
 			player.onGround = false;
@@ -122,9 +197,14 @@ export function processMossInput(
 	player.shootCd = Math.max(0, player.shootCd - dt);
 	player.boostCd = Math.max(0, player.boostCd - dt);
 	player.focus = Math.max(0, player.focus - dt);
+	player.railgunFlash = Math.max(0, (player.railgunFlash ?? 0) - dt);
+	player.railgunAnimationTimer = Math.max(0, (player.railgunAnimationTimer ?? 0) - dt);
 
 	// Recharge fuel on ground
 	if (player.onGround && player.hasRocket) {
-		player.fuel = Math.min(player.maxFuel, player.fuel + dt * 1.75);
+		player.fuel = Math.min(
+			player.maxFuel,
+			player.fuel + dt * (1.75 + effectNumber(player, 'fuelRechargeBonus'))
+		);
 	}
 }

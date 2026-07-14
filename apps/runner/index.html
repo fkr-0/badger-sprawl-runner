@@ -7,21 +7,8 @@
     <link rel="stylesheet" href="./src/game.css" />
   </head>
   <body>
-    <main class="shell">
-      <header class="hud-panel">
-        <div>
-          <h1>Badger Sprawl Runner</h1>
-          <p>Playable vertical slice: Lower Sprawl quests, toll puzzle, boss route, story choices, saves, and skill tree.</p>
-        </div>
-        <div class="kbd-row">
-          <kbd>↑/↓</kbd><span>navigate</span><kbd>Enter</kbd><span>select/advance</span><kbd>Space</kbd><span>jump</span><kbd>M</kbd><span>scan/sync</span><kbd>J/K/L</kbd><span>beat/combat</span><kbd>Esc</kbd><span>menu</span>
-        </div>
-      </header>
+    <main class="game-shell">
       <canvas id="game" width="960" height="540" aria-label="Badger Sprawl Runner playable canvas"></canvas>
-      <section class="status-grid">
-        <div id="status"></div>
-        <div id="minigame"></div>
-      </section>
     </main>
     <script type="module" src="./src/main.ts"></script>
   </body>

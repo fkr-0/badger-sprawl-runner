@@ -6,6 +6,9 @@ export interface RuntimeItemEffects {
 		airControlMultiplier: number;
 		maxFallSpeedBonus: number;
 		fuelRefundOnCombo: number;
+		fuelRechargeBonus: number;
+		rocketFuelBonus: number;
+		boostCooldownReduction: number;
 		landingShockwave: boolean;
 	};
 	combat: {
@@ -15,6 +18,15 @@ export interface RuntimeItemEffects {
 		finisherDamageBonus: number;
 		finisherEmp: boolean;
 		decoyOnPerfectDodge: boolean;
+		parryDamageBonus: number;
+		dodgeCooldownReduction: number;
+		comboWindowBonus: number;
+		railDamageBonus: number;
+		railPierceBonus: number;
+		railCooldownReduction: number;
+		railRecoilReduction: number;
+		empOnChargedShot: boolean;
+		hackChargesMelee: boolean;
 	};
 	hacking: {
 		traceReduction: number;
@@ -28,6 +40,9 @@ export const EMPTY_RUNTIME_ITEM_EFFECTS: RuntimeItemEffects = {
 		airControlMultiplier: 1,
 		maxFallSpeedBonus: 0,
 		fuelRefundOnCombo: 0,
+		fuelRechargeBonus: 0,
+		rocketFuelBonus: 0,
+		boostCooldownReduction: 0,
 		landingShockwave: false,
 	},
 	combat: {
@@ -37,6 +52,15 @@ export const EMPTY_RUNTIME_ITEM_EFFECTS: RuntimeItemEffects = {
 		finisherDamageBonus: 0,
 		finisherEmp: false,
 		decoyOnPerfectDodge: false,
+		parryDamageBonus: 0,
+		dodgeCooldownReduction: 0,
+		comboWindowBonus: 0,
+		railDamageBonus: 0,
+		railPierceBonus: 0,
+		railCooldownReduction: 0,
+		railRecoilReduction: 0,
+		empOnChargedShot: false,
+		hackChargesMelee: false,
 	},
 	hacking: {
 		traceReduction: 0,
@@ -93,6 +117,9 @@ export function resolveRuntimeItemEffects(summary: LoadoutSummary): RuntimeItemE
 			airControlMultiplier: 1 + numberEffect(effects, 'airControlBonus'),
 			maxFallSpeedBonus: numberEffect(effects, 'maxFallSpeedBonus'),
 			fuelRefundOnCombo: numberEffect(effects, 'fuelRefundOnCombo'),
+			fuelRechargeBonus: numberEffect(effects, 'fuelRechargeBonus'),
+			rocketFuelBonus: numberEffect(effects, 'rocketFuelBonus'),
+			boostCooldownReduction: numberEffect(effects, 'boostCooldownReduction'),
 			landingShockwave: boolEffect(effects, 'landingShockwave'),
 		},
 		combat: {
@@ -102,6 +129,15 @@ export function resolveRuntimeItemEffects(summary: LoadoutSummary): RuntimeItemE
 			finisherDamageBonus: numberEffect(effects, 'finisherDamageBonus'),
 			finisherEmp: boolEffect(effects, 'finisherEmp'),
 			decoyOnPerfectDodge: boolEffect(effects, 'decoyOnPerfectDodge'),
+			parryDamageBonus: numberEffect(effects, 'parryDamageBonus'),
+			dodgeCooldownReduction: numberEffect(effects, 'dodgeCooldownReduction'),
+			comboWindowBonus: numberEffect(effects, 'comboWindowBonus'),
+			railDamageBonus: numberEffect(effects, 'railDamageBonus'),
+			railPierceBonus: numberEffect(effects, 'railPierceBonus'),
+			railCooldownReduction: numberEffect(effects, 'railCooldownReduction'),
+			railRecoilReduction: numberEffect(effects, 'railRecoilReduction'),
+			empOnChargedShot: boolEffect(effects, 'empOnChargedShot'),
+			hackChargesMelee: boolEffect(effects, 'hackChargesMelee'),
 		},
 		hacking: {
 			traceReduction: numberEffect(effects, 'traceReduction'),
@@ -118,6 +154,9 @@ export function flattenRuntimeItemEffects(
 		airControlMultiplier: resolved.physics.airControlMultiplier,
 		maxFallSpeedBonus: resolved.physics.maxFallSpeedBonus,
 		fuelRefundOnCombo: resolved.physics.fuelRefundOnCombo,
+		fuelRechargeBonus: resolved.physics.fuelRechargeBonus,
+		rocketFuelBonus: resolved.physics.rocketFuelBonus,
+		boostCooldownReduction: resolved.physics.boostCooldownReduction,
 		landingShockwave: resolved.physics.landingShockwave,
 		damageMitigation: resolved.combat.damageMitigation,
 		parryWindowBonus: resolved.combat.parryWindowBonus,
@@ -125,6 +164,15 @@ export function flattenRuntimeItemEffects(
 		finisherDamageBonus: resolved.combat.finisherDamageBonus,
 		finisherEmp: resolved.combat.finisherEmp,
 		decoyOnPerfectDodge: resolved.combat.decoyOnPerfectDodge,
+		parryDamageBonus: resolved.combat.parryDamageBonus,
+		dodgeCooldownReduction: resolved.combat.dodgeCooldownReduction,
+		comboWindowBonus: resolved.combat.comboWindowBonus,
+		railDamageBonus: resolved.combat.railDamageBonus,
+		railPierceBonus: resolved.combat.railPierceBonus,
+		railCooldownReduction: resolved.combat.railCooldownReduction,
+		railRecoilReduction: resolved.combat.railRecoilReduction,
+		empOnChargedShot: resolved.combat.empOnChargedShot,
+		hackChargesMelee: resolved.combat.hackChargesMelee,
 		traceReduction: resolved.hacking.traceReduction,
 		beatGrace: resolved.hacking.beatGrace,
 	};

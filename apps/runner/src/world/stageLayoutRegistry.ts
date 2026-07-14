@@ -1,4 +1,6 @@
-import { cloneLowerSprawlLayout, type StageLayout } from './lowerSprawlLayout';
+import { cloneChromeArcologyLayout } from './chromeArcologyLayout';
+import { cloneDrainmarketLayout } from './drainmarketLayout';
+import { type StageLayout, cloneLowerSprawlLayout } from './lowerSprawlLayout';
 
 export const RUNTIME_STAGE_IDS = [
 	'lower-sprawl',
@@ -77,6 +79,8 @@ export function isRuntimeStageId(stageId: string): stageId is RuntimeStageId {
 
 export function cloneStageLayout(stageId = 'lower-sprawl'): StageLayout {
 	const runtimeStageId = isRuntimeStageId(stageId) ? stageId : 'lower-sprawl';
+	if (runtimeStageId === 'drainmarket') return cloneDrainmarketLayout();
+	if (runtimeStageId === 'chrome-arcology') return cloneChromeArcologyLayout();
 	const theme = STAGE_LAYOUT_THEMES[runtimeStageId];
 	const layout = cloneLowerSprawlLayout();
 	return {

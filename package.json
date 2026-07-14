@@ -5,10 +5,15 @@
 	"type": "module",
 	"description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
 	"packageManager": "pnpm@9.0.0",
-	"keywords": ["platformer", "game", "canvas", "2d"],
+	"keywords": [
+		"platformer",
+		"game",
+		"canvas",
+		"2d"
+	],
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
-		"build": "pnpm -r build",
+		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
 		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && pnpm -r test",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
@@ -18,12 +23,22 @@
 		"format": "biome format . --write",
 		"typecheck": "pnpm -r typecheck",
 		"smoke:runner": "node tests/smoke-runner.mjs",
+		"smoke:artifact": "node tests/artifact-bundle-browser.mjs",
 		"sprites:placeholder": "node scripts/generate-placeholder-sprites.mjs",
 		"sprites:missing": "node scripts/generate-missing-sprites.mjs",
 		"sprites:missing:dry": "node scripts/generate-missing-sprites.mjs --dry-run",
 		"sprites:check": "node tests/public-sprite-assets.mjs",
+		"sprites:progression": "python3 scripts/generate-progression-sprites.py",
 		"test:e2e:details": "playwright test tests/e2e/details-targets.spec.ts --project=chromium --reporter=line --output=/tmp/badger-sprawl-runner-details-test-results",
-		"verify:details": "pnpm -r typecheck && pnpm -r test && pnpm run test:e2e:details && node tests/no-e2e-artifact-churn.mjs"
+		"verify:details": "pnpm -r typecheck && pnpm -r test && pnpm run test:e2e:details && node tests/no-e2e-artifact-churn.mjs",
+		"test:e2e:drainmarket": "playwright test tests/e2e/drainmarket-vertical-slice.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-drainmarket-test-results",
+		"test:e2e:chrome-arcology": "playwright test tests/e2e/chrome-arcology-vertical-slice.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-chrome-arcology-test-results",
+		"test:e2e:progression": "playwright test tests/e2e/progression-skill-tree.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-progression-test-results",
+		"verify:release": "pnpm run test && pnpm run typecheck && pnpm run build && pnpm run smoke:runner && pnpm run smoke:artifact && pnpm run lint && pnpm exec playwright test --project=chromium",
+		"materialize:artifact-lab": "cd .. && node app-hub-v11/server/artifact-build.mjs --out .artifacts-deploy-stage --no-build",
+		"stage:artifact-lab": "pnpm run verify:release && pnpm run materialize:artifact-lab",
+		"deploy:artifact-lab:dry-run": "pnpm run verify:release && cd .. && ./artifacts-deploy --dry-run",
+		"deploy:artifact-lab": "pnpm run verify:release && cd .. && ./artifacts-deploy"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.3",

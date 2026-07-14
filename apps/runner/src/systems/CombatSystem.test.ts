@@ -34,6 +34,16 @@ describe('CombatSystem deterministic combat', () => {
 		expect(player.lastHitTime).toBe(12.5);
 	});
 
+	it('expires internal melee-chain state alongside the public combo timer', () => {
+		const system = new CombatSystem();
+		const player = entity({ faction: 'player' });
+		const drone = entity({ x: 45, hp: 10, maxHp: 10 });
+
+		expect(system.meleeInput(player, [drone], 'light', undefined, 1)?.move.id).toBe('claw_jab');
+		system.step(player, [drone], {}, 0.5, undefined, { time: 1.5 });
+		expect(system.meleeInput(player, [drone], 'light', undefined, 1.6)?.move.id).toBe('claw_jab');
+	});
+
 	it('resolves armor, poise break, combo gain, and kill events from attack specs', () => {
 		const system = new CombatSystem();
 		const player = entity({ faction: 'player' });
@@ -204,6 +214,36 @@ describe('CombatSystem deterministic combat', () => {
 		expect(player.invuln).toBeGreaterThanOrEqual(0.3);
 		expect(player.vx).toBeLessThanOrEqual(-430);
 		expect(player.vy).toBeLessThan(0);
+	});
+
+	it('materializes dodge decoys and consumes a hack charge on the next melee hit', () => {
+		const system = new CombatSystem();
+		const player = entity({
+			faction: 'player',
+			itemSetEffects: {
+				decoyOnPerfectDodge: true,
+				hackChargesMelee: true,
+				dashCancel: true,
+			},
+		});
+		const enemy = entity({ x: 45 });
+
+		system.step(player, [], { dodgePressed: true, hackPressed: true }, 0.016, undefined, {
+			time: 1,
+		});
+
+		expect(player.decoyTimer).toBeGreaterThan(0);
+		expect(player.invuln).toBeGreaterThan(0.3);
+		expect(player.hackChargeTimer).toBeGreaterThan(3.9);
+		player.invuln = 0;
+		player.vx = 0;
+		const result = system.meleeInput(player, [enemy], 'light', undefined, 1.1);
+
+		expect(result?.hits[0]?.damage).toBe(1.5);
+		expect(enemy.hp).toBe(3.5);
+		expect(enemy.statusEffects?.[0]?.kind).toBe('emp');
+		expect(player.hackChargeTimer).toBe(0);
+		expect(player.vx).toBe(90);
 	});
 
 	it('grants brief damage grace after an explicit enemy attack', () => {

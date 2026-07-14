@@ -29,7 +29,27 @@ export interface ItemDefinition {
 	tags: string[];
 	effect: string;
 	iconAnimation?: string;
+	iconSheetId?: string;
+	pickupAnimation?: string;
+	pickupSheetId?: string;
+	effects?: Record<string, number | string | boolean>;
 	maxStack?: number;
+}
+
+export function mergeEffectRecords(
+	records: readonly Record<string, number | string | boolean>[]
+): Record<string, number | string | boolean> {
+	const merged: Record<string, number | string | boolean> = {};
+	for (const record of records) {
+		for (const [key, value] of Object.entries(record)) {
+			const previous = merged[key];
+			if (typeof value === 'number' && typeof previous === 'number') merged[key] = previous + value;
+			else if (typeof value === 'boolean' && typeof previous === 'boolean')
+				merged[key] = previous || value;
+			else merged[key] = value;
+		}
+	}
+	return merged;
 }
 
 export interface InventoryEntry {
@@ -51,11 +71,21 @@ export class InventorySystem {
 	private catalog = new Map<string, ItemDefinition>();
 
 	constructor(items: readonly ItemDefinition[] = []) {
-		for (const item of items) this.catalog.set(item.id, { ...item, tags: [...item.tags] });
+		for (const item of items) {
+			this.catalog.set(item.id, {
+				...item,
+				tags: [...item.tags],
+				effects: item.effects ? { ...item.effects } : undefined,
+			});
+		}
 	}
 
 	registerItem(item: ItemDefinition): void {
-		this.catalog.set(item.id, { ...item, tags: [...item.tags] });
+		this.catalog.set(item.id, {
+			...item,
+			tags: [...item.tags],
+			effects: item.effects ? { ...item.effects } : undefined,
+		});
 	}
 
 	addItem(itemId: string, quantity = 1): InventoryEntry {
@@ -133,11 +163,14 @@ export class InventorySystem {
 		const ownedItemIds = this.getOwnedItemIds();
 		const equippedItemIds = this.getEquippedItemIds();
 		const activeBonuses = getActiveItemSetBonuses(equippedItemIds, sets);
+		const itemEffects = equippedItemIds
+			.map((itemId) => this.catalog.get(itemId)?.effects)
+			.filter((effects): effects is Record<string, number | string | boolean> => Boolean(effects));
 		return {
 			ownedItemIds,
 			equippedItemIds,
 			activeBonuses,
-			effects: mergeItemSetEffects(activeBonuses),
+			effects: mergeEffectRecords([...itemEffects, mergeItemSetEffects(activeBonuses)]),
 			missingSetPieces: this.getMissingSetPieces(equippedItemIds, sets),
 		};
 	}

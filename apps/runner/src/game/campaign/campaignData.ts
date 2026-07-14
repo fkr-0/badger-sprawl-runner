@@ -195,6 +195,18 @@ export const CAMPAIGN: CampaignDefinition = {
 				name: 'Knife-drone Nest',
 				phaseCount: 2,
 				argument: 'Pain is demand. Demand is market proof.',
+				phases: [
+					{
+						id: 'red-invoice-lunge',
+						label: 'Red Invoice Flash',
+						mechanic: 'red invoice flashes telegraph parryable knife lunges',
+					},
+					{
+						id: 'compound-injury',
+						label: 'Compound Injury',
+						mechanic: 'wide blade fans alternate with faster parryable nest lunges',
+					},
+				],
 				lessons: [
 					{
 						id: 'knife-drone-counter-timing',
@@ -221,11 +233,7 @@ export const CAMPAIGN: CampaignDefinition = {
 						'Wait for the invoice-flash, then tap parry to counter instead of mashing attack.',
 				},
 			],
-			todo: [
-				'add parry tutorial beat',
-				'add stim-cache result flag',
-				'make knife drones teach counter timing',
-			],
+			todo: ['add final clinic ambience and accessibility audio for invoice flashes'],
 			skeleton: skeleton('drain-combat'),
 		},
 		{
@@ -320,10 +328,18 @@ export const CAMPAIGN: CampaignDefinition = {
 				],
 			},
 			rewards: ['elevator_seed', 'two_blueprint_shards'],
+			tutorialBeats: [
+				{
+					id: 'railgun-sightline',
+					label: 'Piercing Sightline',
+					trigger: 'first_glass_atrium_lane',
+					teaches:
+						'Face the aligned glass locks and fire once through the full lane; the railgun rewards preparation rather than repeated shots.',
+				},
+			],
 			todo: [
-				'add railgun sightline rooms',
-				'tag hidden labor floors in background art',
-				'add Madame Vitrine placeholder phases',
+				'add final glass-break audio and reduced-flash accessibility settings',
+				'author dedicated labor-floor silhouette overlays beyond the runtime manifest tags',
 			],
 			skeleton: skeleton('arcology-rail'),
 		},

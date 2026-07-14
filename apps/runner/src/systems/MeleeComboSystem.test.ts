@@ -32,7 +32,7 @@ function enemy(overrides: Partial<CombatEntity> = {}): CombatEntity {
 
 describe('MeleeComboSystem', () => {
 	it('resolves a starter and chained light combo inside the combo window', () => {
-		const state = createMeleeComboState();
+		const state = createMeleeComboState(['double_swipe']);
 		const jab = resolveNextMeleeMove(state, 'light', player());
 		expect(jab?.id).toBe('claw_jab');
 
@@ -42,6 +42,19 @@ describe('MeleeComboSystem', () => {
 			player()
 		);
 		expect(chained?.id).toBe('claw_cross');
+	});
+
+	it('gates the cross-claw follow-up behind Double Swipe', () => {
+		const base = { ...createMeleeComboState(), activeMoveId: 'claw_jab', comboTimer: 0.2, chainDepth: 1 };
+
+		expect(resolveNextMeleeMove(base, 'light', player())).toBeNull();
+		expect(
+			resolveNextMeleeMove(
+				{ ...base, unlockedSkills: ['double_swipe'] },
+				'light',
+				player()
+			)?.id
+		).toBe('claw_cross');
 	});
 
 	it('expires combo state deterministically', () => {
@@ -55,7 +68,7 @@ describe('MeleeComboSystem', () => {
 	});
 
 	it('damages enemies and escalates style through a clean combo chain', () => {
-		const combo = new MeleeComboSystem(createMeleeComboState(['parry_tooth']));
+		const combo = new MeleeComboSystem(createMeleeComboState(['double_swipe', 'parry_tooth']));
 		const badger = player();
 		const drone = enemy();
 		const events: string[] = [];

@@ -1,13 +1,12 @@
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
+import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
 
 export interface RunnerBootstrapResult {
 	app: RunnerApp;
 	canvas: HTMLCanvasElement;
-	statusEl: HTMLElement | null;
-	miniEl: HTMLElement | null;
 }
 
 export interface BadgerTestHarness {
@@ -19,8 +18,16 @@ export interface BadgerTestHarness {
 	getLowerSprawlObjectives: () => ReturnType<
 		StageRunScene['getLowerSprawlObjectiveSnapshot']
 	> | null;
+	getDrainmarketObjectives: () => ReturnType<
+		StageRunScene['getDrainmarketObjectiveSnapshot']
+	> | null;
+	getChromeArcologyObjectives: () => ReturnType<
+		StageRunScene['getChromeArcologyObjectiveSnapshot']
+	> | null;
 	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
 	getCaptainGrin: () => ReturnType<StageRunScene['getCaptainGrinSnapshot']> | null;
+	getKnifeDroneNest: () => ReturnType<StageRunScene['getKnifeDroneNestSnapshot']> | null;
+	getMadameVitrine: () => ReturnType<StageRunScene['getMadameVitrineSnapshot']> | null;
 	getLowerSprawlHazards: () => ReturnType<StageRunScene['getLowerSprawlHazardSnapshot']> | null;
 	getCheckpoint: () => ReturnType<StageRunScene['getCheckpointSnapshot']> | null;
 	getLoadout: () => ReturnType<StageRunScene['getLoadoutSnapshot']> | null;
@@ -59,6 +66,30 @@ function installTestHarness(app: RunnerApp): void {
 		getPlayer: () => {
 			const s = app.getCurrentScene();
 			return s && 'getPlayerSnapshot' in s ? (s as StageRunScene).getPlayerSnapshot() : null;
+		},
+		getMadameVitrine: () => {
+			const s = app.getCurrentScene();
+			return s && 'getMadameVitrineSnapshot' in s
+				? (s as StageRunScene).getMadameVitrineSnapshot()
+				: null;
+		},
+		getChromeArcologyObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getChromeArcologyObjectiveSnapshot' in s
+				? (s as StageRunScene).getChromeArcologyObjectiveSnapshot()
+				: null;
+		},
+		getDrainmarketObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getDrainmarketObjectiveSnapshot' in s
+				? (s as StageRunScene).getDrainmarketObjectiveSnapshot()
+				: null;
+		},
+		getKnifeDroneNest: () => {
+			const s = app.getCurrentScene();
+			return s && 'getKnifeDroneNestSnapshot' in s
+				? (s as StageRunScene).getKnifeDroneNestSnapshot()
+				: null;
 		},
 		getBossPhase: () => {
 			const s = app.getCurrentScene();
@@ -145,21 +176,11 @@ export function bootstrapRunnerApp(doc: Document = document): RunnerBootstrapRes
 	const canvas = doc.querySelector<HTMLCanvasElement>('#game');
 	if (!canvas) return null;
 
-	const statusEl = doc.querySelector<HTMLElement>('#status');
-	const miniEl = doc.querySelector<HTMLElement>('#minigame');
 	const app = createRunnerApp(canvas);
 	app.start();
-	installTestHarness(app);
+	if (runtimeToolsEnabled()) installTestHarness(app);
 
-	if (statusEl) {
-		statusEl.innerHTML = '<strong>Mode:</strong> SceneManager shell';
-	}
-	if (miniEl) {
-		miniEl.innerHTML =
-			'<strong>Controls:</strong> Arrow keys navigate. Enter/Space confirms. Escape/back behavior is scene-specific.<br/><strong>Implemented slice:</strong> SceneManager routes Story, VS, Training, and Skills through concrete scenes.';
-	}
-
-	return { app, canvas, statusEl, miniEl };
+	return { app, canvas };
 }
 
 if (typeof document !== 'undefined') {

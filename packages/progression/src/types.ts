@@ -55,6 +55,9 @@ export interface SkillNode {
 	prereqs: string[];
 	unlocked: boolean;
 	track?: string;
+	tier?: number;
+	description?: string;
+	iconAnimation?: string;
 	effects?: Record<string, number | string | boolean>;
 }
 

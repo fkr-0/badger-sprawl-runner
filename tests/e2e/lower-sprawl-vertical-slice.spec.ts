@@ -382,11 +382,18 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 				.find((enemy) => enemy.bossId === 'tollbooth-captain-grin')
 		);
 		await page.evaluate(
-			([x, y]) => (window as E2EWindow).__badger.teleportPlayer(x - 40, y),
-			[currentBoss.x, currentBoss.y]
+			([x, y, w]) => {
+				const harness = (window as E2EWindow).__badger;
+				const facing = harness.getPlayer()?.dir ?? 1;
+				harness.teleportPlayer(facing >= 0 ? x - 40 : x + w + 8, y);
+			},
+			[currentBoss.x, currentBoss.y, currentBoss.w]
 		);
 		await page.waitForTimeout(80);
 		await page.keyboard.press('KeyJ');
+		await expect
+			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.meleeTimer ?? 0))
+			.toBeGreaterThan(0);
 		await expect
 			.poll(() =>
 				page.evaluate(() => {

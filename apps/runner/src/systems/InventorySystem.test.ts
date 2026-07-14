@@ -33,6 +33,7 @@ const catalog: ItemDefinition[] = [
 		rarity: 'uncommon',
 		tags: ['hack'],
 		effect: 'jam',
+		effects: { traceReduction: 0.1, beatGrace: 0.02 },
 	},
 	{
 		id: 'stim_pack',
@@ -96,5 +97,20 @@ describe('InventorySystem', () => {
 		]);
 		expect(summary.effects.landingShockwave).toBe(true);
 		expect(summary.effects.fuelRefundOnCombo).toBe(1);
+	});
+
+	it('merges individual gear effects with multi-piece set bonuses', () => {
+		const inventory = new InventorySystem(catalog);
+		for (const item of ['signal_jammer', 'bassline_boots', 'gravity_talisman']) {
+			inventory.addItem(item);
+			inventory.equip(item);
+		}
+
+		const summary = inventory.buildLoadoutSummary();
+
+		expect(summary.effects.traceReduction).toBe(0.1);
+		expect(summary.effects.beatGrace).toBe(0.02);
+		expect(summary.effects.landingShockwave).toBe(true);
+		expect(summary.effects.airControlBonus).toBe(0.1);
 	});
 });

@@ -23,6 +23,7 @@ export interface Pickup {
 	radius?: number;
 	visualState?: PickupVisualState;
 	animation?: string;
+	spriteSheetId?: string;
 	persistence?: PickupPersistence;
 	collectTimer?: number;
 }

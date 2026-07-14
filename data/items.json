@@ -178,6 +178,159 @@
 			],
 			"effect": "Unlocks a hidden shop category across runs.",
 			"iconAnimation": "contraband_seed_key_icon"
+		},
+		{
+			"id": "capacitor_coil",
+			"name": "Mutual-Aid Capacitor",
+			"slot": "passive",
+			"rarity": "rare",
+			"tags": [
+				"railgun",
+				"charge"
+			],
+			"effect": "Adds rail damage and pushes one more target through the sightline.",
+			"iconAnimation": "capacitor_coil_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "capacitor_coil_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"railDamageBonus": 0.2,
+				"railPierceBonus": 1
+			}
+		},
+		{
+			"id": "phase_mantle",
+			"name": "Phase Mantle",
+			"slot": "defense",
+			"rarity": "rare",
+			"tags": [
+				"dodge",
+				"guard"
+			],
+			"effect": "Thins incoming hits and cycles the dodge relay faster.",
+			"iconAnimation": "phase_mantle_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "phase_mantle_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"damageMitigation": 0.1,
+				"dodgeCooldownReduction": 0.08
+			}
+		},
+		{
+			"id": "ledger_lens",
+			"name": "Ledger Lens",
+			"slot": "utility",
+			"rarity": "uncommon",
+			"tags": [
+				"combo",
+				"evidence"
+			],
+			"effect": "Keeps the combat chain legible long enough to finish the audit.",
+			"iconAnimation": "ledger_lens_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "ledger_lens_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"comboWindowBonus": 0.14,
+				"meleeStyleBonus": 1
+			}
+		},
+		{
+			"id": "echo_spurs",
+			"name": "Echo Spurs",
+			"slot": "movement",
+			"rarity": "uncommon",
+			"tags": [
+				"air",
+				"beat"
+			],
+			"effect": "Adds aerial correction and accelerates grounded fuel recovery.",
+			"iconAnimation": "echo_spurs_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "echo_spurs_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"airControlBonus": 0.08,
+				"fuelRechargeBonus": 0.2
+			}
+		},
+		{
+			"id": "rail_heat_sink",
+			"name": "Rail Heat Sink",
+			"slot": "passive",
+			"rarity": "rare",
+			"tags": [
+				"railgun",
+				"cooldown"
+			],
+			"effect": "Shortens rail recovery and absorbs most firing recoil.",
+			"iconAnimation": "rail_heat_sink_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "rail_heat_sink_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"railCooldownReduction": 0.14,
+				"railRecoilReduction": 0.45
+			}
+		},
+		{
+			"id": "rootkit_badge",
+			"name": "Rootkit Union Badge",
+			"slot": "hack_combat",
+			"rarity": "epic",
+			"tags": [
+				"hack",
+				"solidarity"
+			],
+			"effect": "Reduces trace and routes successful hacks into close combat.",
+			"iconAnimation": "rootkit_badge_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "rootkit_badge_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"traceReduction": 0.15,
+				"hackChargesMelee": true,
+				"parryDamageBonus": 0.2
+			}
+		},
+		{
+			"id": "shock_fern",
+			"name": "Shock Fern Cutting",
+			"slot": "boon",
+			"rarity": "rare",
+			"tags": [
+				"emp",
+				"garden"
+			],
+			"effect": "Seeds rail impacts with a short EMP bloom.",
+			"iconAnimation": "shock_fern_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "shock_fern_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"empOnChargedShot": true,
+				"railDamageBonus": 0.12
+			}
+		},
+		{
+			"id": "mirror_thread",
+			"name": "Mirror Thread",
+			"slot": "passive",
+			"rarity": "epic",
+			"tags": [
+				"parry",
+				"decoy"
+			],
+			"effect": "Widens the parry seam and leaves a false reflection after a dodge.",
+			"iconAnimation": "mirror_thread_icon",
+			"iconSheetId": "item_icons_extended",
+			"pickupAnimation": "mirror_thread_pickup",
+			"pickupSheetId": "items_extended",
+			"effects": {
+				"parryWindowBonus": 0.025,
+				"decoyOnPerfectDodge": true
+			}
 		}
 	]
 }

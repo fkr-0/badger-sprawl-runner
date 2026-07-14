@@ -3,8 +3,8 @@
  */
 
 import { defaultParams, gravityStep, platformStep } from '@badger/platformer-core';
-import type { Entity } from './PhysicsSystem';
 import type { CombatEntity } from './CombatSystem';
+import type { Entity } from './PhysicsSystem';
 
 export type EnemyState = 'idle' | 'patrol' | 'alert' | 'windup' | 'attack' | 'recovery';
 export type EnemyClass = 'crawler' | 'drone' | 'turret';
@@ -92,9 +92,14 @@ export class EnemySystem {
 	}
 
 	step(enemies: Enemy[], player: Entity, dt: number): void;
-	step(enemies: Enemy[], player: Entity, platforms: Array<{ x: number; y: number; w: number; h: number }>, dt: number): void;
 	step(
-		enemies: Enemy[] = this.enemies,
+		enemies: Enemy[],
+		player: Entity,
+		platforms: Array<{ x: number; y: number; w: number; h: number }>,
+		dt: number
+	): void;
+	step(
+		enemies: Enemy[],
 		player: Entity,
 		platformsOrDt: Array<{ x: number; y: number; w: number; h: number }> | number,
 		maybeDt?: number

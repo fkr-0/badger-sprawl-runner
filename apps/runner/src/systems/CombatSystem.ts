@@ -44,6 +44,8 @@ export interface CombatEntity extends Entity {
 	unlockedSkills?: string[];
 	itemSetEffects?: Record<string, number | string | boolean>;
 	statusEffects?: StatusEffect[];
+	hackChargeTimer?: number;
+	decoyTimer?: number;
 
 	rookMarked?: boolean;
 	bossPhaseLabel?: string;
@@ -55,6 +57,8 @@ export interface CombatEntity extends Entity {
 	isBossPlaceholder?: boolean;
 	usesPatternController?: boolean;
 	bossSpriteSheetId?: string;
+	spriteSheetId?: string;
+	spriteAnimation?: string;
 	bossAction?: string;
 	bossAnimation?: string;
 	bossTelegraph?: number;
@@ -63,6 +67,10 @@ export interface CombatEntity extends Entity {
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
+}
+
+function effectBool(entity: CombatEntity, key: string): boolean {
+	return entity.itemSetEffects?.[key] === true;
 }
 
 export interface HitboxSet {
@@ -151,6 +159,8 @@ function initialize(entity: CombatEntity): void {
 	entity.lastHitTime ??= 0;
 	entity.meleeStyle ??= 0;
 	entity.unlockedSkills ??= [];
+	entity.hackChargeTimer ??= 0;
+	entity.decoyTimer ??= 0;
 }
 
 function decayTimers(entity: CombatEntity, dt: number): void {
@@ -161,6 +171,8 @@ function decayTimers(entity: CombatEntity, dt: number): void {
 	entity.dodgeCooldown = Math.max(0, (entity.dodgeCooldown ?? 0) - dt);
 	entity.dodgeActive = Math.max(0, (entity.dodgeActive ?? 0) - dt);
 	entity.comboTimer = Math.max(0, (entity.comboTimer ?? 0) - dt);
+	entity.hackChargeTimer = Math.max(0, (entity.hackChargeTimer ?? 0) - dt);
+	entity.decoyTimer = Math.max(0, (entity.decoyTimer ?? 0) - dt);
 	entity.isDodging = (entity.dodgeActive ?? 0) > 0;
 }
 
@@ -223,6 +235,7 @@ export class CombatSystem {
 		initialize(player);
 		if (options.unlockedSkills) player.unlockedSkills = [...options.unlockedSkills];
 		decayTimers(player, dt);
+		this.meleeCombos.get(player)?.step(dt);
 		stepCombatStatuses(player, dt, events, this.clock);
 
 		const comboWasActive = (player.comboCount ?? 0) > 0;
@@ -232,10 +245,12 @@ export class CombatSystem {
 		} else if ((player.comboTimer ?? 0) <= 0) {
 			player.comboCount = 0;
 		}
-
 		if (!comboWasActive && (player.comboTimer ?? 0) <= 0) player.comboCount = 0;
 
 		const parryBonus = effectNumber(player, 'parryWindowBonus');
+		if (actionMap.hackPressed && effectBool(player, 'hackChargesMelee')) {
+			player.hackChargeTimer = 4;
+		}
 		if (actionMap.parryPressed && (player.parryCooldown ?? 0) <= 0) {
 			player.parryWindow = 0.15 + parryBonus;
 			player.parryCooldown = 0.4;
@@ -243,9 +258,11 @@ export class CombatSystem {
 		}
 
 		if (actionMap.dodgePressed && (player.dodgeCooldown ?? 0) <= 0 && player.onGround) {
-			player.dodgeActive = 0.25 + effectNumber(player, 'beatGrace');
-			player.dodgeCooldown = 0.5;
-			player.invuln = Math.max(player.invuln, 0.3);
+			const decoyBonus = effectBool(player, 'decoyOnPerfectDodge') ? 0.08 : 0;
+			player.dodgeActive = 0.25 + effectNumber(player, 'beatGrace') + decoyBonus;
+			player.dodgeCooldown = Math.max(0.24, 0.5 - effectNumber(player, 'dodgeCooldownReduction'));
+			player.invuln = Math.max(player.invuln, 0.3 + decoyBonus);
+			if (decoyBonus > 0) player.decoyTimer = 0.75;
 			player.isDodging = true;
 			player.vx = player.dir * Math.max(430, Math.abs(player.vx));
 			player.vy = Math.min(player.vy, -35);
@@ -321,13 +338,85 @@ export class CombatSystem {
 		combo.setUnlockedSkills(player.unlockedSkills ?? []);
 		const result = combo.attack(player, enemies, input, events);
 		if (!result) return null;
+		const finisherBonus =
+			result.move.input === 'finisher' ? effectNumber(player, 'finisherDamageBonus') : 0;
+		const burnMagnitude = effectNumber(player, 'burnTrailDamage');
+		const hackChargeDamage = (player.hackChargeTimer ?? 0) > 0 ? 0.5 : 0;
+		for (const hit of result.hits) {
+			if (hackChargeDamage > 0) {
+				hit.enemy.hp -= hackChargeDamage;
+				hit.damage += hackChargeDamage;
+				hit.killed = hit.enemy.hp <= 0;
+				const applied = applyStatusEffect(
+					statusTarget(hit.enemy, hit.enemy.id ?? 'hack-charged-target'),
+					{
+						id: 'black-ice-bite',
+						kind: 'emp',
+						sourceId: result.move.id,
+						duration: 0.65,
+						remaining: 0.65,
+						stacks: 1,
+						maxStacks: 1,
+						tickInterval: 0.3,
+						tickTimer: 0.3,
+						magnitude: 0.18,
+					}
+				);
+				assignStatusTarget(hit.enemy, applied.target);
+			}
+			if (finisherBonus > 0) {
+				hit.enemy.hp -= finisherBonus;
+				hit.damage += finisherBonus;
+				hit.killed = hit.enemy.hp <= 0;
+			}
+			if (burnMagnitude > 0) {
+				const applied = applyStatusEffect(statusTarget(hit.enemy, hit.enemy.id ?? 'melee-target'), {
+					id: 'badger-afterburn',
+					kind: 'burn',
+					sourceId: result.move.id,
+					duration: 1.2,
+					remaining: 1.2,
+					stacks: 1,
+					maxStacks: 3,
+					tickInterval: 0.4,
+					tickTimer: 0.4,
+					magnitude: burnMagnitude,
+				});
+				assignStatusTarget(hit.enemy, applied.target);
+			}
+			if (result.move.input === 'finisher' && player.itemSetEffects?.finisherEmp === true) {
+				const applied = applyStatusEffect(
+					statusTarget(hit.enemy, hit.enemy.id ?? 'finisher-target'),
+					{
+						id: 'peoples-finisher-emp',
+						kind: 'emp',
+						sourceId: result.move.id,
+						duration: 0.9,
+						remaining: 0.9,
+						stacks: 1,
+						maxStacks: 1,
+						tickInterval: 0.3,
+						tickTimer: 0.3,
+						magnitude: 0.25,
+					}
+				);
+				assignStatusTarget(hit.enemy, applied.target);
+			}
+		}
+		if (hackChargeDamage > 0 && result.hits.length > 0) player.hackChargeTimer = 0;
+		if (effectBool(player, 'dashCancel') && result.hits.length > 0) {
+			player.vx += player.dir * 90;
+		}
 
 		this.lastAction = { kind: 'melee', time, moveId: result.move.id };
 		player.comboCount = Math.min(
 			this.maxCombo,
 			Math.max(player.comboCount ?? 0, result.state.chainDepth)
 		);
-		player.comboTimer = Math.max(player.comboTimer ?? 0, result.move.comboWindow);
+		player.comboTimer = Math.max(
+			player.comboTimer ?? 0,
+			result.move.comboWindow + effectNumber(player, 'comboWindowBonus')
+		);
 		player.lastHitTime = time;
 		player.meleeStyle = result.state.style + effectNumber(player, 'meleeStyleBonus');
 		return result;
@@ -439,7 +528,7 @@ export class CombatSystem {
 					this.maxCombo,
 					(attacker.comboCount ?? 0) + (attack.comboGain ?? 1)
 				);
-				attacker.comboTimer = this.comboWindow;
+				attacker.comboTimer = this.comboWindow + effectNumber(attacker, 'comboWindowBonus');
 				attacker.lastHitTime = time;
 			}
 

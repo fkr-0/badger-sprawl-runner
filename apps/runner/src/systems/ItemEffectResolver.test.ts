@@ -41,4 +41,35 @@ describe('ItemEffectResolver', () => {
 		expect(resolved.combat.finisherDamageBonus).toBe(1);
 		expect(resolved.statusesOnHit.map((status) => status.kind)).toEqual(['emp']);
 	});
+
+	it('resolves extended rail, rocket, and timing hooks', () => {
+		const summary = {
+			ownedItemIds: [],
+			equippedItemIds: [],
+			activeBonuses: [],
+			missingSetPieces: [],
+			effects: {
+				railDamageBonus: 0.4,
+				railPierceBonus: 2,
+				railCooldownReduction: 0.12,
+				railRecoilReduction: 0.35,
+				empOnChargedShot: true,
+				rocketFuelBonus: 2,
+				fuelRechargeBonus: 0.3,
+				comboWindowBonus: 0.15,
+			},
+		};
+
+		const resolved = resolveRuntimeItemEffects(summary);
+
+		expect(resolved.combat).toMatchObject({
+			railDamageBonus: 0.4,
+			railPierceBonus: 2,
+			railCooldownReduction: 0.12,
+			railRecoilReduction: 0.35,
+			empOnChargedShot: true,
+			comboWindowBonus: 0.15,
+		});
+		expect(resolved.physics).toMatchObject({ rocketFuelBonus: 2, fuelRechargeBonus: 0.3 });
+	});
 });
