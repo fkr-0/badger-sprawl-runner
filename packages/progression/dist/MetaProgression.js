@@ -24,7 +24,10 @@ export class MetaProgression {
                 console.warn('Save version outdated, resetting');
                 return null;
             }
-            return parsed;
+            return {
+                ...parsed,
+                skillRanks: parsed.skillRanks ?? Object.fromEntries(parsed.purchasedSkills.map((id) => [id, 1])),
+            };
         }
         catch (e) {
             console.warn('Failed to load meta state:', e);
@@ -74,6 +77,7 @@ export function createMetaState() {
         orbitHeat: 0,
         unlockedBoons: [],
         purchasedSkills: [],
+        skillRanks: {},
     };
 }
 export function persistMeta(state) {

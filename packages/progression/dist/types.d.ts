@@ -23,6 +23,7 @@ export interface RunState {
 export interface MetaState extends Currency {
     unlockedBoons: string[];
     purchasedSkills: string[];
+    skillRanks?: Record<string, number>;
 }
 export interface ShopItem {
     id: string;
@@ -49,6 +50,10 @@ export interface SkillNode {
     unlocked: boolean;
     track?: string;
     tier?: number;
+    column?: number;
+    branch?: string;
+    maxRank?: number;
+    rank?: number;
     description?: string;
     iconAnimation?: string;
     effects?: Record<string, number | string | boolean>;

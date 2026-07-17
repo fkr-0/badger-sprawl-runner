@@ -1,7 +1,16 @@
 /**
- * SkillTree - manages skill nodes and progression
+ * SkillTree - four branched, save-compatible disciplines.
  */
-import type { DerivedStats, SkillNode } from './types';
+import type { DerivedStats, MetaState, SkillNode } from './types';
+export declare const FIRST_RELEASE_SKILL_TRACKS: readonly ["clawline", "railgun", "rocket", "hacking"];
+export type SkillTrackId = (typeof FIRST_RELEASE_SKILL_TRACKS)[number];
+export declare const SKILL_TRACK_PRESENTATION: Record<SkillTrackId, {
+    label: string;
+    shortLabel: string;
+    description: string;
+}>;
+type SkillDefinition = Omit<SkillNode, 'unlocked' | 'rank'>;
+export declare const FIRST_RELEASE_SKILL_NODES: SkillDefinition[];
 export interface SkillGraph {
     nodes: Map<string, SkillNode>;
     attributes: {
@@ -17,11 +26,9 @@ export interface SkillGraph {
 }
 export interface ResolvedSkillEffects {
     effects: Record<string, number | string | boolean>;
-    trackRanks: Record<(typeof FIRST_RELEASE_SKILL_TRACKS)[number], number>;
+    trackRanks: Record<SkillTrackId, number>;
 }
-export declare function resolveSkillEffects(skillIds: readonly string[]): ResolvedSkillEffects;
-export declare const FIRST_RELEASE_SKILL_TRACKS: readonly ["clawline", "railgun", "rocket", "hacking"];
-export declare const FIRST_RELEASE_SKILL_NODES: Omit<SkillNode, 'unlocked'>[];
+export declare function resolveSkillEffects(skillIds: readonly string[], skillRanks?: Readonly<Record<string, number>>): ResolvedSkillEffects;
 export declare class SkillTree {
     private graph;
     constructor();
@@ -41,14 +48,14 @@ export declare function createSkillTree(): SkillTree;
 export type SkillPurchaseFailure = 'unknown-skill' | 'already-unlocked' | 'missing-prerequisite' | 'insufficient-shards';
 export type SkillPurchaseResult = {
     ok: true;
-    state: import('./types').MetaState;
+    state: MetaState;
     node: SkillNode;
 } | {
     ok: false;
-    state: import('./types').MetaState;
+    state: MetaState;
     reason: SkillPurchaseFailure;
 };
-export declare function hydrateSkillTree(purchasedSkills: readonly string[]): SkillTree;
-export declare function purchaseSkillWithMeta(tree: SkillTree, state: import('./types').MetaState, nodeId: string): SkillPurchaseResult;
+export declare function hydrateSkillTree(purchasedSkills: readonly string[], skillRanks?: Readonly<Record<string, number>>): SkillTree;
+export declare function purchaseSkillWithMeta(tree: SkillTree, state: MetaState, nodeId: string): SkillPurchaseResult;
 export { computeDerivedStats } from './derivedStats';
 //# sourceMappingURL=SkillTree.d.ts.map
