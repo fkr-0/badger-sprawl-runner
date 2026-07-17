@@ -7,16 +7,17 @@
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test": "vitest run --pool=forks src/MainBootstrap.test.ts src/runtime/RuntimeEnvironment.test.ts src/engine/SceneManager.test.ts src/RunnerApp.test.ts src/scenes/SkillTreeScene.test.ts src/scenes/StageRunProgression.test.ts src/actors/MossBadger.test.ts src/game/ChromeArcologyObjectives.test.ts src/game/DrainmarketObjectives.test.ts src/game/LowerSprawlObjectives.test.ts src/game/GameFlowRuntimeResult.test.ts src/systems/InputSystem.test.ts src/systems/PhysicsSystem.test.ts src/systems/CameraSystem.test.ts src/systems/EnemySystem.test.ts src/systems/WaveDirector.test.ts src/systems/BossPhaseSystem.test.ts src/systems/CaptainGrinController.test.ts src/systems/KnifeDroneNestController.test.ts src/systems/MadameVitrineController.test.ts src/systems/LowerSprawlHazardSystem.test.ts src/systems/LowerSprawlEnemySystem.test.ts src/systems/DrainmarketEnemySystem.test.ts src/systems/ChromeArcologyEnemySystem.test.ts src/systems/FirstReleaseItemCatalog.test.ts src/systems/StageCheckpointSystem.test.ts src/world/stageLayoutRegistry.test.ts src/systems/CombatActionExecutor.test.ts src/systems/CombatActionSystem.test.ts src/systems/CombatEquipmentExecutor.test.ts src/systems/CombatEventLedger.test.ts src/systems/CombatFrameDataSystem.test.ts src/systems/CombatFrameHitSystem.test.ts src/systems/CombatFrameExecutor.test.ts src/systems/CombatResourceSystem.test.ts src/systems/CombatSystem.test.ts src/systems/DamageModel.test.ts src/systems/CombatTargetingSystem.test.ts src/systems/CombatVisibilitySystem.test.ts src/systems/DeterministicReplaySystem.test.ts src/systems/DeterministicRunStep.test.ts src/systems/CombatTimeline.test.ts src/systems/EquipmentSystem.test.ts src/systems/InventorySystem.test.ts src/systems/ItemAffixSystem.test.ts src/systems/ItemCraftingSystem.test.ts src/systems/ItemDropSystem.test.ts src/systems/ItemDurabilitySystem.test.ts src/systems/ItemEffectResolver.test.ts src/systems/ItemProcSystem.test.ts src/systems/ItemSetSystem.test.ts src/systems/ItemSocketSystem.test.ts src/systems/ItemStatSystem.test.ts src/systems/ItemUpgradeCurve.test.ts src/systems/ItemUseSystem.test.ts src/systems/ItemWearSystem.test.ts src/systems/LoadoutBudgetSystem.test.ts src/systems/MeleeComboSystem.test.ts src/systems/PhysicsCombatBridge.test.ts src/systems/ProjectileCombatBridge.test.ts src/systems/RuntimeItemApplier.test.ts src/systems/SocketEquipmentBridge.test.ts src/systems/StatusEffectSystem.test.ts src/systems/CombatHitboxLayerSystem.test.ts src/systems/PoiseStaggerSystem.test.ts src/systems/ConditionalItemEffectSystem.test.ts src/systems/ReplayDiffSystem.test.ts",
+		"test": "vitest run --pool=forks",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@badger/platformer-core": "workspace:*",
 		"@badger/codegate": "workspace:*",
-		"@badger/sprite-contracts": "workspace:*",
-		"@badger/progression": "workspace:*"
+		"@badger/platformer-core": "workspace:*",
+		"@badger/progression": "workspace:*",
+		"@badger/sprite-contracts": "workspace:*"
 	},
 	"devDependencies": {
+		"jsdom": "^24.1.3",
 		"typescript": "^5.3.3",
 		"vite": "^5.1.0"
 	}

@@ -651,7 +651,7 @@ for (const required of [
 for (const required of [
 	'getActiveBranchConsequences(stage.id)',
 	'Branch effect:',
-	'branchConsequence.uiHint.slice',
+	'branchConsequence.uiHint',
 ]) {
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing branch consequence panel rendering: ${required}`);
 }
@@ -659,7 +659,7 @@ for (const required of [
 for (const required of ['type BossPhase', 'phases?: BossPhase[]', 'phases: stage.boss.phases?.map((phase) => ({ ...phase }))']) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing boss phase projection: ${required}`);
 }
-for (const required of ['stage.boss?.phases?.[0]', 'Boss phase:', 'bossPhase.mechanic.slice']) {
+for (const required of ['stage.boss?.phases?.[0]', 'Boss phase:', 'bossPhase.mechanic']) {
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing boss phase panel rendering: ${required}`);
 }
 
@@ -689,7 +689,7 @@ for (const [source, required] of [
 for (const required of ['sideQuests?: SideQuest[]', 'sideQuests: stage.sideQuests?.map']) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing side quest stage projection: ${required}`);
 }
-for (const required of ['stage.sideQuests?.[0]', 'Side job:', 'sideQuest.objective.slice']) {
+for (const required of ['stage.sideQuests?.[0]', 'Side job:', 'sideQuest.objective']) {
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing side quest panel rendering: ${required}`);
 }
 
@@ -729,6 +729,10 @@ for (const required of [
 	"/^[1-9]$/",
 	'lastChoiceResult',
 	'getCurrentStage()',
+	'syncStageSelection',
+	'startCurrentStage()',
+	'selectionCommitted',
+	'fitText',
 ]) {
 	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing stage choice UI wiring: ${required}`);
 }

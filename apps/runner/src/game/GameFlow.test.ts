@@ -28,6 +28,7 @@ describe('Badger Sprawl Runner game flow', () => {
 			'versus',
 			'training',
 			'skills',
+			'endless',
 		]);
 	});
 
@@ -224,6 +225,31 @@ describe('Badger Sprawl Runner game flow', () => {
 		});
 		expect(flow.getStoryProgress()).toMatchObject({ resultFlags: ['ledger_public_dump'] });
 		expect(flow.getMeta()).toMatchObject({ dubFavor: 2, orbitHeat: 2 });
+	});
+
+	it('keeps repeated stage choices idempotent', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'lower-sprawl' });
+
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		expect(flow.chooseStageChoice(1)).toMatchObject({ ok: true, resultFlag: 'wafer_broadcast' });
+		expect(flow.chooseStageChoice(1)).toMatchObject({ ok: true, resultFlag: 'wafer_broadcast' });
+
+		expect(flow.getStoryProgress().resultFlags).toEqual(['wafer_broadcast']);
+		expect(flow.getMeta()).toMatchObject({ dubFavor: 1, orbitHeat: 1 });
+	});
+
+	it('replaces an earlier stage choice and reverses its meta delta', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'lower-sprawl' });
+
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		flow.chooseStageChoice(0);
+		expect(flow.getMeta()).toMatchObject({ dubFavor: -1, orbitHeat: -1 });
+
+		expect(flow.chooseStageChoice(2)).toMatchObject({ ok: true, resultFlag: 'wafer_safe_routes' });
+		expect(flow.getStoryProgress().resultFlags).toEqual(['wafer_safe_routes']);
+		expect(flow.getMeta()).toMatchObject({ dubFavor: 1, orbitHeat: 0 });
 	});
 
 	it('applies cargo reversal choice flags and heat/favor deltas', () => {

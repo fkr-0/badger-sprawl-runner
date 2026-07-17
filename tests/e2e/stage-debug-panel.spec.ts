@@ -18,10 +18,13 @@ test.describe('StoryFlow stage debug panel', () => {
 		await page.keyboard.press('Enter');
 		await expect.poll(() => consoleMessages).toContain('StoryFlowScene entered');
 
-		for (let index = 0; index < 10; index += 1) {
+		for (let index = 0; index < 12; index += 1) {
+			const mode = await page.evaluate(() => window.__badger?.getStoryState()?.mode);
+			if (mode === 'stage') break;
 			await page.keyboard.press('Enter');
 			await page.waitForTimeout(40);
 		}
+		await expect.poll(() => page.evaluate(() => window.__badger?.getStoryState()?.mode)).toBe('stage');
 		await page.keyboard.press('d');
 		await expect.poll(() => page.evaluate(() => window.__badgerStageDebugDetails.length)).toBeGreaterThan(0);
 

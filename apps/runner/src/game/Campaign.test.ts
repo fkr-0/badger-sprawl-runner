@@ -214,6 +214,7 @@ describe('Brechtian story campaign skeleton', () => {
 				branch: 'exposed',
 				resultFlag: 'lio_exposed',
 				consequence: 'Lio survives politically wounded; colony heat drops but trust breaks.',
+				metaDelta: { orbitHeat: -1, dubFavor: -1 },
 			},
 			{
 				id: 'lio-protected',
@@ -222,6 +223,7 @@ describe('Brechtian story campaign skeleton', () => {
 				resultFlag: 'lio_protected',
 				consequence:
 					'Lio keeps faith with Moss; orbit heat rises because the room sees mercy as weakness.',
+				metaDelta: { orbitHeat: 1, dubFavor: 1 },
 			},
 			{
 				id: 'lio-baited',
@@ -229,6 +231,7 @@ describe('Brechtian story campaign skeleton', () => {
 				branch: 'baited',
 				resultFlag: 'lio_baited',
 				consequence: 'Lio becomes part of the trap; trust becomes tactical instead of intimate.',
+				metaDelta: { orbitHeat: 2, dubFavor: 0 },
 			},
 		]);
 		expect(mirrorPalace?.traversalHazards).toEqual([

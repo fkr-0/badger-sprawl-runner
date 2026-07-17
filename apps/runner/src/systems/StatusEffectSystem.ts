@@ -65,7 +65,7 @@ export function stepStatusEffects(target: StatusTarget, dt: number): StatusStepR
 
 	const events: StatusEvent[] = [];
 	const surviving: StatusEffect[] = [];
-	let next: StatusTarget = { ...target, statusEffects: [] };
+	const next: StatusTarget = { ...target, statusEffects: [] };
 
 	for (const effect of target.statusEffects ?? []) {
 		const stepped = { ...effect, remaining: Math.max(0, effect.remaining - dt) };

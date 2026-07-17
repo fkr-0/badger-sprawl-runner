@@ -83,7 +83,7 @@ function syncCombatantsFromPhysics(physics: PhysicsWorldState, combatants: Comba
 
 function applyItemEventToCombatant(combatant: CombatEntity, event: ItemUseEvent): CombatEntity {
 	if (event.kind !== 'used' || !event.effects) return combatant;
-	let next = { ...combatant };
+	const next = { ...combatant };
 	const heal = event.effects.heal;
 	if (typeof heal === 'number') next.hp = Math.min(next.maxHp, next.hp + heal);
 	if (event.effects.shield === true) next.invuln = Math.max(next.invuln, 0.5);

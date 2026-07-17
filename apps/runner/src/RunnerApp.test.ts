@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRunnerApp } from './RunnerApp';
+import { Renderer } from './renderer/Renderer';
 import { TitleScene } from './scenes/TitleScene';
 import { TrainingScene } from './scenes/TrainingScene';
 import { VersusScene } from './scenes/VersusScene';
 
 function installWindowStub(): void {
+	vi.spyOn(Renderer.prototype, 'loadSprites').mockResolvedValue();
 	const globalWithWindow = globalThis as typeof globalThis & {
 		window?: {
 			addEventListener: () => void;

@@ -54,7 +54,7 @@ function matchingAffixes(item: ItemDefinition, affixes: readonly ItemAffixDefini
 
 function weightedPick(state: DeterministicRngState, affixes: readonly ItemAffixDefinition[]) {
 	const total = affixes.reduce((sum, affix) => sum + affix.weight, 0);
-	let roll = rngRange(state, 0, total);
+	const roll = rngRange(state, 0, total);
 	let cursor = roll.value;
 	for (const affix of affixes) {
 		cursor -= affix.weight;

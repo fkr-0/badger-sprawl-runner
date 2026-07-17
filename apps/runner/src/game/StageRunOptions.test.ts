@@ -33,26 +33,37 @@ describe('buildStageRunSceneOptions', () => {
 		});
 		expect(options.runtimeConfig).toMatchObject({
 			stageId: 'chrome-arcology',
-			payloadRewardId: 'algorithmic_garden_key',
+			payloadRewardId: 'elevator_seed',
 			bossPlaceholderId: 'madame-vitrine',
 		});
 		expect(options.generatedEnemyPacks?.[0]?.enemies.length).toBeGreaterThan(0);
 		expect(options.generatedSideRooms?.[0]?.platforms.length).toBeGreaterThan(0);
 	});
 
-	it('maps active branch consequences into branchGameplayHooks', () => {
-		const flow = createGameFlow(undefined, {
+	it('maps only stage-relevant branch consequences into gameplay hooks', () => {
+		const lioFlow = createGameFlow(undefined, {
 			currentStageId: 'dub-colony',
 			resultFlags: ['lio_protected', 'colony_alignment_chorus'],
 		});
-		flow.selectMenu('story');
-		enterCurrentStage(flow);
+		lioFlow.selectMenu('story');
+		enterCurrentStage(lioFlow);
 
-		const options = buildStageRunSceneOptions(flow);
-		expect(options.branchGameplayHooks).toContain('companion_assist_ready');
-		expect(options.branchGameplayHooks).toContain('naya_shield_bonus');
-		expect(options.generatedEnemyPacks?.[0]?.stageId).toBe('dub-colony');
-		expect(options.generatedSideRooms?.[0]?.stageId).toBe('dub-colony');
+		const lioOptions = buildStageRunSceneOptions(lioFlow);
+		expect(lioOptions.branchGameplayHooks).toContain('companion_assist_ready');
+		expect(lioOptions.branchGameplayHooks).not.toContain('naya_shield_bonus');
+
+		const colonyFlow = createGameFlow(undefined, {
+			currentStageId: 'orbital-lift',
+			resultFlags: ['lio_protected', 'colony_alignment_chorus'],
+		});
+		colonyFlow.selectMenu('story');
+		enterCurrentStage(colonyFlow);
+
+		const colonyOptions = buildStageRunSceneOptions(colonyFlow);
+		expect(colonyOptions.branchGameplayHooks).not.toContain('companion_assist_ready');
+		expect(colonyOptions.branchGameplayHooks).toContain('naya_shield_bonus');
+		expect(colonyOptions.generatedEnemyPacks?.[0]?.stageId).toBe('orbital-lift');
+		expect(colonyOptions.generatedSideRooms?.[0]?.stageId).toBe('orbital-lift');
 	});
 
 	it('returns safe defaults outside a stage state', () => {

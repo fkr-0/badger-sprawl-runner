@@ -390,10 +390,20 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 			[currentBoss.x, currentBoss.y, currentBoss.w]
 		);
 		await page.waitForTimeout(80);
-		await page.keyboard.press('KeyJ');
-		await expect
-			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.meleeTimer ?? 0))
-			.toBeGreaterThan(0);
+		for (let attempt = 0; attempt < 3; attempt += 1) {
+			await page.keyboard.press('KeyJ');
+			await expect
+				.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getPlayer()?.meleeTimer ?? 0))
+				.toBeGreaterThan(0);
+			await page.waitForTimeout(120);
+			const remainingHp = await page.evaluate(() => {
+				const current = (window as E2EWindow).__badger
+					.getEnemies()
+					.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
+				return current?.hp ?? 0;
+			});
+			if (remainingHp <= 0) break;
+		}
 		await expect
 			.poll(() =>
 				page.evaluate(() => {

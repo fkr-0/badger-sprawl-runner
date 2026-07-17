@@ -3,6 +3,7 @@ import type { MenuOptionId } from './game/GameFlow';
 import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
+import type { StoryFlowScene } from './scenes/StoryFlowScene';
 
 export interface RunnerBootstrapResult {
 	app: RunnerApp;
@@ -38,6 +39,7 @@ export interface BadgerTestHarness {
 	getStoryProgress: () => ReturnType<RunnerApp['getFlow']>['getStoryProgress'] extends () => infer T
 		? T
 		: never;
+	getStoryPanelLayout: () => ReturnType<StoryFlowScene['getPanelLayoutSnapshot']> | null;
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
 	teleportPlayer: (x: number, y: number) => void;
 	setBossHp: (hp: number) => void;
@@ -138,6 +140,12 @@ function installTestHarness(app: RunnerApp): void {
 		getStoryState: () => app.getFlow().getState(),
 		getMeta: () => app.getFlow().getMeta(),
 		getStoryProgress: () => app.getFlow().getStoryProgress(),
+		getStoryPanelLayout: () => {
+			const s = app.getCurrentScene();
+			return s && 'getPanelLayoutSnapshot' in s
+				? (s as StoryFlowScene).getPanelLayoutSnapshot()
+				: null;
+		},
 		getSkillTree: () => {
 			const s = app.getCurrentScene();
 			return s && 'getSnapshot' in s ? (s as SkillTreeScene).getSnapshot() : null;

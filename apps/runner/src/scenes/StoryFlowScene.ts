@@ -9,6 +9,20 @@ function formatSigned(value: number): string {
 	return value > 0 ? `+${value}` : `${value}`;
 }
 
+export interface StoryPanelLayoutSnapshot {
+	panelTop: number;
+	panelBottom: number;
+	choiceRows: Array<{ top: number; bottom: number }>;
+	detailsTop: number;
+	detailsBottom: number;
+	controlsTop: number;
+	controlsBottom: number;
+	recapTop: number;
+	recapBottom: number;
+	recapRight: number;
+	autosaveLeft: number;
+}
+
 export interface StoryFlowSceneOptions {
 	onStartStage?: (options: StageRunSceneOptions) => void;
 	onAutosave?: (reason: AutosaveReason) => AutosaveFeedback | undefined;
@@ -41,12 +55,14 @@ export class StoryFlowScene implements Scene {
 	readonly name = 'StoryFlowScene';
 
 	private selectedChoiceIndex = 0;
+	private selectedStageId: string | null = null;
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
 	private lastChoiceResult = '';
 	private lastChoiceRecap: BranchChoiceRecap | null = null;
 	private debugPanelVisible = false;
 	private lastDebugDetail: StageDebugDetail | null = null;
 	private lastAutosaveFeedback: AutosaveFeedback | null = null;
+	private lastPanelLayout: StoryPanelLayoutSnapshot | null = null;
 
 	constructor(
 		private readonly flow: GameFlow = createGameFlow(),
@@ -55,6 +71,15 @@ export class StoryFlowScene implements Scene {
 
 	getFlow(): GameFlow {
 		return this.flow;
+	}
+
+	getPanelLayoutSnapshot(): StoryPanelLayoutSnapshot | null {
+		return this.lastPanelLayout
+			? {
+					...this.lastPanelLayout,
+					choiceRows: this.lastPanelLayout.choiceRows.map((row) => ({ ...row })),
+				}
+			: null;
 	}
 
 	getLastChoiceRecap(): BranchChoiceRecap | null {
@@ -124,6 +149,9 @@ export class StoryFlowScene implements Scene {
 			return;
 		}
 		if (state.mode !== 'stage') return;
+		const stage = this.flow.getCurrentStage();
+		if (!stage) return;
+		this.syncStageSelection(stage);
 		if (event.key.toLowerCase() === 'd') {
 			event.preventDefault();
 			this.toggleStageDebugPanel();
@@ -134,8 +162,7 @@ export class StoryFlowScene implements Scene {
 			this.startCurrentStage();
 			return;
 		}
-		const stage = this.flow.getCurrentStage();
-		const choices = stage?.choiceOutcomes ?? [];
+		const choices = stage.choiceOutcomes ?? [];
 		if (choices.length === 0) return;
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
@@ -144,12 +171,43 @@ export class StoryFlowScene implements Scene {
 			event.preventDefault();
 			this.selectedChoiceIndex = (this.selectedChoiceIndex + 1) % choices.length;
 		} else if (/^[1-9]$/.test(event.key)) {
+			event.preventDefault();
 			const index = Number(event.key) - 1;
-			if (index < choices.length) this.chooseStageChoice(index);
+			if (index < choices.length) {
+				this.selectedChoiceIndex = index;
+				const outcome = choices[index];
+				if (this.lastChoiceRecap?.resultFlag !== outcome?.resultFlag) this.chooseStageChoice(index);
+			}
 		} else if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
-			this.chooseStageChoice(this.selectedChoiceIndex);
+			const selectedOutcome = choices[this.selectedChoiceIndex];
+			if (selectedOutcome && this.lastChoiceRecap?.resultFlag === selectedOutcome.resultFlag) {
+				this.startCurrentStage();
+			} else {
+				this.chooseStageChoice(this.selectedChoiceIndex);
+			}
 		}
+	}
+
+	private syncStageSelection(stage: NonNullable<ReturnType<GameFlow['getCurrentStage']>>): void {
+		if (this.selectedStageId === stage.id) return;
+		this.selectedStageId = stage.id;
+		this.selectedChoiceIndex = 0;
+		this.lastChoiceResult = '';
+		this.lastChoiceRecap = null;
+		this.lastAutosaveFeedback = null;
+		this.lastPanelLayout = null;
+
+		const resultFlags = new Set(this.flow.getStoryProgress().resultFlags);
+		const restoredIndex = stage.choiceOutcomes?.findIndex((outcome) =>
+			resultFlags.has(outcome.resultFlag)
+		);
+		if (restoredIndex === undefined || restoredIndex < 0) return;
+		const restoredOutcome = stage.choiceOutcomes?.[restoredIndex];
+		if (!restoredOutcome) return;
+		this.selectedChoiceIndex = restoredIndex;
+		this.lastChoiceResult = `${restoredOutcome.branch} / ${restoredOutcome.resultFlag}`;
+		this.lastChoiceRecap = this.buildChoiceRecap(stage.id, restoredOutcome);
 	}
 
 	private toggleStageDebugPanel(): void {
@@ -179,17 +237,20 @@ export class StoryFlowScene implements Scene {
 	}
 
 	private startCurrentStage(): void {
+		const stage = this.flow.getCurrentStage();
+		if (!stage) return;
+		this.syncStageSelection(stage);
 		this.options.onStartStage?.(buildStageRunSceneOptions(this.flow));
 	}
 
-	private chooseStageChoice(choiceIndex: number): void {
+	private chooseStageChoice(choiceIndex: number): boolean {
 		const stage = this.flow.getCurrentStage();
 		const outcome = stage?.choiceOutcomes?.[choiceIndex];
 		const result = this.flow.chooseStageChoice(choiceIndex);
 		if (!result.ok) {
 			this.lastChoiceResult = result.reason;
 			this.lastChoiceRecap = null;
-			return;
+			return false;
 		}
 		if (stage && outcome) {
 			this.lastChoiceResult = `${result.branch} / ${result.resultFlag}`;
@@ -200,6 +261,7 @@ export class StoryFlowScene implements Scene {
 				new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap })
 			);
 		}
+		return true;
 	}
 
 	private buildChoiceRecap(stageId: string, outcome: ChoiceOutcome): BranchChoiceRecap {
@@ -283,67 +345,131 @@ export class StoryFlowScene implements Scene {
 	private renderStageChoicePanel(ctx: CanvasRenderingContext2D): void {
 		const stage = this.flow.getCurrentStage();
 		if (!stage?.choiceOutcomes?.length) return;
+		this.syncStageSelection(stage);
 		const panelX = 54;
-		const panelY = ctx.canvas.height - 260;
+		const panelH = Math.min(380, Math.max(330, ctx.canvas.height - 112));
+		const panelY = ctx.canvas.height - panelH - 16;
 		const panelW = ctx.canvas.width - 108;
 		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
-		ctx.fillRect(panelX, panelY, panelW, 244);
+		ctx.fillRect(panelX, panelY, panelW, panelH);
 		ctx.strokeStyle = '#ffb35e';
-		ctx.strokeRect(panelX, panelY, panelW, 244);
+		ctx.strokeRect(panelX, panelY, panelW, panelH);
 		ctx.textAlign = 'left';
 		ctx.fillStyle = '#ffb35e';
 		ctx.font = '700 15px ui-monospace, monospace';
-		ctx.fillText(stage.dramaticQuestion, panelX + 22, panelY + 30);
+		ctx.fillText(this.fitText(ctx, stage.dramaticQuestion, panelW - 44), panelX + 22, panelY + 30);
 		ctx.font = '14px ui-monospace, monospace';
+		const choiceRows: Array<{ top: number; bottom: number }> = [];
 		for (const [index, outcome] of stage.choiceOutcomes.entries()) {
-			const y = panelY + 62 + index * 32;
+			const rowTop = panelY + 46 + index * 54;
+			const y = rowTop + 17;
 			const selected = index === this.selectedChoiceIndex;
 			ctx.fillStyle = selected ? '#67f3c4' : '#eaf2ff';
-			ctx.fillText(`${selected ? '>' : ' '} ${index + 1}. ${outcome.prompt}`, panelX + 28, y);
+			ctx.fillText(
+				this.fitText(ctx, `${selected ? '>' : ' '} ${index + 1}. ${outcome.prompt}`, panelW - 56),
+				panelX + 28,
+				y
+			);
 			ctx.fillStyle = selected ? '#cfeee4' : '#8d94a7';
-			ctx.fillText(outcome.consequence.slice(0, 92), panelX + 62, y + 17);
+			ctx.font = '12px ui-monospace, monospace';
+			ctx.fillText(this.fitText(ctx, outcome.consequence, panelW - 90), panelX + 62, y + 19);
+			ctx.font = '14px ui-monospace, monospace';
+			choiceRows.push({ top: rowTop, bottom: rowTop + 46 });
 		}
+
+		const detailsTop = panelY + 214;
+		let detailY = detailsTop + 14;
 		const sideQuest = stage.sideQuests?.[0];
 		if (sideQuest) {
 			ctx.fillStyle = '#92a4be';
 			ctx.fillText(
-				`Side job: ${sideQuest.title} — ${sideQuest.objective.slice(0, 64)}`,
+				this.fitText(ctx, `Side job: ${sideQuest.title} — ${sideQuest.objective}`, panelW - 44),
 				panelX + 22,
-				panelY + 132
+				detailY
 			);
+			detailY += 17;
 		}
 		const minigame = stage.minigames?.[0];
 		if (minigame) {
 			ctx.fillStyle = '#cfeee4';
-			ctx.fillText(`Minigame: ${minigame.title} (${minigame.kind})`, panelX + 22, panelY + 146);
+			ctx.fillText(
+				this.fitText(ctx, `Minigame: ${minigame.title} (${minigame.kind})`, panelW - 44),
+				panelX + 22,
+				detailY
+			);
+			detailY += 17;
 		}
 		const bossPhase = stage.boss?.phases?.[0];
 		if (bossPhase) {
 			ctx.fillStyle = '#ff5e7a';
 			ctx.fillText(
-				`Boss phase: ${stage.boss?.name} — ${bossPhase.label}: ${bossPhase.mechanic.slice(0, 48)}`,
+				this.fitText(
+					ctx,
+					`Boss phase: ${stage.boss?.name} — ${bossPhase.label}: ${bossPhase.mechanic}`,
+					panelW - 44
+				),
 				panelX + 22,
-				panelY + 160
+				detailY
 			);
+			detailY += 17;
 		}
 		const branchConsequence = this.flow.getActiveBranchConsequences(stage.id)[0];
 		if (branchConsequence) {
 			ctx.fillStyle = '#67f3c4';
 			ctx.fillText(
-				`Branch effect: ${branchConsequence.label} — ${branchConsequence.uiHint.slice(0, 48)}`,
+				this.fitText(
+					ctx,
+					`Branch effect: ${branchConsequence.label} — ${branchConsequence.uiHint}`,
+					panelW - 44
+				),
 				panelX + 22,
-				panelY + 174
+				detailY
 			);
 		}
 
+		const selectedOutcome = stage.choiceOutcomes[this.selectedChoiceIndex];
+		const selectionCommitted =
+			selectedOutcome && this.lastChoiceRecap?.resultFlag === selectedOutcome.resultFlag;
+		const controlsTop = panelY + 286;
 		ctx.fillStyle = '#8d94a7';
 		ctx.fillText(
-			'Arrow keys: select • 1-3/Enter: commit branch • D: debug • R: run stage',
+			selectionCommitted
+				? 'Enter/R: run selected branch • Arrow keys: inspect • 1-3: replace branch • D: debug'
+				: 'Arrow keys: select • 1-3/Enter: commit branch • R: run stage • D: debug',
 			panelX + 22,
-			panelY + 188
+			controlsTop + 14
 		);
-		this.renderChoiceRecap(ctx, panelX + 22, panelY + 204, panelW - 44);
-		this.renderAutosaveFeedback(ctx, panelX + panelW - 272, panelY + 204);
+		const recapTop = panelY + 312;
+		const autosaveLeft = panelX + panelW - 272;
+		const recapRight = autosaveLeft - 16;
+		this.renderChoiceRecap(ctx, panelX + 22, recapTop + 14, recapRight - (panelX + 22));
+		this.renderAutosaveFeedback(ctx, autosaveLeft, recapTop + 14);
+		this.lastPanelLayout = {
+			panelTop: panelY,
+			panelBottom: panelY + panelH,
+			choiceRows,
+			detailsTop,
+			detailsBottom: controlsTop - 6,
+			controlsTop,
+			controlsBottom: recapTop - 4,
+			recapTop,
+			recapBottom: panelY + panelH - 8,
+			recapRight,
+			autosaveLeft,
+		};
+	}
+
+	private fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+		if (ctx.measureText(text).width <= maxWidth) return text;
+		const ellipsis = '…';
+		let low = 0;
+		let high = text.length;
+		while (low < high) {
+			const middle = Math.ceil((low + high) / 2);
+			if (ctx.measureText(`${text.slice(0, middle)}${ellipsis}`).width <= maxWidth) low = middle;
+			else high = middle - 1;
+		}
+		return `${text.slice(0, low).trimEnd()}${ellipsis}`;
 	}
 
 	private renderStageDebugPanel(ctx: CanvasRenderingContext2D): void {
@@ -398,9 +524,13 @@ export class StoryFlowScene implements Scene {
 			return;
 		}
 		ctx.fillStyle = '#67f3c4';
-		ctx.fillText(`Branch recap: ${recap.selectedPrompt.slice(0, 42)} -> ${recap.resultFlag}`, x, y);
+		ctx.fillText(
+			this.fitText(ctx, `Branch recap: ${recap.selectedPrompt} -> ${recap.resultFlag}`, maxWidth),
+			x,
+			y
+		);
 		ctx.fillStyle = '#cfeee4';
-		ctx.fillText(recap.consequence.slice(0, Math.max(24, Math.floor(maxWidth / 8))), x, y + 16);
+		ctx.fillText(this.fitText(ctx, recap.consequence, maxWidth), x, y + 16);
 		ctx.fillStyle = '#ffb35e';
 		ctx.fillText(
 			`Heat ${formatSigned(recap.orbitHeatDelta)} / Favor ${formatSigned(recap.dubFavorDelta)}`,

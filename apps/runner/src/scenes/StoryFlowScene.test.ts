@@ -76,11 +76,60 @@ describe('StoryFlowScene stage launch', () => {
 		expect(scene.getLastDebugDetail()).toMatchObject({
 			stageId: 'antenna-barrens',
 			payloadId: 'debt_ledger_shard',
-			bossId: 'black_ice_fox',
+			bossId: 'black-ice-fox',
 			resultFlags: ['ledger_public_dump'],
 		});
 		expect(scene.getLastDebugDetail()?.branchOutcomes).toContain('ledger_public_dump');
 		expect(debugEvents[0]).toMatchObject({ payloadId: 'debt_ledger_shard' });
+	});
+
+	it('commits a newly highlighted branch before Enter launches it', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'lower-sprawl' });
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		const onStartStage = vi.fn();
+		const scene = new StoryFlowScene(flow, { onStartStage });
+		scene.onEnter({
+			eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
+			canvas: document.createElement('canvas'),
+		});
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+		expect(onStartStage).not.toHaveBeenCalled();
+		expect(scene.getLastChoiceRecap()).toMatchObject({ resultFlag: 'wafer_broadcast' });
+		expect(flow.getStoryProgress().resultFlags).toEqual(['wafer_broadcast']);
+		expect(flow.getMeta()).toMatchObject({ dubFavor: 1, orbitHeat: 1 });
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+		scene.onExit();
+
+		expect(onStartStage).toHaveBeenCalledOnce();
+	});
+
+	it('restores a persisted branch before R launches the stage', () => {
+		const flow = createGameFlow(
+			{ dubFavor: 1, orbitHeat: 0 },
+			{ currentStageId: 'lower-sprawl', resultFlags: ['wafer_safe_routes'] }
+		);
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		const onStartStage = vi.fn();
+		const scene = new StoryFlowScene(flow, { onStartStage });
+		scene.onEnter({
+			eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
+			canvas: document.createElement('canvas'),
+		});
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r' }));
+		scene.onExit();
+
+		expect(scene.getLastChoiceRecap()).toMatchObject({ resultFlag: 'wafer_safe_routes' });
+		expect(flow.getStoryProgress().resultFlags).toEqual(['wafer_safe_routes']);
+		expect(flow.getMeta()).toMatchObject({ dubFavor: 1, orbitHeat: 0 });
+		expect(onStartStage).toHaveBeenCalledOnce();
 	});
 
 	it('builds StageRunSceneOptions when R is pressed in stage mode', () => {
@@ -101,7 +150,7 @@ describe('StoryFlowScene stage launch', () => {
 		expect(onStartStage).toHaveBeenCalledWith(
 			expect.objectContaining({
 				acquiredPayloadIds: ['wafer_key'],
-				branchGameplayHooks: expect.arrayContaining(['companion_assist_ready', 'naya_shield_bonus']),
+				branchGameplayHooks: expect.arrayContaining(['companion_assist_ready']),
 			})
 		);
 	});

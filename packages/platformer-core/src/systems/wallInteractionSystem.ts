@@ -58,7 +58,7 @@ export function applyWallInteraction<T extends WallProbeBody>(
 	input: { jumpPressed?: boolean } = {}
 ): WallInteractionResult<T> {
 	const contact = detectWallContact(body, walls, params.probeDistance);
-	let next = { ...body } as T;
+	const next = { ...body } as T;
 	let wallSliding = false;
 	let wallJumped = false;
 

@@ -614,18 +614,32 @@ export class GameFlow {
 						? { finalBroadcastDoctrine: outcome.branch as FinalBroadcastBranch }
 						: {};
 
+		const stageChoiceFlags = new Set(stage.choiceOutcomes.map((choice) => choice.resultFlag));
+		const priorOutcomes = stage.choiceOutcomes.filter((choice) =>
+			this.storyProgress.resultFlags.includes(choice.resultFlag)
+		);
+		const priorDubFavor = priorOutcomes.reduce(
+			(total, choice) => total + (choice.metaDelta?.dubFavor ?? 0),
+			0
+		);
+		const priorOrbitHeat = priorOutcomes.reduce(
+			(total, choice) => total + (choice.metaDelta?.orbitHeat ?? 0),
+			0
+		);
+
 		this.storyProgress = {
 			...this.storyProgress,
 			...branchProgress,
-			resultFlags: Array.from(new Set([...this.storyProgress.resultFlags, outcome.resultFlag])),
+			resultFlags: [
+				...this.storyProgress.resultFlags.filter((flag) => !stageChoiceFlags.has(flag)),
+				outcome.resultFlag,
+			],
 		};
-		if (outcome.metaDelta) {
-			this.meta = {
-				...this.meta,
-				dubFavor: this.meta.dubFavor + (outcome.metaDelta.dubFavor ?? 0),
-				orbitHeat: this.meta.orbitHeat + (outcome.metaDelta.orbitHeat ?? 0),
-			};
-		}
+		this.meta = {
+			...this.meta,
+			dubFavor: this.meta.dubFavor - priorDubFavor + (outcome.metaDelta?.dubFavor ?? 0),
+			orbitHeat: this.meta.orbitHeat - priorOrbitHeat + (outcome.metaDelta?.orbitHeat ?? 0),
+		};
 
 		return { ok: true, stageId: stage.id, branch: outcome.branch, resultFlag: outcome.resultFlag };
 	}
