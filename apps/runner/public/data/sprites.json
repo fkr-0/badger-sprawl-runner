@@ -4,7 +4,7 @@
 	"spriteSheets": [
 		{
 			"id": "moss_badger",
-			"file": "assets/sprites/moss_badger.png",
+			"file": "assets/sprites/moss_badger_v2.png",
 			"frameSize": [
 				48,
 				48

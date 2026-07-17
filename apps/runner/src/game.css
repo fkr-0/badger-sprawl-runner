@@ -1,6 +1,18 @@
 :root {
 	color-scheme: dark;
-	background: #05070d;
+	--ui-unit: 4px;
+	--ui-bg: #05070d;
+	--ui-bg-raised: #0b101b;
+	--ui-panel: rgba(4, 6, 12, 0.82);
+	--ui-panel-strong: rgba(4, 6, 12, 0.94);
+	--ui-text: #eaf2ff;
+	--ui-muted: #92a4be;
+	--ui-accent: #67f3c4;
+	--ui-accent-alt: #8aa8ff;
+	--ui-warning: #ffb35e;
+	--ui-danger: #ff5e7a;
+	--ui-line: rgba(146, 164, 190, 0.32);
+	background: var(--ui-bg);
 }
 
 * {
@@ -13,7 +25,7 @@ body {
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
-	background: #05070d;
+	background: var(--ui-bg);
 }
 
 body {
@@ -26,7 +38,7 @@ body {
 	width: 100vw;
 	height: 100vh;
 	place-items: center;
-	background: #05070d;
+	background: var(--ui-bg);
 }
 
 canvas {
@@ -35,13 +47,9 @@ canvas {
 	height: min(100vh, calc(100vw * 9 / 16));
 	max-width: 100vw;
 	max-height: 100vh;
-	background: #080a12;
-	image-rendering: auto;
+	background: var(--ui-bg-raised);
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
 	outline: none;
 }
 
-@media (max-width: 680px), (max-height: 420px) {
-	canvas {
-		image-rendering: pixelated;
-	}
-}

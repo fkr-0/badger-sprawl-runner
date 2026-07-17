@@ -1,0 +1,66 @@
+schema_version: 1
+asset:
+  id: moss_badger_motion_master_v2
+  source: moss_badger_motion_master_v2.png
+  runtime_atlas: ../moss_badger_v2.png
+  runtime_copy: ../../../apps/runner/public/assets/sprites/moss_badger_v2.png
+  generated_with: built-in-imagegen
+  background_removal:
+    source_key: "#f903f9"
+    method: chroma-key-soft-matte-despill
+  dimensions:
+    source_grid: [192, 192]
+    source_cell: [48, 48]
+    source_layout: [4, 4]
+    runtime_atlas: [384, 816]
+    runtime_cell: [48, 48]
+    runtime_layout: [8, 17]
+
+art_direction:
+  character: Moss
+  silhouette: compact-athletic-side-profile-badger
+  palette:
+    - charcoal-black
+    - bone-white
+    - moss-green
+    - amber-hardware
+  rendering:
+    - intentional-pixel-clusters
+    - hard-dark-outline
+    - limited-palette
+    - no-antialiasing-at-runtime
+
+source_cells:
+  row_0: [idle_a, idle_b, idle_c, idle_d]
+  row_1: [run_contact, run_pass, run_flight, run_recovery]
+  row_2: [jump_launch, jump_rise, fall, land]
+  row_3: [claw_swipe, katana_slash, railgun_fire, hurt]
+
+runtime_rows:
+  - idle
+  - run
+  - skid
+  - jump_up
+  - fall
+  - land
+  - melee_claws
+  - melee_katana
+  - shoot_railgun
+  - rocket_boost
+  - hit
+  - hack
+  - victory
+  - pickup_react
+  - interact
+  - death_or_down
+  - parry
+
+constraints:
+  preserve:
+    - 48x48-runtime-cells
+    - 8x17-runtime-layout
+    - transparent-background
+    - bottom-centre-anchor
+    - existing-animation-order
+  css:
+    image_rendering: pixelated

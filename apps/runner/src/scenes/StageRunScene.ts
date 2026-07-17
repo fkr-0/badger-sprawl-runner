@@ -143,6 +143,7 @@ export interface StageRunSceneOptions {
 	generatedSideRooms?: readonly GeneratedSideRoom[];
 	procgenSeed?: string;
 	unlockedSkills?: readonly string[];
+	skillRanks?: Readonly<Record<string, number>>;
 	onStoryPayloadCollected?: (payloadId: string) => void;
 	onStageComplete?: (result: StageRuntimeResult) => void;
 	onReturnToTitle?: () => void;
@@ -714,7 +715,10 @@ export class StageRunScene implements Scene {
 			FIRST_RELEASE_ITEM_CATALOG,
 			FIRST_RELEASE_BUDGET_RULE
 		);
-		const skillResolution = resolveSkillEffects(this.player.unlockedSkills ?? []);
+		const skillResolution = resolveSkillEffects(
+			this.player.unlockedSkills ?? [],
+			this.options.skillRanks ?? {}
+		);
 		this.loadoutSummary = {
 			...this.loadoutSummary,
 			effects: mergeEffectRecords([this.loadoutSummary.effects, skillResolution.effects]),

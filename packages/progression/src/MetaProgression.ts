@@ -30,7 +30,11 @@ export class MetaProgression {
 				return null;
 			}
 
-			return parsed;
+			return {
+				...parsed,
+				skillRanks:
+					parsed.skillRanks ?? Object.fromEntries(parsed.purchasedSkills.map((id) => [id, 1])),
+			};
 		} catch (e) {
 			console.warn('Failed to load meta state:', e);
 			return null;
@@ -74,6 +78,7 @@ export function createMetaState(): MetaState {
 		orbitHeat: 0,
 		unlockedBoons: [],
 		purchasedSkills: [],
+		skillRanks: {},
 	};
 }
 

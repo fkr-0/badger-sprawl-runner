@@ -114,6 +114,7 @@ export interface MetaState {
 	orbitHeat: number;
 	unlockedBoons: string[];
 	purchasedSkills: string[];
+	skillRanks?: Record<string, number>;
 }
 
 export interface StoryProgress {
@@ -137,6 +138,10 @@ export interface SkillNode {
 	unlocked: boolean;
 	track?: string;
 	tier?: number;
+	column?: number;
+	branch?: string;
+	maxRank?: number;
+	rank?: number;
 	description?: string;
 	iconAnimation?: string;
 	effects?: Record<string, number | string | boolean>;
@@ -284,10 +289,14 @@ function createDefaultMetaState(): MetaState {
 		orbitHeat: 0,
 		unlockedBoons: [],
 		purchasedSkills: [],
+		skillRanks: {},
 	};
 }
 
-function createSkillMap(purchasedSkills: readonly string[]): Map<string, SkillNode> {
+function createSkillMap(
+	purchasedSkills: readonly string[],
+	skillRanks: Readonly<Record<string, number>> = {}
+): Map<string, SkillNode> {
 	const nodes = new Map(
 		SKILLS.map((skill) => [
 			skill.id,
@@ -295,12 +304,16 @@ function createSkillMap(purchasedSkills: readonly string[]): Map<string, SkillNo
 				...skill,
 				prereqs: [...skill.prereqs],
 				effects: skill.effects ? { ...skill.effects } : undefined,
+				rank: 0,
 			},
 		])
 	);
 	for (const skillId of purchasedSkills) {
 		const node = nodes.get(skillId);
-		if (node) node.unlocked = true;
+		if (node) {
+			node.rank = Math.max(1, Math.min(node.maxRank ?? 1, Math.floor(skillRanks[skillId] ?? 1)));
+			node.unlocked = true;
+		}
 	}
 	return nodes;
 }
@@ -312,7 +325,11 @@ function purchaseSkill(
 ): SkillPurchaseResult {
 	const node = nodes.get(nodeId);
 	if (!node) return { ok: false, state, reason: 'unknown-skill' };
-	if (node.unlocked || state.purchasedSkills.includes(nodeId)) {
+	const rank = Math.max(
+		node.rank ?? 0,
+		state.skillRanks?.[nodeId] ?? (state.purchasedSkills.includes(nodeId) ? 1 : 0)
+	);
+	if (rank >= (node.maxRank ?? 1)) {
 		return { ok: false, state, reason: 'already-unlocked' };
 	}
 
@@ -322,11 +339,16 @@ function purchaseSkill(
 	if (!hasPrerequisites) return { ok: false, state, reason: 'missing-prerequisite' };
 	if (state.blueprintShards < node.cost) return { ok: false, state, reason: 'insufficient-shards' };
 
+	const nextRank = rank + 1;
 	node.unlocked = true;
+	node.rank = nextRank;
 	const nextState = {
 		...state,
 		blueprintShards: state.blueprintShards - node.cost,
-		purchasedSkills: [...state.purchasedSkills, nodeId],
+		purchasedSkills: state.purchasedSkills.includes(nodeId)
+			? [...state.purchasedSkills]
+			: [...state.purchasedSkills, nodeId],
+		skillRanks: { ...(state.skillRanks ?? {}), [nodeId]: nextRank },
 	};
 	return { ok: true, state: nextState, node: { ...node } };
 }
@@ -347,11 +369,15 @@ export class GameFlow {
 
 	constructor(meta: Partial<MetaState> = {}, storyProgress: Partial<StoryProgress> = {}) {
 		this.meta = { ...createDefaultMetaState(), ...meta };
+		this.meta.skillRanks = {
+			...Object.fromEntries(this.meta.purchasedSkills.map((id) => [id, 1])),
+			...(meta.skillRanks ?? {}),
+		};
 		this.storyProgress = migrateStoryProgress({
 			...createDefaultStoryProgress(),
 			...storyProgress,
 		}).progress;
-		this.skills = createSkillMap(this.meta.purchasedSkills);
+		this.skills = createSkillMap(this.meta.purchasedSkills, this.meta.skillRanks);
 	}
 
 	getState(): GameFlowState {
@@ -376,6 +402,7 @@ export class GameFlow {
 			prereqs: [...skill.prereqs],
 			effects: skill.effects ? { ...skill.effects } : undefined,
 			unlocked: Boolean(this.skills.get(skill.id)?.unlocked),
+			rank: this.skills.get(skill.id)?.rank ?? 0,
 		}));
 	}
 

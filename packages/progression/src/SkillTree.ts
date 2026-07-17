@@ -1,9 +1,135 @@
 /**
- * SkillTree - manages skill nodes and progression
+ * SkillTree - four branched, save-compatible disciplines.
  */
 
 import { computeDerivedStats } from './derivedStats';
-import type { DerivedStats, SkillNode } from './types';
+import type { DerivedStats, MetaState, SkillNode } from './types';
+
+export const FIRST_RELEASE_SKILL_TRACKS = ['clawline', 'railgun', 'rocket', 'hacking'] as const;
+export type SkillTrackId = (typeof FIRST_RELEASE_SKILL_TRACKS)[number];
+
+export const SKILL_TRACK_PRESENTATION: Record<
+	SkillTrackId,
+	{ label: string; shortLabel: string; description: string }
+> = {
+	clawline: {
+		label: 'Hand-to-Hand / Claw Combat',
+		shortLabel: 'CLAW COMBAT',
+		description: 'Parries, pursuit, grapples and close-range finishers.',
+	},
+	railgun: {
+		label: 'Ballistics',
+		shortLabel: 'BALLISTICS',
+		description: 'Rail discipline, ricochet math, suppression and smart payloads.',
+	},
+	rocket: {
+		label: 'Stealth / Climbing / Acrobatics',
+		shortLabel: 'GHOSTSTEP',
+		description: 'Quiet movement, wall routes, aerial recovery and pursuit breaks.',
+	},
+	hacking: {
+		label: 'Hacking',
+		shortLabel: 'HACKING',
+		description: 'Trace control, daemon routing, remote exploits and battlefield hijacks.',
+	},
+};
+
+type SkillDefinition = Omit<SkillNode, 'unlocked' | 'rank'>;
+
+function skill(
+	id: string,
+	name: string,
+	track: SkillTrackId,
+	tier: number,
+	column: number,
+	cost: number,
+	prereqs: string[],
+	description: string,
+	effects: Record<string, number | string | boolean>,
+	options: { maxRank?: number; branch?: string; iconAnimation?: string } = {}
+): SkillDefinition {
+	return {
+		id,
+		name,
+		track,
+		tier,
+		column,
+		cost,
+		prereqs,
+		description,
+		effects,
+		maxRank: options.maxRank ?? 1,
+		branch: options.branch ?? 'core',
+		iconAnimation: options.iconAnimation,
+	};
+}
+
+const CLAWLINE_NODES: SkillDefinition[] = [
+	skill('double_swipe', 'Double Swipe', 'clawline', 1, 1, 1, [], 'Unlock the cross-claw follow-up and build style faster.', { unlockMove: 'claw_cross', meleeStyleBonus: 1 }, { iconAnimation: 'double_swipe_icon' }),
+	skill('parry_tooth', 'Parry Tooth', 'clawline', 2, 1, 2, ['double_swipe'], 'Turn a clean parry into a harder counter and unlock Invoice Splitter.', { unlockMove: 'invoice_splitter', parryDamageBonus: 0.75 }, { iconAnimation: 'parry_tooth_icon' }),
+	skill('claw_rush', 'Claw Rush', 'clawline', 3, 1, 2, ['parry_tooth'], 'Cancel recovery into a short pursuit dash.', { dashCancel: true, velocity: 1, dodgeCooldownReduction: 0.06 }, { iconAnimation: 'claw_rush_icon' }),
+	skill('undercut_audit', 'Undercut Audit', 'clawline', 4, 1, 3, ['claw_rush'], 'Keep melee chains alive longer and sharpen finishers.', { comboWindowBonus: 0.16, finisherDamageBonus: 0.5 }, { iconAnimation: 'undercut_audit_icon' }),
+	skill('peoples_finisher', "People's Finisher", 'clawline', 5, 1, 4, ['undercut_audit', 'pack_hunter'], 'Finishers discharge an EMP and parry counters hit harder.', { finisherEmp: true, parryDamageBonus: 0.5 }, { iconAnimation: 'peoples_finisher_icon' }),
+	skill('iron_knuckles', 'Iron Knuckles', 'clawline', 1, 0, 1, [], 'Layer salvaged guards over the paw without slowing the strike.', { clawDamageBonus: 0.12, poiseDamageBonus: 0.08 }, { maxRank: 3, branch: 'pressure', iconAnimation: 'double_swipe_icon' }),
+	skill('slip_guard', 'Slip Guard', 'clawline', 1, 2, 1, [], 'Roll the shoulder through contact and recover guard sooner.', { damageMitigation: 0.025, parryWindowBonus: 0.025 }, { maxRank: 3, branch: 'counter', iconAnimation: 'parry_tooth_icon' }),
+	skill('rake_opening', 'Rake Opening', 'clawline', 2, 0, 2, ['iron_knuckles'], 'A low rake exposes armor seams for the rest of the string.', { armorShred: 0.08, meleeStyleBonus: 1 }, { maxRank: 3, branch: 'pressure', iconAnimation: 'double_swipe_icon' }),
+	skill('tendon_read', 'Tendon Read', 'clawline', 2, 2, 2, ['slip_guard'], 'Read the telegraph in a knee, tail or servo before it commits.', { parryWindowBonus: 0.035, counterDamageBonus: 0.12 }, { maxRank: 3, branch: 'counter', iconAnimation: 'parry_tooth_icon' }),
+	skill('ribcage_rhythm', 'Ribcage Rhythm', 'clawline', 3, 0, 2, ['rake_opening'], 'Alternating body shots accelerate the next finisher.', { comboWindowBonus: 0.05, finisherDamageBonus: 0.12 }, { maxRank: 3, branch: 'pressure', iconAnimation: 'undercut_audit_icon' }),
+	skill('counter_current', 'Counter Current', 'clawline', 3, 2, 2, ['tendon_read'], 'A successful counter refunds dodge cadence.', { dodgeCooldownReduction: 0.04, parryDamageBonus: 0.16 }, { maxRank: 3, branch: 'counter', iconAnimation: 'claw_rush_icon' }),
+	skill('pack_hunter', 'Pack Hunter', 'clawline', 4, 2, 3, ['counter_current', 'ribcage_rhythm'], 'Cross pressure and counter branches; isolated targets lose poise quickly.', { isolatedDamageBonus: 0.25, poiseDamageBonus: 0.2 }, { branch: 'capstone', iconAnimation: 'peoples_finisher_icon' }),
+];
+
+const BALLISTICS_NODES: SkillDefinition[] = [
+	skill('rail_mastery', 'Rail Mastery', 'railgun', 1, 1, 2, [], 'Tune the rail chamber for stronger shots and quicker cycling.', { voltage: 1, railDamageBonus: 0.25, railCooldownReduction: 0.06 }, { iconAnimation: 'rail_mastery_icon' }),
+	skill('piercing_shot', 'Piercing Shot', 'railgun', 2, 1, 2, ['rail_mastery'], 'Punch through one additional aligned target.', { railPierceBonus: 1 }, { iconAnimation: 'piercing_shot_icon' }),
+	skill('capacitor_ritual', 'Capacitor Ritual', 'railgun', 3, 1, 3, ['piercing_shot'], 'Bleed recoil into the capacitor and shorten recovery.', { railRecoilReduction: 0.35, railCooldownReduction: 0.08 }, { iconAnimation: 'capacitor_ritual_icon' }),
+	skill('chain_conductor', 'Chain Conductor', 'railgun', 4, 1, 3, ['capacitor_ritual'], 'Every aligned hit strengthens the public arc.', { railDamageBonus: 0.35, railPierceBonus: 1 }, { iconAnimation: 'chain_conductor_icon' }),
+	skill('public_record', 'Public Record', 'railgun', 5, 1, 4, ['chain_conductor', 'linebreaker'], 'Rail hits carry an EMP record through the sightline.', { empOnChargedShot: true, railPierceBonus: 2 }, { iconAnimation: 'public_record_icon' }),
+	skill('quickdraw_bus', 'Quickdraw Bus', 'railgun', 1, 0, 1, [], 'Snap the weapon online while leaving a dodge.', { railChargeReduction: 0.05, railCooldownReduction: 0.025 }, { maxRank: 3, branch: 'handling', iconAnimation: 'rail_mastery_icon' }),
+	skill('breach_math', 'Breach Math', 'railgun', 1, 2, 1, [], 'Annotate armor joins and weak structural spans.', { railDamageBonus: 0.08, armorPierceBonus: 0.06 }, { maxRank: 3, branch: 'ordnance', iconAnimation: 'piercing_shot_icon' }),
+	skill('recoil_dividend', 'Recoil Dividend', 'railgun', 2, 0, 2, ['quickdraw_bus'], 'Convert a controlled kick into movement and charge.', { railRecoilReduction: 0.12, velocity: 0.5 }, { maxRank: 3, branch: 'handling', iconAnimation: 'capacitor_ritual_icon' }),
+	skill('ricochet_union', 'Ricochet Union', 'railgun', 2, 2, 2, ['breach_math'], 'Hard surfaces vote the round toward a second target.', { ricochetCount: 1, ricochetDamage: 0.12 }, { maxRank: 3, branch: 'ordnance', iconAnimation: 'piercing_shot_icon' }),
+	skill('suppressive_chorus', 'Suppressive Chorus', 'railgun', 3, 0, 2, ['recoil_dividend'], 'Repeated lanes slow hostile windups.', { suppressDuration: 0.18, railCooldownReduction: 0.03 }, { maxRank: 3, branch: 'handling', iconAnimation: 'chain_conductor_icon' }),
+	skill('smart_payload', 'Smart Payload', 'railgun', 3, 2, 2, ['ricochet_union'], 'Charged rounds choose exposed electronics first.', { criticalChanceBonus: 0.05, empDamageBonus: 0.12 }, { maxRank: 3, branch: 'ordnance', iconAnimation: 'public_record_icon' }),
+	skill('linebreaker', 'Linebreaker', 'railgun', 4, 2, 3, ['smart_payload', 'suppressive_chorus'], 'Merge handling and ordnance: one prepared shot opens the whole lane.', { railPierceBonus: 1, railDamageBonus: 0.3 }, { branch: 'capstone', iconAnimation: 'public_record_icon' }),
+];
+
+const GHOSTSTEP_NODES: SkillDefinition[] = [
+	skill('fuel_sipper', 'Quiet Fuel', 'rocket', 1, 1, 1, [], 'Muffle the pack intake, add one cell and improve grounded recharge.', { rocketFuelBonus: 1, fuelRechargeBonus: 0.25 }, { iconAnimation: 'fuel_sipper_icon' }),
+	skill('vector_kick', 'Vector Kick', 'rocket', 2, 1, 2, ['fuel_sipper'], 'Steer harder in the air and recover boost sooner.', { airControlBonus: 0.12, boostCooldownReduction: 0.05 }, { iconAnimation: 'vector_kick_icon' }),
+	skill('badger_afterburn', 'Badger Afterburn', 'rocket', 3, 1, 3, ['vector_kick'], 'Boost through a blind angle and prime the next strike.', { burnTrailDamage: 0.25, stealthExitDamage: 0.2 }, { iconAnimation: 'badger_afterburn_icon' }),
+	skill('skyline_reversal', 'Skyline Reversal', 'rocket', 4, 1, 3, ['badger_afterburn'], 'Reverse falling momentum and dodge sooner after landing.', { maxFallSpeedBonus: 90, dodgeCooldownReduction: 0.08 }, { iconAnimation: 'skyline_reversal_icon' }),
+	skill('communal_thrust', 'Sprawl Without Footsteps', 'rocket', 5, 1, 4, ['skyline_reversal', 'vanishing_point'], 'Chains feed fuel while enemies lose the route entirely.', { rocketFuelBonus: 1, fuelRefundOnCombo: 0.5, stealthDurationBonus: 0.5 }, { iconAnimation: 'communal_thrust_icon' }),
+	skill('wall_scent', 'Wall Scent', 'rocket', 1, 0, 1, [], 'Read handholds, drain seams and climbable service scars.', { climbSpeedBonus: 0.08, wallGripTimeBonus: 0.2 }, { maxRank: 3, branch: 'climbing', iconAnimation: 'vector_kick_icon' }),
+	skill('soft_paw', 'Soft Paw', 'rocket', 1, 2, 1, [], 'Reduce landing noise and enemy hearing radius.', { noiseReduction: 0.12, stealthDurationBonus: 0.08 }, { maxRank: 3, branch: 'stealth', iconAnimation: 'fuel_sipper_icon' }),
+	skill('gutter_ascension', 'Gutter Ascension', 'rocket', 2, 0, 2, ['wall_scent'], 'Chain wall grips into a fast vertical route.', { climbSpeedBonus: 0.1, wallJumpBonus: 0.08 }, { maxRank: 3, branch: 'climbing', iconAnimation: 'skyline_reversal_icon' }),
+	skill('shadow_invoice', 'Shadow Invoice', 'rocket', 2, 2, 2, ['soft_paw'], 'Mark unaware enemies; the first hit collects interest.', { unawareDamageBonus: 0.15, detectionDelayBonus: 0.12 }, { maxRank: 3, branch: 'stealth', iconAnimation: 'badger_afterburn_icon' }),
+	skill('rail_slide', 'Rail Slide', 'rocket', 3, 0, 2, ['gutter_ascension'], 'Slide cables and guardrails without losing sprint momentum.', { traversalSpeedBonus: 0.08, dodgeCooldownReduction: 0.025 }, { maxRank: 3, branch: 'climbing', iconAnimation: 'vector_kick_icon' }),
+	skill('blind_corner', 'Blind Corner', 'rocket', 3, 2, 2, ['shadow_invoice'], 'Breaking sight at speed briefly drops pursuit.', { detectionDelayBonus: 0.16, stealthDurationBonus: 0.12 }, { maxRank: 3, branch: 'stealth', iconAnimation: 'fuel_sipper_icon' }),
+	skill('vanishing_point', 'Vanishing Point', 'rocket', 4, 2, 3, ['blind_corner', 'rail_slide'], 'Climb and stealth routes converge in an aerial pursuit break.', { pursuitBreak: true, airControlBonus: 0.16 }, { branch: 'capstone', iconAnimation: 'communal_thrust_icon' }),
+];
+
+const HACKING_NODES: SkillDefinition[] = [
+	skill('street_syntax', 'Street Syntax', 'hacking', 1, 1, 1, [], 'Forgive the first syntax error and reduce ambient trace.', { cortex: 1, firstHackMistakeIgnored: true, traceReduction: 0.05 }, { iconAnimation: 'street_syntax_icon' }),
+	skill('black_ice_bite', 'Black Ice Bite', 'hacking', 2, 1, 2, ['street_syntax'], 'Successful code work charges the next close counter.', { hackChargesMelee: true, parryDamageBonus: 0.25 }, { iconAnimation: 'black_ice_bite_icon' }),
+	skill('ghost_invoice', 'Ghost Invoice', 'hacking', 3, 1, 2, ['black_ice_bite'], 'Erase a larger share of accumulated trace.', { traceReduction: 0.2 }, { iconAnimation: 'ghost_invoice_icon' }),
+	skill('remote_arc', 'Remote Arc', 'hacking', 4, 1, 3, ['ghost_invoice'], 'Route terminal charge into rail EMP payloads.', { empOnChargedShot: true, railDamageBonus: 0.15 }, { iconAnimation: 'remote_arc_icon' }),
+	skill('public_exploit', 'Public Exploit', 'hacking', 5, 1, 4, ['remote_arc', 'root_collective'], 'Share the exploit: broad timing grace and a defensive checksum.', { beatGrace: 0.06, damageMitigation: 0.08, traceReduction: 0.1 }, { iconAnimation: 'public_exploit_icon' }),
+	skill('packet_sense', 'Packet Sense', 'hacking', 1, 0, 1, [], 'Preview hostile daemon intent before the prompt resolves.', { beatGrace: 0.02, hackPreviewDepth: 1 }, { maxRank: 3, branch: 'infiltration', iconAnimation: 'street_syntax_icon' }),
+	skill('daemon_leash', 'Daemon Leash', 'hacking', 1, 2, 1, [], 'Keep one captured process obedient for longer.', { daemonDurationBonus: 0.15, hackDamageBonus: 0.08 }, { maxRank: 3, branch: 'control', iconAnimation: 'black_ice_bite_icon' }),
+	skill('zero_day_lullaby', 'Zero-Day Lullaby', 'hacking', 2, 0, 2, ['packet_sense'], 'Silence alarms during the first clean exploit window.', { traceReduction: 0.04, detectionDelayBonus: 0.08 }, { maxRank: 3, branch: 'infiltration', iconAnimation: 'ghost_invoice_icon' }),
+	skill('camera_mutiny', 'Camera Mutiny', 'hacking', 2, 2, 2, ['daemon_leash'], 'Turn surveillance toward its owners.', { cameraHijackDuration: 0.4, criticalChanceBonus: 0.03 }, { maxRank: 3, branch: 'control', iconAnimation: 'remote_arc_icon' }),
+	skill('checksum_forgery', 'Checksum Forgery', 'hacking', 3, 0, 2, ['zero_day_lullaby'], 'Failed probes look valid long enough to try again.', { firstHackMistakeIgnored: true, traceReduction: 0.05 }, { maxRank: 3, branch: 'infiltration', iconAnimation: 'ghost_invoice_icon' }),
+	skill('turret_commune', 'Turret Commune', 'hacking', 3, 2, 2, ['camera_mutiny'], 'Hijacked defenses recognize a temporary collective.', { turretHijackDuration: 0.35, hackDamageBonus: 0.12 }, { maxRank: 3, branch: 'control', iconAnimation: 'remote_arc_icon' }),
+	skill('root_collective', 'Root Collective', 'hacking', 4, 2, 3, ['turret_commune', 'checksum_forgery'], 'Infiltration and control merge into a persistent root route.', { remoteHack: true, traceReduction: 0.12, daemonDurationBonus: 0.3 }, { branch: 'capstone', iconAnimation: 'public_exploit_icon' }),
+];
+
+export const FIRST_RELEASE_SKILL_NODES: SkillDefinition[] = [
+	...CLAWLINE_NODES,
+	...BALLISTICS_NODES,
+	...GHOSTSTEP_NODES,
+	...HACKING_NODES,
+];
 
 export interface SkillGraph {
 	nodes: Map<string, SkillNode>;
@@ -19,83 +145,28 @@ export interface SkillGraph {
 	skillPoints: number;
 }
 
-// Clawline skill tree
-const CLAWLINE_NODES: Omit<SkillNode, 'unlocked'>[] = [
-	{
-		id: 'double_swipe',
-		name: 'Double Swipe',
-		cost: 1,
-		prereqs: [],
-		track: 'clawline',
-		tier: 1,
-		description: 'Unlock the cross-claw follow-up and begin building style faster.',
-		iconAnimation: 'double_swipe_icon',
-		effects: { unlockMove: 'claw_cross', meleeStyleBonus: 1 },
-	},
-	{
-		id: 'parry_tooth',
-		name: 'Parry Tooth',
-		cost: 2,
-		prereqs: ['double_swipe'],
-		track: 'clawline',
-		tier: 2,
-		description: 'Turn a clean parry into a harder counter and unlock Invoice Splitter.',
-		iconAnimation: 'parry_tooth_icon',
-		effects: { unlockMove: 'invoice_splitter', parryDamageBonus: 0.75 },
-	},
-	{
-		id: 'claw_rush',
-		name: 'Claw Rush',
-		cost: 2,
-		prereqs: ['parry_tooth'],
-		track: 'clawline',
-		tier: 3,
-		description: 'Cancel recovery into a short pursuit dash.',
-		iconAnimation: 'claw_rush_icon',
-		effects: { dashCancel: true, velocity: 1, dodgeCooldownReduction: 0.06 },
-	},
-	{
-		id: 'undercut_audit',
-		name: 'Undercut Audit',
-		cost: 3,
-		prereqs: ['claw_rush'],
-		track: 'clawline',
-		tier: 4,
-		description: 'Keep melee chains alive longer and sharpen finishers.',
-		iconAnimation: 'undercut_audit_icon',
-		effects: { comboWindowBonus: 0.16, finisherDamageBonus: 0.5 },
-	},
-	{
-		id: 'peoples_finisher',
-		name: "People's Finisher",
-		cost: 4,
-		prereqs: ['undercut_audit'],
-		track: 'clawline',
-		tier: 5,
-		description: 'Finishers discharge an EMP and parry counters hit harder.',
-		iconAnimation: 'peoples_finisher_icon',
-		effects: { finisherEmp: true, parryDamageBonus: 0.5 },
-	},
-];
-
 export interface ResolvedSkillEffects {
 	effects: Record<string, number | string | boolean>;
-	trackRanks: Record<(typeof FIRST_RELEASE_SKILL_TRACKS)[number], number>;
+	trackRanks: Record<SkillTrackId, number>;
 }
 
 function mergeEffect(
 	target: Record<string, number | string | boolean>,
 	key: string,
-	value: number | string | boolean
+	value: number | string | boolean,
+	rank: number
 ): void {
+	const scaled = typeof value === 'number' ? value * rank : value;
 	const previous = target[key];
-	if (typeof value === 'number' && typeof previous === 'number') target[key] = previous + value;
-	else if (typeof value === 'boolean' && typeof previous === 'boolean')
-		target[key] = previous || value;
-	else target[key] = value;
+	if (typeof scaled === 'number' && typeof previous === 'number') target[key] = previous + scaled;
+	else if (typeof scaled === 'boolean' && typeof previous === 'boolean') target[key] = previous || scaled;
+	else target[key] = scaled;
 }
 
-export function resolveSkillEffects(skillIds: readonly string[]): ResolvedSkillEffects {
+export function resolveSkillEffects(
+	skillIds: readonly string[],
+	skillRanks: Readonly<Record<string, number>> = {}
+): ResolvedSkillEffects {
 	const unlocked = new Set(skillIds);
 	const effects: Record<string, number | string | boolean> = {};
 	const trackRanks: ResolvedSkillEffects['trackRanks'] = {
@@ -107,198 +178,13 @@ export function resolveSkillEffects(skillIds: readonly string[]): ResolvedSkillE
 
 	for (const node of FIRST_RELEASE_SKILL_NODES) {
 		if (!unlocked.has(node.id)) continue;
-		if (node.track && node.track in trackRanks) {
-			const track = node.track as keyof typeof trackRanks;
-			trackRanks[track] += 1;
-		}
-		for (const [key, value] of Object.entries(node.effects ?? {})) mergeEffect(effects, key, value);
+		const rank = Math.max(1, Math.min(node.maxRank ?? 1, Math.floor(skillRanks[node.id] ?? 1)));
+		if (node.track && node.track in trackRanks) trackRanks[node.track as SkillTrackId] += rank;
+		for (const [key, value] of Object.entries(node.effects ?? {})) mergeEffect(effects, key, value, rank);
 	}
 
 	return { effects, trackRanks };
 }
-
-// Rail skill tree
-const RAIL_NODES: Omit<SkillNode, 'unlocked'>[] = [
-	{
-		id: 'rail_mastery',
-		name: 'Rail Mastery',
-		cost: 2,
-		prereqs: [],
-		track: 'railgun',
-		tier: 1,
-		description: 'Tune the rail chamber for stronger shots and a quicker cycling cadence.',
-		iconAnimation: 'rail_mastery_icon',
-		effects: { voltage: 1, railDamageBonus: 0.25, railCooldownReduction: 0.06 },
-	},
-	{
-		id: 'piercing_shot',
-		name: 'Piercing Shot',
-		cost: 2,
-		prereqs: ['rail_mastery'],
-		track: 'railgun',
-		tier: 2,
-		description: 'Punch through one additional aligned target.',
-		iconAnimation: 'piercing_shot_icon',
-		effects: { railPierceBonus: 1 },
-	},
-	{
-		id: 'capacitor_ritual',
-		name: 'Capacitor Ritual',
-		cost: 3,
-		prereqs: ['piercing_shot'],
-		track: 'railgun',
-		tier: 3,
-		description: 'Bleed recoil into the capacitor and shorten the recovery cycle.',
-		iconAnimation: 'capacitor_ritual_icon',
-		effects: { railRecoilReduction: 0.35, railCooldownReduction: 0.08 },
-	},
-	{
-		id: 'chain_conductor',
-		name: 'Chain Conductor',
-		cost: 3,
-		prereqs: ['capacitor_ritual'],
-		track: 'railgun',
-		tier: 4,
-		description: 'Every aligned hit strengthens the public arc.',
-		iconAnimation: 'chain_conductor_icon',
-		effects: { railDamageBonus: 0.35, railPierceBonus: 1 },
-	},
-	{
-		id: 'public_record',
-		name: 'Public Record',
-		cost: 4,
-		prereqs: ['chain_conductor'],
-		track: 'railgun',
-		tier: 5,
-		description: 'Rail hits carry an EMP record through the entire sightline.',
-		iconAnimation: 'public_record_icon',
-		effects: { empOnChargedShot: true, railPierceBonus: 2 },
-	},
-];
-
-const ROCKET_NODES: Omit<SkillNode, 'unlocked'>[] = [
-	{
-		id: 'fuel_sipper',
-		name: 'Fuel Sipper',
-		cost: 1,
-		prereqs: [],
-		track: 'rocket',
-		tier: 1,
-		description: 'Add one fuel cell and improve grounded recharge.',
-		iconAnimation: 'fuel_sipper_icon',
-		effects: { rocketFuelBonus: 1, fuelRechargeBonus: 0.25 },
-	},
-	{
-		id: 'vector_kick',
-		name: 'Vector Kick',
-		cost: 2,
-		prereqs: ['fuel_sipper'],
-		track: 'rocket',
-		tier: 2,
-		description: 'Steer harder in the air and recover boost sooner.',
-		iconAnimation: 'vector_kick_icon',
-		effects: { airControlBonus: 0.12, boostCooldownReduction: 0.05 },
-	},
-	{
-		id: 'badger_afterburn',
-		name: 'Badger Afterburn',
-		cost: 3,
-		prereqs: ['vector_kick'],
-		track: 'rocket',
-		tier: 3,
-		description: 'Boosting primes the next strike with a burn trace.',
-		iconAnimation: 'badger_afterburn_icon',
-		effects: { burnTrailDamage: 0.25 },
-	},
-	{
-		id: 'skyline_reversal',
-		name: 'Skyline Reversal',
-		cost: 3,
-		prereqs: ['badger_afterburn'],
-		track: 'rocket',
-		tier: 4,
-		description: 'Reverse falling momentum and dodge again sooner after landing.',
-		iconAnimation: 'skyline_reversal_icon',
-		effects: { maxFallSpeedBonus: 90, dodgeCooldownReduction: 0.08 },
-	},
-	{
-		id: 'communal_thrust',
-		name: 'Communal Thrust',
-		cost: 4,
-		prereqs: ['skyline_reversal'],
-		track: 'rocket',
-		tier: 5,
-		description: 'Combat chains feed the shared fuel line.',
-		iconAnimation: 'communal_thrust_icon',
-		effects: { rocketFuelBonus: 1, fuelRefundOnCombo: 0.5, fuelRechargeBonus: 0.25 },
-	},
-];
-
-const HACK_NODES: Omit<SkillNode, 'unlocked'>[] = [
-	{
-		id: 'street_syntax',
-		name: 'Street Syntax',
-		cost: 1,
-		prereqs: [],
-		track: 'hacking',
-		tier: 1,
-		description: 'Forgive the first syntax error and reduce ambient trace.',
-		iconAnimation: 'street_syntax_icon',
-		effects: { cortex: 1, firstHackMistakeIgnored: true, traceReduction: 0.05 },
-	},
-	{
-		id: 'black_ice_bite',
-		name: 'Black Ice Bite',
-		cost: 2,
-		prereqs: ['street_syntax'],
-		track: 'hacking',
-		tier: 2,
-		description: 'Successful code work charges the next close-range counter.',
-		iconAnimation: 'black_ice_bite_icon',
-		effects: { hackChargesMelee: true, parryDamageBonus: 0.25 },
-	},
-	{
-		id: 'ghost_invoice',
-		name: 'Ghost Invoice',
-		cost: 2,
-		prereqs: ['black_ice_bite'],
-		track: 'hacking',
-		tier: 3,
-		description: 'Erase a larger share of accumulated trace.',
-		iconAnimation: 'ghost_invoice_icon',
-		effects: { traceReduction: 0.2 },
-	},
-	{
-		id: 'remote_arc',
-		name: 'Remote Arc',
-		cost: 3,
-		prereqs: ['ghost_invoice'],
-		track: 'hacking',
-		tier: 4,
-		description: 'Route terminal charge into railgun EMP payloads.',
-		iconAnimation: 'remote_arc_icon',
-		effects: { empOnChargedShot: true, railDamageBonus: 0.15 },
-	},
-	{
-		id: 'public_exploit',
-		name: 'Public Exploit',
-		cost: 4,
-		prereqs: ['remote_arc'],
-		track: 'hacking',
-		tier: 5,
-		description: 'Share the exploit: broader timing grace and a thin defensive checksum.',
-		iconAnimation: 'public_exploit_icon',
-		effects: { beatGrace: 0.06, damageMitigation: 0.08, traceReduction: 0.1 },
-	},
-];
-
-export const FIRST_RELEASE_SKILL_TRACKS = ['clawline', 'railgun', 'rocket', 'hacking'] as const;
-export const FIRST_RELEASE_SKILL_NODES: Omit<SkillNode, 'unlocked'>[] = [
-	...CLAWLINE_NODES,
-	...RAIL_NODES,
-	...ROCKET_NODES,
-	...HACK_NODES,
-];
 
 export class SkillTree {
 	private graph: SkillGraph;
@@ -306,85 +192,45 @@ export class SkillTree {
 	constructor() {
 		this.graph = {
 			nodes: new Map(),
-			attributes: {
-				vigor: 0,
-				sinew: 0,
-				voltage: 0,
-				velocity: 0,
-				cortex: 0,
-				bass: 0,
-				guile: 0,
-			},
+			attributes: { vigor: 0, sinew: 0, voltage: 0, velocity: 0, cortex: 0, bass: 0, guile: 0 },
 			skillPoints: 0,
 		};
-
-		// Initialize nodes
 		for (const node of FIRST_RELEASE_SKILL_NODES) {
 			this.graph.nodes.set(node.id, {
 				...node,
+				prereqs: [...node.prereqs],
 				effects: { ...(node.effects ?? {}) },
 				unlocked: false,
+				rank: 0,
 			});
 		}
 	}
 
 	unlockNode(nodeId: string): boolean {
 		const node = this.graph.nodes.get(nodeId);
-		if (!node) return false;
-
-		if (node.unlocked) return false; // Already unlocked
-
-		// Check prerequisites
-		const hasPrereqs = node.prereqs.every((prereqId) => {
-			const prereq = this.graph.nodes.get(prereqId);
-			return prereq?.unlocked ?? false;
-		});
-
-		if (!hasPrereqs) return false;
-
-		// Check skill points
-		if (this.graph.skillPoints < node.cost) return false;
-
-		// Unlock
+		if (!node || (node.rank ?? 0) >= (node.maxRank ?? 1)) return false;
+		const hasPrereqs = node.prereqs.every((prereqId) => (this.graph.nodes.get(prereqId)?.rank ?? 0) > 0);
+		if (!hasPrereqs || this.graph.skillPoints < node.cost) return false;
+		node.rank = (node.rank ?? 0) + 1;
 		node.unlocked = true;
 		this.graph.skillPoints -= node.cost;
-
-		// Apply stat bonuses based on skill
 		this.applySkillBonus(nodeId);
-
 		return true;
 	}
 
 	canUnlock(nodeId: string): boolean {
 		const node = this.graph.nodes.get(nodeId);
-		if (!node || node.unlocked) return false;
-
-		const hasPrereqs = node.prereqs.every((prereqId) => {
-			const prereq = this.graph.nodes.get(prereqId);
-			return prereq?.unlocked ?? false;
-		});
-
+		if (!node || (node.rank ?? 0) >= (node.maxRank ?? 1)) return false;
+		const hasPrereqs = node.prereqs.every((prereqId) => (this.graph.nodes.get(prereqId)?.rank ?? 0) > 0);
 		return hasPrereqs && this.graph.skillPoints >= node.cost;
 	}
 
 	getAvailableNodes(): SkillNode[] {
-		const available: SkillNode[] = [];
-		for (const node of this.graph.nodes.values()) {
-			if (!node.unlocked && this.canUnlock(node.id)) {
-				available.push(node);
-			}
-		}
-		return available;
+		return [...this.graph.nodes.values()].filter((node) => this.canUnlock(node.id));
 	}
 
 	getUnlockedNodes(): SkillNode[] {
-		const unlocked: SkillNode[] = [];
-		for (const node of this.graph.nodes.values()) {
-			if (node.unlocked) {
-				unlocked.push(node);
-			}
-		}
-		return unlocked;
+		return [...this.graph.nodes.values()].filter((node) => node.unlocked);
 	}
 
 	getNode(nodeId: string): SkillNode | undefined {
@@ -412,29 +258,9 @@ export class SkillTree {
 	}
 
 	private applySkillBonus(skillId: string): void {
-		// Apply skill-specific bonuses
-		switch (skillId) {
-			case 'double_swipe':
-				// Combo starter
-				break;
-			case 'parry_tooth':
-				// Parry damage boost
-				break;
-			case 'claw_rush':
-				// Movement speed boost
-				this.graph.attributes.velocity += 1;
-				break;
-			case 'rail_mastery':
-				// Rail damage boost
-				this.graph.attributes.voltage += 1;
-				break;
-			case 'piercing_shot':
-				// Pierce effect
-				break;
-			case 'public_record':
-				// EMP rail capstone
-				break;
-		}
+		if (skillId === 'claw_rush') this.graph.attributes.velocity += 1;
+		if (skillId === 'rail_mastery') this.graph.attributes.voltage += 1;
+		if (skillId === 'street_syntax') this.graph.attributes.cortex += 1;
 	}
 }
 
@@ -449,47 +275,54 @@ export type SkillPurchaseFailure =
 	| 'insufficient-shards';
 
 export type SkillPurchaseResult =
-	| { ok: true; state: import('./types').MetaState; node: SkillNode }
-	| { ok: false; state: import('./types').MetaState; reason: SkillPurchaseFailure };
+	| { ok: true; state: MetaState; node: SkillNode }
+	| { ok: false; state: MetaState; reason: SkillPurchaseFailure };
 
-export function hydrateSkillTree(purchasedSkills: readonly string[]): SkillTree {
+export function hydrateSkillTree(
+	purchasedSkills: readonly string[],
+	skillRanks: Readonly<Record<string, number>> = {}
+): SkillTree {
 	const tree = createSkillTree();
 	for (const skillId of purchasedSkills) {
 		const node = tree.getNode(skillId);
 		if (!node) continue;
-		tree.addSkillPoints(node.cost);
-		tree.unlockNode(skillId);
+		const rank = Math.max(1, Math.min(node.maxRank ?? 1, Math.floor(skillRanks[skillId] ?? 1)));
+		for (let index = 0; index < rank; index += 1) {
+			tree.addSkillPoints(node.cost);
+			tree.unlockNode(skillId);
+		}
 	}
 	return tree;
 }
 
 export function purchaseSkillWithMeta(
 	tree: SkillTree,
-	state: import('./types').MetaState,
+	state: MetaState,
 	nodeId: string
 ): SkillPurchaseResult {
 	const node = tree.getNode(nodeId);
 	if (!node) return { ok: false, state, reason: 'unknown-skill' };
-	if (node.unlocked || state.purchasedSkills.includes(nodeId)) {
-		return { ok: false, state, reason: 'already-unlocked' };
-	}
-
+	const rank = Math.max(node.rank ?? 0, state.skillRanks?.[nodeId] ?? (state.purchasedSkills.includes(nodeId) ? 1 : 0));
+	if (rank >= (node.maxRank ?? 1)) return { ok: false, state, reason: 'already-unlocked' };
 	const hasPrerequisites = node.prereqs.every(
-		(prereqId) => tree.getNode(prereqId)?.unlocked || state.purchasedSkills.includes(prereqId)
+		(prereqId) => (tree.getNode(prereqId)?.rank ?? 0) > 0 || state.purchasedSkills.includes(prereqId)
 	);
 	if (!hasPrerequisites) return { ok: false, state, reason: 'missing-prerequisite' };
 	if (state.blueprintShards < node.cost) return { ok: false, state, reason: 'insufficient-shards' };
 
 	tree.addSkillPoints(node.cost);
 	if (!tree.unlockNode(nodeId)) return { ok: false, state, reason: 'missing-prerequisite' };
-
+	const nextRank = rank + 1;
 	return {
 		ok: true,
-		node,
+		node: { ...node, rank: nextRank, unlocked: true },
 		state: {
 			...state,
 			blueprintShards: state.blueprintShards - node.cost,
-			purchasedSkills: [...state.purchasedSkills, nodeId],
+			purchasedSkills: state.purchasedSkills.includes(nodeId)
+				? [...state.purchasedSkills]
+				: [...state.purchasedSkills, nodeId],
+			skillRanks: { ...(state.skillRanks ?? {}), [nodeId]: nextRank },
 		},
 	};
 }

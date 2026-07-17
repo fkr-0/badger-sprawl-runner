@@ -2,22 +2,32 @@
  * TitleCardRenderer - Brechtian title/placard scenes
  */
 
+import { ARCADE_UI_FONT, BADGER_UI, drawArcadePanel } from '../ui/ArcadeUi';
+
 export class TitleCardRenderer {
 	render(ctx: CanvasRenderingContext2D, title: string, subtitle?: string, progress = 0): void {
 		const W = ctx.canvas.width;
 		const H = ctx.canvas.height;
 
-		// Dark overlay
-		ctx.fillStyle = `rgba(0, 0, 0, ${0.85 - progress * 0.35})`;
+		ctx.fillStyle = `rgba(5, 7, 13, ${0.88 - progress * 0.34})`;
 		ctx.fillRect(0, 0, W, H);
 
-		// Text box
+		const panelWidth = Math.min(W - 96, 820);
+		const panelHeight = Math.min(H - 120, 276);
+		drawArcadePanel(ctx, {
+			x: W / 2 - panelWidth / 2,
+			y: H / 2 - panelHeight / 2,
+			width: panelWidth,
+			height: panelHeight,
+			strong: true,
+			label: progress > 0 ? `World ${Math.floor(progress * 8) + 1}` : 'Broadcast placard',
+		});
+
 		ctx.save();
 		ctx.translate(W / 2, H / 2);
 
-		// Title
-		ctx.fillStyle = '#eaf2ff';
-		ctx.font = 'bold 48px ui-monospace, monospace';
+		ctx.fillStyle = BADGER_UI.text;
+		ctx.font = `900 44px ${ARCADE_UI_FONT}`;
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 
@@ -36,16 +46,14 @@ export class TitleCardRenderer {
 
 		// Subtitle
 		if (subtitle) {
-			ctx.fillStyle = '#92a4be';
-			ctx.font = '24px ui-monospace, monospace';
+			ctx.fillStyle = BADGER_UI.muted;
+			ctx.font = `20px ${ARCADE_UI_FONT}`;
 			ctx.fillText(subtitle, 0, y + 30);
 		}
 
-		// World title (small, below)
 		if (progress > 0) {
-			ctx.fillStyle = '#67f3c4';
-			ctx.font = '16px ui-monospace, monospace';
-			ctx.fillText(`WORLD ${Math.floor(progress * 8) + 1}`, 0, y + 70);
+			ctx.fillStyle = BADGER_UI.accent;
+			ctx.fillRect(-64, y + 66, 128, 3);
 		}
 
 		ctx.restore();

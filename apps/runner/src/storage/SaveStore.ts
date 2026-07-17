@@ -73,11 +73,23 @@ function sanitizeMeta(meta: Partial<MetaState>): Partial<MetaState> {
 		orbitHeat: numberOrZero(meta.orbitHeat),
 		unlockedBoons: stringArray(meta.unlockedBoons),
 		purchasedSkills: stringArray(meta.purchasedSkills),
+		skillRanks: numberRecord(meta.skillRanks),
 	};
 }
 
 function numberOrZero(value: unknown): number {
 	return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function numberRecord(value: unknown): Record<string, number> {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+	return Object.fromEntries(
+		Object.entries(value)
+			.filter((entry): entry is [string, number] =>
+				typeof entry[1] === 'number' && Number.isFinite(entry[1]) && entry[1] > 0
+			)
+			.map(([key, rank]) => [key, Math.floor(rank)])
+	);
 }
 
 function stringArray(value: unknown): string[] {

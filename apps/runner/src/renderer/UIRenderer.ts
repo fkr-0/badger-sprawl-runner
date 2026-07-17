@@ -4,6 +4,7 @@
 
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
+import { BADGER_UI, drawArcadePanel } from '../ui/ArcadeUi';
 import type { SpriteRenderer } from './SpriteRenderer';
 
 interface HudIconSlot {
@@ -19,13 +20,13 @@ interface HudIconSlot {
 const HUD_ICON_SHEET = 'item_icons';
 const HUD_ICON_SIZE = 32;
 const HUD_ICON_GAP = 9;
-const PANEL = 'rgba(4, 6, 12, 0.82)';
-const PANEL_STRONG = 'rgba(4, 6, 12, 0.92)';
-const TEXT = '#eaf2ff';
-const MUTED = '#92a4be';
-const MINT = '#67f3c4';
-const AMBER = '#ffb35e';
-const DANGER = '#ff5e7a';
+const PANEL = BADGER_UI.panel;
+const PANEL_STRONG = BADGER_UI.panelStrong;
+const TEXT = BADGER_UI.text;
+const MUTED = BADGER_UI.muted;
+const MINT = BADGER_UI.accent;
+const AMBER = BADGER_UI.warning;
+const DANGER = BADGER_UI.danger;
 
 export class UIRenderer {
 	render(
@@ -57,14 +58,7 @@ export class UIRenderer {
 		const x = ctx.canvas.width - width - 18;
 		const y = 90;
 		ctx.save();
-		ctx.fillStyle = PANEL;
-		ctx.fillRect(x, y, width, 54);
-		ctx.fillStyle = MINT;
-		ctx.fillRect(x + width - 3, y, 3, 54);
-		ctx.textAlign = 'left';
-		ctx.font = '700 9px ui-monospace, monospace';
-		ctx.fillStyle = MUTED;
-		ctx.fillText('EQUIPPED SIGNAL', x + 9, y + 12);
+		drawArcadePanel(ctx, { x, y, width, height: 54, label: 'Equipped signal' });
 		for (const [index, slot] of slots.entries()) {
 			const iconX = x + 9 + index * (HUD_ICON_SIZE + gap);
 			const iconY = y + 17;
@@ -119,14 +113,8 @@ export class UIRenderer {
 		const width = 404;
 		const height = 102;
 		ctx.save();
-		ctx.fillStyle = PANEL;
-		ctx.fillRect(x, y, width, height);
-		ctx.fillStyle = MINT;
-		ctx.fillRect(x, y, 5, height);
+		drawArcadePanel(ctx, { x, y, width, height, label: 'Moss // field status' });
 		ctx.textAlign = 'left';
-		ctx.font = '700 10px ui-monospace, monospace';
-		ctx.fillStyle = MUTED;
-		ctx.fillText('MOSS // FIELD STATUS', x + 16, y + 16);
 
 		this.renderHealthBar(ctx, player, x + 16, y + 26, 188, 18);
 		this.renderFuelBar(ctx, player, x + 16, y + 52, 188, 10);
@@ -270,8 +258,7 @@ export class UIRenderer {
 		const width = 154;
 		const height = 12 + lines.length * 16;
 		ctx.save();
-		ctx.fillStyle = PANEL;
-		ctx.fillRect(x, y, width, height);
+		drawArcadePanel(ctx, { x, y, width, height, accent: BADGER_UI.accentAlt });
 		ctx.font = '700 9px ui-monospace, monospace';
 		ctx.textAlign = 'left';
 		for (const [index, line] of lines.entries()) {
@@ -287,14 +274,8 @@ export class UIRenderer {
 		const x = ctx.canvas.width - width - 18;
 		const y = 18;
 		ctx.save();
-		ctx.fillStyle = PANEL;
-		ctx.fillRect(x, y, width, 64);
-		ctx.fillStyle = AMBER;
-		ctx.fillRect(x + width - 4, y, 4, 64);
+		drawArcadePanel(ctx, { x, y, width, height: 64, accent: AMBER, label: 'Current route' });
 		ctx.textAlign = 'left';
-		ctx.font = '700 10px ui-monospace, monospace';
-		ctx.fillStyle = MUTED;
-		ctx.fillText('CURRENT ROUTE', x + 14, y + 17);
 		ctx.font = '700 13px ui-monospace, monospace';
 		ctx.fillStyle = TEXT;
 		ctx.fillText((player.objectiveHint ?? '').slice(0, 39), x + 14, y + 37);
@@ -310,8 +291,14 @@ export class UIRenderer {
 		ctx.textAlign = 'center';
 		if ((player.comboCount ?? 0) > 0) {
 			const x = ctx.canvas.width / 2;
-			ctx.fillStyle = PANEL_STRONG;
-			ctx.fillRect(x - 66, 18, 132, 48);
+			drawArcadePanel(ctx, {
+				x: x - 66,
+				y: 18,
+				width: 132,
+				height: 48,
+				accent: AMBER,
+				strong: true,
+			});
 			ctx.fillStyle = AMBER;
 			ctx.font = '900 22px ui-monospace, monospace';
 			ctx.fillText(`CHAIN ×${player.comboCount}`, x, 47);
@@ -336,8 +323,7 @@ export class UIRenderer {
 		const width = Math.min(520, Math.max(220, ctx.measureText(player.hudToast).width + 48));
 		const x = ctx.canvas.width / 2 - width / 2;
 		const y = 112;
-		ctx.fillStyle = PANEL_STRONG;
-		ctx.fillRect(x, y, width, 34);
+		drawArcadePanel(ctx, { x, y, width, height: 34, strong: true });
 		ctx.fillStyle = MINT;
 		ctx.fillRect(x, y + 31, width, 3);
 		ctx.fillStyle = TEXT;
@@ -353,10 +339,7 @@ export class UIRenderer {
 		const width = Math.min(440, Math.max(180, ctx.measureText(player.contextHint).width + 38));
 		const x = ctx.canvas.width / 2 - width / 2;
 		const y = ctx.canvas.height - 46;
-		ctx.fillStyle = PANEL_STRONG;
-		ctx.fillRect(x, y, width, 28);
-		ctx.strokeStyle = AMBER;
-		ctx.strokeRect(x, y, width, 28);
+		drawArcadePanel(ctx, { x, y, width, height: 28, accent: AMBER, strong: true });
 		ctx.fillStyle = TEXT;
 		ctx.fillText(player.contextHint.toUpperCase(), ctx.canvas.width / 2, y + 19);
 		ctx.restore();

@@ -57,7 +57,7 @@ test.describe('expanded progression skill graph', () => {
 		});
 	});
 
-	test('renders twenty sprite-backed nodes and installs each track root', async ({ page }) => {
+	test('renders forty-eight branched nodes and installs each track root', async ({ page }) => {
 		await enterSkillTree(page);
 		await expect
 			.poll(() => page.evaluate(() => (window as ProgressionWindow).__badger.getSkillTree()))
@@ -67,12 +67,13 @@ test.describe('expanded progression skill graph', () => {
 				selectedTier: 1,
 				blueprintShards: 20,
 				trackProgress: { clawline: 0, railgun: 0, rocket: 0, hacking: 0 },
+				trackTotals: { clawline: 24, railgun: 24, rocket: 24, hacking: 24 },
 			});
 		await expect
 			.poll(() =>
 				page.evaluate(() => (window as ProgressionWindow).__badger.getSkillTree()?.skills.length)
 			)
-			.toBe(20);
+			.toBe(48);
 
 		await page.keyboard.press('Enter');
 		await page.keyboard.press('ArrowRight');
@@ -92,6 +93,7 @@ test.describe('expanded progression skill graph', () => {
 			.toMatchObject({
 				blueprintShards: 15,
 				purchasedSkills: ['double_swipe', 'rail_mastery', 'fuel_sipper', 'street_syntax'],
+				skillRanks: { double_swipe: 1, rail_mastery: 1, fuel_sipper: 1, street_syntax: 1 },
 				trackProgress: { clawline: 1, railgun: 1, rocket: 1, hacking: 1 },
 				message: 'Street Syntax unlocked',
 			});

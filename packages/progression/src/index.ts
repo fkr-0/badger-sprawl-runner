@@ -8,13 +8,14 @@ export { ShopEngine } from './ShopEngine';
 export {
 	FIRST_RELEASE_SKILL_NODES,
 	FIRST_RELEASE_SKILL_TRACKS,
+	SKILL_TRACK_PRESENTATION,
 	SkillTree,
 	createSkillTree,
 	hydrateSkillTree,
 	purchaseSkillWithMeta,
 	resolveSkillEffects,
 } from './SkillTree';
-export type { ResolvedSkillEffects } from './SkillTree';
+export type { ResolvedSkillEffects, SkillTrackId } from './SkillTree';
 export { BoonPool, createBoonPool, PREDEFINED_BOONS } from './BoonPool';
 
 export { computeDerivedStats } from './derivedStats';

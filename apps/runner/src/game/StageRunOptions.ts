@@ -41,6 +41,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		runtimeConfig,
 		procgenSeed,
 		unlockedSkills: meta.purchasedSkills,
+		skillRanks: meta.skillRanks,
 		generatedEnemyPacks,
 		generatedSideRooms,
 		bossPhases: stage?.boss?.phases?.map((phase) => ({ ...phase })) ?? [],

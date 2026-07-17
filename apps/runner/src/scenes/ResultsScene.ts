@@ -6,6 +6,13 @@ import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
 import type { Renderer } from '../renderer/Renderer';
 import type { RunResult } from '@badger/progression';
+import {
+	ARCADE_UI_FONT,
+	BADGER_UI,
+	drawArcadeBackdrop,
+	drawArcadeFooter,
+	drawArcadePanel,
+} from '../ui/ArcadeUi';
 
 export class ResultsScene implements Scene {
 	readonly name = 'ResultsScene';
@@ -43,9 +50,7 @@ export class ResultsScene implements Scene {
 	render(rend: Renderer, alpha: number): void {
 		const ctx = rend.getContext();
 
-		// Darken background
-		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
-		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		drawArcadeBackdrop(ctx);
 
 		if (!this.results) return;
 
@@ -57,11 +62,22 @@ export class ResultsScene implements Scene {
 
 		const W = ctx.canvas.width;
 		const H = ctx.canvas.height;
+		const panelWidth = Math.min(520, W - 96);
+		const panelX = W / 2 - panelWidth / 2;
+		const panelY = H / 4 + 34;
+		drawArcadePanel(ctx, {
+			x: panelX,
+			y: panelY,
+			width: panelWidth,
+			height: 344,
+			accent: this.results.damageDealt > 100 ? BADGER_UI.accent : BADGER_UI.danger,
+			strong: true,
+			label: 'Run ledger',
+		});
 
-		// Title
 		const victory = this.results.damageDealt > 100;
-		ctx.fillStyle = victory ? '#67f3c4' : '#ff5e7a';
-		ctx.font = 'bold 36px ui-monospace, monospace';
+		ctx.fillStyle = victory ? BADGER_UI.accent : BADGER_UI.danger;
+		ctx.font = `900 36px ${ARCADE_UI_FONT}`;
 		ctx.textAlign = 'center';
 		ctx.fillText(victory ? 'MISSION COMPLETE' : 'DEFEATED', W / 2, H / 4);
 
@@ -75,13 +91,13 @@ export class ResultsScene implements Scene {
 		];
 
 		let y = H / 3 + 30;
-		ctx.font = '16px ui-monospace, monospace';
+		ctx.font = `16px ${ARCADE_UI_FONT}`;
 		ctx.textAlign = 'left';
 
 		for (const stat of stats) {
-			ctx.fillStyle = '#92a4be';
+			ctx.fillStyle = BADGER_UI.muted;
 			ctx.fillText(`${stat.label}:`, W / 2 - 100, y);
-			ctx.fillStyle = '#eaf2ff';
+			ctx.fillStyle = BADGER_UI.text;
 			ctx.textAlign = 'right';
 			ctx.fillText(stat.value, W / 2 + 100, y);
 			ctx.textAlign = 'left';
@@ -91,23 +107,20 @@ export class ResultsScene implements Scene {
 		// Rewards
 		y += 20;
 		ctx.textAlign = 'center';
-		ctx.fillStyle = '#ffb35e';
-		ctx.font = 'bold 18px ui-monospace, monospace';
+		ctx.fillStyle = BADGER_UI.warning;
+		ctx.font = `800 18px ${ARCADE_UI_FONT}`;
 		ctx.fillText('REWARDS', W / 2, y);
 		y += 30;
 
-		ctx.fillStyle = '#eaf2ff';
-		ctx.font = '16px ui-monospace, monospace';
+		ctx.fillStyle = BADGER_UI.text;
+		ctx.font = `16px ${ARCADE_UI_FONT}`;
 		ctx.fillText(`${this.results.rewards.credchips} Credchips`, W / 2, y);
 		y += 25;
 		ctx.fillText(`${this.results.rewards.blueprintShards} Blueprint Shards`, W / 2, y);
 		y += 25;
 		ctx.fillText(`${this.results.rewards.dubFavor} Dub Favor`, W / 2, y);
 
-		// Instructions
-		ctx.fillStyle = '#4a4a4a';
-		ctx.font = '14px ui-monospace, monospace';
-		ctx.fillText('Press ENTER to return to Colony Hub', W / 2, H - 50);
+		drawArcadeFooter(ctx, 'Enter  //  Return to Colony Hub');
 	}
 
 	private formatTime(seconds: number): string {
