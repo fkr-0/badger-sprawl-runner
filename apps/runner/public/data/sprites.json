@@ -753,7 +753,15 @@
 				}
 			},
 			"world": "lower_sprawl",
-			"role": "tiles"
+			"role": "tiles",
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+			}
 		},
 		{
 			"id": "items_core",
@@ -1987,7 +1995,15 @@
 				}
 			},
 			"world": "drainmarket",
-			"role": "tiles"
+			"role": "tiles",
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+			}
 		},
 		{
 			"id": "chrome_arcology_tiles",
@@ -2070,6 +2086,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2125,6 +2149,14 @@
 						"front"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/drainmarket-parallax-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2264,6 +2296,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2403,6 +2443,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2542,6 +2590,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2597,6 +2653,14 @@
 						"front"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/antenna-barrens-parallax-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2680,6 +2744,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2819,6 +2891,14 @@
 						"decorative"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2874,6 +2954,14 @@
 						"front"
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/asteroid-redoubt-parallax-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -2974,6 +3062,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -3074,6 +3170,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -3324,6 +3428,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -3675,6 +3787,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -4026,6 +4146,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -4126,6 +4254,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -4376,6 +4512,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -4727,6 +4871,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -4827,6 +4979,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -5178,6 +5338,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-enemies-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -5761,6 +5929,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -5924,6 +6100,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -6087,6 +6271,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -6168,6 +6360,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -6249,6 +6449,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -6494,6 +6702,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -6657,6 +6873,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
@@ -7066,6 +7290,14 @@
 						44
 					]
 				}
+			},
+			"source": {
+				"tool": "OpenAI image generation",
+				"mode": "built-in default",
+				"sourceSheet": "generated/source_previews/sprawl-characters-production-board.png",
+				"promptSet": "generated/source_previews/production-prompt-set.json",
+				"revision": "2026-07-17-production",
+				"note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
 			}
 		},
 		{
