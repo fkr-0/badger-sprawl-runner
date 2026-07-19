@@ -1,4 +1,13 @@
-import { payResourceCosts, stepCombatResources, type CombatResourceState, type ResourceCost, type ResourceEvent } from './CombatResourceSystem';
+import {
+	createGameplayActionState,
+	createResourcePoolState,
+	stepGameplayActionState as runtimeStepGameplayActionState,
+	tryStartGameplayAction,
+	type ArcadeGameplayActionEvent,
+	type ArcadeGameplayActionState,
+	type ArcadeResourceEvent,
+} from '../../../../vendor/arcade-runtime.mjs';
+import type { CombatResourceState, ResourceCost, ResourceEvent } from './CombatResourceSystem';
 
 export interface CombatActionDefinition {
 	id: string;
@@ -6,6 +15,70 @@ export interface CombatActionDefinition {
 	costs: ResourceCost[];
 	queueWindow?: number;
 	cancelTags?: string[];
+}
+
+function toRuntimeResources(resources: CombatResourceState) {
+	return createResourcePoolState(
+		resources.ownerId,
+		resources.pools.map((pool) => ({
+			id: pool.kind,
+			value: pool.value,
+			max: pool.max,
+			regenPerUnit: pool.regenPerSecond,
+			decayPerUnit: pool.decayPerSecond ?? 0,
+		}))
+	);
+}
+
+function fromRuntimeResources(resources: ArcadeGameplayActionState['resources']): CombatResourceState {
+	return {
+		ownerId: resources.ownerId,
+		pools: resources.pools.map((pool) => ({
+			kind: pool.id as CombatResourceState['pools'][number]['kind'],
+			value: pool.value,
+			max: pool.max,
+			regenPerSecond: pool.regenPerUnit,
+			...(pool.decayPerUnit > 0 ? { decayPerSecond: pool.decayPerUnit } : {}),
+		})),
+	};
+}
+
+function toRuntimeState(state: CombatActionState): ArcadeGameplayActionState {
+	return createGameplayActionState(state.ownerId, toRuntimeResources(state.resources), {
+		cooldowns: state.cooldowns,
+		queuedActionId: state.queuedActionId ?? null,
+		queueRemaining: state.queueTimer ?? 0,
+	});
+}
+
+function fromRuntimeState(state: ArcadeGameplayActionState): CombatActionState {
+	return {
+		ownerId: state.ownerId,
+		cooldowns: { ...state.cooldowns },
+		resources: fromRuntimeResources(state.resources),
+		...(state.queuedActionId ? { queuedActionId: state.queuedActionId } : {}),
+		...(state.queuedActionId ? { queueTimer: state.queueRemaining } : {}),
+	};
+}
+
+function fromRuntimeResourceEvent(event: ArcadeResourceEvent): ResourceEvent {
+	return {
+		kind: event.kind as ResourceEvent['kind'],
+		ownerId: event.ownerId,
+		resource: event.resourceId as ResourceEvent['resource'],
+		amount: event.amount,
+	};
+}
+
+function fromRuntimeEvent(event: ArcadeGameplayActionEvent): CombatActionEvent {
+	return {
+		kind: event.kind,
+		ownerId: event.ownerId,
+		...(event.actionId ? { actionId: event.actionId } : {}),
+		...(event.resourceEvent
+			? { resourceEvent: fromRuntimeResourceEvent(event.resourceEvent) }
+			: {}),
+	};
 }
 
 export interface CombatActionState {
@@ -24,31 +97,14 @@ export interface CombatActionEvent {
 }
 
 export function createCombatActionState(ownerId: string, resources: CombatResourceState): CombatActionState {
-	return { ownerId, cooldowns: {}, resources: { ownerId: resources.ownerId, pools: resources.pools.map((pool) => ({ ...pool })) } };
+	return fromRuntimeState(createGameplayActionState(ownerId, toRuntimeResources(resources)));
 }
 
 export function stepCombatActionState(state: CombatActionState, dt: number): { state: CombatActionState; events: CombatActionEvent[] } {
-	if (!Number.isFinite(dt) || dt < 0) throw new Error(`Invalid combat action dt: ${dt}`);
-	const resourceStep = stepCombatResources(state.resources, dt);
-	const cooldowns = Object.fromEntries(
-		Object.entries(state.cooldowns)
-			.map(([id, value]) => [id, Math.max(0, value - dt)])
-			.filter(([, value]) => value > 0)
-	);
-	const queueTimer = Math.max(0, (state.queueTimer ?? 0) - dt);
-	const expired = state.queuedActionId && queueTimer === 0;
+	const stepped = runtimeStepGameplayActionState(toRuntimeState(state), dt);
 	return {
-		state: {
-			ownerId: state.ownerId,
-			cooldowns,
-			resources: resourceStep.state,
-			queuedActionId: expired ? undefined : state.queuedActionId,
-			queueTimer: expired ? undefined : queueTimer,
-		},
-		events: [
-			...resourceStep.events.map((resourceEvent) => ({ kind: 'resource' as const, ownerId: state.ownerId, resourceEvent })),
-			...(expired ? [{ kind: 'queue-expired' as const, ownerId: state.ownerId, actionId: state.queuedActionId }] : []),
-		],
+		state: fromRuntimeState(stepped.state),
+		events: stepped.events.map(fromRuntimeEvent),
 	};
 }
 
@@ -57,41 +113,10 @@ export function tryStartCombatAction(
 	action: CombatActionDefinition,
 	options: { queueIfBlocked?: boolean } = {}
 ): { state: CombatActionState; events: CombatActionEvent[]; ok: boolean } {
-	if ((state.cooldowns[action.id] ?? 0) > 0) {
-		if (options.queueIfBlocked && action.queueWindow) {
-			return {
-				state: { ...state, queuedActionId: action.id, queueTimer: action.queueWindow },
-				events: [{ kind: 'queued', ownerId: state.ownerId, actionId: action.id }],
-				ok: false,
-			};
-		}
-		return { state: { ...state }, events: [{ kind: 'cooldown', ownerId: state.ownerId, actionId: action.id }], ok: false };
-	}
-
-	const paid = payResourceCosts(state.resources, action.costs);
-	if (!paid.ok) {
-		return {
-			state: { ...state, resources: paid.state },
-			events: [
-				{ kind: 'blocked', ownerId: state.ownerId, actionId: action.id },
-				...paid.events.map((resourceEvent) => ({ kind: 'resource' as const, ownerId: state.ownerId, actionId: action.id, resourceEvent })),
-			],
-			ok: false,
-		};
-	}
-
+	const started = tryStartGameplayAction(toRuntimeState(state), action, options);
 	return {
-		state: {
-			ownerId: state.ownerId,
-			cooldowns: { ...state.cooldowns, [action.id]: action.cooldown },
-			resources: paid.state,
-			queuedActionId: undefined,
-			queueTimer: undefined,
-		},
-		events: [
-			{ kind: 'started', ownerId: state.ownerId, actionId: action.id },
-			...paid.events.map((resourceEvent) => ({ kind: 'resource' as const, ownerId: state.ownerId, actionId: action.id, resourceEvent })),
-		],
-		ok: true,
+		state: fromRuntimeState(started.state),
+		events: started.events.map(fromRuntimeEvent),
+		ok: started.ok,
 	};
 }

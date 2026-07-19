@@ -7,6 +7,7 @@ import type { Camera } from '../systems/CameraSystem';
 import { BADGER_UI, drawArcadePanel } from '../ui/ArcadeUi';
 import { buildGameplayHudLayout } from './GameplayHudLayout';
 import type { SpriteRenderer } from './SpriteRenderer';
+import { resolveHudGauge } from '../../../../vendor/arcade-runtime.mjs';
 
 interface HudIconSlot {
 	animation: string;
@@ -97,10 +98,16 @@ export class UIRenderer {
 	}
 
 	private renderScreenFeedback(ctx: CanvasRenderingContext2D, player: Player): void {
-		const healthRatio = player.maxHp > 0 ? player.hp / player.maxHp : 0;
+		const health = resolveHudGauge({
+			value: player.hp,
+			max: player.maxHp,
+			lowThreshold: 0.4,
+			criticalThreshold: 0.2,
+			time: performance.now() / 1000,
+			pulsePeriod: 0.36,
+		});
 		const damageAlpha = Math.min(0.34, player.damageFlash ?? 0);
-		const lowHealthAlpha =
-			healthRatio <= 0.4 ? 0.08 + Math.sin(performance.now() / 180) * 0.025 : 0;
+		const lowHealthAlpha = health.warning ? 0.12 * health.pulse : 0;
 		if (damageAlpha > 0 || lowHealthAlpha > 0) {
 			const gradient = ctx.createRadialGradient(
 				ctx.canvas.width / 2,
@@ -156,12 +163,24 @@ export class UIRenderer {
 	): void {
 		const gap = 4;
 		const segmentWidth = (width - gap * (player.maxHp - 1)) / player.maxHp;
-		for (let index = 0; index < player.maxHp; index += 1) {
+		const gauge = resolveHudGauge({
+			value: player.hp,
+			max: player.maxHp,
+			segments: player.maxHp,
+			lowThreshold: 0.4,
+			criticalThreshold: 0.2,
+		});
+		for (const segment of gauge.segments) {
+			const index = segment.index;
 			const segmentX = x + index * (segmentWidth + gap);
-			ctx.fillStyle = index < Math.ceil(player.hp) ? (player.hp <= 2 ? DANGER : MINT) : '#202633';
+			ctx.fillStyle = '#202633';
 			ctx.fillRect(segmentX, y, segmentWidth, height);
+			if (segment.fill > 0) {
+				ctx.fillStyle = gauge.warning ? DANGER : MINT;
+				ctx.fillRect(segmentX, y, segmentWidth * segment.fill, height);
+			}
 			ctx.fillStyle = 'rgba(255,255,255,0.12)';
-			ctx.fillRect(segmentX, y, segmentWidth, 2);
+			ctx.fillRect(segmentX, y, segmentWidth * Math.max(segment.fill, 0.08), 2);
 		}
 	}
 
@@ -183,9 +202,9 @@ export class UIRenderer {
 		ctx.fillStyle = '#202633';
 		ctx.fillRect(x, y, width, height);
 		if (player.hasRocket && player.maxFuel > 0) {
-			const ratio = Math.max(0, Math.min(1, player.fuel / player.maxFuel));
+			const gauge = resolveHudGauge({ value: player.fuel, max: player.maxFuel });
 			ctx.fillStyle = AMBER;
-			ctx.fillRect(x, y, width * ratio, height);
+			ctx.fillRect(x, y, width * gauge.ratio, height);
 		}
 	}
 

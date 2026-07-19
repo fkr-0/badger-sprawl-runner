@@ -1173,6 +1173,153 @@ export declare function createEntityRegistry<Entity>(
   options?: { getId?: (entity: Entity) => string; revision?: number },
 ): EntityRegistry<Entity>;
 
+export type ArcadeResourcePool = Readonly<{
+  id: string;
+  value: number;
+  min: number;
+  max: number;
+  regenPerUnit: number;
+  decayPerUnit: number;
+  precision: number;
+  metadata?: unknown;
+}>;
+export type ArcadeResourcePoolInput = Readonly<{
+  id?: string;
+  kind?: string;
+  value: number;
+  min?: number;
+  minimum?: number;
+  max?: number;
+  maximum?: number;
+  regenPerUnit?: number;
+  regenPerSecond?: number;
+  decayPerUnit?: number;
+  decayPerSecond?: number;
+  precision?: number;
+  metadata?: unknown;
+}>;
+export type ArcadeResourcePoolState = Readonly<{
+  ownerId: string;
+  revision: number;
+  pools: readonly ArcadeResourcePool[];
+}>;
+export type ArcadeResourceCost = Readonly<{ resourceId?: string; id?: string; kind?: string; amount: number }>;
+export type ArcadeResourceEventKind = 'regenerated' | 'decayed' | 'blocked' | 'spent' | 'gained' | 'set';
+export type ArcadeResourceEvent = Readonly<{
+  kind: ArcadeResourceEventKind;
+  ownerId: string;
+  resourceId: string;
+  amount: number;
+  before: number;
+  after: number;
+  reason?: string;
+}>;
+export declare function createResourcePoolState(ownerId: PropertyKey, pools?: readonly ArcadeResourcePoolInput[], options?: { revision?: number }): ArcadeResourcePoolState;
+export declare function getResourcePool(state: ArcadeResourcePoolState, resourceId: PropertyKey): ArcadeResourcePool | null;
+export declare function getResourceRatio(state: ArcadeResourcePoolState, resourceId: PropertyKey): number;
+export declare function stepResourcePools(state: ArcadeResourcePoolState, delta: number, options?: {
+  canRegenerate?: (pool: ArcadeResourcePool, state: ArcadeResourcePoolState) => boolean;
+  canDecay?: (pool: ArcadeResourcePool, state: ArcadeResourcePoolState) => boolean;
+}): Readonly<{ state: ArcadeResourcePoolState; events: readonly ArcadeResourceEvent[]; changed: boolean }>;
+export declare function canPayResourceCosts(state: ArcadeResourcePoolState, costs: readonly ArcadeResourceCost[]): boolean;
+export declare function payResourceCosts(state: ArcadeResourcePoolState, costs: readonly ArcadeResourceCost[], options?: { reason?: string }): Readonly<{ state: ArcadeResourcePoolState; events: readonly ArcadeResourceEvent[]; ok: boolean }>;
+export declare function gainResource(state: ArcadeResourcePoolState, resourceId: PropertyKey, amount: number, options?: { reason?: string }): Readonly<{ state: ArcadeResourcePoolState; events: readonly ArcadeResourceEvent[]; changed: boolean }>;
+export declare function setResourceValue(state: ArcadeResourcePoolState, resourceId: PropertyKey, value: number, options?: { reason?: string }): Readonly<{ state: ArcadeResourcePoolState; events: readonly ArcadeResourceEvent[]; changed: boolean }>;
+
+export type ArcadeGameplayActionDefinition = Readonly<{
+  id: string;
+  cooldown?: number;
+  costs?: readonly ArcadeResourceCost[];
+  queueWindow?: number;
+  metadata?: unknown;
+}>;
+export type ArcadeGameplayActionState = Readonly<{
+  ownerId: string;
+  cooldowns: Readonly<Record<string, number>>;
+  resources: ArcadeResourcePoolState;
+  queuedActionId: string | null;
+  queueRemaining: number;
+  revision: number;
+}>;
+export type ArcadeGameplayActionEvent = Readonly<{
+  kind: 'started' | 'cooldown' | 'blocked' | 'queued' | 'queue-expired' | 'resource';
+  ownerId: string;
+  actionId?: string;
+  remaining?: number;
+  resourceEvent?: ArcadeResourceEvent;
+}>;
+export declare function createGameplayActionState(ownerId: PropertyKey, resources: ArcadeResourcePoolState, options?: {
+  cooldowns?: Record<string, number>;
+  queuedActionId?: string | null;
+  queueRemaining?: number;
+  revision?: number;
+}): ArcadeGameplayActionState;
+export declare function stepGameplayActionState(state: ArcadeGameplayActionState, delta: number, options?: {
+  resources?: Parameters<typeof stepResourcePools>[2];
+}): Readonly<{ state: ArcadeGameplayActionState; events: readonly ArcadeGameplayActionEvent[]; changed: boolean }>;
+export declare function tryStartGameplayAction(state: ArcadeGameplayActionState, action: ArcadeGameplayActionDefinition, options?: {
+  queueIfBlocked?: boolean;
+  reason?: string;
+}): Readonly<{
+  state: ArcadeGameplayActionState;
+  events: readonly ArcadeGameplayActionEvent[];
+  ok: boolean;
+  reason: 'cooldown' | 'resource' | null;
+}>;
+
+export type ArcadeActionGraceState = Readonly<{
+  graceDuration: number;
+  bufferDuration: number;
+  graceRemaining: number;
+  bufferRemaining: number;
+  revision: number;
+}>;
+export type ArcadeActionGraceEvent = Readonly<{ kind: 'grace-expired' | 'buffer-expired' | 'buffered' | 'activated' }>;
+export declare function createActionGraceState(options?: Partial<ArcadeActionGraceState>): ArcadeActionGraceState;
+export declare function stepActionGrace(state: ArcadeActionGraceState, input?: {
+  delta?: number;
+  available?: boolean;
+  requested?: boolean;
+  enabled?: boolean;
+  consumeOnActivate?: boolean;
+  graceDuration?: number;
+  bufferDuration?: number;
+}): Readonly<{
+  state: ArcadeActionGraceState;
+  activated: boolean;
+  available: boolean;
+  requested: boolean;
+  events: readonly ArcadeActionGraceEvent[];
+}>;
+
+export type ArcadeHudGaugeState = 'empty' | 'critical' | 'low' | 'normal' | 'full';
+export type ArcadeHudGaugeSegment = Readonly<{ index: number; fill: number; active: boolean; full: boolean }>;
+export declare function resolveHudGauge(input?: {
+  value?: number;
+  min?: number;
+  minimum?: number;
+  max?: number;
+  maximum?: number;
+  lowThreshold?: number;
+  criticalThreshold?: number;
+  segments?: number;
+  direction?: 'forward' | 'reverse';
+  time?: number;
+  pulsePeriod?: number;
+  pulseAmount?: number;
+}): Readonly<{
+  value: number;
+  min: number;
+  max: number;
+  ratio: number;
+  missingRatio: number;
+  state: ArcadeHudGaugeState;
+  warning: boolean;
+  pulse: number;
+  direction: 'forward' | 'reverse';
+  segments: readonly ArcadeHudGaugeSegment[];
+}>;
+
 export type HitContactRecord = Readonly<{ hits: number; lastHitTick: number }>;
 export type HitContactPolicy = Readonly<{ maxHitsPerTarget?: number; rehitDelayTicks?: number; rehitDelayFrames?: number }>;
 export type HitContactLedger = {

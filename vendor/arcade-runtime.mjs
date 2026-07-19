@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT DIRECTLY.
 // Edit source/runtime/*.js.inc and run `npm run source:build`.
 
-export const ARCADE_RUNTIME_VERSION = '1.6.0';
+export const ARCADE_RUNTIME_VERSION = '1.7.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -3101,6 +3101,528 @@ export function createEntityRegistry(entities = [], options = {}) {
   return registry;
 }
 
+function arcadeGameplayInvariant(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function arcadeGameplayFinite(value, fallback = 0) {
+  return Number.isFinite(value) ? Number(value) : fallback;
+}
+
+function arcadeGameplayNonNegative(value, label) {
+  const resolved = arcadeGameplayFinite(value, Number.NaN);
+  arcadeGameplayInvariant(Number.isFinite(resolved) && resolved >= 0, `${label} must be non-negative`);
+  return resolved;
+}
+
+function arcadeGameplayPrecision(value, fallback = 6) {
+  const resolved = Math.floor(arcadeGameplayFinite(value, fallback));
+  return Math.max(0, Math.min(12, resolved));
+}
+
+function arcadeGameplayRound(value, precision = 6) {
+  const resolvedPrecision = arcadeGameplayPrecision(precision);
+  const factor = 10 ** resolvedPrecision;
+  return Number((Math.round((value + Number.EPSILON) * factor) / factor).toFixed(resolvedPrecision));
+}
+
+function arcadeGameplayResourceId(value, label = 'resource id') {
+  const id = String(value ?? '').trim();
+  arcadeGameplayInvariant(id.length > 0, `${label} is required`);
+  return id;
+}
+
+function normalizeArcadeResourcePool(pool, index = 0) {
+  arcadeGameplayInvariant(pool && typeof pool === 'object', `resource pool ${index} must be an object`);
+  const id = arcadeGameplayResourceId(pool.id ?? pool.kind, `resource pool ${index} id`);
+  const minimum = arcadeGameplayFinite(pool.min ?? pool.minimum, 0);
+  const maximum = arcadeGameplayFinite(pool.max ?? pool.maximum, Number.NaN);
+  arcadeGameplayInvariant(Number.isFinite(maximum) && maximum >= minimum, `resource pool "${id}" maximum must be at least its minimum`);
+  const precision = arcadeGameplayPrecision(pool.precision, 6);
+  const value = clampNumber(arcadeGameplayFinite(pool.value, minimum), minimum, maximum);
+  return Object.freeze({
+    id,
+    value: arcadeGameplayRound(value, precision),
+    min: minimum,
+    max: maximum,
+    regenPerUnit: arcadeGameplayNonNegative(pool.regenPerUnit ?? pool.regenPerSecond ?? 0, `resource pool "${id}" regeneration`),
+    decayPerUnit: arcadeGameplayNonNegative(pool.decayPerUnit ?? pool.decayPerSecond ?? 0, `resource pool "${id}" decay`),
+    precision,
+    ...(pool.metadata === undefined ? {} : { metadata: pool.metadata }),
+  });
+}
+
+function freezeArcadeResourceState(ownerId, revision, pools) {
+  return Object.freeze({
+    ownerId: String(ownerId ?? ''),
+    revision: Math.max(0, Math.floor(arcadeGameplayFinite(revision, 0))),
+    pools: Object.freeze(pools.map((pool, index) => normalizeArcadeResourcePool(pool, index))),
+  });
+}
+
+function normalizeArcadeResourceState(state) {
+  arcadeGameplayInvariant(state && Array.isArray(state.pools), 'resource pool state is required');
+  const seen = new Set();
+  const pools = state.pools.map((pool, index) => {
+    const normalized = normalizeArcadeResourcePool(pool, index);
+    arcadeGameplayInvariant(!seen.has(normalized.id), `duplicate resource pool "${normalized.id}"`);
+    seen.add(normalized.id);
+    return normalized;
+  });
+  return freezeArcadeResourceState(state.ownerId, state.revision, pools);
+}
+
+function arcadeResourceEvent(kind, state, pool, amount, before, after, extra = {}) {
+  return Object.freeze({
+    kind,
+    ownerId: state.ownerId,
+    resourceId: pool.id,
+    amount: arcadeGameplayRound(amount, pool.precision),
+    before: arcadeGameplayRound(before, pool.precision),
+    after: arcadeGameplayRound(after, pool.precision),
+    ...extra,
+  });
+}
+
+export function createResourcePoolState(ownerId, pools = [], options = {}) {
+  arcadeGameplayInvariant(Array.isArray(pools), 'resource pools must be an array');
+  return normalizeArcadeResourceState({ ownerId, pools, revision: options.revision ?? 0 });
+}
+
+export function getResourcePool(state, resourceId) {
+  const normalized = normalizeArcadeResourceState(state);
+  const id = arcadeGameplayResourceId(resourceId);
+  return normalized.pools.find((pool) => pool.id === id) ?? null;
+}
+
+export function getResourceRatio(state, resourceId) {
+  const pool = getResourcePool(state, resourceId);
+  if (!pool) return 0;
+  const span = pool.max - pool.min;
+  return span <= 0 ? 1 : clampNumber((pool.value - pool.min) / span, 0, 1);
+}
+
+export function stepResourcePools(state, delta, options = {}) {
+  const normalized = normalizeArcadeResourceState(state);
+  const elapsed = arcadeGameplayNonNegative(delta, 'resource step delta');
+  arcadeGameplayInvariant(
+    options.canRegenerate === undefined || typeof options.canRegenerate === 'function',
+    'resource regeneration predicate must be a function',
+  );
+  arcadeGameplayInvariant(
+    options.canDecay === undefined || typeof options.canDecay === 'function',
+    'resource decay predicate must be a function',
+  );
+  const events = [];
+  let changed = false;
+  const pools = normalized.pools.map((pool) => {
+    let value = pool.value;
+    if (pool.regenPerUnit > 0 && value < pool.max && options.canRegenerate?.(pool, normalized) !== false) {
+      const before = value;
+      value = arcadeGameplayRound(clampNumber(value + pool.regenPerUnit * elapsed, pool.min, pool.max), pool.precision);
+      if (value !== before) {
+        events.push(arcadeResourceEvent('regenerated', normalized, pool, value - before, before, value));
+        changed = true;
+      }
+    }
+    if (pool.decayPerUnit > 0 && value > pool.min && options.canDecay?.(pool, normalized) !== false) {
+      const before = value;
+      value = arcadeGameplayRound(clampNumber(value - pool.decayPerUnit * elapsed, pool.min, pool.max), pool.precision);
+      if (value !== before) {
+        events.push(arcadeResourceEvent('decayed', normalized, pool, before - value, before, value));
+        changed = true;
+      }
+    }
+    return Object.freeze({ ...pool, value });
+  });
+  return Object.freeze({
+    state: freezeArcadeResourceState(normalized.ownerId, normalized.revision + (changed ? 1 : 0), pools),
+    events: Object.freeze(events),
+    changed,
+  });
+}
+
+function normalizeArcadeResourceCosts(costs) {
+  arcadeGameplayInvariant(Array.isArray(costs), 'resource costs must be an array');
+  return costs.map((cost, index) => {
+    arcadeGameplayInvariant(cost && typeof cost === 'object', `resource cost ${index} must be an object`);
+    return Object.freeze({
+      resourceId: arcadeGameplayResourceId(cost.resourceId ?? cost.id ?? cost.kind, `resource cost ${index} id`),
+      amount: arcadeGameplayNonNegative(cost.amount, `resource cost ${index} amount`),
+    });
+  });
+}
+
+function aggregateArcadeResourceCosts(costs) {
+  const totals = new Map();
+  for (const cost of normalizeArcadeResourceCosts(costs)) {
+    totals.set(cost.resourceId, (totals.get(cost.resourceId) ?? 0) + cost.amount);
+  }
+  return totals;
+}
+
+export function canPayResourceCosts(state, costs) {
+  const normalized = normalizeArcadeResourceState(state);
+  const totals = aggregateArcadeResourceCosts(costs);
+  return [...totals].every(([resourceId, amount]) => {
+    const pool = normalized.pools.find((candidate) => candidate.id === resourceId);
+    return pool !== undefined && pool.value - amount >= pool.min;
+  });
+}
+
+export function payResourceCosts(state, costs, options = {}) {
+  const normalized = normalizeArcadeResourceState(state);
+  const normalizedCosts = normalizeArcadeResourceCosts(costs);
+  const totals = aggregateArcadeResourceCosts(normalizedCosts);
+  const blocked = normalizedCosts.find((cost) => {
+    const pool = normalized.pools.find((candidate) => candidate.id === cost.resourceId);
+    return pool === undefined || pool.value - (totals.get(cost.resourceId) ?? 0) < pool.min;
+  });
+  if (blocked) {
+    const pool = normalized.pools.find((candidate) => candidate.id === blocked.resourceId);
+    const before = pool?.value ?? 0;
+    const eventPool = pool ?? normalizeArcadeResourcePool({ id: blocked.resourceId, value: 0, min: 0, max: 0 });
+    return Object.freeze({
+      state: normalized,
+      events: Object.freeze([
+        arcadeResourceEvent('blocked', normalized, eventPool, totals.get(blocked.resourceId) ?? blocked.amount, before, before, {
+          reason: options.reason ?? 'insufficient-resource',
+        }),
+      ]),
+      ok: false,
+    });
+  }
+  const events = [];
+  const pools = normalized.pools.map((pool) => {
+    const amount = totals.get(pool.id) ?? 0;
+    if (amount <= 0) return pool;
+    const before = pool.value;
+    const value = arcadeGameplayRound(clampNumber(before - amount, pool.min, pool.max), pool.precision);
+    events.push(arcadeResourceEvent('spent', normalized, pool, before - value, before, value, {
+      reason: options.reason ?? 'cost',
+    }));
+    return Object.freeze({ ...pool, value });
+  });
+  return Object.freeze({
+    state: freezeArcadeResourceState(normalized.ownerId, normalized.revision + (events.length > 0 ? 1 : 0), pools),
+    events: Object.freeze(events),
+    ok: true,
+  });
+}
+
+export function gainResource(state, resourceId, amount, options = {}) {
+  const normalized = normalizeArcadeResourceState(state);
+  const id = arcadeGameplayResourceId(resourceId);
+  const gain = arcadeGameplayNonNegative(amount, 'resource gain');
+  let event = null;
+  const pools = normalized.pools.map((pool) => {
+    if (pool.id !== id) return pool;
+    const before = pool.value;
+    const value = arcadeGameplayRound(clampNumber(before + gain, pool.min, pool.max), pool.precision);
+    if (value !== before) {
+      event = arcadeResourceEvent('gained', normalized, pool, value - before, before, value, {
+        reason: options.reason ?? 'gain',
+      });
+    }
+    return Object.freeze({ ...pool, value });
+  });
+  arcadeGameplayInvariant(normalized.pools.some((pool) => pool.id === id), `unknown resource pool "${id}"`);
+  return Object.freeze({
+    state: freezeArcadeResourceState(normalized.ownerId, normalized.revision + (event ? 1 : 0), pools),
+    events: Object.freeze(event ? [event] : []),
+    changed: event !== null,
+  });
+}
+
+export function setResourceValue(state, resourceId, value, options = {}) {
+  const normalized = normalizeArcadeResourceState(state);
+  const id = arcadeGameplayResourceId(resourceId);
+  const requested = arcadeGameplayFinite(value, Number.NaN);
+  arcadeGameplayInvariant(Number.isFinite(requested), 'resource value must be finite');
+  let event = null;
+  const pools = normalized.pools.map((pool) => {
+    if (pool.id !== id) return pool;
+    const before = pool.value;
+    const next = arcadeGameplayRound(clampNumber(requested, pool.min, pool.max), pool.precision);
+    if (next !== before) {
+      event = arcadeResourceEvent('set', normalized, pool, Math.abs(next - before), before, next, {
+        reason: options.reason ?? 'set',
+      });
+    }
+    return Object.freeze({ ...pool, value: next });
+  });
+  arcadeGameplayInvariant(normalized.pools.some((pool) => pool.id === id), `unknown resource pool "${id}"`);
+  return Object.freeze({
+    state: freezeArcadeResourceState(normalized.ownerId, normalized.revision + (event ? 1 : 0), pools),
+    events: Object.freeze(event ? [event] : []),
+    changed: event !== null,
+  });
+}
+
+function freezeGameplayActionState(state) {
+  return Object.freeze({
+    ownerId: String(state.ownerId ?? ''),
+    cooldowns: Object.freeze({ ...createCooldownState(state.cooldowns) }),
+    resources: normalizeArcadeResourceState(state.resources),
+    queuedActionId: state.queuedActionId === undefined || state.queuedActionId === null
+      ? null
+      : String(state.queuedActionId),
+    queueRemaining: arcadeGameplayNonNegative(state.queueRemaining ?? 0, 'gameplay action queue remaining'),
+    revision: Math.max(0, Math.floor(arcadeGameplayFinite(state.revision, 0))),
+  });
+}
+
+export function createGameplayActionState(ownerId, resources, options = {}) {
+  return freezeGameplayActionState({
+    ownerId,
+    resources,
+    cooldowns: options.cooldowns ?? {},
+    queuedActionId: options.queuedActionId ?? null,
+    queueRemaining: options.queueRemaining ?? 0,
+    revision: options.revision ?? 0,
+  });
+}
+
+function arcadeGameplayActionEvent(kind, state, actionId, extra = {}) {
+  return Object.freeze({
+    kind,
+    ownerId: state.ownerId,
+    ...(actionId === undefined || actionId === null ? {} : { actionId: String(actionId) }),
+    ...extra,
+  });
+}
+
+function normalizeGameplayActionDefinition(action) {
+  arcadeGameplayInvariant(action && typeof action === 'object', 'gameplay action definition is required');
+  const id = String(action.id ?? '').trim();
+  arcadeGameplayInvariant(id.length > 0, 'gameplay action id is required');
+  return Object.freeze({
+    id,
+    cooldown: arcadeGameplayNonNegative(action.cooldown ?? 0, `gameplay action "${id}" cooldown`),
+    costs: Object.freeze(normalizeArcadeResourceCosts(action.costs ?? [])),
+    queueWindow: arcadeGameplayNonNegative(action.queueWindow ?? 0, `gameplay action "${id}" queue window`),
+    ...(action.metadata === undefined ? {} : { metadata: action.metadata }),
+  });
+}
+
+export function stepGameplayActionState(state, delta, options = {}) {
+  const normalized = freezeGameplayActionState(state);
+  const elapsed = arcadeGameplayNonNegative(delta, 'gameplay action delta');
+  const resourceStep = stepResourcePools(normalized.resources, elapsed, options.resources);
+  const cooldowns = stepCooldownState(normalized.cooldowns, elapsed);
+  const previousQueue = normalized.queueRemaining;
+  const queueRemaining = Math.max(0, previousQueue - elapsed);
+  const queueExpired = normalized.queuedActionId !== null && previousQueue > 0 && queueRemaining === 0;
+  const events = [
+    ...resourceStep.events.map((resourceEvent) =>
+      arcadeGameplayActionEvent('resource', normalized, null, { resourceEvent })),
+    ...(queueExpired
+      ? [arcadeGameplayActionEvent('queue-expired', normalized, normalized.queuedActionId)]
+      : []),
+  ];
+  const changed =
+    resourceStep.changed ||
+    Object.keys(cooldowns).length !== Object.keys(normalized.cooldowns).length ||
+    Object.entries(cooldowns).some(([id, value]) => value !== normalized.cooldowns[id]) ||
+    queueRemaining !== normalized.queueRemaining ||
+    queueExpired;
+  return Object.freeze({
+    state: freezeGameplayActionState({
+      ownerId: normalized.ownerId,
+      cooldowns,
+      resources: resourceStep.state,
+      queuedActionId: queueExpired ? null : normalized.queuedActionId,
+      queueRemaining: queueExpired ? 0 : queueRemaining,
+      revision: normalized.revision + (changed ? 1 : 0),
+    }),
+    events: Object.freeze(events),
+    changed,
+  });
+}
+
+export function tryStartGameplayAction(state, rawAction, options = {}) {
+  const normalized = freezeGameplayActionState(state);
+  const action = normalizeGameplayActionDefinition(rawAction);
+  const cooldownRemaining = normalized.cooldowns[action.id] ?? 0;
+  if (cooldownRemaining > 0) {
+    if (options.queueIfBlocked === true && action.queueWindow > 0) {
+      return Object.freeze({
+        state: freezeGameplayActionState({
+          ...normalized,
+          queuedActionId: action.id,
+          queueRemaining: action.queueWindow,
+          revision: normalized.revision + 1,
+        }),
+        events: Object.freeze([arcadeGameplayActionEvent('queued', normalized, action.id, {
+          remaining: cooldownRemaining,
+        })]),
+        ok: false,
+        reason: 'cooldown',
+      });
+    }
+    return Object.freeze({
+      state: normalized,
+      events: Object.freeze([arcadeGameplayActionEvent('cooldown', normalized, action.id, {
+        remaining: cooldownRemaining,
+      })]),
+      ok: false,
+      reason: 'cooldown',
+    });
+  }
+
+  const paid = payResourceCosts(normalized.resources, action.costs, {
+    reason: options.reason ?? `action:${action.id}`,
+  });
+  if (!paid.ok) {
+    return Object.freeze({
+      state: freezeGameplayActionState({ ...normalized, resources: paid.state }),
+      events: Object.freeze([
+        arcadeGameplayActionEvent('blocked', normalized, action.id),
+        ...paid.events.map((resourceEvent) =>
+          arcadeGameplayActionEvent('resource', normalized, action.id, { resourceEvent })),
+      ]),
+      ok: false,
+      reason: 'resource',
+    });
+  }
+
+  const cooldowns = action.cooldown > 0
+    ? startCooldown(normalized.cooldowns, action.id, action.cooldown)
+    : createCooldownState(normalized.cooldowns);
+  return Object.freeze({
+    state: freezeGameplayActionState({
+      ownerId: normalized.ownerId,
+      cooldowns,
+      resources: paid.state,
+      queuedActionId: null,
+      queueRemaining: 0,
+      revision: normalized.revision + 1,
+    }),
+    events: Object.freeze([
+      arcadeGameplayActionEvent('started', normalized, action.id),
+      ...paid.events.map((resourceEvent) =>
+        arcadeGameplayActionEvent('resource', normalized, action.id, { resourceEvent })),
+    ]),
+    ok: true,
+    reason: null,
+  });
+}
+
+function freezeActionGraceState(state) {
+  return Object.freeze({
+    graceDuration: arcadeGameplayNonNegative(state.graceDuration, 'action grace duration'),
+    bufferDuration: arcadeGameplayNonNegative(state.bufferDuration, 'action buffer duration'),
+    graceRemaining: arcadeGameplayNonNegative(state.graceRemaining, 'action grace remaining'),
+    bufferRemaining: arcadeGameplayNonNegative(state.bufferRemaining, 'action buffer remaining'),
+    revision: Math.max(0, Math.floor(arcadeGameplayFinite(state.revision, 0))),
+  });
+}
+
+export function createActionGraceState(options = {}) {
+  const graceDuration = arcadeGameplayNonNegative(options.graceDuration ?? 0, 'action grace duration');
+  const bufferDuration = arcadeGameplayNonNegative(options.bufferDuration ?? 0, 'action buffer duration');
+  return freezeActionGraceState({
+    graceDuration,
+    bufferDuration,
+    graceRemaining: Math.min(graceDuration, arcadeGameplayNonNegative(options.graceRemaining ?? 0, 'action grace remaining')),
+    bufferRemaining: Math.min(bufferDuration, arcadeGameplayNonNegative(options.bufferRemaining ?? 0, 'action buffer remaining')),
+    revision: options.revision ?? 0,
+  });
+}
+
+export function stepActionGrace(state, input = {}) {
+  const normalized = freezeActionGraceState(state);
+  const delta = arcadeGameplayNonNegative(input.delta ?? 1, 'action grace delta');
+  const graceDuration = arcadeGameplayNonNegative(input.graceDuration ?? normalized.graceDuration, 'action grace duration');
+  const bufferDuration = arcadeGameplayNonNegative(input.bufferDuration ?? normalized.bufferDuration, 'action buffer duration');
+  const previousGrace = normalized.graceRemaining;
+  const previousBuffer = normalized.bufferRemaining;
+  let graceRemaining = Math.max(0, previousGrace - delta);
+  let bufferRemaining = Math.max(0, previousBuffer - delta);
+  const events = [];
+  if (previousGrace > 0 && graceRemaining === 0 && input.available !== true) events.push(Object.freeze({ kind: 'grace-expired' }));
+  if (previousBuffer > 0 && bufferRemaining === 0 && input.requested !== true) events.push(Object.freeze({ kind: 'buffer-expired' }));
+  if (input.available === true) graceRemaining = graceDuration;
+  if (input.requested === true) {
+    bufferRemaining = bufferDuration;
+    events.push(Object.freeze({ kind: 'buffered' }));
+  }
+  const available = input.available === true || graceRemaining > 0;
+  const requested = input.requested === true || bufferRemaining > 0;
+  const activated = input.enabled !== false && available && requested;
+  if (activated) {
+    events.push(Object.freeze({ kind: 'activated' }));
+    if (input.consumeOnActivate !== false) {
+      graceRemaining = 0;
+      bufferRemaining = 0;
+    }
+  }
+  const changed =
+    graceDuration !== normalized.graceDuration ||
+    bufferDuration !== normalized.bufferDuration ||
+    graceRemaining !== normalized.graceRemaining ||
+    bufferRemaining !== normalized.bufferRemaining;
+  return Object.freeze({
+    state: freezeActionGraceState({
+      graceDuration,
+      bufferDuration,
+      graceRemaining,
+      bufferRemaining,
+      revision: normalized.revision + (changed ? 1 : 0),
+    }),
+    activated,
+    available,
+    requested,
+    events: Object.freeze(events),
+  });
+}
+
+export function resolveHudGauge(input = {}) {
+  const minimum = arcadeGameplayFinite(input.min ?? input.minimum, 0);
+  const maximum = arcadeGameplayFinite(input.max ?? input.maximum, 1);
+  arcadeGameplayInvariant(maximum >= minimum, 'HUD gauge maximum must be at least its minimum');
+  const value = clampNumber(arcadeGameplayFinite(input.value, minimum), minimum, maximum);
+  const span = maximum - minimum;
+  const ratio = span <= 0 ? 1 : clampNumber((value - minimum) / span, 0, 1);
+  const criticalThreshold = clampNumber(arcadeGameplayFinite(input.criticalThreshold, 0.15), 0, 1);
+  const lowThreshold = clampNumber(arcadeGameplayFinite(input.lowThreshold, 0.35), criticalThreshold, 1);
+  const state = ratio <= 0
+    ? 'empty'
+    : ratio <= criticalThreshold
+      ? 'critical'
+      : ratio <= lowThreshold
+        ? 'low'
+        : ratio >= 1
+          ? 'full'
+          : 'normal';
+  const segmentCount = Math.max(0, Math.floor(arcadeGameplayFinite(input.segments, 0)));
+  const segments = [];
+  for (let index = 0; index < segmentCount; index += 1) {
+    const start = index / segmentCount;
+    const fill = arcadeGameplayRound(clampNumber((ratio - start) * segmentCount, 0, 1), 6);
+    segments.push(Object.freeze({ index, fill, active: fill > 0, full: fill >= 1 }));
+  }
+  const pulsePeriod = Math.max(Number.EPSILON, arcadeGameplayFinite(input.pulsePeriod, 1));
+  const pulseAmount = clampNumber(arcadeGameplayFinite(input.pulseAmount, 0.3), 0, 1);
+  const time = arcadeGameplayFinite(input.time, 0);
+  const warning = state === 'critical' || state === 'low';
+  const pulse = warning
+    ? 1 - pulseAmount / 2 + Math.sin((time / pulsePeriod) * Math.PI * 2) * (pulseAmount / 2)
+    : 1;
+  return Object.freeze({
+    value,
+    min: minimum,
+    max: maximum,
+    ratio,
+    missingRatio: 1 - ratio,
+    state,
+    warning,
+    pulse,
+    direction: input.direction === 'reverse' ? 'reverse' : 'forward',
+    segments: Object.freeze(segments),
+  });
+}
+
 function normalizeHitContactRecord(record = {}) {
   return {
     hits: Math.max(0, Math.floor(finiteNumber(record.hits, 0))),
@@ -6125,6 +6647,7 @@ export const ARCADE_RUNTIME_CAPABILITIES = Object.freeze([
   'collision',
   'deterministic-replay',
   'entity-world',
+  'gameplay-modules',
   'input',
   'localization',
   'netcode-adapters',

@@ -1,4 +1,8 @@
 import type { MovementState, PhysicsParams } from '../PhysicsParams';
+import {
+	createActionGraceState,
+	stepActionGrace,
+} from '../../../../vendor/arcade-runtime.mjs';
 
 export interface CoyoteStepInput {
 	onGround: boolean;
@@ -17,16 +21,21 @@ export interface CoyoteStepOutput {
  * Pure function: update timers for coyote and jump buffer
  */
 export function coyoteStep(input: CoyoteStepInput): CoyoteStepOutput {
-	let { onGround, coyoteLeft, jumpBuffered, params, dt } = input;
-
-	// Decrease coyote timer
-	coyoteLeft = Math.max(0, coyoteLeft - dt);
-	if (onGround) {
-		coyoteLeft = params.coyote;
-	}
-
-	// Decrease jump buffer
-	jumpBuffered = Math.max(0, jumpBuffered - dt);
-
-	return { coyoteLeft, jumpBuffered };
+	const stepped = stepActionGrace(
+		createActionGraceState({
+			graceDuration: input.params.coyote,
+			bufferDuration: input.params.jumpBuffer,
+			graceRemaining: input.coyoteLeft,
+			bufferRemaining: input.jumpBuffered,
+		}),
+		{
+			delta: input.dt,
+			available: input.onGround,
+			enabled: false,
+		}
+	);
+	return {
+		coyoteLeft: stepped.state.graceRemaining,
+		jumpBuffered: stepped.state.bufferRemaining,
+	};
 }
