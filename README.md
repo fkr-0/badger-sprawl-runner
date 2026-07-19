@@ -1,6 +1,6 @@
 # Badger Sprawl Runner
 
-Badger Sprawl Runner v1.0 is a sprite-first cyber-badger side-scrolling platformer prototype with a pnpm/Vite runner app and extractable gameplay packages for physics, code gates, sprite contracts, and progression.
+Badger Sprawl Runner v1.1 is a sprite-first cyber-badger side-scrolling platformer with five complete campaign chapters, a pnpm/Vite runner app, and extractable gameplay packages for physics, code gates, sprite contracts, progression, and shared-runtime rendering.
 
 The project is deliberately original. It uses cyberpunk-sprawl vocabulary and orbital-heist themes as genre inspiration, but keeps names, factions, locations, characters, and plotlines owned by this project.
 
