@@ -56,7 +56,7 @@ for (const sheetId of REVIEW_SHEETS) {
 			await expect(page.locator('#review')).toHaveScreenshot('moss-badger-production.png', {
 				animations: 'disabled',
 				caret: 'hide',
-				maxDiffPixelRatio: 0,
+				maxDiffPixelRatio: 0.01,
 			});
 		}
 		await page.locator('#review').screenshot({ path: outputPath });

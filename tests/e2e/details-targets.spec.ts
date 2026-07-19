@@ -1,5 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
+
+const PLATFORMER_CORE_MODULE_URL = `/@fs${join(
+	process.cwd(),
+	'packages/platformer-core/src/index.ts'
+).replaceAll('\\', '/')}`;
 
 interface DetailsAcceptanceCoverage {
 	testTitle: RegExp;
@@ -203,8 +209,8 @@ test.describe('details.md mechanics contracts', () => {
 
 	test('physics: ledge and corner correction covers all acceptance cases', async ({ page }) => {
 		await page.goto('/');
-		const result = await page.evaluate(async () => {
-			const core = await import('/@fs/home/user/work/code/artifacts/badger-sprawl-runner/packages/platformer-core/src/index.ts');
+		const result = await page.evaluate(async (platformerCoreUrl) => {
+			const core = await import(platformerCoreUrl);
 			const body = { x: 0, y: 0, w: 10, h: 10 };
 			return {
 				horizontal: core.resolveLedgeCorrection({ body, intendedVelocity: { vx: 9, vy: 0 }, obstacles: [{ id: 'ledge', x: 18, y: 9, w: 10, h: 10 }], maxCorrectionPixels: 2 }),
@@ -212,7 +218,7 @@ test.describe('details.md mechanics contracts', () => {
 				blocked: core.resolveLedgeCorrection({ body, intendedVelocity: { vx: 9, vy: 0 }, obstacles: [{ id: 'fat-block', x: 18, y: 6, w: 10, h: 10 }], maxCorrectionPixels: 2 }),
 				tieBreak: core.resolveLedgeCorrection({ body, intendedVelocity: { vx: 9, vy: 0 }, obstacles: [{ id: 'zeta', x: 18, y: 9, w: 10, h: 10 }, { id: 'alpha', x: 18, y: 9, w: 10, h: 10 }], maxCorrectionPixels: 2 }),
 			};
-		});
+		}, PLATFORMER_CORE_MODULE_URL);
 
 		expect(result.horizontal).toMatchObject({ result: 'corrected', event: { kind: 'horizontal-corner', obstacleId: 'ledge', dy: -1.001 } });
 		expect(result.vertical).toMatchObject({ result: 'corrected', event: { kind: 'vertical-head-bump', obstacleId: 'ceiling-chip', dx: -1.001 } });
@@ -222,8 +228,8 @@ test.describe('details.md mechanics contracts', () => {
 
 	test('physics: slope walking and slide surfaces covers all acceptance cases', async ({ page }) => {
 		await page.goto('/');
-		const result = await page.evaluate(async () => {
-			const core = await import('/@fs/home/user/work/code/artifacts/badger-sprawl-runner/packages/platformer-core/src/index.ts');
+		const result = await page.evaluate(async (platformerCoreUrl) => {
+			const core = await import(platformerCoreUrl);
 			const slopes = [
 				{ id: 'ramp-a', x1: 0, y1: 100, x2: 100, y2: 50, materialId: 'concrete' },
 				{ id: 'ramp-b', x1: 0, y1: 100, x2: 100, y2: 50, materialId: 'steel' },
@@ -236,7 +242,7 @@ test.describe('details.md mechanics contracts', () => {
 				slippery: core.walkSlopeSurface({ body, slopes, materials: [{ id: 'concrete', traction: 0.2, slideMultiplier: 10 }], gravity: 100, dt: 0.1 }),
 				tieBreak: core.resolveSlopeSurface({ x: 25, slopes: [...slopes].reverse() }),
 			};
-		});
+		}, PLATFORMER_CORE_MODULE_URL);
 
 		expect(result.sample).toMatchObject({ slopeId: 'ramp-a', y: 75, normalX: -0.447214, normalY: -0.894427 });
 		expect(result.uphill.body.x).toBe(42);
@@ -332,8 +338,8 @@ test.describe('details.md mechanics contracts', () => {
 
 	test('items: conditional affixes cover airborne, third-hit, cooldown, status, rng, and replay hash', async ({ page }) => {
 		await page.goto('/');
-		const result = await page.evaluate(async () => {
-			const core = await import('/@fs/home/user/work/code/artifacts/badger-sprawl-runner/packages/platformer-core/src/index.ts');
+		const result = await page.evaluate(async (platformerCoreUrl) => {
+			const core = await import(platformerCoreUrl);
 			const conditional = await import('/src/systems/ConditionalItemEffectSystem.ts');
 			const airborneRuntime = [conditional.createConditionalEffectRuntime({ id: 'air-dmg', itemId: 'wing-chip', trigger: 'airborne', effects: { damage: 2 } })];
 			const thirdRuntime = [conditional.createConditionalEffectRuntime({ id: 'third-burn', itemId: 'ember', trigger: 'third-hit', effects: { burn: true } })];
@@ -350,7 +356,7 @@ test.describe('details.md mechanics contracts', () => {
 				stableB,
 				miss: conditional.resolveConditionalItemEffects([conditional.createConditionalEffectRuntime({ id: 'miss', itemId: 'coin', trigger: 'parry', chance: 0, effects: { shield: 1 } })], [{ kind: 'parry', time: 1 }], { onGround: true }, 0, core.createDeterministicRng('always-miss')),
 			};
-		});
+		}, PLATFORMER_CORE_MODULE_URL);
 
 		expect(result.grounded.events).toEqual([]);
 		expect(result.airborne.events[0]).toMatchObject({ kind: 'triggered', effects: { damage: 2 } });
@@ -384,9 +390,9 @@ test.describe('details.md mechanics contracts', () => {
 
 	test('integrated: all details mechanics are deterministic across repeated browser evaluations', async ({ page }) => {
 		await page.goto('/');
-		const result = await page.evaluate(async () => {
+		const result = await page.evaluate(async (platformerCoreUrl) => {
 			const buildSnapshot = async () => {
-				const core = await import('/@fs/home/user/work/code/artifacts/badger-sprawl-runner/packages/platformer-core/src/index.ts');
+				const core = await import(platformerCoreUrl);
 				const frame = await import('/src/systems/CombatFrameDataSystem.ts');
 				const layers = await import('/src/systems/CombatHitboxLayerSystem.ts');
 				const poise = await import('/src/systems/PoiseStaggerSystem.ts');
@@ -420,7 +426,7 @@ test.describe('details.md mechanics contracts', () => {
 			};
 
 			return { first: await buildSnapshot(), second: await buildSnapshot() };
-		});
+		}, PLATFORMER_CORE_MODULE_URL);
 
 		expect(result.first).toEqual(result.second);
 		expect(result.first.cancel.routes).toEqual(['cross', 'launcher']);
