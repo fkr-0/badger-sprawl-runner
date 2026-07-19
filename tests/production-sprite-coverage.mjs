@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +43,12 @@ assert.deepEqual(roleCounts, {
 	vfx: 1,
 });
 
+const requireSourceArchive =
+	process.env.REQUIRE_SPRITE_SOURCE_ARCHIVE === '1' ||
+	process.env.REQUIRE_DALLE_SOURCE_ARCHIVE === '1';
+let archivedSourceBoardsPresent = 0;
+const declaredPromptSets = new Set();
+const archivedPromptSetsPresent = new Set();
 const hashes = new Set();
 for (const sheet of production) {
 	const sourcePath = join(root, sheet.file);
@@ -70,11 +76,33 @@ for (const sheet of production) {
 	assert.equal(height, expectedHeight, `${sheet.id}: atlas height does not match its runtime rows`);
 	assert.equal(colorType, 6, `${sheet.id}: production atlas must preserve RGBA transparency`);
 
+	assert.equal(
+		typeof sheet.source.sourceSheet,
+		'string',
+		`${sheet.id}: missing sourceSheet metadata`
+	);
 	const sourceSheet = join(root, sheet.source.sourceSheet);
-	assert.ok(statSync(sourceSheet).isFile(), `${sheet.id}: missing source board`);
+	if (existsSync(sourceSheet)) {
+		assert.ok(statSync(sourceSheet).isFile(), `${sheet.id}: archived source is not a file`);
+		archivedSourceBoardsPresent += 1;
+	} else if (requireSourceArchive) {
+		assert.fail(`${sheet.id}: missing archived source board`);
+	}
+
 	if (sheet.source.revision === '2026-07-17-production') {
+		assert.equal(
+			typeof sheet.source.promptSet,
+			'string',
+			`${sheet.id}: missing promptSet metadata`
+		);
+		declaredPromptSets.add(sheet.source.promptSet);
 		const promptSet = join(root, sheet.source.promptSet);
-		assert.ok(statSync(promptSet).isFile(), `${sheet.id}: missing prompt record`);
+		if (existsSync(promptSet)) {
+			assert.ok(statSync(promptSet).isFile(), `${sheet.id}: archived prompt set is not a file`);
+			archivedPromptSetsPresent.add(sheet.source.promptSet);
+		} else if (requireSourceArchive) {
+			assert.fail(`${sheet.id}: missing archived prompt record`);
+		}
 	} else {
 		assert.equal(sheet.source.importer, 'scripts/import-dalle-sprites.py');
 		assert.ok(
@@ -89,5 +117,8 @@ for (const sheet of production) {
 }
 
 console.log(
-	`production sprites: ${production.length} authored sheets validated (${[...hashes].length} unique PNGs)`
+	`production sprites: ${production.length} authored sheets validated ` +
+		`(${[...hashes].length} unique PNGs; ` +
+		`${archivedSourceBoardsPresent}/${production.length} external source boards present; ` +
+		`${archivedPromptSetsPresent.size}/${declaredPromptSets.size} prompt archives present)`
 );

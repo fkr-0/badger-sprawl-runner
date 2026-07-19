@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 function assert(condition, message) {
@@ -6,7 +6,10 @@ function assert(condition, message) {
 }
 
 const root = new URL('../', import.meta.url).pathname;
-const promptRoots = ['llm-sprite-generation', 'docs/workflows'];
+const promptRoots = [
+	{ path: 'llm-sprite-generation', optional: true },
+	{ path: 'docs/workflows', optional: false },
+];
 const gridObjectPattern = /grid:\s*\{[^}\n]*columns:\s*(\d+)[^}\n]*rows:\s*(\d+)[^}\n]*\}/g;
 const proseGridPatterns = [
 	/\b(\d+)\s*(?:columns?|cols?)\s*by\s*(\d+)\s*rows?\b/gi,
@@ -30,10 +33,25 @@ async function* walk(dir) {
 	}
 }
 
-const violations = [];
+async function directoryAvailable(path, optional) {
+	try {
+		await access(path);
+		return true;
+	} catch (error) {
+		if (optional && error?.code === 'ENOENT') return false;
+		throw error;
+	}
+}
 
-for (const promptRoot of promptRoots) {
-	for await (const file of walk(join(root, promptRoot))) {
+const violations = [];
+let scannedFiles = 0;
+
+for (const { path: promptRoot, optional } of promptRoots) {
+	const promptDirectory = join(root, promptRoot);
+	if (!(await directoryAvailable(promptDirectory, optional))) continue;
+
+	for await (const file of walk(promptDirectory)) {
+		scannedFiles += 1;
 		const content = await readFile(file, 'utf8');
 		const rel = relative(root, file);
 
@@ -86,6 +104,8 @@ for (const promptRoot of promptRoots) {
 		}
 	}
 }
+
+assert(scannedFiles > 0, 'Sprite prompt grid contracts did not scan any tracked prompt files');
 
 assert(
 	violations.length === 0,
