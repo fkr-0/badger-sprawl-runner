@@ -12,6 +12,59 @@ export type ArcadePixiNamespace = {
 export declare const ARCADE_PIXI_RUNTIME_VERSION: string;
 export declare const DEFAULT_ARCADE_LAYERS: readonly string[];
 
+export declare function clampArcadeValue(value: number, minimum: number, maximum: number): number;
+export declare function approachArcadeValue(current: number, target: number, maximumDelta: number): number;
+export declare function applyArcadeDrag(value: number, drag: number, delta?: number): number;
+
+export type ArcadeKinematicBody2D = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+};
+
+export declare function integrateArcadeBody2D<T extends ArcadeKinematicBody2D>(
+  body: T,
+  delta?: number,
+): T;
+
+export type ArcadeAnimationMode = 'loop' | 'once' | 'pingpong';
+
+export type ArcadeAnimationClock = {
+  frame: number;
+  elapsed: number;
+  direction: 1 | -1;
+  playing: boolean;
+  paused: boolean;
+  completed: boolean;
+  frameAdvances: number;
+  advancedFrames: readonly number[];
+};
+
+export type ArcadeAnimationTimeline = {
+  frameCount: number;
+  frameDuration: number | readonly number[] | ((frame: number) => number);
+  mode?: ArcadeAnimationMode;
+  speed?: number;
+  maxAdvances?: number;
+  singleFrameMode?: 'hold' | 'complete';
+};
+
+export declare function createArcadeAnimationClock(
+  initial?: Partial<ArcadeAnimationClock>,
+): ArcadeAnimationClock;
+
+export declare function playArcadeAnimationClock(
+  state?: Partial<ArcadeAnimationClock>,
+  options?: { restart?: boolean; frame?: number; direction?: 1 | -1 },
+): ArcadeAnimationClock;
+
+export declare function advanceArcadeAnimationClock(
+  state: Partial<ArcadeAnimationClock>,
+  deltaTime: number,
+  timeline: ArcadeAnimationTimeline,
+): ArcadeAnimationClock;
+
 export type ArcadeCameraState = {
   x: number;
   y: number;
@@ -50,6 +103,7 @@ export type ArcadePerformanceSummary = {
 export type ArcadeFrameProfiler = {
   record(name: string, durationMs: number): number;
   measure<T>(name: string, callback: () => T): T;
+  measureAsync<T>(name: string, callback: () => Promise<T>): Promise<T>;
   snapshot(name: string): ArcadePerformanceSummary;
   snapshot(): Readonly<Record<string, ArcadePerformanceSummary>>;
   compare(baselineName: string, candidateName: string): Readonly<{
@@ -104,6 +158,7 @@ export type ArcadePixiTelemetry = {
   backend: unknown;
   contextLosses: number;
   contextRestores: number;
+  contextState: 'ready' | 'lost';
   assetsLoaded: number;
   framesRendered: number;
   ticks: number;
@@ -228,6 +283,10 @@ export type CanvasTexturePassState = {
   sprite: import('pixi.js').Sprite;
   width: number;
   height: number;
+  dirty: boolean;
+  redraws: number;
+  skippedFrames: number;
+  invalidate(): void;
 };
 
 export type CanvasTexturePassOptions = {
@@ -246,6 +305,10 @@ export type CanvasTexturePassOptions = {
   enabled?: boolean;
   clear?: boolean;
   resizeWithRuntime?: boolean;
+  shouldDraw?: (
+    frame: ArcadePixiFrame,
+    pass: ArcadePixiPassContext<CanvasTexturePassState>,
+  ) => boolean;
   canvasFactory?: (width: number, height: number) => HTMLCanvasElement;
   onResize?: (
     size: { width: number; height: number; runtime: ArcadePixiRuntime },

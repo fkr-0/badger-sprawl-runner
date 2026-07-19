@@ -213,7 +213,9 @@ export class TrainingMode {
 		};
 	}
 
-	recordMeasurements(measurements: Partial<Omit<TrainingMetrics, 'hitCount' | 'damageTotal' | 'lastAction'>>): void {
+	recordMeasurements(
+		measurements: Partial<Omit<TrainingMetrics, 'hitCount' | 'damageTotal' | 'lastAction'>>
+	): void {
 		this.state = {
 			...this.state,
 			metrics: { ...this.state.metrics, ...measurements },

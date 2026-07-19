@@ -2,8 +2,8 @@
  * TrainingDummy - invincible damage test target
  */
 
-import type { CombatEntity } from '../systems/CombatSystem';
 import type { DummyPresetId } from '../game/TrainingMode';
+import type { CombatEntity } from '../systems/CombatSystem';
 import type { Entity } from '../systems/PhysicsSystem';
 
 export interface TrainingDummy extends Entity, CombatEntity {
@@ -42,6 +42,7 @@ export function createTrainingDummy(
 		invuln: 0,
 		stun: 0,
 		faction: 'enemy',
+		usesPatternController: true,
 		spriteSheetId: 'moss_badger_production',
 		spriteAnimation: 'idle',
 

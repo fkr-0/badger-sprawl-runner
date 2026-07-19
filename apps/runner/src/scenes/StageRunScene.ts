@@ -44,9 +44,9 @@ import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
 import type { StoryBalanceRules } from '../game/StoryBalanceRules';
 import {
 	DUMMY_PRESETS,
+	type DummyPresetId,
 	TRAINING_KITS,
 	TRAINING_LESSONS,
-	type DummyPresetId,
 	type TrainingAction,
 	type TrainingKitId,
 	type TrainingLessonId,
@@ -316,7 +316,9 @@ export class StageRunScene implements Scene {
 		this.captainGrin =
 			!options.training && options.stageId === 'lower-sprawl' ? new CaptainGrinController() : null;
 		this.knifeDroneNest =
-			!options.training && options.stageId === 'drainmarket' ? new KnifeDroneNestController() : null;
+			!options.training && options.stageId === 'drainmarket'
+				? new KnifeDroneNestController()
+				: null;
 		this.madameVitrine =
 			!options.training && options.stageId === 'chrome-arcology'
 				? new MadameVitrineController()
@@ -332,13 +334,9 @@ export class StageRunScene implements Scene {
 				? new LowerSprawlHazardSystem()
 				: null;
 		this.lowerSprawlEnemies =
-			!options.training && options.stageId === 'lower-sprawl'
-				? new LowerSprawlEnemySystem()
-				: null;
+			!options.training && options.stageId === 'lower-sprawl' ? new LowerSprawlEnemySystem() : null;
 		this.drainmarketEnemies =
-			!options.training && options.stageId === 'drainmarket'
-				? new DrainmarketEnemySystem()
-				: null;
+			!options.training && options.stageId === 'drainmarket' ? new DrainmarketEnemySystem() : null;
 		this.chromeArcologyEnemies =
 			!options.training && options.stageId === 'chrome-arcology'
 				? new ChromeArcologyEnemySystem()
@@ -349,10 +347,9 @@ export class StageRunScene implements Scene {
 				: null;
 		this.dubColonyEnemies =
 			!options.training && options.stageId === 'dub-colony' ? new DubColonyEnemySystem() : null;
-		this.checkpoints =
-			options.training
-				? null
-				: options.stageId === 'lower-sprawl'
+		this.checkpoints = options.training
+			? null
+			: options.stageId === 'lower-sprawl'
 				? new StageCheckpointSystem(LOWER_SPRAWL_CHECKPOINTS)
 				: options.stageId === 'drainmarket'
 					? new StageCheckpointSystem(DRAINMARKET_CHECKPOINTS)
@@ -368,9 +365,7 @@ export class StageRunScene implements Scene {
 		// Initialize animation state
 		this.player.animState = createAnimationState();
 		this.lowerSprawlObjectives =
-			!options.training && options.stageId === 'lower-sprawl'
-				? new LowerSprawlObjectives()
-				: null;
+			!options.training && options.stageId === 'lower-sprawl' ? new LowerSprawlObjectives() : null;
 		this.drainmarketObjectives =
 			!options.training && options.stageId === 'drainmarket' ? new DrainmarketObjectives() : null;
 		this.chromeArcologyObjectives =
@@ -396,10 +391,9 @@ export class StageRunScene implements Scene {
 		this.inventory.equip('claws');
 		this.refreshLoadout();
 		this.player.checkpointLabel = this.checkpoints?.getSnapshot().activeLabel;
-		this.player.hudToast =
-			options.training
-				? 'Dummy dojo online // infinite integrity'
-				: options.stageId === 'lower-sprawl'
+		this.player.hudToast = options.training
+			? 'Dummy dojo online // infinite integrity'
+			: options.stageId === 'lower-sprawl'
 				? 'Follow the public route'
 				: options.stageId === 'drainmarket'
 					? 'Red invoice flash // L parry'
@@ -412,18 +406,71 @@ export class StageRunScene implements Scene {
 								: undefined;
 		this.player.hudToastTimer = options.training
 			? 3.2
-			: [
-			'lower-sprawl',
-			'drainmarket',
-			'chrome-arcology',
-			'mirror-palace',
-			'dub-colony',
-		].includes(options.stageId ?? '')
-			? 2.6
-			: 0;
+			: ['lower-sprawl', 'drainmarket', 'chrome-arcology', 'mirror-palace', 'dub-colony'].includes(
+						options.stageId ?? ''
+					)
+				? 2.6
+				: 0;
 		this.initWorld();
 		if (this.training) this.updateTrainingHints();
 		else this.updateGameplayHints();
+	}
+
+	getGameplayHudLayoutSnapshot(): ReturnType<typeof buildGameplayHudLayout> {
+		const companionLineCount =
+			Number((this.player.companionShield ?? 0) > 0) +
+			Number(Boolean(this.player.rookOverlayActive)) +
+			Number(Boolean(this.player.companionHint));
+		const canvas = this.renderer?.getContext().canvas;
+		return buildGameplayHudLayout(
+			canvas?.width ?? 960,
+			canvas?.height ?? 540,
+			companionLineCount,
+			(this.player.gearIconSlots ?? []).length
+		);
+	}
+
+	getTrainingSnapshot(): TrainingRunSnapshot | null {
+		if (!this.training || !this.trainingDummy || !this.options.training || !this.options.stageId) {
+			return null;
+		}
+		const state = this.training.getState();
+		return {
+			stageId: this.options.stageId,
+			seed: this.options.training.seed,
+			lessonId: state.lessonId,
+			dummyPresetId: state.dummyPresetId,
+			kitId: state.kitId,
+			dummy: {
+				x: this.trainingDummy.x,
+				y: this.trainingDummy.y,
+				spawnX: this.trainingDummy.spawnX,
+				spawnY: this.trainingDummy.spawnY,
+				hp: 'infinite',
+				flashTimer: this.trainingDummy.flashTimer,
+				attackTelegraph: this.trainingDummy.attackTelegraph,
+			},
+			player: {
+				x: this.player.x,
+				y: this.player.y,
+				hp: this.player.hp,
+				maxHp: this.player.maxHp,
+				hasRailgun: this.player.hasRailgun,
+				hasRocket: this.player.hasRocket,
+				fuel: this.player.fuel,
+				maxFuel: this.player.maxFuel,
+				stims: this.player.stims,
+			},
+			overlays: { ...state.overlays },
+			metrics: { ...state.metrics },
+			arena: { ...this.trainingArena },
+		};
+	}
+
+	private emitTrainingState(): void {
+		const snapshot = this.getTrainingSnapshot();
+		if (snapshot)
+			window.dispatchEvent(new CustomEvent('badger:training-state', { detail: snapshot }));
 	}
 
 	private updateChromeArcologyHints(snapshot: ChromeArcologyObjectiveSnapshot): void {
@@ -528,7 +575,7 @@ export class StageRunScene implements Scene {
 		this.player.onGround = true;
 		const state = this.training?.getState();
 		this.trainingDummy = createTrainingDummy(
-			Math.min(right - 80, this.player.x + 340),
+			Math.min(right - 80, this.player.x + 72),
 			floor.y - 50,
 			state?.dummyPresetId ?? 'idle'
 		);
@@ -560,10 +607,11 @@ export class StageRunScene implements Scene {
 		this.player.onGround = true;
 		this.player.comboCount = 0;
 		this.player.comboTimer = 0;
-		this.trainingDummy.spawnX = Math.min(this.trainingArena.right - 80, this.player.x + 340);
+		this.trainingDummy.spawnX = Math.min(this.trainingArena.right - 80, this.player.x + 72);
 		this.trainingDummy.spawnY = this.trainingArena.floorY - this.trainingDummy.h;
 		configureTrainingDummy(this.trainingDummy, this.training.getState().dummyPresetId);
 		this.trainingDamageNumberTimer = 0;
+		this.input?.clearPressed();
 		this.applyTrainingKit();
 		this.updateTrainingHints();
 		this.showToast('Practice reset // positions and metrics restored', 1.5);
@@ -571,15 +619,20 @@ export class StageRunScene implements Scene {
 
 	private cycleTrainingLesson(delta: number): void {
 		if (!this.training) return;
-		const current = TRAINING_LESSONS.findIndex((lesson) => lesson.id === this.training?.getState().lessonId);
-		const next = TRAINING_LESSONS[(current + delta + TRAINING_LESSONS.length) % TRAINING_LESSONS.length];
+		const current = TRAINING_LESSONS.findIndex(
+			(lesson) => lesson.id === this.training?.getState().lessonId
+		);
+		const next =
+			TRAINING_LESSONS[(current + delta + TRAINING_LESSONS.length) % TRAINING_LESSONS.length];
 		if (next) this.training.selectLesson(next.id);
 		this.updateTrainingHints();
 	}
 
 	private cycleTrainingDummy(delta: number): void {
 		if (!this.training || !this.trainingDummy) return;
-		const current = DUMMY_PRESETS.findIndex((preset) => preset.id === this.training?.getState().dummyPresetId);
+		const current = DUMMY_PRESETS.findIndex(
+			(preset) => preset.id === this.training?.getState().dummyPresetId
+		);
 		const next = DUMMY_PRESETS[(current + delta + DUMMY_PRESETS.length) % DUMMY_PRESETS.length];
 		if (!next) return;
 		this.training.selectDummyPreset(next.id);
@@ -1613,6 +1666,114 @@ export class StageRunScene implements Scene {
 		ctx.restore();
 	}
 
+	private renderTrainingOverlay(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const snapshot = this.getTrainingSnapshot();
+		const dummy = this.trainingDummy;
+		if (!snapshot || !dummy) return;
+		const { overlays, metrics } = snapshot;
+		const playerX = this.player.x - cameraX;
+		const dummyX = dummy.x - cameraX;
+
+		ctx.save();
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'alphabetic';
+
+		if (overlays.showHurtboxes) {
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = '#67f3c4';
+			ctx.strokeRect(playerX, this.player.y, this.player.w, this.player.h);
+			ctx.strokeStyle = '#8aa8ff';
+			ctx.strokeRect(dummyX, dummy.y, dummy.w, dummy.h);
+		}
+
+		if (overlays.showHitboxes) {
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = '#ffb35e';
+			ctx.setLineDash([5, 3]);
+			if (this.player.meleeTimer > 0) {
+				const width = this.player.hasKatana ? 50 : 42;
+				ctx.strokeRect(
+					playerX + (this.player.dir > 0 ? this.player.w : -width),
+					this.player.y + 8,
+					width,
+					this.player.hasKatana ? 32 : 28
+				);
+			}
+			if ((this.player.railgunAnimationTimer ?? 0) > 0) {
+				ctx.strokeRect(
+					this.player.dir > 0 ? playerX + this.player.w : playerX - 560,
+					this.player.y + 14,
+					560,
+					18
+				);
+			}
+			if (dummy.attackTelegraph > 0) {
+				ctx.strokeStyle = '#ff5e7a';
+				ctx.strokeRect(dummy.dir > 0 ? dummyX + dummy.w : dummyX - 76, dummy.y + 6, 76, 38);
+			}
+			ctx.setLineDash([]);
+		}
+
+		ctx.textAlign = 'center';
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#8aa8ff';
+		ctx.fillText('DUMMY // ∞', dummyX + dummy.w / 2, dummy.y - 14);
+		if (overlays.showDamageNumbers && this.trainingDamageNumberTimer > 0) {
+			ctx.globalAlpha = Math.min(1, this.trainingDamageNumberTimer * 2);
+			ctx.fillStyle = '#ffb35e';
+			ctx.font = '900 16px ui-monospace, monospace';
+			ctx.fillText(
+				`-${metrics.lastHitDamage.toFixed(1)}`,
+				dummyX + dummy.w / 2,
+				dummy.y - 32 - (0.75 - this.trainingDamageNumberTimer) * 18
+			);
+			ctx.globalAlpha = 1;
+		}
+
+		if (overlays.showFrameData) {
+			const panelY = GAMEPLAY_HUD_WORLD_OVERLAY_TOP + 42;
+			ctx.textAlign = 'left';
+			ctx.fillStyle = 'rgba(4, 6, 12, 0.88)';
+			ctx.fillRect(12, panelY, 286, 116);
+			ctx.strokeStyle = '#8aa8ff';
+			ctx.strokeRect(12, panelY, 286, 116);
+			ctx.fillStyle = '#8aa8ff';
+			ctx.font = '700 10px ui-monospace, monospace';
+			ctx.fillText('DUMMY LAB // LIVE FRAME DATA', 24, panelY + 18);
+			ctx.fillStyle = '#eaf2ff';
+			ctx.font = '9px ui-monospace, monospace';
+			ctx.fillText(
+				`stage ${snapshot.stageId} // seed ${snapshot.seed.slice(-12)}`,
+				24,
+				panelY + 36
+			);
+			ctx.fillText(
+				`lesson ${snapshot.lessonId} // dummy ${snapshot.dummyPresetId} // kit ${snapshot.kitId}`,
+				24,
+				panelY + 52
+			);
+			ctx.fillStyle = '#67f3c4';
+			ctx.fillText(
+				`last ${metrics.lastHitDamage.toFixed(1)} // combo ${metrics.comboDamage.toFixed(1)} // hps ${metrics.hitsPerSecond}`,
+				24,
+				panelY + 70
+			);
+			ctx.fillStyle = '#ffb35e';
+			ctx.fillText(
+				`rail ${metrics.railReloadDeltaMs}ms // parry ${metrics.parryWindowDeltaMs}ms // hack ${metrics.hackCastTimeMs}ms`,
+				24,
+				panelY + 87
+			);
+			ctx.fillStyle = '#92a4be';
+			ctx.fillText(
+				`melee active ${metrics.meleeActiveFrames}f // recovery ${metrics.recoveryFrames}f`,
+				24,
+				panelY + 104
+			);
+		}
+		ctx.restore();
+	}
+
 	private renderDubColonyObjectivePanel(ctx: CanvasRenderingContext2D): void {
 		const snapshot = this.dubColonyObjectives?.getSnapshot(this.player);
 		if (!snapshot) return;
@@ -2469,6 +2630,52 @@ export class StageRunScene implements Scene {
 			if (event.code === 'Escape') {
 				this.options.onReturnToTitle?.();
 				event.preventDefault();
+			} else if (this.training) {
+				switch (event.code) {
+					case 'KeyH':
+						this.training.toggleAllOverlays();
+						break;
+					case 'F1':
+						this.training.toggleOverlay('showHitboxes');
+						break;
+					case 'F2':
+						this.training.toggleOverlay('showHurtboxes');
+						break;
+					case 'F3':
+						this.training.toggleOverlay('showFrameData');
+						break;
+					case 'F4':
+						this.training.toggleOverlay('showDamageNumbers');
+						break;
+					case 'BracketLeft':
+						this.cycleTrainingLesson(-1);
+						break;
+					case 'BracketRight':
+						this.cycleTrainingLesson(1);
+						break;
+					case 'Comma':
+						this.cycleTrainingDummy(-1);
+						break;
+					case 'Period':
+						this.cycleTrainingDummy(1);
+						break;
+					case 'Digit1':
+					case 'Digit2':
+					case 'Digit3':
+					case 'Digit4': {
+						const kit = TRAINING_KITS[Number(event.code.slice(-1)) - 1];
+						if (kit) this.selectTrainingKit(kit.id);
+						break;
+					}
+					case 'KeyR':
+						this.resetTrainingPractice();
+						break;
+					case 'KeyN':
+						this.options.training?.onRerollStage?.();
+						break;
+				}
+				this.emitTrainingState();
+				event.preventDefault();
 			} else if (event.code === 'F3' && toolsEnabled) {
 				this.debugOverlayVisible = !this.debugOverlayVisible;
 				event.preventDefault();
@@ -2476,6 +2683,7 @@ export class StageRunScene implements Scene {
 		};
 		window.addEventListener('keydown', handleKeyDown);
 		this.keyHandler = handleKeyDown;
+		if (this.training) this.emitTrainingState();
 	}
 
 	onExit(): void {
@@ -2488,10 +2696,140 @@ export class StageRunScene implements Scene {
 		}
 	}
 
+	private getTrainingCombatEvents(): CombatEvents {
+		return {
+			onEvent: (event) => {
+				this.handleCombatEvent(event);
+				if (!this.training || !this.trainingDummy) return;
+				if (
+					event.source === 'player' &&
+					event.targetId === this.trainingDummy.id &&
+					(event.kind === 'hit' || event.kind === 'kill')
+				) {
+					const moveId = event.moveId ?? '';
+					const action: TrainingAction = moveId.includes('railgun')
+						? 'railgun'
+						: moveId.includes('parry')
+							? 'parry'
+							: 'melee';
+					this.training.recordHit({
+						damage: event.damage ?? 0,
+						action,
+						timeMs: this.trainingElapsed * 1000,
+					});
+					hitTrainingDummy(this.trainingDummy, this.trainingElapsed * 1000);
+					this.trainingDamageNumberTimer = 0.75;
+					this.updateTrainingHints();
+				}
+				if (event.kind === 'parry' && event.source === 'player') {
+					this.training.recordMeasurements({
+						parryWindowDeltaMs: Math.round((this.player.parryWindow ?? 0.15) * 1000),
+					});
+				}
+			},
+			mitigateDamage: () => 0,
+			requestHitstop: (duration) => {
+				this.hitstopRemaining = Math.min(duration, 0.06);
+			},
+			requestScreenShake: (intensity) => {
+				this.screenShakeIntensity = Math.min(intensity, 5);
+			},
+		};
+	}
+
+	private updateTraining(dt: number, action: ReturnType<InputSystem['snapshot']>): void {
+		const input = this.input;
+		const dummy = this.trainingDummy;
+		if (!input || !this.training || !dummy) return;
+		this.trainingElapsed += dt;
+		this.trainingDamageNumberTimer = Math.max(0, this.trainingDamageNumberTimer - dt);
+		this.updateFeedbackTimers(dt);
+		const events = this.getTrainingCombatEvents();
+		this.physics.step(this.player, this.platforms, action, dt, {
+			onJump: () => this.emitJumpParticles(),
+			onLand: (fallDistance) => this.emitLandingParticles(fallDistance),
+			onCoyoteJump: () => this.emitCoyoteParticles(),
+		});
+		this.combat.step(this.player, [dummy], action, dt, events);
+		processMossInput(this.player, action, dt, this.combat, [dummy], events);
+
+		if (action.hackPressed && Math.abs(this.player.x - dummy.x) < 180) {
+			this.training.recordHit({
+				damage: 0.5,
+				action: 'codegate',
+				timeMs: this.trainingElapsed * 1000,
+			});
+			this.training.recordMeasurements({ hackCastTimeMs: 420 });
+			hitTrainingDummy(dummy, this.trainingElapsed * 1000);
+			this.trainingDamageNumberTimer = 0.75;
+			this.renderer?.emitVFX(dummy.x + dummy.w / 2, dummy.y + dummy.h / 2, 'emp', 8, 52);
+		}
+
+		const dummyStep = processTrainingDummy(dummy, dt);
+		if (dummyStep.attackFired && Math.abs(this.player.x - dummy.x) < 150) {
+			this.combat.resolveAttack(
+				dummy,
+				[this.player],
+				{
+					id: 'training-dummy:telegraphed-strike',
+					source: 'enemy',
+					damage: 1,
+					stun: 0.2,
+					knockbackX: 80,
+					hitbox: {
+						x: dummy.dir > 0 ? dummy.x + dummy.w : dummy.x - 76,
+						y: dummy.y + 6,
+						w: 76,
+						h: 38,
+					},
+					parryable: true,
+				},
+				events
+			);
+		}
+
+		if (action.shootPressed && this.player.hasRailgun) {
+			this.training.recordMeasurements({
+				railReloadDeltaMs: Math.round(this.player.shootCd * 1000),
+			});
+		}
+		if (action.parryPressed) {
+			this.training.recordMeasurements({
+				parryWindowDeltaMs: Math.round((this.player.parryWindow ?? 0) * 1000),
+			});
+		}
+		if (action.meleePressed) {
+			const animationName = this.player.hasKatana ? 'melee_katana' : 'melee_claws';
+			const animation = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet
+				.animations[animationName];
+			const frames = animation?.frames ?? 4;
+			this.training.recordMeasurements({
+				meleeActiveFrames: Math.max(1, Math.ceil(frames * 0.5)),
+				recoveryFrames: Math.max(1, frames - Math.ceil(frames * 0.5)),
+			});
+		}
+
+		this.player.hp = this.player.maxHp;
+		this.player.invuln = Math.max(this.player.invuln, 0.08);
+		this.player.stims = 9;
+		if (this.player.hasRocket) this.player.fuel = this.player.maxFuel;
+		dummy.hp = Number.POSITIVE_INFINITY;
+		dummy.maxHp = Number.POSITIVE_INFINITY;
+		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 960);
+		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), dt, this.player.vx);
+		this.updateAnimation(dt);
+		this.updateTrainingHints();
+		input.clearPressed();
+	}
+
 	update(dt: number): void {
 		const input = this.input;
 		if (!input) return;
 		const action = input.snapshot();
+		if (this.training) {
+			this.updateTraining(dt, action);
+			return;
+		}
 		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
 		this.updateFeedbackTimers(dt);
 		this.handleLowerSprawlEvents(this.lowerSprawlObjectives?.step(simDt, this.player) ?? []);
@@ -2714,6 +3052,7 @@ export class StageRunScene implements Scene {
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
+		if (this.training) this.renderTrainingOverlay(ctx, cam.x);
 		if (this.debugOverlayVisible) {
 			this.renderBalanceOverlay(ctx);
 			this.renderRuntimeConfigOverlay(ctx);

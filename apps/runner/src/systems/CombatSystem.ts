@@ -67,6 +67,8 @@ export interface CombatEntity extends Entity {
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
+	isDummy?: boolean;
+	flashTimer?: number;
 }
 
 function effectBool(entity: CombatEntity, key: string): boolean {

@@ -1,4 +1,5 @@
-import type { Velocity, PhysicsParams } from '../PhysicsParams';
+import { approach, clampNumber } from '../../../../vendor/arcade-core.mjs';
+import type { PhysicsParams } from '../PhysicsParams';
 
 /**
  * Pure function: update velocity and position based on acceleration
@@ -31,12 +32,11 @@ export function movementStep(input: MovementStepInput): MovementStepOutput {
 
 	// Friction on ground
 	if (axisInput === 0 && onGround) {
-		const friction = Math.sign(vx) * params.friction * dt;
-		vx = Math.abs(friction) > Math.abs(vx) ? 0 : vx - friction;
+		vx = approach(vx, 0, params.friction * dt);
 	}
 
 	// Clamp speed
-	vx = Math.max(-params.maxRunSpeed, Math.min(params.maxRunSpeed, vx));
+	vx = clampNumber(vx, -params.maxRunSpeed, params.maxRunSpeed);
 
 	// Fast fall multiplier
 	if (isFastFalling && vy > 0) {

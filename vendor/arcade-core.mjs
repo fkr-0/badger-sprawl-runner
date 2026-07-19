@@ -12,6 +12,91 @@ function defaultNow() {
   return globalThis.performance?.now?.() ?? Date.now();
 }
 
+
+
+export function clampNumber(value, minimum = -Infinity, maximum = Infinity) {
+  invariant(minimum <= maximum, 'minimum must not exceed maximum');
+  return Math.max(minimum, Math.min(maximum, finite(value, 0)));
+}
+
+export function approach(current, target, maxDelta) {
+  const delta = Math.max(0, finite(maxDelta, 0));
+  const from = finite(current, 0);
+  const to = finite(target, 0);
+  if (from < to) return Math.min(from + delta, to);
+  if (from > to) return Math.max(from - delta, to);
+  return from;
+}
+
+export function integrateAcceleration(value, acceleration, dt = 1, minimum = -Infinity, maximum = Infinity) {
+  invariant(Number.isFinite(dt) && dt >= 0, `invalid integration dt: ${dt}`);
+  return clampNumber(finite(value, 0) + finite(acceleration, 0) * dt, minimum, maximum);
+}
+
+export function integrateBody(body, dt = 1, acceleration = {}) {
+  invariant(Number.isFinite(dt) && dt >= 0, `invalid body integration dt: ${dt}`);
+  const vx = integrateAcceleration(body.vx ?? body.velocityX ?? 0, acceleration.x ?? 0, dt,
+    acceleration.minX ?? -Infinity, acceleration.maxX ?? Infinity);
+  const vy = integrateAcceleration(body.vy ?? body.velocityY ?? 0, acceleration.y ?? 0, dt,
+    acceleration.minY ?? -Infinity, acceleration.maxY ?? Infinity);
+  return Object.freeze({
+    ...body,
+    x: finite(body.x, 0) + vx * dt,
+    y: finite(body.y, 0) + vy * dt,
+    ...('vx' in body ? { vx } : {}),
+    ...('vy' in body ? { vy } : {}),
+    ...('velocityX' in body ? { velocityX: vx } : {}),
+    ...('velocityY' in body ? { velocityY: vy } : {}),
+  });
+}
+
+function rectWidth(rect) {
+  return finite(rect.w ?? rect.width, 0);
+}
+
+function rectHeight(rect) {
+  return finite(rect.h ?? rect.height, 0);
+}
+
+export function aabbOverlap(a, b) {
+  const aw = rectWidth(a);
+  const ah = rectHeight(a);
+  const bw = rectWidth(b);
+  const bh = rectHeight(b);
+  return a.x < b.x + bw && a.x + aw > b.x && a.y < b.y + bh && a.y + ah > b.y;
+}
+
+export function resolveOneWayPlatforms(options) {
+  const body = options.body;
+  const previous = options.previous;
+  const velocityY = finite(options.velocityY ?? body.vy ?? body.velocityY, 0);
+  const downwardSign = finite(options.downwardSign, 1) >= 0 ? 1 : -1;
+  const tolerance = Math.max(0, finite(options.tolerance, 0));
+  const bodyHeight = rectHeight(body);
+  const previousBottom = previous.y + bodyHeight;
+  const nextBottom = body.y + bodyHeight;
+  const falling = velocityY * downwardSign >= 0;
+  if (!falling) return null;
+  let best = null;
+  for (const platform of options.platforms ?? []) {
+    const platformWidth = rectWidth(platform);
+    const horizontal = body.x + rectWidth(body) > platform.x && body.x < platform.x + platformWidth;
+    if (!horizontal) continue;
+    const platformTop = platform.y;
+    const crossed = previousBottom <= platformTop + tolerance && nextBottom >= platformTop;
+    if (!crossed) continue;
+    if (!best || platformTop < best.platform.y) {
+      best = Object.freeze({
+        platform,
+        x: body.x,
+        y: platformTop - bodyHeight,
+        velocityY: 0,
+      });
+    }
+  }
+  return best;
+}
+
 export function createFixedStepLoop(options) {
   invariant(typeof options?.update === 'function', 'fixed-step loop requires update');
   invariant(typeof options?.render === 'function', 'fixed-step loop requires render');

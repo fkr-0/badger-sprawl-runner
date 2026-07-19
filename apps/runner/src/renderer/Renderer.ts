@@ -208,6 +208,10 @@ export class Renderer {
 			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
 			: 0;
 		this.ctx.save();
+		if ((enemy.flashTimer ?? 0) > 0) {
+			this.ctx.globalAlpha = Math.floor(performance.now() / 45) % 2 === 0 ? 0.38 : 0.92;
+			this.ctx.filter = 'brightness(1.8) saturate(0.45)';
+		}
 		if (enemy.invuln > 0 && Math.floor(performance.now() / 70) % 2 === 0) {
 			this.ctx.globalAlpha = 0.46;
 		}
@@ -217,6 +221,7 @@ export class Renderer {
 		const spriteX = x + enemy.w / 2 - frameWidth / 2;
 		const spriteY = enemy.y + enemy.h - frameHeight;
 		this.spriteRenderer.drawFrame(sheetId, animationName, frame, spriteX, spriteY, enemy.dir > 0);
+		this.ctx.filter = 'none';
 		this.ctx.restore();
 		return true;
 	}
@@ -459,6 +464,22 @@ export class Renderer {
 
 	getSpriteRenderer(): SpriteRenderer {
 		return this.spriteRenderer;
+	}
+
+	getActorRenderContract(): {
+		playerFrameWidth: number;
+		playerFrameHeight: number;
+		bossTargetHeight: number;
+		bossToPlayerHeightRatio: number;
+	} {
+		const [playerFrameWidth, playerFrameHeight] = this.spriteRenderer
+			.getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet.frameSize ?? [48, 48];
+		return {
+			playerFrameWidth,
+			playerFrameHeight,
+			bossTargetHeight: BOSS_RENDER_HEIGHT,
+			bossToPlayerHeightRatio: BOSS_RENDER_HEIGHT / playerFrameHeight,
+		};
 	}
 
 	getVFXPool(): VFXPool {

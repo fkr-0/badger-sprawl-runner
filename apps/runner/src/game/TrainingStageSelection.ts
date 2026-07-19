@@ -18,11 +18,15 @@ function hashSeed(seed: string): number {
 export function createTrainingStageSeed(): string {
 	const random = new Uint32Array(2);
 	globalThis.crypto?.getRandomValues?.(random);
-	const entropy = random[0] || random[1] ? `${random[0]}-${random[1]}` : `${Date.now()}-${performance.now()}`;
+	const entropy =
+		random[0] || random[1] ? `${random[0]}-${random[1]}` : `${Date.now()}-${performance.now()}`;
 	return `dummy-training:${entropy}`;
 }
 
-export function selectTrainingStage(seed: string, previousStageId?: RuntimeStageId): TrainingStageSelection {
+export function selectTrainingStage(
+	seed: string,
+	previousStageId?: RuntimeStageId
+): TrainingStageSelection {
 	const initialIndex = hashSeed(seed) % RUNTIME_STAGE_IDS.length;
 	const stageIndex =
 		previousStageId && RUNTIME_STAGE_IDS[initialIndex] === previousStageId
@@ -34,4 +38,3 @@ export function selectTrainingStage(seed: string, previousStageId?: RuntimeStage
 		stageId: RUNTIME_STAGE_IDS[stageIndex] ?? 'lower-sprawl',
 	};
 }
-

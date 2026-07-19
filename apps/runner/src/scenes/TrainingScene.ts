@@ -1,82 +1,112 @@
-import type { Renderer } from '../renderer/Renderer';
 /**
- * TrainingScene - lightweight practice mode scene backed by TrainingMode state.
+ * TrainingScene - full dummy dojo hosted inside a randomly selected campaign stage.
  */
 
 import type { Scene, SceneContext } from '../engine/SceneManager';
-import { type TrainingAction, createTrainingMode } from '../game/TrainingMode';
+import {
+	type TrainingStageSelection,
+	createTrainingStageSeed,
+	selectTrainingStage,
+} from '../game/TrainingStageSelection';
+import type { Renderer } from '../renderer/Renderer';
+import type { RuntimeStageId } from '../world/stageLayoutRegistry';
+import { StageRunScene, type TrainingRunSnapshot } from './StageRunScene';
 
 export interface TrainingSceneOptions {
 	onReturnToTitle?: () => void;
+	seed?: string;
+	stageId?: RuntimeStageId;
 }
 
 export class TrainingScene implements Scene {
 	readonly name = 'TrainingScene';
 
-	private readonly training = createTrainingMode();
-	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
+	private selection: TrainingStageSelection;
+	private stageScene: StageRunScene;
+	private context: SceneContext | null = null;
 
-	constructor(private readonly options: TrainingSceneOptions = {}) {}
-
-	getTrainingState(): ReturnType<typeof this.training.getState> {
-		return this.training.getState();
+	constructor(private readonly options: TrainingSceneOptions = {}) {
+		const seed = options.seed ?? createTrainingStageSeed();
+		const selected = selectTrainingStage(seed);
+		this.selection = options.stageId
+			? {
+					seed,
+					stageId: options.stageId,
+					stageIndex: selected.stageIndex,
+				}
+			: selected;
+		this.stageScene = this.createStageScene();
 	}
 
-	onEnter(_ctx: SceneContext): void {
-		console.log('TrainingScene entered');
-		const handleKeyDown = (event: KeyboardEvent): void => {
-			if (event.code === 'Escape') {
-				this.options.onReturnToTitle?.();
-				event.preventDefault();
-				return;
-			}
-			if (event.code === 'KeyR') {
-				this.training.resetPractice();
-				event.preventDefault();
-			}
-			if (event.code === 'KeyJ') {
-				this.recordPracticeHit('melee');
-				event.preventDefault();
-			}
-		};
-		window.addEventListener('keydown', handleKeyDown);
-		this.keyHandler = handleKeyDown;
+	getTrainingState(): TrainingRunSnapshot | null {
+		return this.stageScene.getTrainingSnapshot();
+	}
+
+	getStageRunScene(): StageRunScene {
+		return this.stageScene;
+	}
+
+	getGameplayHudLayoutSnapshot(): ReturnType<StageRunScene['getGameplayHudLayoutSnapshot']> {
+		return this.stageScene.getGameplayHudLayoutSnapshot();
+	}
+
+	getSelectedStage(): TrainingStageSelection {
+		return { ...this.selection };
+	}
+
+	debugTeleportPlayer(x: number, y: number): void {
+		this.stageScene.debugTeleportPlayer(x, y);
+	}
+
+	onEnter(ctx: SceneContext): void {
+		console.log(`TrainingScene entered // ${this.selection.stageId}`);
+		this.context = ctx;
+		this.stageScene.onEnter(ctx);
+		window.dispatchEvent(
+			new CustomEvent('badger:training-stage-selected', { detail: this.getSelectedStage() })
+		);
 	}
 
 	onExit(): void {
+		this.stageScene.onExit();
+		this.context = null;
 		console.log('TrainingScene exited');
-		if (this.keyHandler) {
-			window.removeEventListener('keydown', this.keyHandler);
-			this.keyHandler = null;
-		}
 	}
 
-	update(_dt: number): void {}
-
-	recordPracticeHit(action: TrainingAction, damage = 1): void {
-		this.training.recordHit({ action, damage });
+	update(dt: number): void {
+		this.stageScene.update(dt);
 	}
 
-	render(renderer: Renderer, _alpha: number): void {
-		const maybeRenderer = renderer as { getContext?: () => CanvasRenderingContext2D };
-		const ctx = maybeRenderer.getContext?.();
-		if (!ctx) return;
+	render(renderer: Renderer, alpha: number): void {
+		this.stageScene.render(renderer, alpha);
+	}
 
-		const state = this.training.getState();
-		ctx.save();
-		ctx.fillStyle = '#0b1020';
-		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		ctx.fillStyle = '#eaf2ff';
-		ctx.font = '700 28px ui-monospace, monospace';
-		ctx.textAlign = 'center';
-		ctx.fillText('DUMMY TRAINING', ctx.canvas.width / 2, 90);
-		ctx.font = '16px ui-monospace, monospace';
-		ctx.fillText(
-			`lesson: ${state.lessonId} • dummy: ${state.dummyPresetId} • kit: ${state.kitId}`,
-			ctx.canvas.width / 2,
-			135
+	private createStageScene(previous?: TrainingRunSnapshot | null): StageRunScene {
+		return new StageRunScene({
+			stageId: this.selection.stageId,
+			procgenSeed: this.selection.seed,
+			generatedEnemyPacks: [],
+			generatedSideRooms: [],
+			training: {
+				enabled: true,
+				seed: this.selection.seed,
+				lessonId: previous?.lessonId,
+				dummyPresetId: previous?.dummyPresetId,
+				kitId: previous?.kitId,
+				onRerollStage: () => this.rerollStage(),
+			},
+			onReturnToTitle: this.options.onReturnToTitle,
+		});
+	}
+
+	private rerollStage(): void {
+		const previous = this.stageScene.getTrainingSnapshot();
+		this.stageScene.onExit();
+		this.selection = selectTrainingStage(createTrainingStageSeed(), this.selection.stageId);
+		this.stageScene = this.createStageScene(previous);
+		if (this.context) this.stageScene.onEnter(this.context);
+		window.dispatchEvent(
+			new CustomEvent('badger:training-stage-selected', { detail: this.getSelectedStage() })
 		);
-		ctx.fillText(`hits: ${state.metrics.hitCount}`, ctx.canvas.width / 2, 170);
-		ctx.restore();
 	}
 }

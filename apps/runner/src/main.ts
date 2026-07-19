@@ -6,6 +6,7 @@ import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
 import type { StoryFlowScene } from './scenes/StoryFlowScene';
+import type { TrainingScene } from './scenes/TrainingScene';
 
 export interface RunnerBootstrapResult {
 	app: RunnerApp;
@@ -51,6 +52,11 @@ export interface BadgerTestHarness {
 	getStoryPanelLayout: () => ReturnType<StoryFlowScene['getPanelLayoutSnapshot']> | null;
 	getStoryPresentation: () => ReturnType<StoryFlowScene['getPresentationSnapshot']> | null;
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
+	getTraining: () => ReturnType<TrainingScene['getTrainingState']> | null;
+	getGameplayHudLayout: () => ReturnType<StageRunScene['getGameplayHudLayoutSnapshot']> | null;
+	getActorRenderContract: () => ReturnType<RunnerApp['getRenderer']>['getActorRenderContract'] extends () => infer T
+		? T
+		: never;
 	teleportPlayer: (x: number, y: number) => void;
 	setBossHp: (hp: number) => void;
 	setEnemyHp: (enemyId: string, hp: number) => void;
@@ -76,16 +82,21 @@ function installTestHarness(app: RunnerApp): void {
 	const runnerWindow = window as RunnerWindow;
 	// Expose app for advanced test access
 	runnerWindow.__app = app;
+	const getStageScene = (): StageRunScene | null => {
+		const scene = app.getCurrentScene();
+		if (scene && 'getStageRunScene' in scene) {
+			return (scene as TrainingScene).getStageRunScene();
+		}
+		return scene && 'getPlayerSnapshot' in scene ? (scene as StageRunScene) : null;
+	};
 
 	const h: BadgerTestHarness = {
 		getSceneName: () => app.getCurrentScene()?.name ?? 'none',
 		getPlayer: () => {
-			const s = app.getCurrentScene();
-			return s && 'getPlayerSnapshot' in s ? (s as StageRunScene).getPlayerSnapshot() : null;
+			return getStageScene()?.getPlayerSnapshot() ?? null;
 		},
 		setEnemyHp: (enemyId, hp) => {
-			const s = app.getCurrentScene();
-			if (s && 'debugSetEnemyHp' in s) (s as StageRunScene).debugSetEnemyHp(enemyId, hp);
+			getStageScene()?.debugSetEnemyHp(enemyId, hp);
 		},
 		getKingFeedback: () => {
 			const s = app.getCurrentScene();
@@ -172,16 +183,13 @@ function installTestHarness(app: RunnerApp): void {
 			return s && 'getLoadoutSnapshot' in s ? (s as StageRunScene).getLoadoutSnapshot() : null;
 		},
 		getEnemies: () => {
-			const s = app.getCurrentScene();
-			return s && 'getEnemySnapshots' in s ? (s as StageRunScene).getEnemySnapshots() : null;
+			return getStageScene()?.getEnemySnapshots() ?? null;
 		},
 		getPickups: () => {
-			const s = app.getCurrentScene();
-			return s && 'getPickupSnapshots' in s ? (s as StageRunScene).getPickupSnapshots() : null;
+			return getStageScene()?.getPickupSnapshots() ?? null;
 		},
 		getAnimation: () => {
-			const s = app.getCurrentScene();
-			return s && 'getAnimationSnapshot' in s ? (s as StageRunScene).getAnimationSnapshot() : null;
+			return getStageScene()?.getAnimationSnapshot() ?? null;
 		},
 		getLowerSprawlObjectives: () => {
 			const s = app.getCurrentScene();
@@ -202,17 +210,28 @@ function installTestHarness(app: RunnerApp): void {
 			const s = app.getCurrentScene();
 			return s && 'getSnapshot' in s ? (s as SkillTreeScene).getSnapshot() : null;
 		},
+		getTraining: () => {
+			const scene = app.getCurrentScene();
+			return scene && 'getTrainingState' in scene
+				? (scene as TrainingScene).getTrainingState()
+				: null;
+		},
+		getGameplayHudLayout: () => {
+			const scene = app.getCurrentScene();
+			if (scene && 'getGameplayHudLayoutSnapshot' in scene) {
+				return (scene as TrainingScene).getGameplayHudLayoutSnapshot();
+			}
+			return getStageScene()?.getGameplayHudLayoutSnapshot() ?? null;
+		},
+		getActorRenderContract: () => app.getRenderer().getActorRenderContract(),
 		teleportPlayer: (x, y) => {
-			const s = app.getCurrentScene();
-			if (s && 'debugTeleportPlayer' in s) (s as StageRunScene).debugTeleportPlayer(x, y);
+			getStageScene()?.debugTeleportPlayer(x, y);
 		},
 		setBossHp: (hp) => {
-			const s = app.getCurrentScene();
-			if (s && 'debugSetBossHp' in s) (s as StageRunScene).debugSetBossHp(hp);
+			getStageScene()?.debugSetBossHp(hp);
 		},
 		setPlayerHp: (hp) => {
-			const s = app.getCurrentScene();
-			if (s && 'debugSetPlayerHp' in s) (s as StageRunScene).debugSetPlayerHp(hp);
+			getStageScene()?.debugSetPlayerHp(hp);
 		},
 		routeMode: (modeId) => app.routeMode(modeId),
 		getLoadedSheetIds: () => {

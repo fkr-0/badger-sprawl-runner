@@ -1,6 +1,7 @@
-/**
- * AABB collision test
- */
+/** Shared arcade-core AABB collision test. */
+
+import { aabbOverlap } from '../../../../vendor/arcade-core.mjs';
+
 export interface Rect {
 	x: number;
 	y: number;
@@ -9,5 +10,5 @@ export interface Rect {
 }
 
 export function aabb(a: Rect, b: Rect): boolean {
-	return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+	return aabbOverlap(a, b);
 }

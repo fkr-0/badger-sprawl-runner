@@ -1,4 +1,4 @@
-import { aabb } from './aabb';
+import { resolveOneWayPlatforms } from '../../../../vendor/arcade-core.mjs';
 
 export interface PlatformStepInput {
 	x: number;
@@ -20,29 +20,22 @@ export interface PlatformStepOutput {
 	coyoteLeft: number;
 }
 
-/**
- * Pure function: resolve platform collision
- * Snap player to platform if landing, reset coyote time
- */
+/** Resolve one-way platform landing through the shared arcade collision primitive. */
 export function platformStep(input: PlatformStepInput): PlatformStepOutput {
-	const { x, y, w, h, vx, vy, prevVy, dt, platforms, coyoteTime } = input;
-	const player = { x, y, w, h };
-
-	let onGround = false;
-	let coyoteLeft = 0;
-
-	for (const p of platforms) {
-		// Check if player overlaps and is falling onto platform
-		// Use prevVy to approximate previous position from the caller's actual timestep.
-		const prevY = y - prevVy * dt;
-		if (aabb(player, p) && vy >= 0 && prevY + h <= p.y + 6) {
-			// Snap to platform
-			const snappedY = p.y - h;
-			onGround = true;
-			coyoteLeft = coyoteTime;
-			return { x, y: snappedY, onGround, coyoteLeft };
-		}
-	}
-
-	return { x, y, onGround, coyoteLeft };
+	const { x, y, w, h, vy, prevVy, dt, platforms, coyoteTime } = input;
+	const previous = { x, y: y - prevVy * dt, w, h };
+	const landing = resolveOneWayPlatforms({
+		body: { x, y, w, h, vy },
+		previous,
+		velocityY: vy,
+		tolerance: 6,
+		platforms,
+	});
+	if (!landing) return { x, y, onGround: false, coyoteLeft: 0 };
+	return {
+		x,
+		y: landing.y,
+		onGround: true,
+		coyoteLeft: coyoteTime,
+	};
 }

@@ -1,4 +1,4 @@
-export const ARCADE_PIXI_RUNTIME_VERSION = '0.5.0';
+export const ARCADE_PIXI_RUNTIME_VERSION = '0.7.0';
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
   'backdrop',
@@ -19,6 +19,181 @@ function finiteNumber(value, fallback) {
 function positiveNumber(value, fallback) {
   const resolved = finiteNumber(value, fallback);
   return resolved > 0 ? resolved : fallback;
+}
+
+export function clampArcadeValue(value, minimum, maximum) {
+  const resolvedMinimum = finiteNumber(minimum, 0);
+  const resolvedMaximum = finiteNumber(maximum, resolvedMinimum);
+  invariant(resolvedMinimum <= resolvedMaximum, 'clamp minimum must not exceed maximum');
+  return Math.min(resolvedMaximum, Math.max(resolvedMinimum, finiteNumber(value, resolvedMinimum)));
+}
+
+export function approachArcadeValue(current, target, maximumDelta) {
+  const resolvedCurrent = finiteNumber(current, 0);
+  const resolvedTarget = finiteNumber(target, resolvedCurrent);
+  const resolvedDelta = Math.max(0, finiteNumber(maximumDelta, 0));
+  if (resolvedCurrent < resolvedTarget) return Math.min(resolvedCurrent + resolvedDelta, resolvedTarget);
+  if (resolvedCurrent > resolvedTarget) return Math.max(resolvedCurrent - resolvedDelta, resolvedTarget);
+  return resolvedCurrent;
+}
+
+export function applyArcadeDrag(value, drag, delta = 1) {
+  const resolvedDrag = Math.max(0, finiteNumber(drag, 0));
+  const resolvedDelta = Math.max(0, finiteNumber(delta, 0));
+  return approachArcadeValue(value, 0, resolvedDrag * resolvedDelta);
+}
+
+export function integrateArcadeBody2D(body, delta = 1) {
+  invariant(body && typeof body === 'object', 'kinematic body is required');
+  const resolvedDelta = Math.max(0, finiteNumber(delta, 0));
+  const x = finiteNumber(body.x, 0);
+  const y = finiteNumber(body.y, 0);
+  const vx = finiteNumber(body.vx, 0);
+  const vy = finiteNumber(body.vy, 0);
+  return {
+    ...body,
+    x: x + vx * resolvedDelta,
+    y: y + vy * resolvedDelta,
+    vx,
+    vy,
+  };
+}
+
+const ARCADE_ANIMATION_MODES = new Set(['loop', 'once', 'pingpong']);
+
+function normalizeAnimationMode(mode) {
+  return ARCADE_ANIMATION_MODES.has(mode) ? mode : 'loop';
+}
+
+function resolveAnimationFrameDuration(frameDuration, frame) {
+  const rawDuration = typeof frameDuration === 'function'
+    ? frameDuration(frame)
+    : Array.isArray(frameDuration)
+      ? frameDuration[frame]
+      : frameDuration;
+  return positiveNumber(rawDuration, 1 / 60);
+}
+
+export function createArcadeAnimationClock(initial = {}) {
+  return {
+    frame: Math.max(0, Math.floor(finiteNumber(initial.frame, 0))),
+    elapsed: Math.max(0, finiteNumber(initial.elapsed, 0)),
+    direction: initial.direction === -1 ? -1 : 1,
+    playing: initial.playing === true,
+    paused: initial.paused === true,
+    completed: initial.completed === true,
+    frameAdvances: 0,
+    advancedFrames: [],
+  };
+}
+
+export function playArcadeAnimationClock(state = {}, options = {}) {
+  const current = createArcadeAnimationClock(state);
+  const restart = options.restart !== false;
+  return {
+    ...current,
+    frame: restart ? Math.max(0, Math.floor(finiteNumber(options.frame, 0))) : current.frame,
+    elapsed: restart ? 0 : current.elapsed,
+    direction: restart ? (options.direction === -1 ? -1 : 1) : current.direction,
+    playing: true,
+    paused: false,
+    completed: false,
+    frameAdvances: 0,
+    advancedFrames: [],
+  };
+}
+
+export function advanceArcadeAnimationClock(state, deltaTime, timeline = {}) {
+  const current = createArcadeAnimationClock(state);
+  const frameCount = Math.max(0, Math.floor(finiteNumber(timeline.frameCount, 0)));
+  const delta = Math.max(0, finiteNumber(deltaTime, 0));
+  const speed = Math.max(0, finiteNumber(timeline.speed, 1));
+  const mode = normalizeAnimationMode(timeline.mode);
+  const maxAdvances = Math.max(1, Math.floor(finiteNumber(timeline.maxAdvances, 10_000)));
+
+  if (!current.playing || current.paused || frameCount === 0 || delta === 0 || speed === 0) {
+    return current;
+  }
+
+  let frame = clampArcadeValue(current.frame, 0, frameCount - 1);
+  let elapsed = current.elapsed + delta * speed;
+  let direction = current.direction;
+  let playing = current.playing;
+  let completed = false;
+  let frameAdvances = 0;
+  const advancedFrames = [];
+
+  if (frameCount === 1 && timeline.singleFrameMode !== 'complete') {
+    const duration = resolveAnimationFrameDuration(timeline.frameDuration, 0);
+    return {
+      ...current,
+      frame: 0,
+      elapsed: elapsed % duration,
+      playing: true,
+      completed: false,
+      frameAdvances: Math.floor(elapsed / duration),
+      advancedFrames: [],
+    };
+  }
+
+  while (playing && frameAdvances < maxAdvances) {
+    const duration = resolveAnimationFrameDuration(timeline.frameDuration, frame);
+    if (elapsed < duration) break;
+    elapsed -= duration;
+    frameAdvances += 1;
+
+    if (mode === 'loop') {
+      frame = (frame + 1) % frameCount;
+      advancedFrames.push(frame);
+      continue;
+    }
+
+    if (mode === 'once') {
+      if (frame < frameCount - 1) {
+        frame += 1;
+        advancedFrames.push(frame);
+      } else {
+        playing = false;
+        completed = true;
+        elapsed = 0;
+      }
+      continue;
+    }
+
+    if (direction === 1) {
+      if (frame < frameCount - 1) {
+        frame += 1;
+        advancedFrames.push(frame);
+      }
+      else {
+        direction = -1;
+        frame = Math.max(0, frameCount - 2);
+        advancedFrames.push(frame);
+      }
+    } else if (frame > 0) {
+      frame -= 1;
+      advancedFrames.push(frame);
+    } else {
+      direction = 1;
+      frame = Math.min(frameCount - 1, 1);
+      advancedFrames.push(frame);
+    }
+  }
+
+  if (frameAdvances === maxAdvances && playing) {
+    elapsed = Math.min(elapsed, resolveAnimationFrameDuration(timeline.frameDuration, frame));
+  }
+
+  return {
+    ...current,
+    frame,
+    elapsed,
+    direction,
+    playing,
+    completed,
+    frameAdvances,
+    advancedFrames,
+  };
 }
 
 export function createArcadeCameraTransform(initial = {}) {
@@ -117,6 +292,7 @@ export function createArcadeFrameProfiler(options = {}) {
   const clock = options.now
     ?? globalThis.performance?.now?.bind(globalThis.performance)
     ?? Date.now;
+  invariant(typeof clock === 'function', 'profile clock must be a function');
   const samples = new Map();
 
   const record = (name, durationMs) => {
@@ -156,6 +332,15 @@ export function createArcadeFrameProfiler(options = {}) {
         record(name, clock() - startedAt);
       }
     },
+    async measureAsync(name, callback) {
+      invariant(typeof callback === 'function', 'async profile callback must be a function');
+      const startedAt = clock();
+      try {
+        return await callback();
+      } finally {
+        record(name, clock() - startedAt);
+      }
+    },
     snapshot(name) {
       if (name !== undefined) return summarize(samples.get(name));
       return Object.freeze(Object.fromEntries(
@@ -189,10 +374,14 @@ export function defineArcadeRenderPlan(entries, options = {}) {
     invariant(!names.has(entry.name), `render plan pass "${entry.name}" is duplicated`);
     invariant(typeof entry.layer === 'string' && allowedLayers.has(entry.layer), `render plan pass "${entry.name}" uses unknown layer "${entry.layer}"`);
     names.add(entry.name);
+    const order = Number(entry.order ?? index);
+    const priority = Number(entry.priority ?? 0);
+    invariant(Number.isFinite(order), `render plan pass "${entry.name}" order must be finite`);
+    invariant(Number.isFinite(priority), `render plan pass "${entry.name}" priority must be finite`);
     return Object.freeze({
       ...entry,
-      order: Number(entry.order ?? index),
-      priority: Number(entry.priority ?? 0),
+      order,
+      priority,
       enabled: entry.enabled !== false,
     });
   });
@@ -341,12 +530,16 @@ export async function createArcadePixiRuntime(options) {
   let lastFrameTime = null;
   let destroyed = false;
   let running = false;
+  let contextLost = false;
+  let resumeAfterContextRestore = false;
+  let registrationSequence = 0;
 
   const telemetry = {
     version: ARCADE_PIXI_RUNTIME_VERSION,
     backend: app.renderer?.type ?? preference,
     contextLosses: 0,
     contextRestores: 0,
+    contextState: 'ready',
     assetsLoaded: 0,
     framesRendered: 0,
     ticks: 0,
@@ -384,28 +577,44 @@ export async function createArcadePixiRuntime(options) {
 
   const handleContextLost = (event) => {
     event.preventDefault?.();
+    if (contextLost || destroyed) return;
+    contextLost = true;
+    resumeAfterContextRestore = running;
     telemetry.contextLosses += 1;
+    telemetry.contextState = 'lost';
     canvas.dataset.contextState = 'lost';
+    if (running) runtime.pause('context-lost');
     emit('context-lost', event);
     emitTelemetry();
   };
 
   const handleContextRestored = () => {
+    if (!contextLost || destroyed) return;
+    contextLost = false;
     telemetry.contextRestores += 1;
+    telemetry.contextState = 'ready';
     canvas.dataset.contextState = 'ready';
     emit('context-restored');
     emitTelemetry();
+    if (resumeAfterContextRestore) {
+      resumeAfterContextRestore = false;
+      runtime.resume('context-restored');
+    }
   };
 
   canvas.addEventListener('webglcontextlost', handleContextLost);
   canvas.addEventListener('webglcontextrestored', handleContextRestored);
 
-  const sortedSystems = () => [...systems.values()].sort((a, b) => b.priority - a.priority);
-  const sortedPasses = () => [...passes.values()].sort((a, b) => b.priority - a.priority);
+  const sortedSystems = () => [...systems.values()].sort(
+    (a, b) => b.priority - a.priority || a.sequence - b.sequence,
+  );
+  const sortedPasses = () => [...passes.values()].sort(
+    (a, b) => a.order - b.order || b.priority - a.priority || a.sequence - b.sequence,
+  );
 
   const updatePassTelemetry = () => {
-    telemetry.passNames = [...passes.keys()];
-    telemetry.activePassNames = [...passes.values()]
+    telemetry.passNames = sortedPasses().map((pass) => pass.name);
+    telemetry.activePassNames = sortedPasses()
       .filter((pass) => pass.enabled)
       .map((pass) => pass.name);
     canvas.dataset.arcadePasses = telemetry.passNames.join(',');
@@ -423,7 +632,7 @@ export async function createArcadePixiRuntime(options) {
   });
 
   const tick = (deltaMs, timeMs = Date.now(), render = autoRender) => {
-    if (destroyed) return;
+    if (destroyed || contextLost) return;
     const boundedDelta = Math.max(0, Math.min(250, Number.isFinite(deltaMs) ? deltaMs : 0));
     telemetry.ticks += 1;
     telemetry.elapsedMs += boundedDelta;
@@ -528,12 +737,16 @@ export async function createArcadePixiRuntime(options) {
       invariant(passOptions.create === undefined || typeof passOptions.create === 'function', `pass "${name}" create must be a function`);
       invariant(passOptions.resize === undefined || typeof passOptions.resize === 'function', `pass "${name}" resize must be a function`);
       invariant(passOptions.destroy === undefined || typeof passOptions.destroy === 'function', `pass "${name}" destroy must be a function`);
+      const order = Number(passOptions.order ?? 0);
+      const priority = Number(passOptions.priority ?? 0);
+      invariant(Number.isFinite(order), `pass "${name}" order must be finite`);
+      invariant(Number.isFinite(priority), `pass "${name}" priority must be finite`);
 
       const layer = runtime.layer(passOptions.layer);
       layer.sortableChildren = true;
       const container = new PIXI.Container();
       container.label = `pass:${name}`;
-      container.zIndex = Number(passOptions.order ?? 0);
+      container.zIndex = order;
       container.visible = passOptions.enabled !== false;
       layer.addChild(container);
 
@@ -542,7 +755,9 @@ export async function createArcadePixiRuntime(options) {
         layerName: passOptions.layer,
         layer,
         container,
-        priority: Number(passOptions.priority ?? 0),
+        order,
+        priority,
+        sequence: registrationSequence++,
         enabled: passOptions.enabled !== false,
         update: passOptions.update,
         resize: passOptions.resize,
@@ -619,10 +834,13 @@ export async function createArcadePixiRuntime(options) {
       invariant(typeof name === 'string' && name.length > 0, 'system name is required');
       invariant(typeof update === 'function', `system "${name}" must be a function`);
       invariant(!systems.has(name), `system "${name}" already exists`);
+      const priority = Number(systemOptions.priority ?? 0);
+      invariant(Number.isFinite(priority), `system "${name}" priority must be finite`);
       systems.set(name, {
         name,
         update,
-        priority: Number(systemOptions.priority ?? 0),
+        priority,
+        sequence: registrationSequence++,
         enabled: systemOptions.enabled !== false,
       });
       telemetry.systemNames = [...systems.keys()];
@@ -639,6 +857,7 @@ export async function createArcadePixiRuntime(options) {
       const system = systems.get(name);
       invariant(system, `unknown system "${name}"`);
       system.enabled = Boolean(enabled);
+      emitTelemetry();
     },
     on(eventName, callback) {
       invariant(typeof callback === 'function', 'event callback must be a function');
@@ -686,7 +905,7 @@ export async function createArcadePixiRuntime(options) {
     resize,
     resizeFromTarget,
     render() {
-      if (destroyed) return;
+      if (destroyed || contextLost) return;
       profiler.measure('render', () => app.renderer.render(app.stage));
       telemetry.framesRendered += 1;
       updatePerformanceTelemetry();
@@ -696,6 +915,10 @@ export async function createArcadePixiRuntime(options) {
     },
     start(reason = 'manual') {
       if (destroyed || running) return;
+      if (contextLost) {
+        resumeAfterContextRestore = true;
+        return;
+      }
       running = true;
       telemetry.running = true;
       telemetry.paused = false;
@@ -717,6 +940,10 @@ export async function createArcadePixiRuntime(options) {
       emitTelemetry();
     },
     resume(reason = 'manual') {
+      if (contextLost) {
+        resumeAfterContextRestore = true;
+        return;
+      }
       runtime.start(reason);
     },
     snapshot() {
@@ -734,6 +961,8 @@ export async function createArcadePixiRuntime(options) {
       if (destroyed) return;
       runtime.pause('destroy');
       destroyed = true;
+      contextLost = false;
+      resumeAfterContextRestore = false;
       telemetry.destroyed = true;
       telemetry.running = false;
       telemetry.paused = true;
@@ -793,12 +1022,14 @@ export function createCanvasTexturePassOptions(options = {}) {
     enabled = true,
     clear = true,
     resizeWithRuntime = true,
+    shouldDraw,
     canvasFactory,
     onResize,
   } = options;
 
   invariant(PIXI?.Texture && PIXI?.Sprite, 'PixiJS Texture and Sprite constructors are required for a canvas texture pass');
   invariant(typeof draw === 'function', 'canvas texture pass requires a draw function');
+  invariant(shouldDraw === undefined || typeof shouldDraw === 'function', 'canvas texture pass shouldDraw must be a function');
   invariant(width === undefined || (Number.isFinite(width) && width > 0), 'canvas texture pass width must be positive');
   invariant(height === undefined || (Number.isFinite(height) && height > 0), 'canvas texture pass height must be positive');
 
@@ -811,14 +1042,17 @@ export function createCanvasTexturePassOptions(options = {}) {
   }))(canvasWidth, canvasHeight);
 
   const resizeState = (state, nextWidth, nextHeight) => {
+    if (state.width === nextWidth && state.height === nextHeight) return false;
     state.canvas.width = nextWidth;
     state.canvas.height = nextHeight;
     state.width = nextWidth;
     state.height = nextHeight;
     state.sprite.width = nextWidth;
     state.sprite.height = nextHeight;
+    state.dirty = true;
     state.texture.source?.update?.();
     state.texture.update?.();
+    return true;
   };
 
   return {
@@ -841,21 +1075,35 @@ export function createCanvasTexturePassOptions(options = {}) {
       sprite.width = resolvedWidth;
       sprite.height = resolvedHeight;
       pass.container.addChild(sprite);
-      return {
+      const state = {
         canvas,
         context,
         texture,
         sprite,
         width: resolvedWidth,
         height: resolvedHeight,
+        dirty: true,
+        redraws: 0,
+        skippedFrames: 0,
+        invalidate() {
+          state.dirty = true;
+        },
       };
+      return state;
     },
     update(frame, pass) {
       const state = pass.state;
+      const requested = shouldDraw ? shouldDraw(frame, pass) : true;
+      if (!state.dirty && requested === false) {
+        state.skippedFrames += 1;
+        return;
+      }
       if (clear) state.context.clearRect(0, 0, state.width, state.height);
       draw(state.context, frame, pass);
       if (state.texture.source?.update) state.texture.source.update();
       else state.texture.update?.();
+      state.dirty = false;
+      state.redraws += 1;
     },
     resize(payload, pass) {
       if (resizeWithRuntime) resizeState(pass.state, payload.width, payload.height);

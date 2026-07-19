@@ -1,5 +1,27 @@
 export declare const ARCADE_CORE_VERSION: string;
 
+
+export declare function clampNumber(value: number, minimum?: number, maximum?: number): number;
+export declare function approach(current: number, target: number, maxDelta: number): number;
+export declare function integrateAcceleration(
+  value: number, acceleration: number, dt?: number, minimum?: number, maximum?: number
+): number;
+export declare function integrateBody<T extends { x: number; y: number; vx?: number; vy?: number; velocityX?: number; velocityY?: number }>(
+  body: T,
+  dt?: number,
+  acceleration?: { x?: number; y?: number; minX?: number; maxX?: number; minY?: number; maxY?: number },
+): Readonly<T>;
+export type ArcadeRect = { x: number; y: number; w?: number; h?: number; width?: number; height?: number };
+export declare function aabbOverlap(a: ArcadeRect, b: ArcadeRect): boolean;
+export declare function resolveOneWayPlatforms<T extends ArcadeRect>(options: {
+  body: ArcadeRect & { vx?: number; vy?: number; velocityX?: number; velocityY?: number };
+  previous: ArcadeRect;
+  velocityY?: number;
+  downwardSign?: 1 | -1;
+  tolerance?: number;
+  platforms: readonly T[];
+}): Readonly<{ platform: T; x: number; y: number; velocityY: 0 }> | null;
+
 export type TimeUnit = 'seconds' | 'milliseconds';
 export type FixedStepLoop = {
   start(): void;
