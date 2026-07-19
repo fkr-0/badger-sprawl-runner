@@ -5,6 +5,13 @@
 
 import { resolveSkillEffects } from '@badger/progression';
 import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
+import {
+	type TrainingDummy,
+	configureTrainingDummy,
+	createTrainingDummy,
+	hitTrainingDummy,
+	processTrainingDummy,
+} from '../actors/TrainingDummy';
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
 import {
@@ -35,6 +42,17 @@ import {
 } from '../game/MirrorPalaceObjectives';
 import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
 import type { StoryBalanceRules } from '../game/StoryBalanceRules';
+import {
+	DUMMY_PRESETS,
+	TRAINING_KITS,
+	TRAINING_LESSONS,
+	type DummyPresetId,
+	type TrainingAction,
+	type TrainingKitId,
+	type TrainingLessonId,
+	type TrainingOverlayState,
+	createTrainingMode,
+} from '../game/TrainingMode';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
 import {
@@ -42,7 +60,10 @@ import {
 	createAnimationState,
 	playAnimation,
 } from '../renderer/AnimationState';
-import { GAMEPLAY_HUD_WORLD_OVERLAY_TOP } from '../renderer/GameplayHudLayout';
+import {
+	GAMEPLAY_HUD_WORLD_OVERLAY_TOP,
+	buildGameplayHudLayout,
+} from '../renderer/GameplayHudLayout';
 import {
 	CHROME_ARCOLOGY_PARALLAX_SHEET_ID,
 	DRAINMARKET_PARALLAX_SHEET_ID,
@@ -153,6 +174,46 @@ export interface RuntimeTutorialBeat {
 	teaches: string;
 }
 
+export interface TrainingRunOptions {
+	enabled: true;
+	seed: string;
+	lessonId?: TrainingLessonId;
+	dummyPresetId?: DummyPresetId;
+	kitId?: TrainingKitId;
+	onRerollStage?: () => void;
+}
+
+export interface TrainingRunSnapshot {
+	stageId: RuntimeStageId;
+	seed: string;
+	lessonId: TrainingLessonId;
+	dummyPresetId: DummyPresetId;
+	kitId: TrainingKitId;
+	dummy: {
+		x: number;
+		y: number;
+		spawnX: number;
+		spawnY: number;
+		hp: 'infinite';
+		flashTimer: number;
+		attackTelegraph: number;
+	};
+	player: {
+		x: number;
+		y: number;
+		hp: number;
+		maxHp: number;
+		hasRailgun: boolean;
+		hasRocket: boolean;
+		fuel: number;
+		maxFuel: number;
+		stims: number;
+	};
+	overlays: TrainingOverlayState;
+	metrics: ReturnType<ReturnType<typeof createTrainingMode>['getState']>['metrics'];
+	arena: { left: number; right: number; floorY: number };
+}
+
 export interface RuntimeBossPlaceholder {
 	id: string;
 	name: string;
@@ -178,6 +239,7 @@ export interface StageRunSceneOptions {
 	onStoryPayloadCollected?: (payloadId: string) => void;
 	onStageComplete?: (result: StageRuntimeResult) => void;
 	onReturnToTitle?: () => void;
+	training?: TrainingRunOptions;
 }
 
 export class StageRunScene implements Scene {
@@ -238,33 +300,59 @@ export class StageRunScene implements Scene {
 	private nayaAssistTimer = 0;
 	private stageCompletionDispatched = false;
 	private debugOverlayVisible = false;
+	private readonly training: ReturnType<typeof createTrainingMode> | null;
+	private trainingDummy: TrainingDummy | null = null;
+	private trainingElapsed = 0;
+	private trainingDamageNumberTimer = 0;
+	private trainingArena = { left: 0, right: 960, floorY: 494 };
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
+		this.training = options.training ? createTrainingMode() : null;
 		this.companions = new CompanionSystem(
 			undefined,
 			resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])
 		);
 		this.bossPhases = new BossPhaseSystem(options.bossPhases ?? []);
-		this.captainGrin = options.stageId === 'lower-sprawl' ? new CaptainGrinController() : null;
-		this.knifeDroneNest = options.stageId === 'drainmarket' ? new KnifeDroneNestController() : null;
+		this.captainGrin =
+			!options.training && options.stageId === 'lower-sprawl' ? new CaptainGrinController() : null;
+		this.knifeDroneNest =
+			!options.training && options.stageId === 'drainmarket' ? new KnifeDroneNestController() : null;
 		this.madameVitrine =
-			options.stageId === 'chrome-arcology' ? new MadameVitrineController() : null;
+			!options.training && options.stageId === 'chrome-arcology'
+				? new MadameVitrineController()
+				: null;
 		this.reflectionJudge =
-			options.stageId === 'mirror-palace' ? new ReflectionJudgeController() : null;
-		this.kingFeedback = options.stageId === 'dub-colony' ? new KingFeedbackController() : null;
+			!options.training && options.stageId === 'mirror-palace'
+				? new ReflectionJudgeController()
+				: null;
+		this.kingFeedback =
+			!options.training && options.stageId === 'dub-colony' ? new KingFeedbackController() : null;
 		this.lowerSprawlHazards =
-			options.stageId === 'lower-sprawl' ? new LowerSprawlHazardSystem() : null;
+			!options.training && options.stageId === 'lower-sprawl'
+				? new LowerSprawlHazardSystem()
+				: null;
 		this.lowerSprawlEnemies =
-			options.stageId === 'lower-sprawl' ? new LowerSprawlEnemySystem() : null;
+			!options.training && options.stageId === 'lower-sprawl'
+				? new LowerSprawlEnemySystem()
+				: null;
 		this.drainmarketEnemies =
-			options.stageId === 'drainmarket' ? new DrainmarketEnemySystem() : null;
+			!options.training && options.stageId === 'drainmarket'
+				? new DrainmarketEnemySystem()
+				: null;
 		this.chromeArcologyEnemies =
-			options.stageId === 'chrome-arcology' ? new ChromeArcologyEnemySystem() : null;
+			!options.training && options.stageId === 'chrome-arcology'
+				? new ChromeArcologyEnemySystem()
+				: null;
 		this.mirrorPalaceEnemies =
-			options.stageId === 'mirror-palace' ? new MirrorPalaceEnemySystem() : null;
-		this.dubColonyEnemies = options.stageId === 'dub-colony' ? new DubColonyEnemySystem() : null;
+			!options.training && options.stageId === 'mirror-palace'
+				? new MirrorPalaceEnemySystem()
+				: null;
+		this.dubColonyEnemies =
+			!options.training && options.stageId === 'dub-colony' ? new DubColonyEnemySystem() : null;
 		this.checkpoints =
-			options.stageId === 'lower-sprawl'
+			options.training
+				? null
+				: options.stageId === 'lower-sprawl'
 				? new StageCheckpointSystem(LOWER_SPRAWL_CHECKPOINTS)
 				: options.stageId === 'drainmarket'
 					? new StageCheckpointSystem(DRAINMARKET_CHECKPOINTS)
@@ -280,23 +368,38 @@ export class StageRunScene implements Scene {
 		// Initialize animation state
 		this.player.animState = createAnimationState();
 		this.lowerSprawlObjectives =
-			options.stageId === 'lower-sprawl' ? new LowerSprawlObjectives() : null;
+			!options.training && options.stageId === 'lower-sprawl'
+				? new LowerSprawlObjectives()
+				: null;
 		this.drainmarketObjectives =
-			options.stageId === 'drainmarket' ? new DrainmarketObjectives() : null;
+			!options.training && options.stageId === 'drainmarket' ? new DrainmarketObjectives() : null;
 		this.chromeArcologyObjectives =
-			options.stageId === 'chrome-arcology' ? new ChromeArcologyObjectives() : null;
+			!options.training && options.stageId === 'chrome-arcology'
+				? new ChromeArcologyObjectives()
+				: null;
 		this.mirrorPalaceObjectives =
-			options.stageId === 'mirror-palace' ? new MirrorPalaceObjectives() : null;
+			!options.training && options.stageId === 'mirror-palace'
+				? new MirrorPalaceObjectives()
+				: null;
 		this.dubColonyObjectives =
-			options.stageId === 'dub-colony'
+			!options.training && options.stageId === 'dub-colony'
 				? new DubColonyObjectives(options.storyResultFlags ?? [])
 				: null;
+		if (this.training && options.training) {
+			if (options.training.lessonId) this.training.selectLesson(options.training.lessonId);
+			if (options.training.dummyPresetId) {
+				this.training.selectDummyPreset(options.training.dummyPresetId);
+			}
+			if (options.training.kitId) this.training.selectKit(options.training.kitId);
+		}
 		this.inventory.addItem('claws');
 		this.inventory.equip('claws');
 		this.refreshLoadout();
 		this.player.checkpointLabel = this.checkpoints?.getSnapshot().activeLabel;
 		this.player.hudToast =
-			options.stageId === 'lower-sprawl'
+			options.training
+				? 'Dummy dojo online // infinite integrity'
+				: options.stageId === 'lower-sprawl'
 				? 'Follow the public route'
 				: options.stageId === 'drainmarket'
 					? 'Red invoice flash // L parry'
@@ -307,7 +410,9 @@ export class StageRunScene implements Scene {
 							: options.stageId === 'dub-colony'
 								? 'Watch the woofer ring // act on the bass pulse'
 								: undefined;
-		this.player.hudToastTimer = [
+		this.player.hudToastTimer = options.training
+			? 3.2
+			: [
 			'lower-sprawl',
 			'drainmarket',
 			'chrome-arcology',
@@ -317,7 +422,8 @@ export class StageRunScene implements Scene {
 			? 2.6
 			: 0;
 		this.initWorld();
-		this.updateGameplayHints();
+		if (this.training) this.updateTrainingHints();
+		else this.updateGameplayHints();
 	}
 
 	private updateChromeArcologyHints(snapshot: ChromeArcologyObjectiveSnapshot): void {
@@ -406,6 +512,97 @@ export class StageRunScene implements Scene {
 		) {
 			this.player.contextHint = 'K pierce lane // J close strike // Shift dodge';
 		}
+	}
+
+	private initTrainingWorld(layout: ReturnType<typeof cloneStageLayout>): void {
+		this.platforms = layout.platforms.map((platform) => ({ ...platform }));
+		this.pickups = [];
+		const floor = [...this.platforms]
+			.filter((platform) => platform.w >= 420)
+			.sort((a, b) => b.w - a.w || b.y - a.y)[0] ?? { x: 0, y: 494, w: 960, h: 80 };
+		const left = floor.x + 72;
+		const right = floor.x + floor.w - 72;
+		this.trainingArena = { left, right, floorY: floor.y };
+		this.player.x = Math.min(right - 420, left + 72);
+		this.player.y = floor.y - this.player.h;
+		this.player.onGround = true;
+		const state = this.training?.getState();
+		this.trainingDummy = createTrainingDummy(
+			Math.min(right - 80, this.player.x + 340),
+			floor.y - 50,
+			state?.dummyPresetId ?? 'idle'
+		);
+		this.enemies = [this.trainingDummy];
+		this.player.checkpointLabel = `Dummy dojo // ${this.options.stageId ?? layout.id}`;
+		this.applyTrainingKit();
+		this.updateTrainingHints();
+	}
+
+	private applyTrainingKit(): void {
+		if (!this.training) return;
+		const unlocks = this.training.getPlayerKit().unlocks;
+		this.player.hasRailgun = unlocks.includes('railgun');
+		this.player.hasRocket = unlocks.includes('rocket_pack');
+		this.player.hasKatana = this.training.getState().kitId === 'full';
+		this.player.maxFuel = this.player.hasRocket ? 8 : 0;
+		this.player.fuel = this.player.maxFuel;
+		this.player.stims = 9;
+		this.player.hp = this.player.maxHp;
+	}
+
+	private resetTrainingPractice(): void {
+		if (!this.training || !this.trainingDummy) return;
+		this.training.resetPractice();
+		this.player.x = this.trainingArena.left + 72;
+		this.player.y = this.trainingArena.floorY - this.player.h;
+		this.player.vx = 0;
+		this.player.vy = 0;
+		this.player.onGround = true;
+		this.player.comboCount = 0;
+		this.player.comboTimer = 0;
+		this.trainingDummy.spawnX = Math.min(this.trainingArena.right - 80, this.player.x + 340);
+		this.trainingDummy.spawnY = this.trainingArena.floorY - this.trainingDummy.h;
+		configureTrainingDummy(this.trainingDummy, this.training.getState().dummyPresetId);
+		this.trainingDamageNumberTimer = 0;
+		this.applyTrainingKit();
+		this.updateTrainingHints();
+		this.showToast('Practice reset // positions and metrics restored', 1.5);
+	}
+
+	private cycleTrainingLesson(delta: number): void {
+		if (!this.training) return;
+		const current = TRAINING_LESSONS.findIndex((lesson) => lesson.id === this.training?.getState().lessonId);
+		const next = TRAINING_LESSONS[(current + delta + TRAINING_LESSONS.length) % TRAINING_LESSONS.length];
+		if (next) this.training.selectLesson(next.id);
+		this.updateTrainingHints();
+	}
+
+	private cycleTrainingDummy(delta: number): void {
+		if (!this.training || !this.trainingDummy) return;
+		const current = DUMMY_PRESETS.findIndex((preset) => preset.id === this.training?.getState().dummyPresetId);
+		const next = DUMMY_PRESETS[(current + delta + DUMMY_PRESETS.length) % DUMMY_PRESETS.length];
+		if (!next) return;
+		this.training.selectDummyPreset(next.id);
+		configureTrainingDummy(this.trainingDummy, next.id);
+		this.updateTrainingHints();
+	}
+
+	private selectTrainingKit(kitId: TrainingKitId): void {
+		if (!this.training) return;
+		this.training.selectKit(kitId);
+		this.applyTrainingKit();
+		this.updateTrainingHints();
+	}
+
+	private updateTrainingHints(): void {
+		if (!this.training) return;
+		const state = this.training.getState();
+		const lesson = this.training.getLesson();
+		const preset = this.training.getDummyPreset();
+		this.player.objectiveHint = `${lesson.label} // ${preset.label}`;
+		this.player.loadoutHint = `${this.options.stageId ?? 'stage'} // ${this.training.getPlayerKit().label} // ∞ resources`;
+		this.player.contextHint = 'H overlays • [ ] lesson • , . dummy • 1-4 kit • R reset • N stage';
+		this.player.checkpointLabel = `Training // ${state.metrics.hitCount} hits // ${state.metrics.damageTotal.toFixed(1)} dmg`;
 	}
 
 	private updateDubColonyHints(snapshot: DubColonyObjectiveSnapshot): void {
@@ -2880,6 +3077,10 @@ export class StageRunScene implements Scene {
 
 	private initWorld(): void {
 		const layout = cloneStageLayout(this.options.stageId);
+		if (this.training) {
+			this.initTrainingWorld(layout);
+			return;
+		}
 		this.platforms = layout.platforms;
 		this.pickups = layout.pickups;
 		applyPersistedPayloadPickups(this.pickups, this.options.acquiredPayloadIds ?? []);

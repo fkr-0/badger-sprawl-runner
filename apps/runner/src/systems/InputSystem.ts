@@ -1,6 +1,10 @@
-/**
- * Input system: maps keyboard/gamepad to ActionMap with edge detection
- */
+/** Shared arcade-core semantic keyboard/gamepad input adapter. */
+
+import {
+	createActionInput,
+	type ActionBinding,
+	type ActionState,
+} from '../../../../vendor/arcade-core.mjs';
 
 export interface ActionMap {
 	moveLeft: boolean;
@@ -31,79 +35,109 @@ export interface KeyboardInputTarget {
 	removeEventListener(type: 'keydown' | 'keyup', listener: (event: KeyboardEvent) => void): void;
 }
 
+type RunnerAction =
+	| 'moveLeft'
+	| 'moveRight'
+	| 'jump'
+	| 'fastFall'
+	| 'melee'
+	| 'shoot'
+	| 'item'
+	| 'parry'
+	| 'dodge'
+	| 'hack'
+	| 'pause'
+	| 'debugToggle';
+
+const ACTIONS: readonly RunnerAction[] = [
+	'moveLeft',
+	'moveRight',
+	'jump',
+	'fastFall',
+	'melee',
+	'shoot',
+	'item',
+	'parry',
+	'dodge',
+	'hack',
+	'pause',
+	'debugToggle',
+];
+
+const BINDINGS: Record<RunnerAction, ActionBinding[]> = {
+	moveLeft: ['KeyA', 'ArrowLeft', { type: 'axis', index: 0, direction: -1 }, { type: 'button', index: 14 }],
+	moveRight: ['KeyD', 'ArrowRight', { type: 'axis', index: 0, direction: 1 }, { type: 'button', index: 15 }],
+	jump: ['Space', 'KeyW', 'ArrowUp', { type: 'button', index: 0 }],
+	fastFall: ['KeyS', 'ArrowDown', { type: 'axis', index: 1, direction: 1 }, { type: 'button', index: 13 }],
+	melee: ['KeyJ', { type: 'button', index: 2 }],
+	shoot: ['KeyK', { type: 'button', index: 5 }],
+	item: ['KeyE', { type: 'button', index: 3 }],
+	parry: ['KeyL', { type: 'button', index: 4 }],
+	dodge: ['ShiftLeft', 'ShiftRight', 'KeyR', { type: 'button', index: 1 }],
+	hack: ['KeyM', { type: 'button', index: 6 }],
+	pause: ['Escape', { type: 'button', index: 9 }],
+	debugToggle: ['KeyH'],
+};
+
+function held(snapshot: Readonly<Record<RunnerAction, ActionState>>, action: RunnerAction): boolean {
+	return snapshot[action].held;
+}
+
+function pressed(snapshot: Readonly<Record<RunnerAction, ActionState>>, action: RunnerAction): boolean {
+	return snapshot[action].pressed;
+}
+
 export class InputSystem {
-	private keys = new Set<string>();
-	private pressed = new Set<string>();
-	private readonly keyDownListener = (event: KeyboardEvent): void => this.onKeyDown(event);
-	private readonly keyUpListener = (event: KeyboardEvent): void => this.onKeyUp(event);
+	private readonly input;
 	private destroyed = false;
 
-	constructor(private readonly target: KeyboardInputTarget = window) {
-		this.target.addEventListener('keydown', this.keyDownListener);
-		this.target.addEventListener('keyup', this.keyUpListener);
+	constructor(target: KeyboardInputTarget = window) {
+		this.input = createActionInput({
+			actions: ACTIONS,
+			bindings: BINDINGS,
+			keyboardOptions: {
+				target: target as unknown as Window,
+				preventDefaultCodes: ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'],
+			},
+			gamepadIndex: 0,
+		});
 	}
 
 	destroy(): void {
 		if (this.destroyed) return;
 		this.destroyed = true;
-		this.target.removeEventListener('keydown', this.keyDownListener);
-		this.target.removeEventListener('keyup', this.keyUpListener);
-		this.keys.clear();
-		this.pressed.clear();
-	}
-
-	private onKeyDown(e: KeyboardEvent): void {
-		if (!this.keys.has(e.code)) {
-			this.pressed.add(e.code);
-		}
-		this.keys.add(e.code);
-		if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-			e.preventDefault();
-		}
-	}
-
-	private onKeyUp(e: KeyboardEvent): void {
-		this.keys.delete(e.code);
+		this.input.destroy();
+		this.input.reset();
 	}
 
 	snapshot(): ActionMap {
-		const left = this.has('KeyA', 'ArrowLeft');
-		const right = this.has('KeyD', 'ArrowRight');
-
+		const state = this.input.advance();
 		return {
-			moveLeft: left,
-			moveRight: right,
-			jump: this.has('Space', 'KeyW', 'ArrowUp'),
-			jumpPressed: this.edge('Space', 'KeyW', 'ArrowUp'),
-			fastFall: this.has('KeyS', 'ArrowDown'),
-			melee: this.has('KeyJ'),
-			meleePressed: this.edge('KeyJ'),
-			shoot: this.has('KeyK'),
-			shootPressed: this.edge('KeyK'),
-			item: this.has('KeyE'),
-			itemPressed: this.edge('KeyE'),
-			parry: this.has('KeyL'),
-			parryPressed: this.edge('KeyL'),
-			dodge: this.has('ShiftLeft', 'ShiftRight', 'KeyR'),
-			dodgePressed: this.edge('ShiftLeft', 'ShiftRight', 'KeyR'),
-			hack: this.has('KeyM'),
-			hackPressed: this.edge('KeyM'),
-			hackHeld: this.keys.has('KeyM'),
-			pause: this.has('Escape'),
-			pausePressed: this.edge('Escape'),
-			debugToggle: this.edge('KeyH'),
+			moveLeft: held(state, 'moveLeft'),
+			moveRight: held(state, 'moveRight'),
+			jump: held(state, 'jump'),
+			jumpPressed: pressed(state, 'jump'),
+			fastFall: held(state, 'fastFall'),
+			melee: held(state, 'melee'),
+			meleePressed: pressed(state, 'melee'),
+			shoot: held(state, 'shoot'),
+			shootPressed: pressed(state, 'shoot'),
+			item: held(state, 'item'),
+			itemPressed: pressed(state, 'item'),
+			parry: held(state, 'parry'),
+			parryPressed: pressed(state, 'parry'),
+			dodge: held(state, 'dodge'),
+			dodgePressed: pressed(state, 'dodge'),
+			hack: held(state, 'hack'),
+			hackPressed: pressed(state, 'hack'),
+			hackHeld: held(state, 'hack'),
+			pause: held(state, 'pause'),
+			pausePressed: pressed(state, 'pause'),
+			debugToggle: pressed(state, 'debugToggle'),
 		};
 	}
 
 	clearPressed(): void {
-		this.pressed.clear();
-	}
-
-	private has(...codes: string[]): boolean {
-		return codes.some((c) => this.keys.has(c));
-	}
-
-	private edge(...codes: string[]): boolean {
-		return codes.some((c) => this.pressed.has(c));
+		this.input.clearEdges();
 	}
 }

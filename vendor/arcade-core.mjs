@@ -283,6 +283,9 @@ export function createActionInput(options) {
       keyboard.advance();
       return read();
     },
+    refresh() {
+      return read();
+    },
     snapshot() {
       return current ?? read();
     },

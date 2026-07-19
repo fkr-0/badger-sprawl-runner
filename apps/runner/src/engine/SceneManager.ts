@@ -1,7 +1,6 @@
-/**
- * Scene management with push/pop/replace transitions
- */
+/** Shared arcade-core scene stack adapted to Badger's renderer context. */
 
+import { createSceneStack } from '../../../../vendor/arcade-core.mjs';
 import type { Renderer } from '../renderer/Renderer';
 import type { EventBus } from './EventBus';
 
@@ -20,53 +19,37 @@ export interface SceneContext {
 }
 
 export class SceneManager {
-	private stack: Scene[] = [];
+	private readonly stack;
 
-	constructor(private context: SceneContext) {}
+	constructor(context: SceneContext) {
+		this.stack = createSceneStack<SceneContext, Scene>({ context });
+	}
 
 	push(scene: Scene): void {
 		this.stack.push(scene);
-		scene.onEnter(this.context);
 	}
 
 	clear(): void {
-		while (this.stack.length > 0) {
-			this.stack.pop()?.onExit();
-		}
+		this.stack.clear();
 	}
 
 	pop(): Scene | undefined {
-		const current = this.stack.pop();
-		if (current) {
-			current.onExit();
-		}
-		return current;
+		return this.stack.pop();
 	}
 
 	replace(scene: Scene): void {
-		const current = this.stack.pop();
-		if (current) {
-			current.onExit();
-		}
-		this.stack.push(scene);
-		scene.onEnter(this.context);
+		this.stack.replace(scene);
 	}
 
 	getCurrent(): Scene | undefined {
-		return this.stack[this.stack.length - 1];
+		return this.stack.current();
 	}
 
 	update(dt: number): void {
-		const current = this.getCurrent();
-		if (current) {
-			current.update(dt);
-		}
+		this.stack.update(dt);
 	}
 
 	render(renderer: Renderer, alpha: number): void {
-		const current = this.getCurrent();
-		if (current) {
-			current.render(renderer, alpha);
-		}
+		this.stack.render(renderer, alpha);
 	}
 }

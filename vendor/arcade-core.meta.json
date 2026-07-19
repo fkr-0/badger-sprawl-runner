@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "module": "arcade-core.mjs",
   "types": "arcade-core.d.mts",
-  "sha256": "37dcad6b9cf76b56164654757c5e30df5831326066dc1453b20ab378b48206bd",
-  "typesSha256": "42d793f191d6e6c3af0d3db2eebdc9646779b4fa03f9769eec48117d49756813"
+  "sha256": "d7737a24845c7088fb4477da0f8286659cb888b2381e7624662a62f979084ca1",
+  "typesSha256": "355a31ea4f096377e575358427e34d3f0d1fecfd5606962c5e138d2ca92df628"
 }

@@ -10,7 +10,19 @@ describe('training mode state', () => {
 			lessonId: 'movement',
 			dummyPresetId: 'idle',
 			kitId: 'base',
-			metrics: { hitCount: 0, damageTotal: 0, lastAction: 'none' },
+			metrics: {
+				hitCount: 0,
+				damageTotal: 0,
+				lastAction: 'none',
+				lastHitDamage: 0,
+				hitsPerSecond: 0,
+			},
+			overlays: {
+				showHitboxes: true,
+				showHurtboxes: true,
+				showFrameData: true,
+				showDamageNumbers: true,
+			},
 		});
 		expect(training.getDummyPreset().invincible).toBe(true);
 	});
@@ -35,19 +47,44 @@ describe('training mode state', () => {
 		training.selectLesson('melee');
 		training.selectDummyPreset('armored');
 
-		training.recordHit({ damage: 2, action: 'melee' });
-		training.recordHit({ damage: 1, action: 'parry' });
+		training.recordHit({ damage: 2, action: 'melee', timeMs: 100 });
+		training.recordHit({ damage: 1, action: 'parry', timeMs: 400 });
 		expect(training.getState().metrics).toMatchObject({
 			hitCount: 2,
 			damageTotal: 3,
 			lastAction: 'parry',
+			lastHitDamage: 1,
+			comboDamage: 3,
+			hitsPerSecond: 2,
+		});
+		training.recordMeasurements({ railReloadDeltaMs: 720, parryWindowDeltaMs: 150 });
+		expect(training.getState().metrics).toMatchObject({
+			railReloadDeltaMs: 720,
+			parryWindowDeltaMs: 150,
 		});
 
 		training.resetPractice();
 		expect(training.getState()).toMatchObject({
 			lessonId: 'melee',
 			dummyPresetId: 'armored',
-			metrics: { hitCount: 0, damageTotal: 0, lastAction: 'none' },
+			metrics: { hitCount: 0, damageTotal: 0, lastAction: 'none', comboDamage: 0 },
+		});
+	});
+
+	it('toggles live overlay groups without affecting the selected lesson or kit', () => {
+		const training = createTrainingMode();
+		training.selectLesson('railgun');
+		training.selectKit('full');
+		training.toggleAllOverlays();
+		expect(training.getState()).toMatchObject({
+			lessonId: 'railgun',
+			kitId: 'full',
+			overlays: {
+				showHitboxes: false,
+				showHurtboxes: false,
+				showFrameData: false,
+				showDamageNumbers: false,
+			},
 		});
 	});
 

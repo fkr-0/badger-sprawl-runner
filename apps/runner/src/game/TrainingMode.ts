@@ -41,6 +41,21 @@ export interface TrainingMetrics {
 	hitCount: number;
 	damageTotal: number;
 	lastAction: TrainingAction;
+	lastHitDamage: number;
+	comboDamage: number;
+	hitsPerSecond: number;
+	railReloadDeltaMs: number;
+	parryWindowDeltaMs: number;
+	meleeActiveFrames: number;
+	recoveryFrames: number;
+	hackCastTimeMs: number;
+}
+
+export interface TrainingOverlayState {
+	showHitboxes: boolean;
+	showHurtboxes: boolean;
+	showFrameData: boolean;
+	showDamageNumbers: boolean;
 }
 
 export interface TrainingState {
@@ -48,6 +63,7 @@ export interface TrainingState {
 	dummyPresetId: DummyPresetId;
 	kitId: TrainingKitId;
 	metrics: TrainingMetrics;
+	overlays: TrainingOverlayState;
 }
 
 const DEFAULT_TRAINING_LESSON: TrainingLesson = {
@@ -104,19 +120,40 @@ export const TRAINING_KITS: TrainingKit[] = [
 ];
 
 function zeroMetrics(): TrainingMetrics {
-	return { hitCount: 0, damageTotal: 0, lastAction: 'none' };
+	return {
+		hitCount: 0,
+		damageTotal: 0,
+		lastAction: 'none',
+		lastHitDamage: 0,
+		comboDamage: 0,
+		hitsPerSecond: 0,
+		railReloadDeltaMs: 0,
+		parryWindowDeltaMs: 0,
+		meleeActiveFrames: 0,
+		recoveryFrames: 0,
+		hackCastTimeMs: 0,
+	};
 }
+
+const DEFAULT_OVERLAYS: TrainingOverlayState = {
+	showHitboxes: true,
+	showHurtboxes: true,
+	showFrameData: true,
+	showDamageNumbers: true,
+};
 
 function clone<T>(value: T): T {
 	return structuredClone(value) as T;
 }
 
 export class TrainingMode {
+	private recentHitTimes: number[] = [];
 	private state: TrainingState = {
 		lessonId: 'movement',
 		dummyPresetId: 'idle',
 		kitId: 'base',
 		metrics: zeroMetrics(),
+		overlays: { ...DEFAULT_OVERLAYS },
 	};
 
 	getState(): TrainingState {
@@ -158,18 +195,53 @@ export class TrainingMode {
 		}
 	}
 
-	recordHit(hit: { damage: number; action: TrainingAction }): void {
+	recordHit(hit: { damage: number; action: TrainingAction; timeMs?: number }): void {
+		const timeMs = hit.timeMs ?? performance.now();
+		this.recentHitTimes = this.recentHitTimes.filter((time) => timeMs - time <= 1000);
+		this.recentHitTimes.push(timeMs);
 		this.state = {
 			...this.state,
 			metrics: {
+				...this.state.metrics,
 				hitCount: this.state.metrics.hitCount + 1,
 				damageTotal: this.state.metrics.damageTotal + hit.damage,
 				lastAction: hit.action,
+				lastHitDamage: hit.damage,
+				comboDamage: this.state.metrics.comboDamage + hit.damage,
+				hitsPerSecond: this.recentHitTimes.length,
+			},
+		};
+	}
+
+	recordMeasurements(measurements: Partial<Omit<TrainingMetrics, 'hitCount' | 'damageTotal' | 'lastAction'>>): void {
+		this.state = {
+			...this.state,
+			metrics: { ...this.state.metrics, ...measurements },
+		};
+	}
+
+	toggleOverlay(overlay: keyof TrainingOverlayState): void {
+		this.state = {
+			...this.state,
+			overlays: { ...this.state.overlays, [overlay]: !this.state.overlays[overlay] },
+		};
+	}
+
+	toggleAllOverlays(): void {
+		const enabled = !Object.values(this.state.overlays).every(Boolean);
+		this.state = {
+			...this.state,
+			overlays: {
+				showHitboxes: enabled,
+				showHurtboxes: enabled,
+				showFrameData: enabled,
+				showDamageNumbers: enabled,
 			},
 		};
 	}
 
 	resetPractice(): void {
+		this.recentHitTimes = [];
 		this.state = { ...this.state, metrics: zeroMetrics() };
 	}
 }

@@ -71,6 +71,7 @@ export declare function createActionInput<Action extends string>(options: {
   getGamepads?: () => ArrayLike<Gamepad | null>;
 }): {
   advance(): Readonly<Record<Action, ActionState>>;
+  refresh(): Readonly<Record<Action, ActionState>>;
   snapshot(): Readonly<Record<Action, ActionState>>;
   clearEdges(): void;
   setBindings(bindings: Partial<ActionBindings<Action>>): void;
