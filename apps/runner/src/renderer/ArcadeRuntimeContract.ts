@@ -3,7 +3,9 @@
  *
  * Simulation and sprite contracts remain unchanged while rendering passes migrate.
  */
-export const BADGER_ARCADE_PIXI_RUNTIME_VERSION = '0.2.0';
+import { defineArcadeRenderPlan } from '../../../../vendor/arcade-pixi-runtime.mjs';
+
+export const BADGER_ARCADE_PIXI_RUNTIME_VERSION = '0.5.0';
 
 export const BADGER_PIXI_LAYERS = [
 	'backdrop',
@@ -14,7 +16,7 @@ export const BADGER_PIXI_LAYERS = [
 	'effects',
 	'world-front',
 	'hud',
-	'overlay'
+	'overlay',
 ] as const;
 
 export const BADGER_CANVAS_PASS_TO_PIXI_LAYER = {
@@ -26,5 +28,79 @@ export const BADGER_CANVAS_PASS_TO_PIXI_LAYER = {
 	vfx: 'effects',
 	foreground: 'world-front',
 	runnerHud: 'hud',
-	sceneUi: 'overlay'
+	sceneUi: 'overlay',
 } as const;
+
+export const BADGER_PIXI_RENDER_PLAN = defineArcadeRenderPlan(
+	[
+		{
+			name: 'stage-backdrop',
+			layer: 'backdrop',
+			legacyPass: 'stageBackdrop',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+		{
+			name: 'parallax',
+			layer: 'world-back',
+			legacyPass: 'parallax',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+		{
+			name: 'terrain',
+			layer: 'world',
+			legacyPass: 'terrain',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+		{
+			name: 'actors',
+			layer: 'actors',
+			legacyPass: 'actors',
+			migration: 'native',
+			activation: 'planned',
+			required: true,
+		},
+		{
+			name: 'projectiles',
+			layer: 'projectiles',
+			legacyPass: 'projectiles',
+			migration: 'native',
+			activation: 'planned',
+		},
+		{
+			name: 'vfx',
+			layer: 'effects',
+			legacyPass: 'vfx',
+			migration: 'native',
+			activation: 'planned',
+		},
+		{
+			name: 'foreground',
+			layer: 'world-front',
+			legacyPass: 'foreground',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+		{
+			name: 'runner-hud',
+			layer: 'hud',
+			legacyPass: 'runnerHud',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+		{
+			name: 'scene-ui',
+			layer: 'overlay',
+			legacyPass: 'sceneUi',
+			migration: 'canvas-bridge',
+			activation: 'ready',
+		},
+	] as const,
+	{ layers: BADGER_PIXI_LAYERS }
+);
+
+export const BADGER_PIXI_BRIDGE_PASSES = BADGER_PIXI_RENDER_PLAN.filter(
+	(pass) => pass.migration === 'canvas-bridge' && pass.activation === 'ready'
+);

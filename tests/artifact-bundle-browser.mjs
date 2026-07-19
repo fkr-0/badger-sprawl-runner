@@ -107,6 +107,10 @@ try {
 			urls.some((url) => url.endsWith('/assets/sprites/item_icons_extended.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/skill_icons.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_parallax.png')) &&
+			urls.some((url) => url.endsWith('/assets/sprites/worlds/mirror_palace_parallax.png')) &&
+			urls.some((url) => url.endsWith('/assets/sprites/worlds/dub_colony_parallax.png')) &&
+			urls.some((url) => url.endsWith('/assets/sprites/characters/naya_root.png')) &&
+			urls.some((url) => url.endsWith('/assets/sprites/bosses/boss_king_feedback_ampthrone.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/enemies/chrome_bellhop.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/enemies/mirror_sentinel.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/bosses/boss_madame_vitrine_glasscourt.png'))

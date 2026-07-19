@@ -36,6 +36,7 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 	return {
 		stageId,
 		acquiredPayloadIds: storyProgress.acquiredPayloads,
+		storyResultFlags: storyProgress.resultFlags,
 		branchGameplayHooks,
 		balanceRules,
 		runtimeConfig,

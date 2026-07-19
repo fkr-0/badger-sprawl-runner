@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import {
 	BADGER_ARCADE_PIXI_RUNTIME_VERSION,
 	BADGER_CANVAS_PASS_TO_PIXI_LAYER,
-	BADGER_PIXI_LAYERS
+	BADGER_PIXI_BRIDGE_PASSES,
+	BADGER_PIXI_LAYERS,
+	BADGER_PIXI_RENDER_PLAN
 } from './ArcadeRuntimeContract';
 
 describe('shared Pixi runtime contract', () => {
 	it('pins the common runtime and preserves deterministic pass order', () => {
-		expect(BADGER_ARCADE_PIXI_RUNTIME_VERSION).toBe('0.2.0');
+		expect(BADGER_ARCADE_PIXI_RUNTIME_VERSION).toBe('0.5.0');
 		expect(BADGER_PIXI_LAYERS).toEqual([
 			'backdrop',
 			'world-back',
@@ -20,5 +24,36 @@ describe('shared Pixi runtime contract', () => {
 			'overlay'
 		]);
 		expect(BADGER_CANVAS_PASS_TO_PIXI_LAYER.parallax).toBe('world-back');
+		expect(BADGER_PIXI_RENDER_PLAN.map(({ name, layer }) => [name, layer])).toEqual([
+			['stage-backdrop', 'backdrop'],
+			['parallax', 'world-back'],
+			['terrain', 'world'],
+			['actors', 'actors'],
+			['projectiles', 'projectiles'],
+			['vfx', 'effects'],
+			['foreground', 'world-front'],
+			['runner-hud', 'hud'],
+			['scene-ui', 'overlay']
+		]);
+		expect(BADGER_PIXI_BRIDGE_PASSES.map((pass) => pass.name)).toEqual([
+			'stage-backdrop',
+			'parallax',
+			'terrain',
+			'foreground',
+			'runner-hud',
+			'scene-ui'
+		]);
+
+		const runtimeModule = readFileSync(
+			new URL('../../../../vendor/arcade-pixi-runtime.mjs', import.meta.url)
+		);
+		const metadata = JSON.parse(
+			readFileSync(
+				new URL('../../../../vendor/arcade-pixi-runtime.meta.json', import.meta.url),
+				'utf8'
+			)
+		) as { version: string; sha256: string };
+		expect(metadata.version).toBe(BADGER_ARCADE_PIXI_RUNTIME_VERSION);
+		expect(createHash('sha256').update(runtimeModule).digest('hex')).toBe(metadata.sha256);
 	});
 });

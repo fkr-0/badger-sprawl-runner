@@ -8,7 +8,7 @@ export class BeatClock {
 	private audioCtx: AudioContext | null = null;
 	private subscribers: Array<(beatNumber: number) => void> = [];
 
-	constructor(bpm = 140) {
+	constructor(bpm = 86) {
 		this.bpm = bpm;
 	}
 

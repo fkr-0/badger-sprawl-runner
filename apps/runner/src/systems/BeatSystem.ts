@@ -23,7 +23,7 @@ export class BeatSystem {
 	}> = [];
 
 	constructor(private eventBus?: EventBus) {
-		this.beatClock = new BeatClock(140); // Default 140 BPM dub
+		this.beatClock = new BeatClock(86); // Classic head-nod hip-hop pocket
 	}
 
 	init(audioCtx: AudioContext): void {

@@ -48,6 +48,10 @@ export interface Player extends Entity, CombatEntity {
 	railgunFlash?: number;
 	railgunAnimationTimer?: number;
 	railgunHitCount?: number;
+	hackAnimationTimer?: number;
+	interactionAnimationTimer?: number;
+	pickupReactionTimer?: number;
+	victoryAnimationTimer?: number;
 	skillTrackRanks?: Record<'clawline' | 'railgun' | 'rocket' | 'hacking', number>;
 	gearIconSlots?: Array<{
 		itemId: string;
@@ -95,6 +99,10 @@ export function createPlayer(): Player {
 		railgunFlash: 0,
 		railgunAnimationTimer: 0,
 		railgunHitCount: 0,
+		hackAnimationTimer: 0,
+		interactionAnimationTimer: 0,
+		pickupReactionTimer: 0,
+		victoryAnimationTimer: 0,
 	};
 }
 
@@ -107,6 +115,7 @@ export function processMossInput(
 	combatEvents?: CombatEvents
 ): void {
 	const canAct = player.stun <= 0;
+	if (canAct && actionMap.hackPressed) player.hackAnimationTimer = 0.42;
 
 	// Melee
 	if (canAct && actionMap.meleePressed && player.meleeTimer <= 0) {
@@ -199,6 +208,10 @@ export function processMossInput(
 	player.focus = Math.max(0, player.focus - dt);
 	player.railgunFlash = Math.max(0, (player.railgunFlash ?? 0) - dt);
 	player.railgunAnimationTimer = Math.max(0, (player.railgunAnimationTimer ?? 0) - dt);
+	player.hackAnimationTimer = Math.max(0, (player.hackAnimationTimer ?? 0) - dt);
+	player.interactionAnimationTimer = Math.max(0, (player.interactionAnimationTimer ?? 0) - dt);
+	player.pickupReactionTimer = Math.max(0, (player.pickupReactionTimer ?? 0) - dt);
+	player.victoryAnimationTimer = Math.max(0, (player.victoryAnimationTimer ?? 0) - dt);
 
 	// Recharge fuel on ground
 	if (player.onGround && player.hasRocket) {

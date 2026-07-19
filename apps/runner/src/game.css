@@ -15,6 +15,24 @@
 	background: var(--ui-bg);
 }
 
+#game {
+	position: relative;
+	z-index: 1;
+}
+
+#game[data-renderer-mode="bridge-overlay"] {
+	background: transparent;
+}
+
+#badger-pixi-bridge {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 0;
+	pointer-events: none;
+}
+
 * {
 	box-sizing: border-box;
 }
@@ -39,6 +57,7 @@ body {
 	height: 100vh;
 	place-items: center;
 	background: var(--ui-bg);
+	position: relative;
 }
 
 canvas {
@@ -52,4 +71,3 @@ canvas {
 	image-rendering: crisp-edges;
 	outline: none;
 }
-

@@ -1,6 +1,8 @@
 import { cloneChromeArcologyLayout } from './chromeArcologyLayout';
 import { cloneDrainmarketLayout } from './drainmarketLayout';
+import { cloneDubColonyLayout } from './dubColonyLayout';
 import { type StageLayout, cloneLowerSprawlLayout } from './lowerSprawlLayout';
+import { cloneMirrorPalaceLayout } from './mirrorPalaceLayout';
 
 export const RUNTIME_STAGE_IDS = [
 	'lower-sprawl',
@@ -81,6 +83,8 @@ export function cloneStageLayout(stageId = 'lower-sprawl'): StageLayout {
 	const runtimeStageId = isRuntimeStageId(stageId) ? stageId : 'lower-sprawl';
 	if (runtimeStageId === 'drainmarket') return cloneDrainmarketLayout();
 	if (runtimeStageId === 'chrome-arcology') return cloneChromeArcologyLayout();
+	if (runtimeStageId === 'mirror-palace') return cloneMirrorPalaceLayout();
+	if (runtimeStageId === 'dub-colony') return cloneDubColonyLayout();
 	const theme = STAGE_LAYOUT_THEMES[runtimeStageId];
 	const layout = cloneLowerSprawlLayout();
 	return {

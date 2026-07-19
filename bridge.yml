@@ -27,6 +27,16 @@ commands:
     description: Run the complete Drainmarket vertical slice in Chromium and Firefox.
     timeoutMs: 180000
     track: test
+  e2e-dub-colony:
+    run: pnpm run test:e2e:dub-colony
+    description: Run the Chapter 5 colony vote, Naya companion, beat-reactor, and King Feedback flow in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
+  e2e-mirror-palace:
+    run: pnpm run test:e2e:mirror-palace
+    description: Run the Chapter 4 Mirror Palace rocket, story-choice, animation, and Reflection Judge flow in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
   e2e-progression:
     run: pnpm run test:e2e:progression
     description: Run the expanded sprite-backed item and four-track skill-tree acceptance flow in Chromium and Firefox.
@@ -82,10 +92,16 @@ agent:
     - Keep this original; avoid direct use of protected cyberpunk novel canon.
     - The user-facing artifact is the Vite production build published to dist/.
     - Data manifests are intended to survive extraction into a standalone library.
+    - Canvas2D remains production-authoritative; use the verified vendored arcade-pixi-runtime v0.4 render plan and bridge adapter for incremental migration.
   tasks:
     - Continue replacing remaining generated fallback sheets with authored production animation sheets.
     - Split minigame engine into its own package when API stabilizes.
   changelog:
+    - "2026-07-19: Rebalanced gameplay actor scale and replaced overlapping fixed HUD coordinates with a compact tested 960x540 layout."
+    - "2026-07-19: Retuned Dub Colony from 140 BPM to an 86 BPM classic hip-hop pocket with proportionally rebalanced branch timing windows."
+    - "2026-07-19: Added the verified shared-runtime v0.4 render plan and ready-pass Canvas bridge installer."
+    - "2026-07-19: Added the complete Dub Colony Chapter 5 beat, companion, civic-vote, and King Feedback story route."
+    - "2026-07-18: Promoted the 86-frame Moss motion atlas, upgraded story presentation, and added the complete Mirror Palace Chapter 4 route."
     - "2026-07-14: Expanded progression to 23 items, six item sets, 20 skill nodes, and generated pickup/item/skill sprite sheets."
     - "2026-07-14: Added Chrome Arcology railgun gameplay, Madame Vitrine phases, focused cross-browser E2E, and staged artifact validation."
     - "2026-07-14: Added gated Artifact Lab build, validation, staging, dry-run deploy, and deploy actions."

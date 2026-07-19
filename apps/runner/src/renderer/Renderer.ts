@@ -2,6 +2,7 @@
  * Renderer - central canvas context wrapper and render coordination
  */
 
+import { createArcadeCameraTransform } from '../../../../vendor/arcade-pixi-runtime.mjs';
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
 import type { CombatEntity } from '../systems/CombatSystem';
@@ -17,6 +18,14 @@ export const PLAYER_SPRITE_SHEET_ID = 'moss_badger_production';
 export const LOWER_SPRAWL_BACKDROP_SHEET_ID = 'lower_sprawl_backdrop';
 export const DRAINMARKET_PARALLAX_SHEET_ID = 'drainmarket_parallax';
 export const CHROME_ARCOLOGY_PARALLAX_SHEET_ID = 'chrome_arcology_parallax';
+export const MIRROR_PALACE_PARALLAX_SHEET_ID = 'mirror_palace_parallax';
+export const DUB_COLONY_PARALLAX_SHEET_ID = 'dub_colony_parallax';
+const BOSS_RENDER_HEIGHT = 78;
+
+export type BadgerBridgePassName = 'stage-backdrop' | 'parallax' | 'terrain';
+export interface BadgerRendererBridgeSink {
+	queuePass(name: BadgerBridgePassName, draw: (ctx: CanvasRenderingContext2D) => void): void;
+}
 
 export class Renderer {
 	private spriteRenderer: SpriteRenderer;
@@ -25,6 +34,8 @@ export class Renderer {
 	private titleCardRenderer: TitleCardRenderer;
 	private uiRenderer: UIRenderer;
 	private dialoguePortraitRenderer: DialoguePortraitRenderer;
+	private bridgeSink: BadgerRendererBridgeSink | null = null;
+	private cameraTransform = createArcadeCameraTransform({ anchorX: 0, anchorY: 0 });
 
 	constructor(
 		private ctx: CanvasRenderingContext2D,
@@ -46,33 +57,75 @@ export class Renderer {
 		this.ctx.clearRect(0, 0, this.width, this.height);
 	}
 
+	setBridgeSink(sink: BadgerRendererBridgeSink | null): void {
+		this.bridgeSink = sink;
+	}
+
+	private queueBridgePass(
+		name: BadgerBridgePassName,
+		draw: (ctx: CanvasRenderingContext2D) => void
+	): boolean {
+		if (!this.bridgeSink) return false;
+		this.bridgeSink.queuePass(name, draw);
+		return true;
+	}
+
 	drawBackground(): void {
-		const sky = this.ctx.createLinearGradient(0, 0, 0, this.height);
+		if (this.queueBridgePass('stage-backdrop', (ctx) => this.drawBackgroundTo(ctx))) return;
+		this.drawBackgroundTo(this.ctx);
+	}
+
+	private drawBackgroundTo(ctx: CanvasRenderingContext2D): void {
+		const sky = ctx.createLinearGradient(0, 0, 0, this.height);
 		sky.addColorStop(0, '#111832');
 		sky.addColorStop(0.55, '#12101f');
 		sky.addColorStop(1, '#080a12');
-		this.ctx.fillStyle = sky;
-		this.ctx.fillRect(0, 0, this.width, this.height);
+		ctx.fillStyle = sky;
+		ctx.fillRect(0, 0, this.width, this.height);
 	}
 
 	renderParallax(cameraX: number): void {
+		if (
+			this.queueBridgePass('parallax', (ctx) =>
+				this.parallaxRenderer.render(ctx, cameraX, this.width, this.height)
+			)
+		)
+			return;
 		this.parallaxRenderer.render(this.ctx, cameraX, this.width, this.height);
 	}
 
 	renderStageBackdrop(sheetId: string): boolean {
 		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
-		this.spriteRenderer.drawFrame(sheetId, 'background', 0, 0, 0);
-		const shade = this.ctx.createLinearGradient(0, 0, 0, this.height);
+		if (this.queueBridgePass('stage-backdrop', (ctx) => this.drawStageBackdropTo(ctx, sheetId))) {
+			return true;
+		}
+		this.drawStageBackdropTo(this.ctx, sheetId);
+		return true;
+	}
+
+	private drawStageBackdropTo(ctx: CanvasRenderingContext2D, sheetId: string): void {
+		this.spriteRenderer.drawFrameTo(ctx, sheetId, 'background', 0, 0, 0);
+		const shade = ctx.createLinearGradient(0, 0, 0, this.height);
 		shade.addColorStop(0, 'rgba(4, 7, 16, 0.10)');
 		shade.addColorStop(0.65, 'rgba(4, 7, 16, 0.20)');
 		shade.addColorStop(1, 'rgba(4, 7, 16, 0.48)');
-		this.ctx.fillStyle = shade;
-		this.ctx.fillRect(0, 0, this.width, this.height);
-		return true;
+		ctx.fillStyle = shade;
+		ctx.fillRect(0, 0, this.width, this.height);
 	}
 
 	renderStageParallax(sheetId: string, cameraX: number): boolean {
 		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
+		if (this.queueBridgePass('parallax', (ctx) => this.drawStageParallaxTo(ctx, sheetId, cameraX)))
+			return true;
+		this.drawStageParallaxTo(this.ctx, sheetId, cameraX);
+		return true;
+	}
+
+	private drawStageParallaxTo(
+		ctx: CanvasRenderingContext2D,
+		sheetId: string,
+		cameraX: number
+	): void {
 		const layers = [
 			{ animation: 'back_plate', speed: 0.035, alpha: 1 },
 			{ animation: 'mid_plate', speed: 0.09, alpha: 0.84 },
@@ -80,10 +133,11 @@ export class Renderer {
 		];
 		for (const layer of layers) {
 			const offset = -((cameraX * layer.speed) % this.width);
-			this.ctx.save();
-			this.ctx.globalAlpha = layer.alpha;
-			this.spriteRenderer.drawFrame(sheetId, layer.animation, 0, offset, 0, false, 3, 3);
-			this.spriteRenderer.drawFrame(
+			ctx.save();
+			ctx.globalAlpha = layer.alpha;
+			this.spriteRenderer.drawFrameTo(ctx, sheetId, layer.animation, 0, offset, 0, false, 3, 3);
+			this.spriteRenderer.drawFrameTo(
+				ctx,
 				sheetId,
 				layer.animation,
 				0,
@@ -93,38 +147,54 @@ export class Renderer {
 				3,
 				3
 			);
-			this.ctx.restore();
+			ctx.restore();
 		}
-		const shade = this.ctx.createLinearGradient(0, 0, 0, this.height);
+		const shade = ctx.createLinearGradient(0, 0, 0, this.height);
 		shade.addColorStop(0, 'rgba(8, 5, 14, 0.08)');
 		shade.addColorStop(0.62, 'rgba(8, 5, 14, 0.18)');
 		shade.addColorStop(1, 'rgba(8, 5, 14, 0.52)');
-		this.ctx.fillStyle = shade;
-		this.ctx.fillRect(0, 0, this.width, this.height);
-		return true;
+		ctx.fillStyle = shade;
+		ctx.fillRect(0, 0, this.width, this.height);
 	}
 
 	renderPlatforms(
 		platforms: Array<{ x: number; y: number; w: number; h: number }>,
 		cameraX: number
 	): void {
+		if (this.queueBridgePass('terrain', (ctx) => this.drawPlatformsTo(ctx, platforms, cameraX)))
+			return;
+		this.drawPlatformsTo(this.ctx, platforms, cameraX);
+	}
+
+	private drawPlatformsTo(
+		ctx: CanvasRenderingContext2D,
+		platforms: Array<{ x: number; y: number; w: number; h: number }>,
+		cameraX: number
+	): void {
+		this.cameraTransform.set({
+			x: cameraX,
+			y: 0,
+			zoom: 1,
+			viewportWidth: this.width,
+			viewportHeight: this.height,
+		});
 		for (const p of platforms) {
-			const x = p.x - cameraX;
+			const x = this.cameraTransform.worldToScreen({ x: p.x, y: p.y }).x;
 			if (x + p.w < 0 || x > this.width) continue;
 
 			// Platform body
-			this.ctx.fillStyle = '#272b32';
-			this.ctx.fillRect(x, p.y, p.w, p.h);
+			ctx.fillStyle = '#272b32';
+			ctx.fillRect(x, p.y, p.w, p.h);
 
 			// Platform highlight
-			this.ctx.fillStyle = '#364457';
-			this.ctx.fillRect(x, p.y, p.w, 4);
+			ctx.fillStyle = '#364457';
+			ctx.fillRect(x, p.y, p.w, 4);
 
 			// Safety stripes
-			this.ctx.fillStyle = '#ffb35e';
+			ctx.fillStyle = '#ffb35e';
 			for (let sx = x + 10; sx < x + p.w - 10; sx += 24) {
-				this.ctx.fillRect(sx, p.y + p.h - 8, 12, 4);
-				this.ctx.fillRect(sx + 12, p.y + p.h - 4, 12, 4);
+				ctx.fillRect(sx, p.y + p.h - 8, 12, 4);
+				ctx.fillRect(sx + 12, p.y + p.h - 4, 12, 4);
 			}
 		}
 	}
@@ -141,14 +211,12 @@ export class Renderer {
 		if (enemy.invuln > 0 && Math.floor(performance.now() / 70) % 2 === 0) {
 			this.ctx.globalAlpha = 0.46;
 		}
-		this.spriteRenderer.drawFrame(
-			sheetId,
-			animationName,
-			frame,
-			x + enemy.w / 2 - 24,
-			enemy.y + enemy.h - 48,
-			enemy.dir > 0
-		);
+		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(sheetId)?.sheet.frameSize ?? [
+			48, 48,
+		];
+		const spriteX = x + enemy.w / 2 - frameWidth / 2;
+		const spriteY = enemy.y + enemy.h - frameHeight;
+		this.spriteRenderer.drawFrame(sheetId, animationName, frame, spriteX, spriteY, enemy.dir > 0);
 		this.ctx.restore();
 		return true;
 	}
@@ -161,8 +229,12 @@ export class Renderer {
 		const frame = animation
 			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
 			: 0;
-		const spriteX = x + enemy.w / 2 - 48;
-		const spriteY = enemy.y + enemy.h - 88;
+		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(sheetId)?.sheet.frameSize ?? [
+			96, 96,
+		];
+		const renderScale = Math.min(1, BOSS_RENDER_HEIGHT / frameHeight);
+		const spriteX = x + enemy.w / 2 - frameWidth / 2;
+		const spriteY = enemy.y + enemy.h - frameHeight;
 
 		this.ctx.save();
 		if ((enemy.bossTelegraph ?? 0) > 0) {
@@ -175,17 +247,26 @@ export class Renderer {
 			this.ctx.stroke();
 		}
 		this.ctx.globalAlpha = enemy.hp <= 0 ? 0.72 : 1;
-		this.spriteRenderer.drawFrame(sheetId, animationName, frame, spriteX, spriteY, enemy.dir > 0);
+		this.spriteRenderer.drawFrame(
+			sheetId,
+			animationName,
+			frame,
+			spriteX,
+			spriteY,
+			enemy.dir > 0,
+			renderScale,
+			renderScale
+		);
 		this.ctx.globalAlpha = 1;
 
-		const barW = 118;
+		const barW = 96;
 		const ratio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
 		this.ctx.fillStyle = 'rgba(4, 6, 12, 0.85)';
 		this.ctx.fillRect(x + enemy.w / 2 - barW / 2, enemy.y - 25, barW, 12);
 		this.ctx.fillStyle = ratio > 0.5 ? '#ffb35e' : '#ff5e7a';
 		this.ctx.fillRect(x + enemy.w / 2 - barW / 2 + 2, enemy.y - 23, (barW - 4) * ratio, 8);
 		this.ctx.fillStyle = '#eaf2ff';
-		this.ctx.font = '700 9px ui-monospace, monospace';
+		this.ctx.font = '700 8px ui-monospace, monospace';
 		this.ctx.textAlign = 'center';
 		this.ctx.fillText(enemy.bossName ?? 'CAPTAIN GRIN', x + enemy.w / 2, enemy.y - 30);
 		this.ctx.restore();
@@ -199,8 +280,10 @@ export class Renderer {
 		},
 		cameraX: number
 	): void {
-		const x = player.x - cameraX;
-		const y = player.y;
+		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet
+			.frameSize ?? [48, 48];
+		const x = player.x - cameraX + player.w / 2 - frameWidth / 2;
+		const y = player.y + player.h - frameHeight;
 		const scaleX = player.scaleX ?? 1;
 		const scaleY = player.scaleY ?? 1;
 

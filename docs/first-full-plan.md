@@ -437,7 +437,7 @@
 
        Audio System
 
-       BeatClock.ts is the heart of the beat-sync system. It maintains a BPM value (default 140 for Dub Colony, 0/disabled for non-beat worlds) and exposes:
+       BeatClock.ts is the heart of the beat-sync system. It maintains a BPM value (default 86 for Dub Colony, 0/disabled for non-beat worlds) and exposes:
        interface BeatClock {
          currentBeat(): number;         // beats elapsed as float
          nextDownbeatTime(): number;    // seconds until next downbeat

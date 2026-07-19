@@ -31,7 +31,11 @@ export function resolveCompanionGameplayModifiers(
 	return {
 		nayaShieldBonus: hooks.has('naya_shield_bonus') ? 1 : 0,
 		rookOverlayBonusSeconds: hooks.has('ambush_warning_overlay') ? 0.9 : 0,
-		assistHintLeadSeconds: hooks.has('companion_assist_ready') ? 1.4 : hooks.has('companion_assist_delay') ? -1 : 0,
+		assistHintLeadSeconds: hooks.has('companion_assist_ready')
+			? 1.4
+			: hooks.has('companion_assist_delay')
+				? -1
+				: 0,
 		ambushWarningOverlay: hooks.has('ambush_warning_overlay'),
 	};
 }
@@ -57,7 +61,10 @@ export class CompanionSystem {
 	) {
 		this.state.active = [...active];
 		this.state.nayaShield += modifiers.nayaShieldBonus ?? 0;
-		this.state.hintTimer = Math.max(0.8, this.state.hintTimer - (modifiers.assistHintLeadSeconds ?? 0));
+		this.state.hintTimer = Math.max(
+			0.8,
+			this.state.hintTimer - (modifiers.assistHintLeadSeconds ?? 0)
+		);
 	}
 
 	step(player: Player, enemies: CombatEntity[], dt: number, events: CompanionEvents = {}): void {
@@ -69,7 +76,8 @@ export class CompanionSystem {
 		}
 
 		if (this.hasCompanion('rook_null') && enemies.some((enemy) => enemy.hp > 0)) {
-			this.state.rookOverlayUntil = ROOK_OVERLAY_SECONDS + (this.modifiers.rookOverlayBonusSeconds ?? 0);
+			this.state.rookOverlayUntil =
+				ROOK_OVERLAY_SECONDS + (this.modifiers.rookOverlayBonusSeconds ?? 0);
 			events.onOverlay?.();
 		} else {
 			this.state.rookOverlayUntil = Math.max(0, this.state.rookOverlayUntil - dt);
@@ -93,6 +101,16 @@ export class CompanionSystem {
 		this.state.nayaShield = Math.max(0, this.state.nayaShield - blocked);
 		events.onShield?.(blocked);
 		return amount - blocked;
+	}
+
+	rechargeNayaShield(amount: number, events: CompanionEvents = {}): number {
+		if (!this.hasCompanion('naya_root') || amount <= 0) return this.state.nayaShield;
+		const maxShield = NAYA_SHIELD_MAX + (this.modifiers.nayaShieldBonus ?? 0);
+		const before = this.state.nayaShield;
+		this.state.nayaShield = Math.min(maxShield, this.state.nayaShield + amount);
+		const restored = this.state.nayaShield - before;
+		if (restored > 0) events.onShield?.(restored);
+		return this.state.nayaShield;
 	}
 
 	getState(): CompanionRuntimeState {

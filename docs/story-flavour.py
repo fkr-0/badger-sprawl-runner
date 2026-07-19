@@ -2397,7 +2397,7 @@ chapters = [
                 "King Feedback boss",
                 "massive rebel in speaker armor, cable crown, microphone mace, anxious expression, amp throne behind",
             ),
-            "music": "heavy dub steppers, live handclaps as vote rhythm, siren skanks, bass drops tied to boss waves",
+            "music": "86 BPM golden-era boom-bap, live handclaps as vote rhythm, dusty organ chops, dub bass drops tied to boss waves",
         },
         "sound_effect_vibes": {
             "ambient": "speaker hum, greenhouse fans, kitchen pots, children arguing, solder crackle",
@@ -2407,19 +2407,19 @@ chapters = [
         },
         "musical_theme": {
             "name": "Assembly in Low Frequency",
-            "bpm": 140,
-            "mode": "G minor dub steppers with modal jazz chords in safe zones",
+            "bpm": 86,
+            "mode": "G minor golden-era boom-bap with dub bass and modal jazz chords in safe zones",
             "instruments": [
                 "deep sub bass",
-                "spring reverb snare",
-                "organ skank",
+                "dusty sampled snare",
+                "chopped organ stabs",
                 "hand drums",
                 "sampled crowd murmurs",
                 "melodica",
             ],
             "dynamic_layers": [
                 "greenhouse: mellow neo-soul chords over water drops",
-                "raid: steppers beat and alarm siren",
+                "raid: heavier boom-bap break and alarm siren",
                 "vote: percussion thins so dialogue breathes",
                 "boss: bass becomes both weapon and question",
             ],

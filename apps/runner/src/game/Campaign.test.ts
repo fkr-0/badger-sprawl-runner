@@ -253,15 +253,15 @@ describe('Brechtian story campaign skeleton', () => {
 		]);
 	});
 
-	it('defines Dub Colony beat-timing modifier, colony alignment outcomes, and Naya companion placeholder', () => {
+	it('defines Dub Colony beat timing, colony alignment outcomes, and visible Naya companion', () => {
 		const dubColony = CAMPAIGN.stages.find((stage) => stage.id === 'dub-colony');
 
 		expect(dubColony?.stageModifiers).toContainEqual({
 			id: 'bass-reactor-sync',
 			label: 'Bass Reactor Sync',
 			kind: 'beat-timing',
-			bpm: 140,
-			perfectWindowMs: 90,
+			bpm: 86,
+			perfectWindowMs: 145,
 			teaches: 'jump, parry, and strike on the bass pulse to overcharge rebel equipment',
 		});
 		expect(dubColony?.choice.outcomes).toEqual([
@@ -293,10 +293,15 @@ describe('Brechtian story campaign skeleton', () => {
 		expect(dubColony?.companion).toEqual({
 			id: 'naya-root',
 			name: 'Naya Root',
-			role: 'beat-scout companion placeholder',
-			placeholder: true,
+			role: 'visible shield companion and beat scout',
+			placeholder: false,
 			abilities: ['marks bass pulses', 'calls safe landings', 'amplifies chorus choices'],
 		});
+		expect(dubColony?.boss.phases?.map((phase) => phase.id)).toEqual([
+			'security-pulse',
+			'emergency-crown',
+			'chorus-test',
+		]);
 	});
 
 	it('defines Antenna Barrens code-gate pressure, Black-Ice Fox hack duel, and ledger release heat/favor outcomes', () => {

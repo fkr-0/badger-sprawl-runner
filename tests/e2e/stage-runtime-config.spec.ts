@@ -49,7 +49,7 @@ test.describe('Stage runtime config', () => {
 		});
 		expect(config.modifierRules).toEqual(
 			expect.arrayContaining([
-				expect.objectContaining({ id: 'bass-reactor-sync', effect: 'rhythm window 90ms at 140bpm' }),
+				expect.objectContaining({ id: 'bass-reactor-sync', effect: 'rhythm window 145ms at 86bpm' }),
 			])
 		);
 		expect(config.enemyMixTags).toEqual(expect.arrayContaining(['beat-timing']));

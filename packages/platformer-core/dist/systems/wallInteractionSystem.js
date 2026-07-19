@@ -21,7 +21,7 @@ export function detectWallContact(body, walls, probeDistance) {
 }
 export function applyWallInteraction(body, walls, params, input = {}) {
     const contact = detectWallContact(body, walls, params.probeDistance);
-    let next = { ...body };
+    const next = { ...body };
     let wallSliding = false;
     let wallJumped = false;
     if (contact && !body.onGround && body.vy > 0) {

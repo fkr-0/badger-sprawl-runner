@@ -14,7 +14,8 @@
 		"@badger/codegate": "workspace:*",
 		"@badger/platformer-core": "workspace:*",
 		"@badger/progression": "workspace:*",
-		"@badger/sprite-contracts": "workspace:*"
+		"@badger/sprite-contracts": "workspace:*",
+		"pixi.js": "^8.19.0"
 	},
 	"devDependencies": {
 		"jsdom": "^24.1.3",

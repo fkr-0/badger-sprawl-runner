@@ -1,12 +1,28 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
+import { CAMPAIGN } from '../game/Campaign';
 import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
 import { buildStageRunSceneOptions } from '../game/StageRunOptions';
+import { getDialoguePortrait } from '../renderer/DialoguePortraitRenderer';
 import type { Renderer } from '../renderer/Renderer';
 import type { AutosaveFeedback, AutosaveReason } from '../storage/AutosaveFeedback';
 import type { StageRunSceneOptions } from './StageRunScene';
 
 function formatSigned(value: number): string {
 	return value > 0 ? `+${value}` : `${value}`;
+}
+
+export interface StoryPresentationSnapshot {
+	mode: ReturnType<GameFlow['getState']>['mode'];
+	stageId: string | null;
+	chapter: number | null;
+	stageName: string | null;
+	placard: string | null;
+	speaker: string | null;
+	lineIndex: number;
+	lineCount: number;
+	selectedChoiceIndex: number;
+	selectedResultFlag: string | null;
+	choiceCommitted: boolean;
 }
 
 export interface StoryPanelLayoutSnapshot {
@@ -63,6 +79,7 @@ export class StoryFlowScene implements Scene {
 	private lastDebugDetail: StageDebugDetail | null = null;
 	private lastAutosaveFeedback: AutosaveFeedback | null = null;
 	private lastPanelLayout: StoryPanelLayoutSnapshot | null = null;
+	private storyTime = 0;
 
 	constructor(
 		private readonly flow: GameFlow = createGameFlow(),
@@ -71,6 +88,38 @@ export class StoryFlowScene implements Scene {
 
 	getFlow(): GameFlow {
 		return this.flow;
+	}
+
+	getPresentationSnapshot(): StoryPresentationSnapshot {
+		const state = this.flow.getState();
+		const stageId =
+			state.mode === 'title-card' || state.mode === 'stage' || state.mode === 'debrief'
+				? state.stageId
+				: state.mode === 'dialogue'
+					? state.dialogueId.replace(/-briefing$/, '')
+					: null;
+		const stage = stageId
+			? CAMPAIGN.stages.find((candidate) => candidate.id === stageId)
+			: undefined;
+		const dialogue = state.mode === 'dialogue' ? this.flow.getCurrentDialogue() : undefined;
+		const debrief = state.mode === 'debrief' ? this.flow.getCurrentDebrief() : undefined;
+		const currentStage = state.mode === 'stage' ? this.flow.getCurrentStage() : undefined;
+		const selectedOutcome = currentStage?.choiceOutcomes?.[this.selectedChoiceIndex];
+		return {
+			mode: state.mode,
+			stageId,
+			chapter: stage?.chapter ?? null,
+			stageName: stage?.name ?? null,
+			placard: stage?.placard ?? null,
+			speaker: dialogue?.speaker ?? debrief?.speaker ?? null,
+			lineIndex: state.mode === 'dialogue' || state.mode === 'debrief' ? state.lineIndex : 0,
+			lineCount: dialogue?.lines.length ?? debrief?.lines.length ?? 0,
+			selectedChoiceIndex: this.selectedChoiceIndex,
+			selectedResultFlag: selectedOutcome?.resultFlag ?? null,
+			choiceCommitted: Boolean(
+				selectedOutcome && this.lastChoiceRecap?.resultFlag === selectedOutcome.resultFlag
+			),
+		};
 	}
 
 	getPanelLayoutSnapshot(): StoryPanelLayoutSnapshot | null {
@@ -276,7 +325,9 @@ export class StoryFlowScene implements Scene {
 		};
 	}
 
-	update(_dt: number): void {}
+	update(dt: number): void {
+		this.storyTime += Math.max(0, dt);
+	}
 
 	render(renderer: Renderer, _alpha: number): void {
 		const maybeRenderer = renderer;
@@ -284,11 +335,14 @@ export class StoryFlowScene implements Scene {
 		if (!ctx) return;
 
 		const state = this.flow.getState();
+		renderer.clear();
+		renderer.drawBackground();
+		if (state.mode === 'title-card') {
+			this.renderTitlePlacard(renderer, state.stageId, state.placard);
+			return;
+		}
 		ctx.save();
-		ctx.fillStyle = '#eaf2ff';
-		ctx.font = '700 20px ui-monospace, monospace';
-		ctx.textAlign = 'center';
-		ctx.fillText(`Story Flow: ${state.mode}`, ctx.canvas.width / 2, 80);
+		this.renderStoryRibbon(ctx);
 
 		if (state.mode === 'dialogue') {
 			const dialogue = this.flow.getCurrentDialogue();
@@ -318,6 +372,60 @@ export class StoryFlowScene implements Scene {
 		ctx.restore();
 	}
 
+	private renderTitlePlacard(renderer: Renderer, stageId: string, placard: string): void {
+		const stage = CAMPAIGN.stages.find((candidate) => candidate.id === stageId);
+		const chapter = stage?.chapter ?? 1;
+		const subtitle = stage
+			? `${stage.place} // Chapter ${chapter} // ${stage.primaryVerb}`
+			: `Chapter ${chapter}`;
+		renderer.renderTitleCard(placard, subtitle, Math.max(0, chapter - 1) / CAMPAIGN.stages.length);
+		const ctx = renderer.getContext();
+		ctx.save();
+		ctx.textAlign = 'center';
+		ctx.fillStyle = '#67f3c4';
+		ctx.font = '700 16px ui-monospace, monospace';
+		ctx.fillText(stage?.name.toUpperCase() ?? stageId.toUpperCase(), ctx.canvas.width / 2, 98);
+		ctx.fillStyle = '#92a4be';
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillText(
+			(stage?.machinery ?? []).slice(0, 3).join('  •  ').toUpperCase(),
+			ctx.canvas.width / 2,
+			ctx.canvas.height - 54
+		);
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText('ENTER // REVEAL THE MACHINERY', ctx.canvas.width / 2, ctx.canvas.height - 30);
+		ctx.restore();
+	}
+
+	private renderStoryRibbon(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.getPresentationSnapshot();
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.84)';
+		ctx.fillRect(24, 18, ctx.canvas.width - 48, 64);
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillRect(24, 18, 5, 64);
+		ctx.textAlign = 'left';
+		ctx.font = '700 11px ui-monospace, monospace';
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText(
+			`STORY MODE // ${snapshot.mode.toUpperCase()} // CHAPTER ${snapshot.chapter ?? '-'}`,
+			42,
+			39
+		);
+		ctx.font = '900 18px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText((snapshot.stageName ?? 'BADGER SPRAWL RUNNER').toUpperCase(), 42, 64);
+		ctx.textAlign = 'right';
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(
+			`${this.flow.getStoryProgress().completedStageIds.length}/${CAMPAIGN.stages.length} STAGES COMPLETE`,
+			ctx.canvas.width - 42,
+			50
+		);
+		ctx.restore();
+	}
+
 	private renderDialoguePanel(
 		ctx: CanvasRenderingContext2D,
 		renderer: Renderer,
@@ -331,6 +439,7 @@ export class StoryFlowScene implements Scene {
 		ctx.fillRect(panelX, panelY, panelW, 124);
 		ctx.strokeStyle = '#67f3c4';
 		ctx.strokeRect(panelX, panelY, panelW, 124);
+		this.renderDialogueFigure(ctx, renderer, speaker);
 
 		renderer.renderDialoguePortrait(speaker, panelX + 18, panelY + 24, 72);
 		ctx.textAlign = 'left';
@@ -339,7 +448,55 @@ export class StoryFlowScene implements Scene {
 		ctx.fillText(speaker, panelX + 108, panelY + 36);
 		ctx.fillStyle = '#eaf2ff';
 		ctx.font = '14px ui-monospace, monospace';
-		ctx.fillText(line.slice(0, 96), panelX + 108, panelY + 68);
+		const lines = this.wrapText(ctx, line, panelW - 152);
+		for (const [index, text] of lines.slice(0, 3).entries()) {
+			ctx.fillText(text, panelX + 108, panelY + 68 + index * 20);
+		}
+		ctx.fillStyle = '#92a4be';
+		ctx.font = '10px ui-monospace, monospace';
+		ctx.fillText('ENTER // CONTINUE', panelX + panelW - 150, panelY + 108);
+	}
+
+	private renderDialogueFigure(
+		ctx: CanvasRenderingContext2D,
+		renderer: Renderer,
+		speaker: string
+	): void {
+		const portrait = getDialoguePortrait(speaker);
+		const sprites = renderer.getSpriteRenderer();
+		if (!portrait.sheetId || !sprites.hasSheet(portrait.sheetId)) return;
+		const animation = sprites.getSheet(portrait.sheetId)?.sheet.animations[portrait.animation];
+		const frame = animation ? Math.floor(this.storyTime * animation.fps) % animation.frames : 0;
+		ctx.save();
+		ctx.globalAlpha = 0.2;
+		sprites.drawFrame(
+			portrait.sheetId,
+			portrait.animation,
+			frame,
+			ctx.canvas.width - 280,
+			116,
+			false,
+			3.2,
+			3.2
+		);
+		ctx.restore();
+	}
+
+	private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+		const words = text.split(/\s+/);
+		const lines: string[] = [];
+		let current = '';
+		for (const word of words) {
+			const candidate = current ? `${current} ${word}` : word;
+			if (current && ctx.measureText(candidate).width > maxWidth) {
+				lines.push(current);
+				current = word;
+			} else {
+				current = candidate;
+			}
+		}
+		if (current) lines.push(current);
+		return lines;
 	}
 
 	private renderStageChoicePanel(ctx: CanvasRenderingContext2D): void {

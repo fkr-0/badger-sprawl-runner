@@ -531,30 +531,40 @@
 				48,
 				48
 			],
-			"grid": {
-				"columns": 4,
-				"rows": 2
-			},
+			"role": "player_runtime",
 			"animations": {
 				"idle": {
-					"frames": 1,
-					"fps": 6,
-					"order": [
-						0
+					"frames": 6,
+					"fps": 8,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"run": {
 					"frames": 8,
 					"fps": 14,
-					"order": [
-						0,
-						1,
-						2,
-						3,
-						4,
-						5,
-						6,
-						7
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					],
 					"events": [
 						{
@@ -567,118 +577,480 @@
 							"kind": "footstep",
 							"name": "right"
 						}
+					],
+					"tags": [
+						"locomotion"
 					]
 				},
 				"skid": {
-					"frames": 1,
+					"frames": 3,
 					"fps": 12,
-					"order": [
-						1
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"jump_up": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						2
+					"frames": 3,
+					"fps": 10,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"events": [
+						{
+							"frame": 0,
+							"kind": "action_window",
+							"name": "jump_start"
+						}
+					],
+					"tags": [
+						"airborne",
+						"locomotion"
 					]
 				},
 				"fall": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						6
+					"frames": 3,
+					"fps": 10,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"tags": [
+						"airborne",
+						"locomotion"
 					]
 				},
 				"land": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						1
+					"frames": 2,
+					"fps": 14,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"events": [
+						{
+							"frame": 0,
+							"kind": "footstep",
+							"name": "landing"
+						}
+					],
+					"tags": [
+						"landing",
+						"locomotion"
 					]
 				},
 				"melee_claws": {
-					"frames": 1,
-					"fps": 14,
-					"order": [
-						4
+					"frames": 5,
+					"fps": 22,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"hitboxes": [
+						{
+							"x": 34,
+							"y": 16,
+							"w": 26,
+							"h": 18,
+							"label": "claw_arc"
+						}
+					],
+					"events": [
+						{
+							"frame": 1,
+							"kind": "action_window",
+							"name": "startup"
+						},
+						{
+							"frame": 2,
+							"kind": "hitbox",
+							"name": "active_start",
+							"payload": {
+								"box": "claw_arc"
+							}
+						},
+						{
+							"frame": 2,
+							"kind": "vfx",
+							"name": "claw_arc",
+							"payload": {
+								"kind": "muzzle",
+								"count": 4,
+								"spread": 40
+							}
+						},
+						{
+							"frame": 4,
+							"kind": "cancel_window",
+							"name": "recovery_cancel"
+						}
+					],
+					"tags": [
+						"combat",
+						"melee"
 					]
 				},
 				"melee_katana": {
-					"frames": 1,
-					"fps": 14,
-					"order": [
-						4
+					"frames": 7,
+					"fps": 18,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"hitboxes": [
+						{
+							"x": 32,
+							"y": 12,
+							"w": 40,
+							"h": 22,
+							"label": "katana_smear"
+						}
+					],
+					"events": [
+						{
+							"frame": 1,
+							"kind": "action_window",
+							"name": "startup"
+						},
+						{
+							"frame": 3,
+							"kind": "hitbox",
+							"name": "active_start",
+							"payload": {
+								"box": "katana_smear"
+							}
+						},
+						{
+							"frame": 3,
+							"kind": "vfx",
+							"name": "katana_smear",
+							"payload": {
+								"kind": "muzzle",
+								"count": 6,
+								"spread": 48
+							}
+						},
+						{
+							"frame": 6,
+							"kind": "cancel_window",
+							"name": "recovery_cancel"
+						}
+					],
+					"tags": [
+						"combat",
+						"melee"
 					]
 				},
 				"shoot_railgun": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						5
+					"frames": 5,
+					"fps": 16,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"hitboxes": [
+						{
+							"x": 42,
+							"y": 18,
+							"w": 72,
+							"h": 8,
+							"label": "rail_line"
+						}
+					],
+					"events": [
+						{
+							"frame": 2,
+							"kind": "hitbox",
+							"name": "rail_line_active",
+							"payload": {
+								"box": "rail_line"
+							}
+						},
+						{
+							"frame": 2,
+							"kind": "vfx",
+							"name": "rail_muzzle",
+							"payload": {
+								"kind": "muzzle",
+								"count": 8,
+								"spread": 64
+							}
+						}
+					],
+					"tags": [
+						"combat",
+						"ranged"
 					]
 				},
 				"rocket_boost": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						5
+					"frames": 6,
+					"fps": 18,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"events": [
+						{
+							"frame": 0,
+							"kind": "vfx",
+							"name": "rocket_flame",
+							"payload": {
+								"kind": "rocket",
+								"count": 3,
+								"spread": 24
+							}
+						},
+						{
+							"frame": 3,
+							"kind": "vfx",
+							"name": "rocket_flame",
+							"payload": {
+								"kind": "rocket",
+								"count": 3,
+								"spread": 24
+							}
+						}
+					],
+					"tags": [
+						"movement",
+						"rocket"
 					]
 				},
 				"hit": {
-					"frames": 1,
+					"frames": 3,
 					"fps": 12,
-					"order": [
-						7
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"hack": {
-					"frames": 1,
-					"fps": 10,
-					"order": [
-						3
+					"frames": 4,
+					"fps": 8,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"victory": {
-					"frames": 1,
-					"fps": 8,
-					"order": [
-						0
+					"frames": 8,
+					"fps": 10,
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"pickup_react": {
-					"frames": 1,
-					"fps": 10,
-					"order": [
-						1
+					"frames": 3,
+					"fps": 12,
+					"tags": [
+						"item",
+						"react"
+					],
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"interact": {
-					"frames": 1,
+					"frames": 4,
 					"fps": 10,
-					"order": [
-						3
+					"tags": [
+						"interaction"
+					],
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"death_or_down": {
-					"frames": 1,
-					"fps": 8,
-					"order": [
-						7
+					"frames": 6,
+					"fps": 10,
+					"tags": [
+						"damage",
+						"downed"
+					],
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
 					]
 				},
 				"parry": {
-					"frames": 1,
-					"fps": 12,
-					"order": [
-						3
+					"frames": 4,
+					"fps": 18,
+					"tags": [
+						"combat",
+						"defense"
+					],
+					"hurtboxes": [
+						{
+							"x": 12,
+							"y": 6,
+							"w": 24,
+							"h": 40,
+							"label": "body"
+						}
+					],
+					"anchor": [
+						24,
+						44
+					],
+					"events": [
+						{
+							"frame": 1,
+							"kind": "action_window",
+							"name": "parry_active"
+						},
+						{
+							"frame": 1,
+							"kind": "vfx",
+							"name": "parry_flash",
+							"payload": {
+								"kind": "emp",
+								"count": 5,
+								"spread": 32
+							}
+						},
+						{
+							"frame": 3,
+							"kind": "cancel_window",
+							"name": "parry_recovery_cancel"
+						}
 					]
 				}
 			},
 			"source": {
-				"tool": "ComfyUI API + production normalization",
-				"sourceSheet": "generated/sprites/comfy_badger_run/badger_running_grid_4x2_1024x512.png",
-				"note": "Background-cleaned and normalized to the 48x48 runtime contract."
+				"tool": "authored motion-master promotion",
+				"sourceSheet": "assets/sprites/source/moss_badger_motion_master_v2.png",
+				"runtimeAtlas": "assets/sprites/moss_badger_v2.png",
+				"note": "Complete 17-row production atlas with authored locomotion, combat, interaction, reaction, and story poses."
 			}
 		},
 		{
@@ -2213,6 +2585,66 @@
 						"front"
 					]
 				}
+			}
+		},
+		{
+			"id": "mirror_palace_parallax",
+			"file": "assets/sprites/worlds/mirror_palace_parallax.png",
+			"frameSize": [
+				320,
+				180
+			],
+			"world": "mirror_palace",
+			"role": "parallax",
+			"grid": {
+				"columns": 3,
+				"rows": 1
+			},
+			"animations": {
+				"back_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						0
+					],
+					"loop": false,
+					"tags": [
+						"world:mirror_palace",
+						"parallax",
+						"back"
+					]
+				},
+				"mid_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						1
+					],
+					"loop": false,
+					"tags": [
+						"world:mirror_palace",
+						"parallax",
+						"mid"
+					]
+				},
+				"front_plate": {
+					"frames": 1,
+					"fps": 1,
+					"order": [
+						2
+					],
+					"loop": false,
+					"tags": [
+						"world:mirror_palace",
+						"parallax",
+						"front"
+					]
+				}
+			},
+			"source": {
+				"tool": "deterministic Pillow pixel-art generator",
+				"script": "scripts/generate-mirror-palace-parallax.py",
+				"note": "Three horizontally packed 320x180 reflected banquet hall depth plates."
 			}
 		},
 		{

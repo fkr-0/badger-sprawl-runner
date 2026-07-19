@@ -128,7 +128,7 @@ export interface CompanionPlaceholder {
 	id: string;
 	name: string;
 	role: string;
-	placeholder: true;
+	placeholder: boolean;
 	abilities: string[];
 }
 

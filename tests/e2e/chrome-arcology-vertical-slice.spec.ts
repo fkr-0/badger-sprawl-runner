@@ -266,9 +266,21 @@ test.describe('Chrome Arcology complete vertical slice', () => {
 			)
 			.toBe('shoot');
 		await page.keyboard.press('KeyK');
-		await page.waitForTimeout(70);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (window as ArcologyWindow).__badger.getChromeArcologyObjectives().expectedInput
+				)
+			)
+			.toBe('parry');
 		await page.keyboard.press('KeyL');
-		await page.waitForTimeout(70);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => (window as ArcologyWindow).__badger.getChromeArcologyObjectives().expectedInput
+				)
+			)
+			.toBe('shoot');
 		await page.keyboard.press('KeyK');
 		await expect
 			.poll(() =>

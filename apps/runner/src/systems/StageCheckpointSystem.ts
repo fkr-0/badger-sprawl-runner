@@ -25,6 +25,18 @@ export const LOWER_SPRAWL_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
 	{ id: 'toll-approach', label: 'Toll approach', x: 1320, y: 448 },
 ];
 
+export const MIRROR_PALACE_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
+	{ id: 'palace-foyer', label: 'Mirror foyer', x: 60, y: 448 },
+	{ id: 'contract-gallery', label: 'Contract gallery', x: 980, y: 448 },
+	{ id: 'banquet-approach', label: 'Banquet approach', x: 1780, y: 448 },
+];
+
+export const DUB_COLONY_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
+	{ id: 'greenhouse-car', label: 'Greenhouse car', x: 60, y: 448 },
+	{ id: 'studio-temple', label: 'Studio temple', x: 1120, y: 448 },
+	{ id: 'assembly-deck', label: 'Assembly deck', x: 2100, y: 448 },
+];
+
 export const CHROME_ARCOLOGY_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
 	{ id: 'arcology-lobby', label: 'Arcology lobby', x: 60, y: 448 },
 	{ id: 'service-guts', label: 'Service guts', x: 920, y: 448 },

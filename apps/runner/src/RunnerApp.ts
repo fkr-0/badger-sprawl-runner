@@ -1,8 +1,11 @@
+import { createArcadeFrameProfiler } from '../../../vendor/arcade-pixi-runtime.mjs';
+import type { ArcadePerformanceSummary } from '../../../vendor/arcade-pixi-runtime.mjs';
 import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
 import { type Scene, SceneManager } from './engine/SceneManager';
 import type { GameFlow, MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
+import type { BadgerPixiBridgeController } from './renderer/BadgerPixiBridge';
 import { Renderer } from './renderer/Renderer';
 import { resolveRuntimeAssetUrl } from './runtime/RuntimeEnvironment';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
@@ -17,6 +20,10 @@ export interface RunnerApp {
 	getCurrentScene(): Scene | undefined;
 	getRenderer(): Renderer;
 	getFlow(): GameFlow;
+	setPixiBridge(controller: BadgerPixiBridgeController | null): void;
+	getRendererMode(): 'canvas' | 'bridge';
+	getRendererPerformance(): ArcadePerformanceSummary;
+	getBridgePerformance(): ArcadePerformanceSummary | null;
 }
 
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
@@ -25,6 +32,8 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 
 	const eventBus = new EventBus();
 	const renderer = new Renderer(ctx, canvas.width, canvas.height);
+	const renderProfiler = createArcadeFrameProfiler({ sampleSize: 240 });
+	let pixiBridge: BadgerPixiBridgeController | null = null;
 	const sceneManager = new SceneManager({ eventBus, canvas, renderer });
 	const saveDriver = createLocalStorageSaveDriver(window.localStorage);
 	const flow = loadGameFlow(saveDriver);
@@ -47,8 +56,20 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 			renderer.updateVFX(dt);
 		},
 		(alpha) => {
+			const bridgeActive =
+				pixiBridge !== null && sceneManager.getCurrent()?.name === 'StageRunScene';
+			renderer.setBridgeSink(bridgeActive ? pixiBridge : null);
+			pixiBridge?.beginFrame();
+			const startedAt = performance.now();
 			renderer.clear();
 			sceneManager.render(renderer, alpha);
+			pixiBridge?.render(bridgeActive, startedAt);
+			if (sceneManager.getCurrent()?.name === 'StageRunScene') {
+				renderProfiler.record(
+					bridgeActive ? 'bridge:stage' : 'canvas:stage',
+					performance.now() - startedAt
+				);
+			}
 		}
 	);
 
@@ -74,6 +95,8 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		stop(): void {
 			gameLoop.stop();
 			sceneManager.clear();
+			pixiBridge?.destroy();
+			pixiBridge = null;
 		},
 		routeMode,
 		getCurrentScene(): Scene | undefined {
@@ -84,6 +107,19 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		},
 		getFlow(): GameFlow {
 			return flow;
+		},
+		setPixiBridge(controller): void {
+			pixiBridge?.destroy();
+			pixiBridge = controller;
+		},
+		getRendererMode(): 'canvas' | 'bridge' {
+			return pixiBridge ? 'bridge' : 'canvas';
+		},
+		getRendererPerformance(): ArcadePerformanceSummary {
+			return renderProfiler.snapshot(pixiBridge ? 'bridge:stage' : 'canvas:stage');
+		},
+		getBridgePerformance(): ArcadePerformanceSummary | null {
+			return pixiBridge?.performance() ?? null;
 		},
 	};
 }

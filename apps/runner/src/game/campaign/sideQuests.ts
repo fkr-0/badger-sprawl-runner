@@ -50,6 +50,14 @@ export const CAMPAIGN_SIDE_QUESTS: Record<string, SideQuest[]> = {
 			reward: 'dubFavor+1 and stronger assist timing',
 			stageHook: 'bass reactor sync',
 		},
+		{
+			id: 'missing-vote-cards',
+			title: 'Missing Vote Cards',
+			giver: 'Little Ix',
+			objective: 'Recover three vote cards hidden by nervous emergency-command volunteers.',
+			reward: 'the colony vote remains representative instead of merely fast',
+			stageHook: 'assembly deck vote',
+		},
 	],
 	'antenna-barrens': [
 		{

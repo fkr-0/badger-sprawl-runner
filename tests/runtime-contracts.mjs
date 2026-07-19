@@ -156,6 +156,8 @@ for (const script of [
 	'verify:release',
 	'test:e2e:drainmarket',
 	'test:e2e:chrome-arcology',
+	'test:e2e:mirror-palace',
+	'test:e2e:dub-colony',
 	'test:e2e:progression',
 	'stage:artifact-lab',
 	'deploy:artifact-lab:dry-run',
@@ -809,11 +811,14 @@ for (const required of [
 	'railgun_icon',
 	'katana_icon',
 	'stim_pack_icon',
-	'spriteRenderer.drawFrame(HUD_ICON_SHEET',
 	'getHudIconSlots',
 ]) {
 	assert(uiRendererSource.includes(required), `UIRenderer missing item icon HUD contract: ${required}`);
 }
+assert(
+	/spriteRenderer\.drawFrame\(\s*HUD_ICON_SHEET/.test(uiRendererSource),
+	'UIRenderer must draw HUD item icons from HUD_ICON_SHEET',
+);
 assert(
 	rendererSource.includes('this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer)'),
 	'Renderer must pass SpriteRenderer into UIRenderer so item_icons can render',

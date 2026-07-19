@@ -84,6 +84,38 @@ Progression now uses one canonical graph and one shared runtime effect channel i
 
 The full progression route is covered by `tests/e2e/progression-skill-tree.spec.ts` in Chromium and Firefox, while Chrome Arcology E2E verifies saved Railgun skills and conductor gear changing the live weapon.
 
+### Animated story mode and Mirror Palace
+
+Moss now uses the complete authored 17-row motion atlas in production: 86 frames across idle, run, skid, jump, fall, land, claws, katana, railgun, rocket boost, hit, hack, interaction, pickup reaction, parry, victory, and defeat states. Story mode now presents authored chapter placards, progress ribbons, wrapped dialogue, animated speaker figures, branch recaps, and stage-specific machinery context.
+
+Chapter 4 is a complete dedicated story route rather than a shifted Lower Sprawl clone:
+
+- rocket-pack traversal through Debt-contract Door, Reflection Loop, and Banquet Switchback
+- Table of Refusals side story with three survivor testimonies
+- Banquet Etiquette Loop refusal sequence
+- banquet usher and mirror sentinel production enemy behaviors
+- three-phase Reflection Judge court battle
+- Lio exposed/protected/baited branch persistence
+- Mirror Pass payload and transition into Dub Colony
+
+The route is covered by `tests/e2e/mirror-palace-vertical-slice.spec.ts` in Chromium and Firefox.
+
+### Dub Colony civic rhythm chapter
+
+Chapter 5 now uses the authored moving-colony art and turns an 86-BPM classic hip-hop pocket into live gameplay:
+
+- greenhouse, studio-temple, reactor, and assembly-deck route built from dedicated colony geometry
+- visible woofer pulse and audio-independent beat window, paced for a laid-back head nod rather than rhythm-game rush
+- jump, parry, and melee reactor valves graded as perfect, late, missed, or jammed
+- Naya Root follows Moss, marks the pulse, and recharges her shared damage shield after successful syncs
+- Chorus Spare Parts and Missing Vote Cards side stories
+- signal-jammer bats that erase timing information and feedback guards that can be talked down
+- chorus, army, and supplier vote branches with different rhythm or logistics consequences
+- three-phase King Feedback battle: Security Pulse, Emergency Crown, and Chorus Test
+- Bass Reactor Core payload and Antenna Barrens handoff
+
+The full chapter is covered by `tests/e2e/dub-colony-vertical-slice.spec.ts` in Chromium and Firefox.
+
 Deferred after v1.0: final production art/audio, CI-hosted artifacts, and an npm publishing decision for workspace packages.
 
 ## Requirements
@@ -109,7 +141,15 @@ python3 -m http.server 8042
 # then open http://localhost:8042; the root entry redirects to apps/runner/dist/index.html
 ```
 
-The production page is canvas-only. Development/test tools are omitted by default; append `?debug=1` to explicitly enable the F3 overlays.
+The production page remains Canvas2D-only. Development/test tools are omitted by default; append `?debug=1` to explicitly enable the F3 overlays.
+
+### Shared Pixi runtime migration
+
+The shared `@arcade/pixi-runtime` v0.5 module is vendored with declarations and checksum metadata. `apps/runner/src/renderer/ArcadeRuntimeContract.ts` defines an executable ordered render plan rather than only a pass-name map. Stage backdrop, parallax, terrain, foreground, HUD, and scene UI are ready for the runtime's Canvas-texture bridge; actors, projectiles, and VFX remain the native-Pixi conversion boundary. Simulation, collision, stage objectives, sprite contracts, and the existing fixed-step game loop remain unchanged.
+
+PixiJS 8.19 is now an explicit runner dependency. `?renderer=bridge` activates Pixi-owned stage-backdrop, parallax, and terrain texture passes while actors, projectiles, VFX, world interactions, and UI continue through the authoritative Canvas2D overlay. The default remains Canvas-only until the exposed mean and p95 stage-render measurements are compared in browser acceptance.
+
+The initial Chromium benchmark deliberately keeps Canvas as the default: uploading three full-size Canvas textures produces materially higher p95 frame cost than direct Canvas rendering. Bridge mode is therefore a migration and profiling surface, not a production-default recommendation yet.
 
 ## Controls
 
@@ -140,8 +180,12 @@ pnpm run smoke:artifact # opens the nested-path production artifact in Chromium 
 pnpm run lint          # Biome release lint gate
 pnpm run test:e2e:drainmarket # Stage 2 acceptance in Chromium and Firefox
 pnpm run test:e2e:chrome-arcology # Stage 3 acceptance in Chromium and Firefox
+pnpm run test:e2e:mirror-palace # Chapter 4 story and animation acceptance
+pnpm run test:e2e:dub-colony # Chapter 5 vote, beat, companion, and boss acceptance
 pnpm run test:e2e:progression # expanded item and four-track skill acceptance
 pnpm run sprites:progression # regenerate extended item, pickup, and skill atlases
+pnpm run sprites:moss-motion # promote the complete authored Moss motion atlas
+pnpm run sprites:mirror-palace # regenerate the reflected banquet parallax atlas
 pnpm run verify:release # complete build, validation, smoke, lint, and Chromium E2E gate
 pnpm run stage:artifact-lab # verify, then materialize .artifacts-deploy-stage
 pnpm run deploy:artifact-lab:dry-run # verify and preview deployment

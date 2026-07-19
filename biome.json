@@ -9,6 +9,7 @@
 			"playwright-report/**",
 			"apps/runner/dist/**",
 			"**/dist/**",
+			"vendor/**",
 			"workflow.json"
 		],
 		"maxSize": 2097152

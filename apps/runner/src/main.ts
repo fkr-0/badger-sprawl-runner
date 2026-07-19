@@ -1,5 +1,7 @@
+import type { ArcadePerformanceSummary } from '../../../vendor/arcade-pixi-runtime.mjs';
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
+import { createBadgerPixiBridge, isBadgerPixiBridgeRequested } from './renderer/BadgerPixiBridge';
 import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
@@ -25,10 +27,17 @@ export interface BadgerTestHarness {
 	getChromeArcologyObjectives: () => ReturnType<
 		StageRunScene['getChromeArcologyObjectiveSnapshot']
 	> | null;
+	getMirrorPalaceObjectives: () => ReturnType<
+		StageRunScene['getMirrorPalaceObjectiveSnapshot']
+	> | null;
+	getDubColonyObjectives: () => ReturnType<StageRunScene['getDubColonyObjectiveSnapshot']> | null;
 	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
 	getCaptainGrin: () => ReturnType<StageRunScene['getCaptainGrinSnapshot']> | null;
 	getKnifeDroneNest: () => ReturnType<StageRunScene['getKnifeDroneNestSnapshot']> | null;
 	getMadameVitrine: () => ReturnType<StageRunScene['getMadameVitrineSnapshot']> | null;
+	getReflectionJudge: () => ReturnType<StageRunScene['getReflectionJudgeSnapshot']> | null;
+	getKingFeedback: () => ReturnType<StageRunScene['getKingFeedbackSnapshot']> | null;
+	getCompanions: () => ReturnType<StageRunScene['getCompanionSnapshot']> | null;
 	getLowerSprawlHazards: () => ReturnType<StageRunScene['getLowerSprawlHazardSnapshot']> | null;
 	getCheckpoint: () => ReturnType<StageRunScene['getCheckpointSnapshot']> | null;
 	getLoadout: () => ReturnType<StageRunScene['getLoadoutSnapshot']> | null;
@@ -40,13 +49,18 @@ export interface BadgerTestHarness {
 		? T
 		: never;
 	getStoryPanelLayout: () => ReturnType<StoryFlowScene['getPanelLayoutSnapshot']> | null;
+	getStoryPresentation: () => ReturnType<StoryFlowScene['getPresentationSnapshot']> | null;
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
 	teleportPlayer: (x: number, y: number) => void;
 	setBossHp: (hp: number) => void;
+	setEnemyHp: (enemyId: string, hp: number) => void;
 	setPlayerHp: (hp: number) => void;
 	routeMode: (modeId: MenuOptionId) => void;
 	getLoadedSheetIds: () => string[];
 	hasSheet: (sheetId: string) => boolean;
+	getRendererMode: () => 'canvas' | 'bridge';
+	getRendererPerformance: () => ArcadePerformanceSummary;
+	getBridgePerformance: () => ArcadePerformanceSummary | null;
 }
 
 interface RunnerWindow extends Window {
@@ -68,6 +82,44 @@ function installTestHarness(app: RunnerApp): void {
 		getPlayer: () => {
 			const s = app.getCurrentScene();
 			return s && 'getPlayerSnapshot' in s ? (s as StageRunScene).getPlayerSnapshot() : null;
+		},
+		setEnemyHp: (enemyId, hp) => {
+			const s = app.getCurrentScene();
+			if (s && 'debugSetEnemyHp' in s) (s as StageRunScene).debugSetEnemyHp(enemyId, hp);
+		},
+		getKingFeedback: () => {
+			const s = app.getCurrentScene();
+			return s && 'getKingFeedbackSnapshot' in s
+				? (s as StageRunScene).getKingFeedbackSnapshot()
+				: null;
+		},
+		getCompanions: () => {
+			const s = app.getCurrentScene();
+			return s && 'getCompanionSnapshot' in s ? (s as StageRunScene).getCompanionSnapshot() : null;
+		},
+		getDubColonyObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getDubColonyObjectiveSnapshot' in s
+				? (s as StageRunScene).getDubColonyObjectiveSnapshot()
+				: null;
+		},
+		getStoryPresentation: () => {
+			const s = app.getCurrentScene();
+			return s && 'getPresentationSnapshot' in s
+				? (s as StoryFlowScene).getPresentationSnapshot()
+				: null;
+		},
+		getReflectionJudge: () => {
+			const s = app.getCurrentScene();
+			return s && 'getReflectionJudgeSnapshot' in s
+				? (s as StageRunScene).getReflectionJudgeSnapshot()
+				: null;
+		},
+		getMirrorPalaceObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getMirrorPalaceObjectiveSnapshot' in s
+				? (s as StageRunScene).getMirrorPalaceObjectiveSnapshot()
+				: null;
 		},
 		getMadameVitrine: () => {
 			const s = app.getCurrentScene();
@@ -176,6 +228,9 @@ function installTestHarness(app: RunnerApp): void {
 			const spriteRenderer = renderer?.getSpriteRenderer?.();
 			return spriteRenderer?.hasSheet(sheetId) ?? false;
 		},
+		getRendererMode: () => app.getRendererMode(),
+		getRendererPerformance: () => app.getRendererPerformance(),
+		getBridgePerformance: () => app.getBridgePerformance(),
 	};
 	runnerWindow.__badger = h;
 }
@@ -186,6 +241,17 @@ export function bootstrapRunnerApp(doc: Document = document): RunnerBootstrapRes
 
 	const app = createRunnerApp(canvas);
 	app.start();
+	if (isBadgerPixiBridgeRequested()) {
+		const mount = canvas.parentElement;
+		if (mount) {
+			void createBadgerPixiBridge({
+				mount,
+				sourceCanvas: canvas,
+				width: canvas.width,
+				height: canvas.height,
+			}).then((controller) => app.setPixiBridge(controller));
+		}
+	}
 	if (runtimeToolsEnabled()) installTestHarness(app);
 
 	return { app, canvas };

@@ -3,11 +3,11 @@
  */
 
 import {
-	loadSpriteSheet,
-	normalizeSpriteManifest,
-	type SpriteManifest,
 	type LoadedSheet,
 	type SpriteAnimationEvent,
+	type SpriteManifest,
+	loadSpriteSheet,
+	normalizeSpriteManifest,
 } from '@badger/sprite-contracts';
 
 interface FallbackEntity {
@@ -50,18 +50,34 @@ export class SpriteRenderer {
 		scaleX = 1,
 		scaleY = 1
 	): void {
+		this.drawFrameTo(this.ctx, sheetId, animName, frameIndex, x, y, flipX, scaleX, scaleY);
+	}
+
+	drawFrameTo(
+		ctx: CanvasRenderingContext2D,
+		sheetId: string,
+		animName: string,
+		frameIndex: number,
+		x: number,
+		y: number,
+		flipX = false,
+		scaleX = 1,
+		scaleY = 1
+	): void {
 		const sheet = this.sheets.get(sheetId);
 		if (!sheet) return;
 
-		// Apply squash and stretch
-		const originalTransform = this.ctx.getTransform();
-		this.ctx.translate(x + (scaleX !== 1 ? 16 : 0), y + (scaleY !== 1 ? 23 : 0));
-		this.ctx.scale(scaleX, scaleY);
-		this.ctx.translate(-(x + (scaleX !== 1 ? 16 : 0)), -(y + (scaleY !== 1 ? 23 : 0)));
+		// Apply squash/stretch around the frame's feet rather than a hard-coded
+		// point. This keeps 32px icons, 48px actors and 96px bosses aligned.
+		const [frameWidth, frameHeight] = sheet.sheet.frameSize;
+		const originalTransform = ctx.getTransform();
+		ctx.translate(x + frameWidth / 2, y + frameHeight);
+		ctx.scale(scaleX, scaleY);
+		ctx.translate(-(x + frameWidth / 2), -(y + frameHeight));
 
-		sheet.drawFrame(this.ctx, animName, frameIndex, x, y, flipX);
+		sheet.drawFrame(ctx, animName, frameIndex, x, y, flipX);
 
-		this.ctx.setTransform(originalTransform);
+		ctx.setTransform(originalTransform);
 	}
 
 	drawEntity(
@@ -84,7 +100,11 @@ export class SpriteRenderer {
 		return this.sheets.get(sheetId);
 	}
 
-	getAnimationEvents(sheetId: string, animName: string, frameIndex: number): SpriteAnimationEvent[] {
+	getAnimationEvents(
+		sheetId: string,
+		animName: string,
+		frameIndex: number
+	): SpriteAnimationEvent[] {
 		const sheet = this.sheets.get(sheetId);
 		const animation = sheet?.sheet.animations[animName];
 		if (!animation?.events) return [];

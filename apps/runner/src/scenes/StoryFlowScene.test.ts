@@ -10,6 +10,29 @@ function enterCurrentStage(flow: ReturnType<typeof createGameFlow>): void {
 }
 
 describe('StoryFlowScene stage launch', () => {
+	it('exposes authored chapter placard and animated dialogue presentation metadata', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
+		flow.selectMenu('story');
+		const scene = new StoryFlowScene(flow);
+
+		expect(scene.getPresentationSnapshot()).toMatchObject({
+			mode: 'title-card',
+			stageId: 'mirror-palace',
+			chapter: 4,
+			stageName: 'Treason at the Mirror Banquet',
+			placard: 'Debt can make a friend wear the enemy mask before they stop loving you.',
+		});
+
+		flow.advanceTitleCard();
+		expect(scene.getPresentationSnapshot()).toMatchObject({
+			mode: 'dialogue',
+			stageId: 'mirror-palace',
+			speaker: 'Auntie Subharmonic',
+			lineIndex: 0,
+			lineCount: 2,
+		});
+	});
+
 	it('records and emits a branch recap when a stage choice is committed', () => {
 		const flow = createGameFlow(undefined, { currentStageId: 'mirror-palace' });
 		flow.selectMenu('story');

@@ -12,6 +12,24 @@ describe('stageLayoutRegistry', () => {
 		}
 	});
 
+	it('uses the authored Dub Colony beat route and production enemy families', () => {
+		const layout = cloneStageLayout('dub-colony');
+		expect(layout.id).toBe('dub-colony-runtime');
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'dub_shield')).toBe(true);
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'bass_reactor_core')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'signal_jammer_bat')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'feedback_guard')).toBe(true);
+	});
+
+	it('uses the authored Mirror Palace rocket route and story payload', () => {
+		const layout = cloneStageLayout('mirror-palace');
+		expect(layout.id).toBe('mirror-palace-runtime');
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'rocket_backpack')).toBe(true);
+		expect(layout.pickups.some((pickup) => pickup.itemId === 'mirror_pass')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'banquet_usher')).toBe(true);
+		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'mirror_sentinel')).toBe(true);
+	});
+
 	it('uses the authored Chrome Arcology railgun layout and production enemy families', () => {
 		const layout = cloneStageLayout('chrome-arcology');
 		expect(layout.id).toBe('chrome-arcology-runtime');

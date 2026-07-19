@@ -24,7 +24,7 @@ describe('buildStageRuntimeConfig', () => {
 		expect(config?.modifierRules[0]).toMatchObject({
 			id: 'bass-reactor-sync',
 			kind: 'beat-timing',
-			effect: 'rhythm window 90ms at 140bpm',
+			effect: 'rhythm window 145ms at 86bpm',
 		});
 		expect(config?.enemyMixTags).toEqual(expect.arrayContaining(['beat-timing']));
 	});

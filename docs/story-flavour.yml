@@ -979,8 +979,8 @@ badger_sprawl_runner_story_content_pack:
     sound_effect_vibes: speaker hum, greenhouse fans, kitchen pots, feedback squeal, sub-bass shield pulses
     musical_theme:
       name: Assembly in Low Frequency
-      bpm: 140
-      palette: dub steppers, organ skank, hand drums, neo-soul chords, crowd murmurs
+      bpm: 86
+      palette: golden-era boom-bap drums, dusty organ chops, dub bass, hand percussion, neo-soul chords, crowd murmurs
     sprite_texture_generation_prompts:
     - asset_id: BG_DUB_GREENHOUSE_CAR
       prompt: dub colony greenhouse car; plants, patched glass, speaker cables, seed trays; 2D side-scrolling platformer asset;

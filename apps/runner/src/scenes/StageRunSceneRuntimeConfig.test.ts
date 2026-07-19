@@ -19,7 +19,7 @@ describe('StageRunScene runtime config', () => {
 						id: 'bass-reactor-sync',
 						label: 'Bass Reactor Sync',
 						kind: 'beat-timing',
-						effect: 'rhythm window 90ms at 140bpm',
+						effect: 'rhythm window 145ms at 86bpm',
 					},
 				],
 			},

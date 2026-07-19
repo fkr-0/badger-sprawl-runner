@@ -5,6 +5,7 @@
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
 import { BADGER_UI, drawArcadePanel } from '../ui/ArcadeUi';
+import { buildGameplayHudLayout } from './GameplayHudLayout';
 import type { SpriteRenderer } from './SpriteRenderer';
 
 interface HudIconSlot {
@@ -18,9 +19,10 @@ interface HudIconSlot {
 }
 
 const HUD_ICON_SHEET = 'item_icons';
-const HUD_ICON_SIZE = 32;
-const HUD_ICON_GAP = 9;
-const PANEL = BADGER_UI.panel;
+const HUD_ICON_SOURCE_SIZE = 32;
+const HUD_ICON_SIZE = 24;
+const HUD_ICON_SCALE = HUD_ICON_SIZE / HUD_ICON_SOURCE_SIZE;
+const HUD_ICON_GAP = 7;
 const PANEL_STRONG = BADGER_UI.panelStrong;
 const TEXT = BADGER_UI.text;
 const MUTED = BADGER_UI.muted;
@@ -36,43 +38,59 @@ export class UIRenderer {
 		spriteRenderer?: SpriteRenderer
 	): void {
 		void camera;
+		const companionLines = this.getCompanionLines(player);
+		const layout = buildGameplayHudLayout(
+			ctx.canvas.width,
+			ctx.canvas.height,
+			companionLines.length,
+			(player.gearIconSlots ?? []).length
+		);
 		this.renderScreenFeedback(ctx, player);
-		this.renderVitals(ctx, player, spriteRenderer);
-		this.renderCompanionStatus(ctx, player, 432, 18);
-		this.renderObjective(ctx, player);
-		this.renderGearLoadout(ctx, player, spriteRenderer);
-		this.renderCombatReadout(ctx, player);
-		this.renderToast(ctx, player);
-		this.renderContextHint(ctx, player);
+		this.renderVitals(ctx, player, spriteRenderer, layout.vitals);
+		this.renderCompanionStatus(ctx, companionLines, layout.companions);
+		this.renderObjective(ctx, player, layout.objective);
+		this.renderGearLoadout(ctx, player, spriteRenderer, layout.gear);
+		this.renderCombatReadout(ctx, player, layout.combat);
+		this.renderToast(ctx, player, layout.toast);
+		this.renderContextHint(ctx, player, layout.context);
 	}
 
 	private renderGearLoadout(
 		ctx: CanvasRenderingContext2D,
 		player: Player,
-		spriteRenderer: SpriteRenderer | undefined
+		spriteRenderer: SpriteRenderer | undefined,
+		rect: { x: number; y: number; width: number; height: number }
 	): void {
 		const slots = player.gearIconSlots ?? [];
 		if (slots.length === 0) return;
 		const gap = 7;
-		const width = 20 + slots.length * (HUD_ICON_SIZE + gap);
-		const x = ctx.canvas.width - width - 18;
-		const y = 90;
+		const { x, y, width, height } = rect;
 		ctx.save();
-		drawArcadePanel(ctx, { x, y, width, height: 54, label: 'Equipped signal' });
+		drawArcadePanel(ctx, { x, y, width, height, label: 'Equipped' });
 		for (const [index, slot] of slots.entries()) {
 			const iconX = x + 9 + index * (HUD_ICON_SIZE + gap);
-			const iconY = y + 17;
+			const iconY = y + 15;
 			ctx.fillStyle = 'rgba(103, 243, 196, 0.1)';
 			ctx.fillRect(iconX - 1, iconY - 1, HUD_ICON_SIZE + 2, HUD_ICON_SIZE + 2);
 			ctx.strokeStyle = MINT;
 			ctx.strokeRect(iconX - 1, iconY - 1, HUD_ICON_SIZE + 2, HUD_ICON_SIZE + 2);
 			if (spriteRenderer?.hasSheet(slot.sheetId)) {
-				spriteRenderer.drawFrame(slot.sheetId, slot.animation, 0, iconX, iconY);
+				spriteRenderer.drawFrame(
+					slot.sheetId,
+					slot.animation,
+					0,
+					iconX,
+					iconY,
+					false,
+					HUD_ICON_SCALE,
+					HUD_ICON_SCALE
+				);
 			} else {
 				ctx.fillStyle = '#1a1d26';
 				ctx.fillRect(iconX, iconY, HUD_ICON_SIZE, HUD_ICON_SIZE);
 				ctx.fillStyle = TEXT;
-				ctx.fillText(slot.label.slice(0, 3).toUpperCase(), iconX + 5, iconY + 20);
+				ctx.font = '8px ui-monospace, monospace';
+				ctx.fillText(slot.label.slice(0, 3).toUpperCase(), iconX + 3, iconY + 16);
 			}
 		}
 		ctx.restore();
@@ -106,26 +124,24 @@ export class UIRenderer {
 	private renderVitals(
 		ctx: CanvasRenderingContext2D,
 		player: Player,
-		spriteRenderer: SpriteRenderer | undefined
+		spriteRenderer: SpriteRenderer | undefined,
+		rect: { x: number; y: number; width: number; height: number }
 	): void {
-		const x = 18;
-		const y = 18;
-		const width = 404;
-		const height = 102;
+		const { x, y, width, height } = rect;
 		ctx.save();
-		drawArcadePanel(ctx, { x, y, width, height, label: 'Moss // field status' });
+		drawArcadePanel(ctx, { x, y, width, height, label: 'Moss // integrity' });
 		ctx.textAlign = 'left';
 
-		this.renderHealthBar(ctx, player, x + 16, y + 26, 188, 18);
-		this.renderFuelBar(ctx, player, x + 16, y + 52, 188, 10);
-		this.renderItemIcons(ctx, player, spriteRenderer, x + 222, y + 27);
+		this.renderHealthBar(ctx, player, x + 14, y + 29, 150, 12);
+		this.renderFuelBar(ctx, player, x + 14, y + 50, 150, 7);
+		this.renderItemIcons(ctx, player, spriteRenderer, x + 184, y + 27);
 
-		ctx.font = '10px ui-monospace, monospace';
+		ctx.font = '9px ui-monospace, monospace';
 		ctx.fillStyle = MUTED;
 		ctx.fillText(
 			`CHECKPOINT // ${(player.checkpointLabel ?? 'SPRAWL ENTRY').toUpperCase()}`,
-			x + 16,
-			y + 84
+			x + 14,
+			y + 68
 		);
 		ctx.restore();
 	}
@@ -140,9 +156,6 @@ export class UIRenderer {
 	): void {
 		const gap = 4;
 		const segmentWidth = (width - gap * (player.maxHp - 1)) / player.maxHp;
-		ctx.font = '700 10px ui-monospace, monospace';
-		ctx.fillStyle = TEXT;
-		ctx.fillText('INTEGRITY', x, y - 5);
 		for (let index = 0; index < player.maxHp; index += 1) {
 			const segmentX = x + index * (segmentWidth + gap);
 			ctx.fillStyle = index < Math.ceil(player.hp) ? (player.hp <= 2 ? DANGER : MINT) : '#202633';
@@ -160,7 +173,7 @@ export class UIRenderer {
 		width: number,
 		height: number
 	): void {
-		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.font = '700 8px ui-monospace, monospace';
 		ctx.fillStyle = player.hasRocket ? AMBER : MUTED;
 		ctx.fillText(
 			player.hasRocket ? `ROCKET ${player.fuel.toFixed(1)}/${player.maxFuel}` : 'ROCKET // OFFLINE',
@@ -205,13 +218,22 @@ export class UIRenderer {
 		ctx.strokeRect(x - 2, y - 2, HUD_ICON_SIZE + 4, HUD_ICON_SIZE + 4);
 
 		if (spriteRenderer?.hasSheet(HUD_ICON_SHEET)) {
-			spriteRenderer.drawFrame(HUD_ICON_SHEET, slot.animation, 0, x, y);
+			spriteRenderer.drawFrame(
+				HUD_ICON_SHEET,
+				slot.animation,
+				0,
+				x,
+				y,
+				false,
+				HUD_ICON_SCALE,
+				HUD_ICON_SCALE
+			);
 		} else {
 			ctx.fillStyle = '#1a1d26';
 			ctx.fillRect(x, y, HUD_ICON_SIZE, HUD_ICON_SIZE);
 			ctx.fillStyle = slot.active ? MINT : '#7a8194';
-			ctx.font = '10px ui-monospace, monospace';
-			ctx.fillText(slot.label.slice(0, 3).toUpperCase(), x + 5, y + 20);
+			ctx.font = '8px ui-monospace, monospace';
+			ctx.fillText(slot.label.slice(0, 3).toUpperCase(), x + 3, y + 16);
 		}
 
 		const ratio =
@@ -225,24 +247,19 @@ export class UIRenderer {
 		ctx.fillStyle = PANEL_STRONG;
 		ctx.fillRect(x - 2, y + HUD_ICON_SIZE + 3, 16, 13);
 		ctx.fillStyle = TEXT;
-		ctx.font = '700 9px ui-monospace, monospace';
-		ctx.fillText(slot.key, x + 2, y + HUD_ICON_SIZE + 13);
+		ctx.font = '700 8px ui-monospace, monospace';
+		ctx.fillText(slot.key, x + 2, y + HUD_ICON_SIZE + 12);
 
 		if (slot.count !== undefined && slot.count > 0) {
 			ctx.fillStyle = PANEL_STRONG;
 			ctx.fillRect(x + 19, y + 19, 15, 14);
 			ctx.fillStyle = TEXT;
-			ctx.fillText(String(slot.count), x + 23, y + 30);
+			ctx.fillText(String(slot.count), x + 22, y + 28);
 		}
 		ctx.restore();
 	}
 
-	private renderCompanionStatus(
-		ctx: CanvasRenderingContext2D,
-		player: Player,
-		x: number,
-		y: number
-	): void {
+	private getCompanionLines(player: Player): Array<{ text: string; color: string }> {
 		const lines: Array<{ text: string; color: string }> = [];
 		if ((player.companionShield ?? 0) > 0) {
 			lines.push({ text: `Naya shield ${Math.floor(player.companionShield ?? 0)}`, color: MINT });
@@ -251,97 +268,109 @@ export class UIRenderer {
 			lines.push({ text: 'Rook overlay active', color: AMBER });
 		}
 		if (player.companionHint) {
-			lines.push({ text: player.companionHint.slice(0, 28), color: MUTED });
+			lines.push({ text: player.companionHint.slice(0, 31), color: MUTED });
 		}
-		if (lines.length === 0) return;
+		return lines;
+	}
 
-		const width = 154;
-		const height = 12 + lines.length * 16;
+	private renderCompanionStatus(
+		ctx: CanvasRenderingContext2D,
+		lines: Array<{ text: string; color: string }>,
+		rect: { x: number; y: number; width: number; height: number }
+	): void {
+		if (lines.length === 0) return;
+		const { x, y, width, height } = rect;
 		ctx.save();
 		drawArcadePanel(ctx, { x, y, width, height, accent: BADGER_UI.accentAlt });
-		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.font = '700 8px ui-monospace, monospace';
 		ctx.textAlign = 'left';
 		for (const [index, line] of lines.entries()) {
 			ctx.fillStyle = line.color;
-			ctx.fillText(line.text.toUpperCase(), x + 9, y + 15 + index * 16);
+			ctx.fillText(line.text.toUpperCase(), x + 9, y + 14 + index * 14);
 		}
 		ctx.restore();
 	}
 
-	private renderObjective(ctx: CanvasRenderingContext2D, player: Player): void {
+	private renderObjective(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		rect: { x: number; y: number; width: number; height: number }
+	): void {
 		if (!player.objectiveHint && !player.loadoutHint) return;
-		const width = 330;
-		const x = ctx.canvas.width - width - 18;
-		const y = 18;
+		const { x, y, width, height } = rect;
 		ctx.save();
-		drawArcadePanel(ctx, { x, y, width, height: 64, accent: AMBER, label: 'Current route' });
+		drawArcadePanel(ctx, { x, y, width, height, accent: AMBER, label: 'Current route' });
 		ctx.textAlign = 'left';
-		ctx.font = '700 13px ui-monospace, monospace';
+		ctx.font = '700 11px ui-monospace, monospace';
 		ctx.fillStyle = TEXT;
-		ctx.fillText((player.objectiveHint ?? '').slice(0, 39), x + 14, y + 37);
-		ctx.font = '10px ui-monospace, monospace';
+		ctx.fillText((player.objectiveHint ?? '').slice(0, 42), x + 14, y + 36);
+		ctx.font = '9px ui-monospace, monospace';
 		ctx.fillStyle = MINT;
-		ctx.fillText((player.loadoutHint ?? '').slice(0, 48), x + 14, y + 54);
+		ctx.fillText((player.loadoutHint ?? '').slice(0, 52), x + 14, y + 52);
 		ctx.restore();
 	}
 
-	private renderCombatReadout(ctx: CanvasRenderingContext2D, player: Player): void {
+	private renderCombatReadout(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		rect: { x: number; y: number; width: number; height: number }
+	): void {
 		if ((player.comboCount ?? 0) <= 0 && !player.bossPhaseHint && !player.rookOverlayActive) return;
 		ctx.save();
 		ctx.textAlign = 'center';
-		if ((player.comboCount ?? 0) > 0) {
-			const x = ctx.canvas.width / 2;
-			drawArcadePanel(ctx, {
-				x: x - 66,
-				y: 18,
-				width: 132,
-				height: 48,
-				accent: AMBER,
-				strong: true,
-			});
-			ctx.fillStyle = AMBER;
-			ctx.font = '900 22px ui-monospace, monospace';
-			ctx.fillText(`CHAIN ×${player.comboCount}`, x, 47);
-		}
-		if (player.bossPhaseHint) {
-			ctx.fillStyle = PANEL_STRONG;
-			ctx.fillRect(ctx.canvas.width / 2 - 190, 72, 380, 28);
-			ctx.fillStyle = DANGER;
-			ctx.font = '700 11px ui-monospace, monospace';
-			ctx.fillText(player.bossPhaseHint.slice(0, 54).toUpperCase(), ctx.canvas.width / 2, 90);
-		}
+		drawArcadePanel(ctx, {
+			...rect,
+			accent: player.bossPhaseHint ? DANGER : AMBER,
+			strong: true,
+		});
+		const chain = (player.comboCount ?? 0) > 0 ? ` // CHAIN ×${player.comboCount}` : '';
+		const message = `${player.bossPhaseHint ?? 'COMBAT FLOW'}${chain}`.slice(0, 58);
+		ctx.fillStyle = player.bossPhaseHint ? DANGER : AMBER;
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillText(message.toUpperCase(), rect.x + rect.width / 2, rect.y + 16);
 		ctx.restore();
 	}
 
-	private renderToast(ctx: CanvasRenderingContext2D, player: Player): void {
+	private renderToast(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		rect: { x: number; y: number; width: number; height: number }
+	): void {
 		if (!player.hudToast || (player.hudToastTimer ?? 0) <= 0) return;
 		const alpha = Math.min(1, (player.hudToastTimer ?? 0) * 2);
 		ctx.save();
 		ctx.globalAlpha = alpha;
 		ctx.textAlign = 'center';
-		ctx.font = '700 14px ui-monospace, monospace';
-		const width = Math.min(520, Math.max(220, ctx.measureText(player.hudToast).width + 48));
+		ctx.font = '700 11px ui-monospace, monospace';
+		const width = Math.min(rect.width, Math.max(220, ctx.measureText(player.hudToast).width + 36));
 		const x = ctx.canvas.width / 2 - width / 2;
-		const y = 112;
-		drawArcadePanel(ctx, { x, y, width, height: 34, strong: true });
+		const y = rect.y;
+		drawArcadePanel(ctx, { x, y, width, height: rect.height, strong: true });
 		ctx.fillStyle = MINT;
-		ctx.fillRect(x, y + 31, width, 3);
+		ctx.fillRect(x, y + rect.height - 3, width, 3);
 		ctx.fillStyle = TEXT;
-		ctx.fillText(player.hudToast.toUpperCase(), ctx.canvas.width / 2, y + 22);
+		ctx.fillText(player.hudToast.toUpperCase(), ctx.canvas.width / 2, y + 20);
 		ctx.restore();
 	}
 
-	private renderContextHint(ctx: CanvasRenderingContext2D, player: Player): void {
+	private renderContextHint(
+		ctx: CanvasRenderingContext2D,
+		player: Player,
+		rect: { x: number; y: number; width: number; height: number }
+	): void {
 		if (!player.contextHint) return;
 		ctx.save();
 		ctx.textAlign = 'center';
-		ctx.font = '700 12px ui-monospace, monospace';
-		const width = Math.min(440, Math.max(180, ctx.measureText(player.contextHint).width + 38));
+		ctx.font = '700 10px ui-monospace, monospace';
+		const width = Math.min(
+			rect.width,
+			Math.max(180, ctx.measureText(player.contextHint).width + 32)
+		);
 		const x = ctx.canvas.width / 2 - width / 2;
-		const y = ctx.canvas.height - 46;
-		drawArcadePanel(ctx, { x, y, width, height: 28, accent: AMBER, strong: true });
+		const y = rect.y;
+		drawArcadePanel(ctx, { x, y, width, height: rect.height, accent: AMBER, strong: true });
 		ctx.fillStyle = TEXT;
-		ctx.fillText(player.contextHint.toUpperCase(), ctx.canvas.width / 2, y + 19);
+		ctx.fillText(player.contextHint.toUpperCase(), ctx.canvas.width / 2, y + 16);
 		ctx.restore();
 	}
 

@@ -17,12 +17,22 @@ import {
 	type DrainmarketObjectiveSnapshot,
 	DrainmarketObjectives,
 } from '../game/DrainmarketObjectives';
+import {
+	type DubColonyObjectiveEvent,
+	type DubColonyObjectiveSnapshot,
+	DubColonyObjectives,
+} from '../game/DubColonyObjectives';
 import type { StageRuntimeResult } from '../game/GameFlow';
 import {
 	type LowerSprawlObjectiveEvent,
 	type LowerSprawlObjectiveSnapshot,
 	LowerSprawlObjectives,
 } from '../game/LowerSprawlObjectives';
+import {
+	type MirrorPalaceObjectiveEvent,
+	type MirrorPalaceObjectiveSnapshot,
+	MirrorPalaceObjectives,
+} from '../game/MirrorPalaceObjectives';
 import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
 import type { StoryBalanceRules } from '../game/StoryBalanceRules';
 import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/EncounterGenerator';
@@ -32,10 +42,13 @@ import {
 	createAnimationState,
 	playAnimation,
 } from '../renderer/AnimationState';
+import { GAMEPLAY_HUD_WORLD_OVERLAY_TOP } from '../renderer/GameplayHudLayout';
 import {
 	CHROME_ARCOLOGY_PARALLAX_SHEET_ID,
 	DRAINMARKET_PARALLAX_SHEET_ID,
+	DUB_COLONY_PARALLAX_SHEET_ID,
 	LOWER_SPRAWL_BACKDROP_SHEET_ID,
+	MIRROR_PALACE_PARALLAX_SHEET_ID,
 	PLAYER_SPRITE_SHEET_ID,
 	type Renderer,
 } from '../renderer/Renderer';
@@ -62,6 +75,7 @@ import {
 	type DrainmarketEnemyEvent,
 	DrainmarketEnemySystem,
 } from '../systems/DrainmarketEnemySystem';
+import { type DubColonyEnemyEvent, DubColonyEnemySystem } from '../systems/DubColonyEnemySystem';
 import {
 	FIRST_RELEASE_ITEM_CATALOG,
 	getFirstReleaseItem,
@@ -79,6 +93,11 @@ import {
 	applyPersistedPayloadPickups,
 	getCollectedStoryPayloadIds,
 } from '../systems/ItemSystem';
+import {
+	KingFeedbackController,
+	type KingFeedbackEvent,
+	type KingFeedbackSnapshot,
+} from '../systems/KingFeedbackController';
 import {
 	KnifeDroneNestController,
 	type KnifeDroneNestEvent,
@@ -103,13 +122,24 @@ import {
 	type MadameVitrineEvent,
 	type MadameVitrineSnapshot,
 } from '../systems/MadameVitrineController';
+import {
+	type MirrorPalaceEnemyEvent,
+	MirrorPalaceEnemySystem,
+} from '../systems/MirrorPalaceEnemySystem';
 import { PhysicsSystem } from '../systems/PhysicsSystem';
 import type { Platform } from '../systems/PhysicsSystem';
+import {
+	ReflectionJudgeController,
+	type ReflectionJudgeEvent,
+	type ReflectionJudgeSnapshot,
+} from '../systems/ReflectionJudgeController';
 import { applyRuntimeItemEffectsToCombatEntity } from '../systems/RuntimeItemApplier';
 import {
 	CHROME_ARCOLOGY_CHECKPOINTS,
 	DRAINMARKET_CHECKPOINTS,
+	DUB_COLONY_CHECKPOINTS,
 	LOWER_SPRAWL_CHECKPOINTS,
+	MIRROR_PALACE_CHECKPOINTS,
 	type StageCheckpointEvent,
 	type StageCheckpointSnapshot,
 	StageCheckpointSystem,
@@ -133,6 +163,7 @@ export interface RuntimeBossPlaceholder {
 export interface StageRunSceneOptions {
 	stageId?: RuntimeStageId;
 	acquiredPayloadIds?: readonly string[];
+	storyResultFlags?: readonly string[];
 	branchGameplayHooks?: readonly string[];
 	balanceRules?: StoryBalanceRules;
 	runtimeConfig?: StageRuntimeConfig;
@@ -161,10 +192,14 @@ export class StageRunScene implements Scene {
 	private readonly captainGrin: CaptainGrinController | null;
 	private readonly knifeDroneNest: KnifeDroneNestController | null;
 	private readonly madameVitrine: MadameVitrineController | null;
+	private readonly reflectionJudge: ReflectionJudgeController | null;
+	private readonly kingFeedback: KingFeedbackController | null;
 	private readonly lowerSprawlHazards: LowerSprawlHazardSystem | null;
 	private readonly lowerSprawlEnemies: LowerSprawlEnemySystem | null;
 	private readonly drainmarketEnemies: DrainmarketEnemySystem | null;
 	private readonly chromeArcologyEnemies: ChromeArcologyEnemySystem | null;
+	private readonly mirrorPalaceEnemies: MirrorPalaceEnemySystem | null;
+	private readonly dubColonyEnemies: DubColonyEnemySystem | null;
 	private readonly checkpoints: StageCheckpointSystem | null;
 	private encounterGenerator = new EncounterGenerator();
 	private inventory = new InventorySystem(FIRST_RELEASE_ITEM_CATALOG);
@@ -176,6 +211,7 @@ export class StageRunScene implements Scene {
 	);
 	private items = new ItemSystem({
 		onCollect: (pickup) => {
+			this.player.pickupReactionTimer = Math.max(this.player.pickupReactionTimer ?? 0, 0.34);
 			this.renderer?.emitVFX(pickup.x, pickup.y, 'pickup', 8, 42);
 			this.collectLoadoutPickup(pickup);
 			if (pickup.persistence === 'story_payload' && pickup.itemId) {
@@ -197,6 +233,9 @@ export class StageRunScene implements Scene {
 	private readonly lowerSprawlObjectives: LowerSprawlObjectives | null;
 	private readonly drainmarketObjectives: DrainmarketObjectives | null;
 	private readonly chromeArcologyObjectives: ChromeArcologyObjectives | null;
+	private readonly mirrorPalaceObjectives: MirrorPalaceObjectives | null;
+	private readonly dubColonyObjectives: DubColonyObjectives | null;
+	private nayaAssistTimer = 0;
 	private stageCompletionDispatched = false;
 	private debugOverlayVisible = false;
 
@@ -210,6 +249,9 @@ export class StageRunScene implements Scene {
 		this.knifeDroneNest = options.stageId === 'drainmarket' ? new KnifeDroneNestController() : null;
 		this.madameVitrine =
 			options.stageId === 'chrome-arcology' ? new MadameVitrineController() : null;
+		this.reflectionJudge =
+			options.stageId === 'mirror-palace' ? new ReflectionJudgeController() : null;
+		this.kingFeedback = options.stageId === 'dub-colony' ? new KingFeedbackController() : null;
 		this.lowerSprawlHazards =
 			options.stageId === 'lower-sprawl' ? new LowerSprawlHazardSystem() : null;
 		this.lowerSprawlEnemies =
@@ -218,6 +260,9 @@ export class StageRunScene implements Scene {
 			options.stageId === 'drainmarket' ? new DrainmarketEnemySystem() : null;
 		this.chromeArcologyEnemies =
 			options.stageId === 'chrome-arcology' ? new ChromeArcologyEnemySystem() : null;
+		this.mirrorPalaceEnemies =
+			options.stageId === 'mirror-palace' ? new MirrorPalaceEnemySystem() : null;
+		this.dubColonyEnemies = options.stageId === 'dub-colony' ? new DubColonyEnemySystem() : null;
 		this.checkpoints =
 			options.stageId === 'lower-sprawl'
 				? new StageCheckpointSystem(LOWER_SPRAWL_CHECKPOINTS)
@@ -225,7 +270,11 @@ export class StageRunScene implements Scene {
 					? new StageCheckpointSystem(DRAINMARKET_CHECKPOINTS)
 					: options.stageId === 'chrome-arcology'
 						? new StageCheckpointSystem(CHROME_ARCOLOGY_CHECKPOINTS)
-						: null;
+						: options.stageId === 'mirror-palace'
+							? new StageCheckpointSystem(MIRROR_PALACE_CHECKPOINTS)
+							: options.stageId === 'dub-colony'
+								? new StageCheckpointSystem(DUB_COLONY_CHECKPOINTS)
+								: null;
 		this.player = createPlayer();
 		this.player.unlockedSkills = [...(options.unlockedSkills ?? [])];
 		// Initialize animation state
@@ -236,6 +285,12 @@ export class StageRunScene implements Scene {
 			options.stageId === 'drainmarket' ? new DrainmarketObjectives() : null;
 		this.chromeArcologyObjectives =
 			options.stageId === 'chrome-arcology' ? new ChromeArcologyObjectives() : null;
+		this.mirrorPalaceObjectives =
+			options.stageId === 'mirror-palace' ? new MirrorPalaceObjectives() : null;
+		this.dubColonyObjectives =
+			options.stageId === 'dub-colony'
+				? new DubColonyObjectives(options.storyResultFlags ?? [])
+				: null;
 		this.inventory.addItem('claws');
 		this.inventory.equip('claws');
 		this.refreshLoadout();
@@ -247,10 +302,18 @@ export class StageRunScene implements Scene {
 					? 'Red invoice flash // L parry'
 					: options.stageId === 'chrome-arcology'
 						? 'K railgun // pierce the glass sightlines'
-						: undefined;
-		this.player.hudToastTimer = ['lower-sprawl', 'drainmarket', 'chrome-arcology'].includes(
-			options.stageId ?? ''
-		)
+						: options.stageId === 'mirror-palace'
+							? 'Airborne E boost // break the false route'
+							: options.stageId === 'dub-colony'
+								? 'Watch the woofer ring // act on the bass pulse'
+								: undefined;
+		this.player.hudToastTimer = [
+			'lower-sprawl',
+			'drainmarket',
+			'chrome-arcology',
+			'mirror-palace',
+			'dub-colony',
+		].includes(options.stageId ?? '')
 			? 2.6
 			: 0;
 		this.initWorld();
@@ -345,9 +408,328 @@ export class StageRunScene implements Scene {
 		}
 	}
 
+	private updateDubColonyHints(snapshot: DubColonyObjectiveSnapshot): void {
+		const parts = snapshot.spareParts.filter((part) => part.recovered).length;
+		const votes = snapshot.voteCards.filter((card) => card.recovered).length;
+		const tuned = snapshot.reactorNodes.filter((node) => node.tuned).length;
+		if (parts < snapshot.spareParts.length) {
+			this.player.objectiveHint = `Recover chorus spare parts // ${parts}/${snapshot.spareParts.length}`;
+		} else if (votes < snapshot.voteCards.length) {
+			this.player.objectiveHint = `Restore missing vote cards // ${votes}/${snapshot.voteCards.length}`;
+		} else if (!snapshot.reactorSynchronized) {
+			this.player.objectiveHint = `Tune the Bass Reactor on beat // ${tuned}/${snapshot.reactorNodes.length}`;
+		} else if (!snapshot.bossDefeated) {
+			this.player.objectiveHint = 'Answer King Feedback on the Assembly Deck';
+		} else if (!snapshot.payloadCollected) {
+			this.player.objectiveHint = 'Secure the Bass Reactor Core';
+		} else {
+			this.player.objectiveHint = 'The colony can hear itself again';
+		}
+		this.player.loadoutHint = `${snapshot.alignment.toUpperCase()} vote // ${snapshot.bpm} BPM // streak ${snapshot.beatStreak}`;
+		this.player.contextHint = undefined;
+
+		const king = this.kingFeedback?.getSnapshot();
+		if (king?.action === 'windup') {
+			this.player.contextHint =
+				king.pendingAttack === 'emergency-crown'
+					? 'COMMAND LANE // JUMP'
+					: king.pendingAttack === 'security-pulse'
+						? 'BASS FLASH // L PARRY'
+						: 'FULL-DECK PULSE // MOVE WITH NAYA';
+			return;
+		}
+		if (snapshot.jamRemaining > 0) {
+			this.player.contextHint = `RHYTHM JAMMED // ${snapshot.jamRemaining.toFixed(1)}s`;
+			return;
+		}
+		const centerX = this.player.x + this.player.w / 2;
+		const centerY = this.player.y + this.player.h / 2;
+		const distance = (x: number, y: number): number => Math.hypot(centerX - x, centerY - y);
+		const part = snapshot.spareParts.find(
+			(entry) => !entry.recovered && distance(entry.x, entry.y) < 84
+		);
+		if (part) {
+			this.player.contextHint = 'M recover reactor spare';
+			return;
+		}
+		const vote = snapshot.voteCards.find(
+			(entry) => !entry.recovered && distance(entry.x, entry.y) < 84
+		);
+		if (vote) {
+			this.player.contextHint = 'M return the hidden vote card';
+			return;
+		}
+		const node = snapshot.reactorNodes.find(
+			(entry) => !entry.tuned && distance(entry.x, entry.y) < 116
+		);
+		if (node) {
+			this.player.contextHint = `${snapshot.inBeatWindow ? 'NOW' : 'WAIT'} // ${node.expectedAction.toUpperCase()} ON WOOFER PULSE`;
+			return;
+		}
+		const guard = this.enemies.find(
+			(enemy) =>
+				enemy.hp > 0 &&
+				enemy.procgenFamily === 'feedback_guard' &&
+				enemy.aiState === 'windup' &&
+				Math.abs(enemy.x - this.player.x) < 110
+		);
+		if (guard) this.player.contextHint = 'M remind the guard who the shield serves';
+	}
+
+	private handleDubColonyEvents(events: DubColonyObjectiveEvent[]): void {
+		if (events.length === 0 || !this.dubColonyObjectives) return;
+		for (const event of events) {
+			if (['spare-part-recovered', 'vote-card-recovered'].includes(event.kind)) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.46
+				);
+			}
+			if (event.kind === 'spare-part-recovered') {
+				const count = this.dubColonyObjectives
+					.getSnapshot(this.player)
+					.spareParts.filter((part) => part.recovered).length;
+				this.showToast(`Chorus spare recovered // ${count}/3`, 1.45);
+			} else if (event.kind === 'vote-card-recovered') {
+				const count = this.dubColonyObjectives
+					.getSnapshot(this.player)
+					.voteCards.filter((card) => card.recovered).length;
+				this.showToast(`Vote returned to the assembly // ${count}/3`, 1.55);
+			} else if (event.kind === 'beat-hit') {
+				this.nayaAssistTimer = 0.62;
+				this.companions.rechargeNayaShield(event.grade === 'perfect' ? 0.8 : 0.4, {
+					onShield: () =>
+						this.renderer?.emitVFX(this.player.x - 18, this.player.y + 12, 'emp', 8, 50),
+				});
+				this.showToast(`${event.grade.toUpperCase()} // ${event.action} joins the chorus`, 1.1);
+			} else if (event.kind === 'beat-missed') {
+				this.showToast('Offbeat // the reactor keeps listening', 0.9);
+			} else if (event.kind === 'rhythm-jammed') {
+				this.showToast('Signal jammer erased the downbeat', 1.35);
+			} else if (event.kind === 'tutorial-complete') {
+				this.showToast('Naya sync // shared timing restores the shield', 2);
+			} else if (event.kind === 'reactor-synchronized') {
+				this.showToast('Bass Reactor synchronized // no channel dominates', 2.2);
+				this.renderer?.emitVFX(2210, 420, 'emp', 18, 130);
+			}
+			window.dispatchEvent(
+				new CustomEvent('badger:dub-colony-progress', {
+					detail: { event, snapshot: this.dubColonyObjectives.getSnapshot(this.player) },
+				})
+			);
+		}
+	}
+
+	private handleDubColonyEnemyEvents(events: DubColonyEnemyEvent[]): void {
+		for (const event of events) {
+			const enemy =
+				'enemyId' in event
+					? this.enemies.find((candidate) => candidate.id === event.enemyId)
+					: undefined;
+			if (event.kind === 'enemy-telegraph' && enemy) {
+				this.renderer?.emitVFX(
+					enemy.x + enemy.w / 2,
+					enemy.y + enemy.h / 2,
+					event.attack === 'static-burst' ? 'emp' : 'muzzle',
+					8,
+					event.attack === 'static-burst' ? 92 : 48
+				);
+			}
+			if (event.kind === 'rhythm-jammed') {
+				this.handleDubColonyEvents(this.dubColonyObjectives?.jamRhythm(event.duration) ?? []);
+			}
+			if (event.kind === 'guard-talked-down') {
+				this.showToast('Guard stands down // safety is not silence', 1.8);
+				this.player.interactionAnimationTimer = 0.5;
+			}
+			window.dispatchEvent(new CustomEvent('badger:dub-colony-enemy', { detail: event }));
+		}
+	}
+
+	private handleKingFeedbackEvents(events: KingFeedbackEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'boss-telegraph') {
+				const message =
+					event.attack === 'security-pulse'
+						? 'Security Pulse // L parry the fear'
+						: event.attack === 'emergency-crown'
+							? 'Emergency Crown // jump the command lane'
+							: 'Chorus Test // no single safe voice';
+				this.showToast(message, 1.2);
+				this.renderer?.emitVFX(2500, 390, 'muzzle', 14, 110);
+			}
+			if (event.kind === 'boss-phase-transition') {
+				this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 13);
+				this.renderer?.emitVFX(2500, 390, 'emp', 20, 140);
+				this.showToast(
+					event.phaseIndex === 1
+						? 'Emergency command takes the crown'
+						: 'The assembly answers as a chorus',
+					1.9
+				);
+			}
+			window.dispatchEvent(new CustomEvent('badger:king-feedback-pattern', { detail: event }));
+		}
+	}
+
+	private updateMirrorPalaceHints(snapshot: MirrorPalaceObjectiveSnapshot): void {
+		const heard = snapshot.guests.filter((guest) => guest.heard).length;
+		const broken = snapshot.traversalSeals.filter((seal) => seal.broken).length;
+		if (!this.player.hasRocket) {
+			this.player.objectiveHint = 'Collect the foyer rocket backpack';
+		} else if (broken < snapshot.traversalSeals.length) {
+			this.player.objectiveHint = `Break false routes // ${broken}/${snapshot.traversalSeals.length}`;
+		} else if (heard < snapshot.guests.length) {
+			this.player.objectiveHint = `Hear the refusals // ${heard}/${snapshot.guests.length}`;
+		} else if (snapshot.etiquetteStatus !== 'solved') {
+			this.player.objectiveHint = 'Repeat the banquet refusal sequence';
+		} else if (!snapshot.bossDefeated) {
+			this.player.objectiveHint = 'Reject the Reflection Judge’s contract';
+		} else if (!snapshot.payloadCollected) {
+			this.player.objectiveHint = 'Secure the Mirror Pass';
+		} else {
+			this.player.objectiveHint = 'The banquet has lost its authority';
+		}
+		this.player.loadoutHint = `Rocket seals ${broken}/3 // refusal table ${heard}/3`;
+		this.player.contextHint = undefined;
+
+		const judge = this.reflectionJudge?.getSnapshot();
+		if (judge?.action === 'windup') {
+			this.player.contextHint =
+				judge.pendingAttack === 'mirror-verdict'
+					? 'VERDICT LANE // AIRBORNE E BOOST'
+					: 'GOLD GAVEL // L PARRY';
+			return;
+		}
+		const centerX = this.player.x + this.player.w / 2;
+		const centerY = this.player.y + this.player.h / 2;
+		const distance = (x: number, y: number): number => Math.hypot(centerX - x, centerY - y);
+		const guest = snapshot.guests.find((entry) => !entry.heard && distance(entry.x, entry.y) < 86);
+		if (guest) {
+			this.player.contextHint = 'M listen to the refusal testimony';
+			return;
+		}
+		const seal = snapshot.traversalSeals.find(
+			(entry) => !entry.broken && distance(entry.x, entry.y) < 122
+		);
+		if (seal) {
+			this.player.contextHint =
+				seal.kind === 'reflection-loop'
+					? 'ENTER RIGHT // REVERSE LEFT ON SECOND SHIMMER'
+					: this.player.hasRocket
+						? 'AIRBORNE E // BREAK CONTRACT ROUTE'
+						: 'Rocket backpack required';
+			return;
+		}
+		if (
+			snapshot.etiquetteStatus !== 'solved' &&
+			distance(snapshot.etiquetteTerminal.x, snapshot.etiquetteTerminal.y) < 94
+		) {
+			this.player.contextHint =
+				snapshot.etiquetteStatus === 'active'
+					? `${snapshot.expectedInput?.toUpperCase() ?? 'WAIT'} // refuse politely`
+					: heard === 3 && broken === 3
+						? 'M begin banquet etiquette loop'
+						: 'Collect every refusal and break every route';
+		}
+	}
+
+	private handleMirrorPalaceEvents(events: MirrorPalaceObjectiveEvent[]): void {
+		if (events.length === 0 || !this.mirrorPalaceObjectives) return;
+		for (const event of events) {
+			if (
+				['refusal-heard', 'etiquette-started', 'etiquette-step', 'etiquette-complete'].includes(
+					event.kind
+				)
+			) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.46
+				);
+			}
+			if (event.kind === 'refusal-heard') {
+				const heard = this.mirrorPalaceObjectives
+					.getSnapshot()
+					.guests.filter((guest) => guest.heard).length;
+				this.showToast(`Refusal entered into the public record // ${heard}/3`, 1.6);
+			} else if (event.kind === 'traversal-seal-broken') {
+				this.showToast(`False route broken // ${event.id}`, 1.45);
+				this.renderer?.emitVFX(this.player.x + 16, this.player.y + 20, 'rocket', 10, 70);
+			} else if (event.kind === 'tutorial-complete') {
+				this.showToast('Rocket lesson // momentum is not consent', 1.9);
+			} else if (event.kind === 'etiquette-started') {
+				this.showToast('Banquet etiquette // L J SHIFT L', 1.9);
+			} else if (event.kind === 'etiquette-complete') {
+				this.showToast('Refusal sequence accepted // court doors open', 2);
+				this.renderer?.emitVFX(1880, 420, 'emp', 14, 100);
+			} else if (event.kind === 'etiquette-failed') {
+				this.showToast('The mirrors applauded the wrong answer // restart', 1.6);
+			} else if (event.kind === 'hack-mistake-ignored') {
+				this.showToast('Street Syntax // one etiquette lie ignored', 1.6);
+			}
+			window.dispatchEvent(
+				new CustomEvent('badger:mirror-palace-progress', {
+					detail: { event, snapshot: this.mirrorPalaceObjectives.getSnapshot() },
+				})
+			);
+		}
+	}
+
+	private handleMirrorPalaceEnemyEvents(events: MirrorPalaceEnemyEvent[]): void {
+		for (const event of events) {
+			const enemy = this.enemies.find((candidate) => candidate.id === event.enemyId);
+			if (event.kind === 'enemy-telegraph' && enemy) {
+				this.renderer?.emitVFX(
+					enemy.x + enemy.w / 2,
+					enemy.y + 18,
+					event.attack === 'reflection-lane' ? 'emp' : 'muzzle',
+					8,
+					event.attack === 'reflection-lane' ? 86 : 46
+				);
+			}
+			window.dispatchEvent(new CustomEvent('badger:mirror-palace-enemy', { detail: event }));
+		}
+	}
+
+	private handleReflectionJudgeEvents(events: ReflectionJudgeEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'boss-telegraph') {
+				const message =
+					event.attack === 'mirror-verdict'
+						? 'Mirror verdict // boost over the white lane'
+						: event.attack === 'contract-gavel'
+							? 'Contract gavel // L parry'
+							: 'False self dash // wait, then L';
+				this.showToast(message, 1.2);
+				this.renderer?.emitVFX(2280, 390, 'muzzle', 12, 96);
+			}
+			if (event.kind === 'boss-phase-transition') {
+				this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 12);
+				this.renderer?.emitVFX(2280, 390, 'emp', 18, 125);
+				this.showToast(
+					event.phaseIndex === 1
+						? 'The signed image cracks // verdict lanes online'
+						: 'The false self enters the record',
+					1.9
+				);
+			}
+			window.dispatchEvent(new CustomEvent('badger:reflection-judge-pattern', { detail: event }));
+		}
+	}
+
 	private handleChromeArcologyEvents(events: ChromeArcologyObjectiveEvent[]): void {
 		if (events.length === 0 || !this.chromeArcologyObjectives) return;
 		for (const event of events) {
+			if (
+				['cargo-tag-scanned', 'router-started', 'router-step', 'router-complete'].includes(
+					event.kind
+				)
+			) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.42
+				);
+			}
 			if (event.kind === 'sightline-pierced') {
 				const pierced = this.chromeArcologyObjectives
 					.getSnapshot()
@@ -434,7 +816,11 @@ export class StageRunScene implements Scene {
 						? 'Stim cache secured'
 						: pickup.itemId === 'elevator_seed'
 							? 'Elevator seed secured'
-							: 'Wafer key secured';
+							: pickup.itemId === 'mirror_pass'
+								? 'Mirror Pass secured'
+								: pickup.itemId === 'bass_reactor_core'
+									? 'Bass Reactor Core secured'
+									: 'Wafer key secured';
 				this.showToast(payloadMessage, 2.4);
 			}
 			return;
@@ -477,6 +863,16 @@ export class StageRunScene implements Scene {
 	private handleDrainmarketEvents(events: DrainmarketObjectiveEvent[]): void {
 		if (events.length === 0 || !this.drainmarketObjectives) return;
 		for (const event of events) {
+			if (
+				['invoice-delivered', 'triage-started', 'triage-step', 'triage-complete'].includes(
+					event.kind
+				)
+			) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.42
+				);
+			}
 			if (event.kind === 'invoice-delivered') {
 				const delivered = this.drainmarketObjectives
 					.getSnapshot()
@@ -552,6 +948,7 @@ export class StageRunScene implements Scene {
 		this.player.hudToastTimer = Math.max(0, (this.player.hudToastTimer ?? 0) - dt);
 		this.player.damageFlash = Math.max(0, (this.player.damageFlash ?? 0) - dt * 1.6);
 		this.player.healFlash = Math.max(0, (this.player.healFlash ?? 0) - dt * 1.25);
+		this.nayaAssistTimer = Math.max(0, this.nayaAssistTimer - dt);
 	}
 
 	private updateGameplayHints(): void {
@@ -566,7 +963,17 @@ export class StageRunScene implements Scene {
 			return;
 		}
 		const chromeArcology = this.chromeArcologyObjectives?.getSnapshot();
-		if (chromeArcology) this.updateChromeArcologyHints(chromeArcology);
+		if (chromeArcology) {
+			this.updateChromeArcologyHints(chromeArcology);
+			return;
+		}
+		const mirrorPalace = this.mirrorPalaceObjectives?.getSnapshot();
+		if (mirrorPalace) {
+			this.updateMirrorPalaceHints(mirrorPalace);
+			return;
+		}
+		const dubColony = this.dubColonyObjectives?.getSnapshot(this.player);
+		if (dubColony) this.updateDubColonyHints(dubColony);
 	}
 
 	private updateLowerSprawlHints(snapshot: LowerSprawlObjectiveSnapshot): void {
@@ -827,6 +1234,14 @@ export class StageRunScene implements Scene {
 	private handleLowerSprawlEvents(events: LowerSprawlObjectiveEvent[]): void {
 		if (events.length === 0 || !this.lowerSprawlObjectives) return;
 		for (const event of events) {
+			if (
+				['meter-scanned', 'puzzle-started', 'puzzle-step', 'puzzle-complete'].includes(event.kind)
+			) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.42
+				);
+			}
 			if (event.kind === 'meter-scanned') {
 				this.renderer?.emitVFX(this.player.x + this.player.w / 2, this.player.y + 12, 'emp', 5, 26);
 			} else if (event.kind === 'puzzle-step' || event.kind === 'puzzle-complete') {
@@ -861,6 +1276,41 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
+		this.stageCompletionDispatched = true;
+		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
+		this.options.onStageComplete?.(result);
+	}
+
+	private updateDubColonyCompletion(): void {
+		const objectives = this.dubColonyObjectives;
+		if (!objectives || this.stageCompletionDispatched) return;
+		const payloadCollected = getCollectedStoryPayloadIds(this.pickups).includes(
+			'bass_reactor_core'
+		);
+		const boss = this.enemies.find((enemy) => enemy.bossId === 'king-feedback');
+		this.handleDubColonyEvents(
+			objectives.observeWorld(payloadCollected, Boolean(boss && boss.hp <= 0))
+		);
+		const result = objectives.claimCompletion();
+		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
+		this.stageCompletionDispatched = true;
+		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
+		this.options.onStageComplete?.(result);
+	}
+
+	private updateMirrorPalaceCompletion(): void {
+		const objectives = this.mirrorPalaceObjectives;
+		if (!objectives || this.stageCompletionDispatched) return;
+		const payloadCollected = getCollectedStoryPayloadIds(this.pickups).includes('mirror_pass');
+		const boss = this.enemies.find((enemy) => enemy.bossId === 'reflection-judge');
+		this.handleMirrorPalaceEvents(
+			objectives.observeWorld(payloadCollected, Boolean(boss && boss.hp <= 0))
+		);
+		const result = objectives.claimCompletion();
+		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
 		this.stageCompletionDispatched = true;
 		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
 		this.options.onStageComplete?.(result);
@@ -876,6 +1326,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
 		this.stageCompletionDispatched = true;
 		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
 		this.options.onStageComplete?.(result);
@@ -891,6 +1342,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
 		this.stageCompletionDispatched = true;
 		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
 		this.options.onStageComplete?.(result);
@@ -960,6 +1412,279 @@ export class StageRunScene implements Scene {
 					hazard.y - 6
 				);
 			}
+		}
+		ctx.restore();
+	}
+
+	private renderDubColonyObjectivePanel(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.dubColonyObjectives?.getSnapshot(this.player);
+		if (!snapshot) return;
+		const parts = snapshot.spareParts.filter((part) => part.recovered).length;
+		const votes = snapshot.voteCards.filter((card) => card.recovered).length;
+		const tuned = snapshot.reactorNodes.filter((node) => node.tuned).length;
+		const x = 24;
+		const y = ctx.canvas.height - 126;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
+		ctx.fillRect(x, y, 500, 102);
+		ctx.strokeStyle = snapshot.readyToComplete ? '#67f3c4' : '#ffb35e';
+		ctx.strokeRect(x, y, 500, 102);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(`DUB COLONY // ${snapshot.alignment.toUpperCase()} ASSEMBLY`, x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = parts === 3 ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Reactor spares: ${parts}/3`, x + 12, y + 41);
+		ctx.fillStyle = votes === 3 ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Vote cards: ${votes}/3`, x + 190, y + 41);
+		ctx.fillStyle = tuned === 3 ? '#67f3c4' : snapshot.inBeatWindow ? '#ffb35e' : '#eaf2ff';
+		ctx.fillText(
+			`Reactor sync: ${tuned}/3 • ${snapshot.bpm} BPM • ${snapshot.lastGrade ?? 'listen'}`,
+			x + 12,
+			y + 61
+		);
+		ctx.fillStyle = snapshot.payloadCollected ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Bass Core: ${snapshot.payloadCollected ? 'secured' : 'waiting'}`, x + 12, y + 82);
+		ctx.fillStyle = snapshot.bossDefeated ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(
+			`King Feedback: ${snapshot.bossDefeated ? 'listening' : 'commanding'}`,
+			x + 245,
+			y + 82
+		);
+		ctx.restore();
+	}
+
+	private renderDubColonyWorld(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const snapshot = this.dubColonyObjectives?.getSnapshot(this.player);
+		if (!snapshot) return;
+		const sprites = this.renderer?.getSpriteRenderer();
+		ctx.save();
+		ctx.textAlign = 'center';
+		ctx.font = '700 10px ui-monospace, monospace';
+
+		if (sprites?.hasSheet('dub_colony_tiles')) {
+			for (const x of [360, 980, 1680, 2320]) {
+				sprites.drawFrame('dub_colony_tiles', 'speaker_stack', 0, x - cameraX, 462);
+			}
+			const pulseFrame = snapshot.beatIndex % 4;
+			for (const node of snapshot.reactorNodes) {
+				sprites.drawFrame(
+					'dub_colony_tiles',
+					'woofer_pulse',
+					pulseFrame,
+					node.x - cameraX - 16,
+					node.y - 32
+				);
+			}
+		}
+
+		for (const part of snapshot.spareParts) {
+			const x = part.x - cameraX;
+			ctx.fillStyle = part.recovered ? '#67f3c4' : '#ffb35e';
+			ctx.fillRect(x - 12, part.y - 28, 24, 22);
+			ctx.strokeStyle = '#eaf2ff';
+			ctx.strokeRect(x - 12, part.y - 28, 24, 22);
+			ctx.fillStyle = part.recovered ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(part.recovered ? 'IN CHORUS' : 'M: RECOVER', x, part.y - 36);
+		}
+
+		for (const card of snapshot.voteCards) {
+			const x = card.x - cameraX;
+			ctx.fillStyle = card.recovered ? '#67f3c4' : '#eaf2ff';
+			ctx.fillRect(x - 9, card.y - 26, 18, 20);
+			ctx.fillStyle = card.recovered ? '#67f3c4' : '#ffb35e';
+			ctx.fillText(card.recovered ? 'VOTE RETURNED' : 'M: VOTE CARD', x, card.y - 34);
+			if (sprites?.hasSheet('character_little_ix')) {
+				const animation = card.recovered ? 'assist' : 'idle';
+				const frame = snapshot.beatIndex % (card.recovered ? 6 : 4);
+				sprites.drawFrame('character_little_ix', animation, frame, x - 60, card.y - 48);
+			}
+		}
+
+		for (const node of snapshot.reactorNodes) {
+			const x = node.x - cameraX;
+			const pulse = snapshot.inBeatWindow
+				? 1
+				: 0.45 + Math.sin(snapshot.beatPhase * Math.PI * 2) * 0.18;
+			ctx.globalAlpha = Math.max(0.25, pulse);
+			ctx.strokeStyle = node.tuned ? '#67f3c4' : snapshot.jamRemaining > 0 ? '#ff5e7a' : '#ffb35e';
+			ctx.lineWidth = snapshot.inBeatWindow ? 5 : 2;
+			ctx.beginPath();
+			ctx.arc(x, node.y - 18, 24 + snapshot.beatPhase * 20, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.globalAlpha = 1;
+			ctx.fillStyle = node.tuned ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(
+				node.tuned ? 'SYNCED' : `${node.expectedAction.toUpperCase()} ON PULSE`,
+				x,
+				node.y - 58
+			);
+		}
+
+		if (sprites?.hasSheet('character_naya_root')) {
+			const assist = this.nayaAssistTimer > 0;
+			const animation = assist ? 'assist' : 'idle';
+			const frameCount = assist ? 6 : 4;
+			const frame = snapshot.beatIndex % frameCount;
+			const nayaX = this.player.x - cameraX - (this.player.dir > 0 ? 48 : -38);
+			const nayaY = this.player.y + this.player.h - 48;
+			sprites.drawFrame('character_naya_root', animation, frame, nayaX, nayaY, this.player.dir < 0);
+			ctx.strokeStyle = assist ? '#67f3c4' : 'rgba(103, 243, 196, 0.38)';
+			ctx.lineWidth = assist ? 4 : 2;
+			ctx.beginPath();
+			ctx.arc(nayaX + 24, nayaY + 24, 28 + (assist ? 7 : 0), 0, Math.PI * 2);
+			ctx.stroke();
+		}
+
+		for (const [index, checkpoint] of (
+			this.checkpoints?.getSnapshot().checkpoints ?? []
+		).entries()) {
+			const x = checkpoint.x - cameraX;
+			const activeIndex = this.checkpoints?.getSnapshot().activeIndex ?? 0;
+			const active = index <= activeIndex;
+			ctx.fillStyle = active ? '#67f3c4' : '#5b4b35';
+			ctx.fillRect(x - 3, checkpoint.y - 56, 6, 56);
+			ctx.beginPath();
+			ctx.arc(x, checkpoint.y - 62, active ? 8 : 5, 0, Math.PI * 2);
+			ctx.fill();
+		}
+
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.78)';
+		ctx.fillRect(ctx.canvas.width / 2 - 92, GAMEPLAY_HUD_WORLD_OVERLAY_TOP, 184, 34);
+		ctx.strokeStyle = snapshot.jamRemaining > 0 ? '#ff5e7a' : '#ffb35e';
+		ctx.strokeRect(ctx.canvas.width / 2 - 92, GAMEPLAY_HUD_WORLD_OVERLAY_TOP, 184, 34);
+		ctx.fillStyle = snapshot.inBeatWindow ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(
+			snapshot.jamRemaining > 0
+				? 'STATIC OWNS THE CHANNEL'
+				: snapshot.inBeatWindow
+					? '● DOWNBEAT ●'
+					: `BEAT ${snapshot.beatIndex + 1} // LISTEN`,
+			ctx.canvas.width / 2,
+			GAMEPLAY_HUD_WORLD_OVERLAY_TOP + 22
+		);
+		ctx.restore();
+	}
+
+	private renderMirrorPalaceObjectivePanel(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.mirrorPalaceObjectives?.getSnapshot();
+		if (!snapshot) return;
+		const heard = snapshot.guests.filter((guest) => guest.heard).length;
+		const broken = snapshot.traversalSeals.filter((seal) => seal.broken).length;
+		const x = 24;
+		const y = ctx.canvas.height - 122;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
+		ctx.fillRect(x, y, 470, 98);
+		ctx.strokeStyle = snapshot.readyToComplete ? '#67f3c4' : '#8f68ff';
+		ctx.strokeRect(x, y, 470, 98);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#8f68ff';
+		ctx.fillText('MIRROR PALACE OBJECTIVES', x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = heard === 3 ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`Refusal testimonies: ${heard}/3`, x + 12, y + 40);
+		ctx.fillStyle = broken === 3 ? '#67f3c4' : '#ffb35e';
+		ctx.fillText(`False routes: ${broken}/3`, x + 240, y + 40);
+		ctx.fillStyle = snapshot.etiquetteStatus === 'solved' ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(
+			`Banquet etiquette: ${snapshot.etiquetteStatus}${snapshot.expectedInput ? ` • ${snapshot.expectedInput}` : ''}`,
+			x + 12,
+			y + 59
+		);
+		ctx.fillStyle = snapshot.payloadCollected ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(
+			`Mirror Pass: ${snapshot.payloadCollected ? 'secured' : 'missing'}`,
+			x + 12,
+			y + 78
+		);
+		ctx.fillStyle = snapshot.bossDefeated ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(`Judge: ${snapshot.bossDefeated ? 'refused' : 'presiding'}`, x + 270, y + 78);
+		ctx.restore();
+	}
+
+	private renderMirrorPalaceWorld(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const snapshot = this.mirrorPalaceObjectives?.getSnapshot();
+		if (!snapshot) return;
+		ctx.save();
+		ctx.textAlign = 'center';
+		ctx.font = '700 10px ui-monospace, monospace';
+
+		for (const guest of snapshot.guests) {
+			const x = guest.x - cameraX;
+			ctx.fillStyle = guest.heard ? '#67f3c4' : '#8f68ff';
+			ctx.fillRect(x - 13, guest.y - 46, 26, 38);
+			ctx.fillStyle = '#eaf2ff';
+			ctx.fillRect(x - 5, guest.y - 38, 10, 10);
+			ctx.fillStyle = guest.heard ? '#67f3c4' : '#ffb35e';
+			ctx.fillText(guest.heard ? 'REFUSAL HEARD' : 'M: LISTEN', x, guest.y - 54);
+		}
+
+		for (const seal of snapshot.traversalSeals) {
+			const x = seal.x - cameraX;
+			ctx.strokeStyle = seal.broken ? '#67f3c4' : '#eaf2ff';
+			ctx.lineWidth = seal.broken ? 2 : 4;
+			ctx.strokeRect(x - 30, seal.y - 92, 60, 92);
+			ctx.globalAlpha = seal.broken ? 0.18 : 0.52;
+			ctx.fillStyle = seal.kind === 'reflection-loop' ? '#8f68ff' : '#ffb35e';
+			ctx.fillRect(x - 24, seal.y - 84, 48, 76);
+			ctx.globalAlpha = 1;
+			ctx.fillStyle = seal.broken ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(
+				seal.broken
+					? 'FALSE ROUTE BROKEN'
+					: seal.kind === 'reflection-loop'
+						? 'RIGHT → LEFT'
+						: 'AIRBORNE E',
+				x,
+				seal.y - 101
+			);
+		}
+
+		const terminalX = snapshot.etiquetteTerminal.x - cameraX;
+		ctx.fillStyle = 'rgba(8, 6, 16, 0.92)';
+		ctx.fillRect(terminalX - 42, snapshot.etiquetteTerminal.y - 98, 84, 98);
+		ctx.strokeStyle = snapshot.etiquetteStatus === 'solved' ? '#67f3c4' : '#8f68ff';
+		ctx.lineWidth = 3;
+		ctx.strokeRect(terminalX - 42, snapshot.etiquetteTerminal.y - 98, 84, 98);
+		ctx.fillStyle = snapshot.etiquetteStatus === 'active' ? '#ffb35e' : '#eaf2ff';
+		ctx.fillText(
+			snapshot.etiquetteStatus === 'active'
+				? `REFUSE: ${snapshot.expectedInput?.toUpperCase()}`
+				: snapshot.etiquetteStatus === 'solved'
+					? 'TABLE OPEN'
+					: 'M: BANQUET TABLE',
+			terminalX,
+			snapshot.etiquetteTerminal.y - 107
+		);
+
+		for (const [index, checkpoint] of (
+			this.checkpoints?.getSnapshot().checkpoints ?? []
+		).entries()) {
+			const x = checkpoint.x - cameraX;
+			const activeIndex = this.checkpoints?.getSnapshot().activeIndex ?? 0;
+			const active = index <= activeIndex;
+			ctx.fillStyle = active ? '#67f3c4' : '#60557f';
+			ctx.fillRect(x - 3, checkpoint.y - 56, 6, 56);
+			ctx.beginPath();
+			ctx.arc(x, checkpoint.y - 62, active ? 8 : 5, 0, Math.PI * 2);
+			ctx.fill();
+		}
+
+		for (const [x, label] of [
+			[420, 'A CONTRACT IS A COMPLIMENT'],
+			[1220, 'THE MIRROR REMEMBERS YOUR DEBT'],
+			[1860, 'APPLAUSE CONFIRMS CONSENT'],
+		] as const) {
+			const screenX = x - cameraX;
+			ctx.fillStyle = 'rgba(143, 104, 255, 0.15)';
+			ctx.fillRect(screenX - 92, 238, 184, 32);
+			ctx.strokeStyle = '#8f68ff';
+			ctx.strokeRect(screenX - 92, 238, 184, 32);
+			ctx.fillStyle = '#eaf2ff';
+			ctx.fillText(label, screenX, 258);
 		}
 		ctx.restore();
 	}
@@ -1272,6 +1997,14 @@ export class StageRunScene implements Scene {
 		return this.chromeArcologyObjectives?.getSnapshot() ?? null;
 	}
 
+	getMirrorPalaceObjectiveSnapshot(): MirrorPalaceObjectiveSnapshot | null {
+		return this.mirrorPalaceObjectives?.getSnapshot() ?? null;
+	}
+
+	getDubColonyObjectiveSnapshot(): DubColonyObjectiveSnapshot | null {
+		return this.dubColonyObjectives?.getSnapshot(this.player) ?? null;
+	}
+
 	getBossPhaseSnapshot(): BossPhaseRuntimeState | null {
 		return this.bossPhases.getState();
 	}
@@ -1286,6 +2019,21 @@ export class StageRunScene implements Scene {
 
 	getMadameVitrineSnapshot(): MadameVitrineSnapshot | null {
 		return this.madameVitrine?.getSnapshot() ?? null;
+	}
+
+	getReflectionJudgeSnapshot(): ReflectionJudgeSnapshot | null {
+		return this.reflectionJudge?.getSnapshot() ?? null;
+	}
+
+	getKingFeedbackSnapshot(): KingFeedbackSnapshot | null {
+		return this.kingFeedback?.getSnapshot() ?? null;
+	}
+
+	getCompanionSnapshot(): ReturnType<CompanionSystem['getState']> & { nayaAssistTimer: number } {
+		return {
+			...this.companions.getState(),
+			nayaAssistTimer: Number(this.nayaAssistTimer.toFixed(3)),
+		};
 	}
 
 	getLowerSprawlHazardSnapshot(): LowerSprawlHazardSnapshot[] {
@@ -1347,6 +2095,12 @@ export class StageRunScene implements Scene {
 
 	debugSetPlayerHp(hp: number): void {
 		this.player.hp = Math.max(0, Math.min(this.player.maxHp, hp));
+	}
+
+	debugSetEnemyHp(enemyId: string, hp: number): void {
+		const enemy = this.enemies.find((candidate) => candidate.id === enemyId);
+		if (!enemy) return;
+		enemy.hp = Math.max(0, Math.min(enemy.maxHp, hp));
 	}
 
 	getTutorialOverlayBeats(): RuntimeTutorialBeat[] {
@@ -1555,6 +2309,12 @@ export class StageRunScene implements Scene {
 		this.handleChromeArcologyEvents(
 			this.chromeArcologyObjectives?.observeAction(this.player, action) ?? []
 		);
+		this.handleMirrorPalaceEvents(this.mirrorPalaceObjectives?.step(simDt, this.player) ?? []);
+		this.handleMirrorPalaceEvents(
+			this.mirrorPalaceObjectives?.observeAction(this.player, action) ?? []
+		);
+		this.handleDubColonyEvents(this.dubColonyObjectives?.step(simDt) ?? []);
+		this.handleDubColonyEvents(this.dubColonyObjectives?.observeAction(this.player, action) ?? []);
 
 		// Handle hitstop - freeze game briefly for impact
 		if (this.hitstopRemaining > 0) {
@@ -1601,6 +2361,20 @@ export class StageRunScene implements Scene {
 			this.chromeArcologyEnemies?.step(
 				this.enemies,
 				this.player,
+				simDt,
+				this.combat,
+				combatEvents
+			) ?? []
+		);
+		this.handleMirrorPalaceEnemyEvents(
+			this.mirrorPalaceEnemies?.step(this.enemies, this.player, simDt, this.combat, combatEvents) ??
+				[]
+		);
+		this.handleDubColonyEnemyEvents(
+			this.dubColonyEnemies?.step(
+				this.enemies,
+				this.player,
+				action,
 				simDt,
 				this.combat,
 				combatEvents
@@ -1656,6 +2430,28 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
+		const reflectionJudge = this.enemies.find((enemy) => enemy.bossId === 'reflection-judge');
+		this.handleReflectionJudgeEvents(
+			this.reflectionJudge?.step(
+				reflectionJudge,
+				this.player,
+				bossPhaseState,
+				simDt,
+				this.combat,
+				combatEvents
+			) ?? []
+		);
+		const kingFeedback = this.enemies.find((enemy) => enemy.bossId === 'king-feedback');
+		this.handleKingFeedbackEvents(
+			this.kingFeedback?.step(
+				kingFeedback,
+				this.player,
+				bossPhaseState,
+				simDt,
+				this.combat,
+				combatEvents
+			) ?? []
+		);
 		// 9-11. Beat, WaveDirector, Camera
 		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 1950);
 		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), simDt, this.player.vx);
@@ -1668,6 +2464,8 @@ export class StageRunScene implements Scene {
 		this.updateLowerSprawlCompletion();
 		this.updateDrainmarketCompletion();
 		this.updateChromeArcologyCompletion();
+		this.updateMirrorPalaceCompletion();
+		this.updateDubColonyCompletion();
 		this.recoverPlayerIfNeeded();
 		this.updateGameplayHints();
 
@@ -1698,7 +2496,11 @@ export class StageRunScene implements Scene {
 					? rend.renderStageParallax(DRAINMARKET_PARALLAX_SHEET_ID, cam.x)
 					: this.options.stageId === 'chrome-arcology'
 						? rend.renderStageParallax(CHROME_ARCOLOGY_PARALLAX_SHEET_ID, cam.x)
-						: false;
+						: this.options.stageId === 'mirror-palace'
+							? rend.renderStageParallax(MIRROR_PALACE_PARALLAX_SHEET_ID, cam.x)
+							: this.options.stageId === 'dub-colony'
+								? rend.renderStageParallax(DUB_COLONY_PARALLAX_SHEET_ID, cam.x)
+								: false;
 		if (!hasStageArt) {
 			rend.drawBackground();
 			rend.renderParallax(cam.x);
@@ -1707,6 +2509,8 @@ export class StageRunScene implements Scene {
 		this.renderLowerSprawlWorld(ctx, cam.x);
 		this.renderDrainmarketWorld(ctx, cam.x);
 		this.renderChromeArcologyWorld(ctx, cam.x);
+		this.renderMirrorPalaceWorld(ctx, cam.x);
+		this.renderDubColonyWorld(ctx, cam.x);
 		rend.renderPickups(this.pickups, cam.x);
 		rend.renderPlayer(this.player, cam.x);
 		this.renderRailgunBeam(ctx, cam.x);
@@ -1720,6 +2524,8 @@ export class StageRunScene implements Scene {
 			this.renderLowerSprawlObjectivePanel(ctx);
 			this.renderDrainmarketObjectivePanel(ctx);
 			this.renderChromeArcologyObjectivePanel(ctx);
+			this.renderMirrorPalaceObjectivePanel(ctx);
+			this.renderDubColonyObjectivePanel(ctx);
 			this.renderLoadoutPanel(ctx);
 		}
 
@@ -1860,6 +2666,8 @@ export class StageRunScene implements Scene {
 			playAnimation(animState, 'death_or_down', false);
 		} else if (this.player.stun > 0) {
 			playAnimation(animState, 'hit', false);
+		} else if ((this.player.victoryAnimationTimer ?? 0) > 0) {
+			playAnimation(animState, 'victory', false);
 		} else if ((this.player.parryWindow ?? 0) > 0) {
 			playAnimation(animState, 'parry', false);
 		} else if (this.player.hasRailgun && (this.player.railgunAnimationTimer ?? 0) > 0) {
@@ -1868,6 +2676,12 @@ export class StageRunScene implements Scene {
 			playAnimation(animState, this.player.hasKatana ? 'melee_katana' : 'melee_claws', false);
 		} else if (this.player.boostCd > 0.18 && !this.player.onGround) {
 			playAnimation(animState, 'rocket_boost', false);
+		} else if ((this.player.interactionAnimationTimer ?? 0) > 0) {
+			playAnimation(animState, 'interact', false);
+		} else if ((this.player.hackAnimationTimer ?? 0) > 0) {
+			playAnimation(animState, 'hack', false);
+		} else if ((this.player.pickupReactionTimer ?? 0) > 0) {
+			playAnimation(animState, 'pickup_react', false);
 		} else if (this.player.justLanded) {
 			playAnimation(animState, 'land', false);
 		} else if (this.player.isDodging) {
@@ -2105,7 +2919,21 @@ export class StageRunScene implements Scene {
 					/chrome_bellhop|mirror_sentinel|compliance_shield|contract_drone/i.test(
 						enemy.procgenFamily ?? ''
 					));
-			if (lowerSprawlControlled || drainmarketControlled || chromeArcologyControlled) {
+			const mirrorPalaceControlled =
+				this.options.stageId === 'mirror-palace' &&
+				(['ranged', 'bruiser'].includes(enemy.procgenRole ?? '') ||
+					/banquet_usher|mirror_sentinel/i.test(enemy.procgenFamily ?? ''));
+			const dubColonyControlled =
+				this.options.stageId === 'dub-colony' &&
+				(['ranged', 'bruiser'].includes(enemy.procgenRole ?? '') ||
+					/signal_jammer_bat|feedback_guard/i.test(enemy.procgenFamily ?? ''));
+			if (
+				lowerSprawlControlled ||
+				drainmarketControlled ||
+				chromeArcologyControlled ||
+				mirrorPalaceControlled ||
+				dubColonyControlled
+			) {
 				enemy.usesPatternController = true;
 			}
 		}
@@ -2117,15 +2945,57 @@ export class StageRunScene implements Scene {
 		const phaseCount = Math.max(1, boss.phaseCount);
 		const isKnifeNest = boss.id === 'knife-drone-nest';
 		const isMadameVitrine = boss.id === 'madame-vitrine';
-		const hp = isMadameVitrine ? 12 : isKnifeNest ? 8 : 4 + phaseCount * 2;
+		const isReflectionJudge = boss.id === 'reflection-judge';
+		const isKingFeedback = boss.id === 'king-feedback';
+		const hp = isKingFeedback
+			? 15
+			: isReflectionJudge
+				? 14
+				: isMadameVitrine
+					? 12
+					: isKnifeNest
+						? 8
+						: 4 + phaseCount * 2;
 		return {
-			x: isMadameVitrine ? 2070 : isKnifeNest ? 1710 : 1480,
-			y: isMadameVitrine ? 340 : isKnifeNest ? 348 : 418,
-			w: isMadameVitrine ? 72 : isKnifeNest ? 64 : 42,
-			h: isMadameVitrine ? 90 : isKnifeNest ? 82 : 62,
+			x: isKingFeedback
+				? 2500
+				: isReflectionJudge
+					? 2280
+					: isMadameVitrine
+						? 2070
+						: isKnifeNest
+							? 1710
+							: 1480,
+			y: isKingFeedback
+				? 330
+				: isReflectionJudge
+					? 340
+					: isMadameVitrine
+						? 340
+						: isKnifeNest
+							? 348
+							: 418,
+			w: isKingFeedback
+				? 84
+				: isReflectionJudge
+					? 76
+					: isMadameVitrine
+						? 72
+						: isKnifeNest
+							? 64
+							: 42,
+			h: isKingFeedback
+				? 96
+				: isReflectionJudge
+					? 92
+					: isMadameVitrine
+						? 90
+						: isKnifeNest
+							? 82
+							: 62,
 			vx: 0,
 			vy: 0,
-			onGround: isKnifeNest || isMadameVitrine,
+			onGround: isKnifeNest || isMadameVitrine || isReflectionJudge || isKingFeedback,
 			coyoteLeft: 0,
 			jumpBuffered: 0,
 			dir: -1,

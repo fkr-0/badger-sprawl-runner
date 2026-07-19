@@ -421,16 +421,42 @@ export const CAMPAIGN: CampaignDefinition = {
 				name: 'Reflection Judge',
 				phaseCount: 3,
 				argument: 'A contract is a mirror. It only shows what you signed.',
+				phases: [
+					{
+						id: 'signed-image',
+						label: 'Signed Image',
+						mechanic: 'parry the contract gavel and use the rocket pack to leave the applause ring',
+					},
+					{
+						id: 'verdict-lane',
+						label: 'Verdict Lane',
+						mechanic: 'mirror verdicts create long horizontal lanes that must be boosted over',
+					},
+					{
+						id: 'false-self',
+						label: 'False Self',
+						mechanic:
+							'the Judge dashes through reflections and can only be countered after the duplicate commits',
+					},
+				],
 			},
 			debrief: {
 				speaker: 'Lio',
 				lines: ['I did not stop caring.', 'They bought the debt before I learned how to refuse.'],
 			},
 			rewards: ['mirror_pass', 'lio_betrayal_flag'],
+			tutorialBeats: [
+				{
+					id: 'rocket-switchback',
+					label: 'Rocket through the false route',
+					trigger: 'first_debt_contract_door',
+					teaches:
+						'Use airborne E boosts to cross contract doors, then reverse direction when the reflection repeats the exit.',
+				},
+			],
 			todo: [
-				'add three Lio choice outcomes',
-				'store lioTrust branch',
-				'add mirror-door traversal hazards',
+				'add final banquet applause audio and reduced-motion reflection accessibility',
+				'author a dedicated Lio betrayal in-stage cinematic before the Reflection Judge arena',
 			],
 			skeleton: skeleton('mirror-rocket'),
 		},
@@ -493,16 +519,16 @@ export const CAMPAIGN: CampaignDefinition = {
 					id: 'bass-reactor-sync',
 					label: 'Bass Reactor Sync',
 					kind: 'beat-timing',
-					bpm: 140,
-					perfectWindowMs: 90,
+					bpm: 86,
+					perfectWindowMs: 145,
 					teaches: 'jump, parry, and strike on the bass pulse to overcharge rebel equipment',
 				},
 			],
 			companion: {
 				id: 'naya-root',
 				name: 'Naya Root',
-				role: 'beat-scout companion placeholder',
-				placeholder: true,
+				role: 'visible shield companion and beat scout',
+				placeholder: false,
 				abilities: ['marks bass pulses', 'calls safe landings', 'amplifies chorus choices'],
 			},
 			boss: {
@@ -510,16 +536,41 @@ export const CAMPAIGN: CampaignDefinition = {
 				name: 'King Feedback',
 				phaseCount: 3,
 				argument: 'One command is faster than many voices.',
+				phases: [
+					{
+						id: 'security-pulse',
+						label: 'Security Pulse',
+						mechanic: 'parry the close-range shield pulse on the colony beat',
+					},
+					{
+						id: 'emergency-crown',
+						label: 'Emergency Crown',
+						mechanic: 'jump the command lane while jammer bats erase the rhythm display',
+					},
+					{
+						id: 'chorus-test',
+						label: 'Chorus Test',
+						mechanic: 'survive the full-deck pulse and answer with distributed beat actions',
+					},
+				],
 			},
 			debrief: {
 				speaker: 'Auntie Subharmonic',
 				lines: ['The vote was not a cutscene.', 'It was the machine showing its gears.'],
 			},
 			rewards: ['bass_reactor_core', 'naya_root_companion'],
+			tutorialBeats: [
+				{
+					id: 'naya-shield-sync',
+					label: 'Share the downbeat with Naya',
+					trigger: 'first_on_beat_parry_at_reactor_relay',
+					teaches:
+						'Parry, jump, and strike inside the visible bass window to recharge Naya’s shield and tune colony machinery.',
+				},
+			],
 			todo: [
-				'add beat-timing stage modifier',
-				'store colonyAlignment',
-				'add Naya companion placeholder',
+				'add layered reactor music stems and reduced-audio visual metronome accessibility',
+				'author the post-vote greenhouse celebration variants for chorus, army, and supplier outcomes',
 			],
 			skeleton: skeleton('beat-colony'),
 		},
