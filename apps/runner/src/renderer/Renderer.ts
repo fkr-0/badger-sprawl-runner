@@ -4,6 +4,7 @@
 
 import { createArcadeCameraTransform } from '../../../../vendor/arcade-runtime.mjs';
 import type { Player } from '../actors/MossBadger';
+import type { StagePlatformArt } from '../game/StageArtRegistry';
 import type { Camera } from '../systems/CameraSystem';
 import type { CombatEntity } from '../systems/CombatSystem';
 import type { Pickup } from '../systems/ItemSystem';
@@ -163,17 +164,21 @@ export class Renderer {
 
 	renderPlatforms(
 		platforms: Array<{ x: number; y: number; w: number; h: number }>,
-		cameraX: number
+		cameraX: number,
+		art?: StagePlatformArt
 	): void {
-		if (this.queueBridgePass('terrain', (ctx) => this.drawPlatformsTo(ctx, platforms, cameraX)))
+		if (
+			this.queueBridgePass('terrain', (ctx) => this.drawPlatformsTo(ctx, platforms, cameraX, art))
+		)
 			return;
-		this.drawPlatformsTo(this.ctx, platforms, cameraX);
+		this.drawPlatformsTo(this.ctx, platforms, cameraX, art);
 	}
 
 	private drawPlatformsTo(
 		ctx: CanvasRenderingContext2D,
 		platforms: Array<{ x: number; y: number; w: number; h: number }>,
-		cameraX: number
+		cameraX: number,
+		art?: StagePlatformArt
 	): void {
 		this.cameraTransform.set({
 			x: cameraX,
@@ -182,19 +187,70 @@ export class Renderer {
 			viewportWidth: this.width,
 			viewportHeight: this.height,
 		});
-		for (const p of platforms) {
+		const tileSheet = art ? this.spriteRenderer.getSheet(art.sheetId)?.sheet : undefined;
+		const tileSize = tileSheet?.frameSize[0] ?? 32;
+		const now = performance.now() / 1000;
+		const animationFrame = (animationName: string): number => {
+			const animation = tileSheet?.animations[animationName];
+			if (!animation || animation.frames <= 1) return 0;
+			return Math.floor(now * animation.fps) % animation.frames;
+		};
+
+		for (const [platformIndex, p] of platforms.entries()) {
 			const x = this.cameraTransform.worldToScreen({ x: p.x, y: p.y }).x;
 			if (x + p.w < 0 || x > this.width) continue;
 
-			// Platform body
+			// Opaque fallback remains underneath the tile pass so missing or
+			// partially transparent source art never creates collision ambiguity.
 			ctx.fillStyle = '#272b32';
 			ctx.fillRect(x, p.y, p.w, p.h);
 
-			// Platform highlight
+			if (art && tileSheet && this.spriteRenderer.hasSheet(art.sheetId)) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(x, p.y, p.w, p.h);
+				ctx.clip();
+				const firstColumn = Math.max(0, Math.floor(-x / tileSize));
+				const lastColumn = Math.ceil((Math.min(this.width, x + p.w) - x) / tileSize);
+				const rows = Math.max(1, Math.ceil(p.h / tileSize));
+				for (let row = 0; row < rows; row += 1) {
+					const animationName = row === 0 ? art.surfaceAnimation : art.bodyAnimation;
+					const frame = animationFrame(animationName);
+					for (let column = firstColumn; column < lastColumn; column += 1) {
+						this.spriteRenderer.drawFrameTo(
+							ctx,
+							art.sheetId,
+							animationName,
+							frame,
+							x + column * tileSize,
+							p.y + row * tileSize
+						);
+					}
+				}
+				ctx.restore();
+
+				// One deterministic set-dressing prop per substantial platform makes
+				// the imported atlas visible without turning decorative art into a
+				// collision promise.
+				if (p.w >= tileSize * 3 && art.decorations.length > 0) {
+					const decoration = art.decorations[platformIndex % art.decorations.length];
+					if (!decoration) continue;
+					const decorationFrame = animationFrame(decoration);
+					const propX = x + Math.min(p.w - tileSize, tileSize * (1 + (platformIndex % 3)));
+					this.spriteRenderer.drawFrameTo(
+						ctx,
+						art.sheetId,
+						decoration,
+						decorationFrame,
+						propX,
+						p.y - tileSize
+					);
+				}
+				continue;
+			}
+
 			ctx.fillStyle = '#364457';
 			ctx.fillRect(x, p.y, p.w, 4);
-
-			// Safety stripes
 			ctx.fillStyle = '#ffb35e';
 			for (let sx = x + 10; sx < x + p.w - 10; sx += 24) {
 				ctx.fillRect(sx, p.y + p.h - 8, 12, 4);

@@ -107,6 +107,7 @@ try {
 			urls.some((url) => url.endsWith('/assets/sprites/item_icons_extended.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/skill_icons.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_parallax.png')) &&
+			urls.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_tiles.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/worlds/straylight_mirage_parallax.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/worlds/dub_colony_parallax.png')) &&
 			urls.some((url) => url.endsWith('/assets/sprites/characters/naya_root.png')) &&
@@ -162,6 +163,7 @@ try {
 			drawn.some((url) => url.endsWith('/assets/sprites/moss_badger_production.png')) &&
 			drawn.some((url) => url.endsWith('/assets/sprites/items_extended.png')) &&
 			drawn.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_parallax.png')) &&
+			drawn.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_tiles.png')) &&
 			drawn.some((url) => url.endsWith('/assets/sprites/enemies/chrome_bellhop.png'))
 		);
 	});
@@ -177,6 +179,10 @@ try {
 	assert(
 		drawnImages.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_parallax.png')),
 		'Chrome Arcology production parallax loaded but was never drawn'
+	);
+	assert(
+		drawnImages.some((url) => url.endsWith('/assets/sprites/worlds/chrome_arcology_tiles.png')),
+		'Chrome Arcology DALL-E terrain atlas loaded but was never drawn'
 	);
 	assert(
 		drawnImages.some((url) => url.endsWith('/assets/sprites/enemies/chrome_bellhop.png')),

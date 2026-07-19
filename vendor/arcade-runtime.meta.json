@@ -7,6 +7,6 @@
     "arcade-core.mjs",
     "arcade-pixi-runtime.mjs"
   ],
-  "sha256": "4fb6b81cdbe69efa0fd2722f9ae6f4450c813ba0ea2026f8287e0eac3ae6c444",
-  "typesSha256": "891866e14cbacd3378f06a2feb000ec88b8c4756e2f9d241f7047de05c1a20b2"
+  "sha256": "33c9159fc29c3f7a44b6623e04bc2f117221ffb4b8e23675887c362d8d771f09",
+  "typesSha256": "d0780fa66a9f8993456c6c03d344c763a82b1ffccc8a3ae504a37377e955f50b"
 }

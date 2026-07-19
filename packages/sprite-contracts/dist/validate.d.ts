@@ -1,9 +1,9 @@
 import type { SpriteManifest, SpriteManifestSource } from './types';
-export declare function normalizeSpriteManifest(manifest: unknown): SpriteManifest;
 /**
- * Validate sprite manifest structure.
- * Accepts both normalized { version, sheets } manifests and the project runtime
- * data shape { schemaVersion, spriteSheets } used by data/sprites.json.
+ * Compatibility facade over @arcade/runtime's shared sprite-manifest contract.
+ * Accepts both normalized { version, sheets } manifests and Badger's
+ * { schemaVersion, spriteSheets } project-data shape.
  */
 export declare function validateSpriteManifest(manifest: unknown): manifest is SpriteManifestSource;
+export declare function normalizeSpriteManifest(manifest: unknown): SpriteManifest;
 //# sourceMappingURL=validate.d.ts.map

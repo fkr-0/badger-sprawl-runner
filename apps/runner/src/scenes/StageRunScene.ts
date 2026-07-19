@@ -51,6 +51,7 @@ import {
 	type MirrorPalaceObjectiveSnapshot,
 	MirrorPalaceObjectives,
 } from '../game/MirrorPalaceObjectives';
+import { getStagePlatformArt } from '../game/StageArtRegistry';
 import type { StageRuntimeConfig } from '../game/StageRuntimeConfig';
 import type { StoryBalanceRules } from '../game/StoryBalanceRules';
 import {
@@ -3616,7 +3617,11 @@ export class StageRunScene implements Scene {
 			rend.drawBackground();
 			rend.renderParallax(cam.x);
 		}
-		rend.renderPlatforms(this.platforms, cam.x);
+		rend.renderPlatforms(
+			this.platforms,
+			cam.x,
+			getStagePlatformArt(this.options.stageId ?? 'lower-sprawl')
+		);
 		this.renderLowerSprawlWorld(ctx, cam.x);
 		this.renderDrainmarketWorld(ctx, cam.x);
 		this.renderChromeArcologyWorld(ctx, cam.x);

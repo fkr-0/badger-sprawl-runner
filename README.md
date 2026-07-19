@@ -213,6 +213,10 @@ pnpm run test:e2e:training # random-stage dummy dojo and gameplay UI contracts i
 pnpm run sprites:progression # regenerate extended item, pickup, and skill atlases
 pnpm run sprites:moss-motion # promote the complete authored Moss motion atlas
 pnpm run sprites:mirror-palace # regenerate the reflected banquet parallax atlas
+pnpm run sprites:audit:dalle # reconcile image_mapping.json + matching.txt and write mapping reports
+pnpm run sprites:import:dalle:dry # preview normalized DALL-E atlases without replacing runtime files
+pnpm run sprites:import:dalle # import reviewed boards, mirror source/public files, and update provenance
+pnpm run sprites:audit:usage # fail when a runtime sheet has no production-code/data path
 pnpm run verify:release # complete build, validation, smoke, lint, and Chromium E2E gate
 pnpm run stage:artifact-lab # verify, then materialize .artifacts-deploy-stage
 pnpm run deploy:artifact-lab:dry-run # verify and preview deployment
@@ -220,6 +224,12 @@ pnpm run deploy:artifact-lab # verify and deploy through the curated Artifact La
 ```
 
 The bridge exposes the same gates as `validate-release`, `stage-release`, `deploy-release-dry-run`, and `deploy-release`. Deployment actions always run the release verification chain first.
+
+### Reviewed DALL-E sprite import
+
+`image_mapping.json` contains the automatic filename pass. `matching.txt` is the manually reviewed supplemental ledger for ambiguous boards in `images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/`. `scripts/copy-dalle-sprites.sh` retains its historical name but delegates to `scripts/import-dalle-sprites.py`, which crops presentation boards, removes connected backgrounds, packs exact manifest rows, mirrors assets into `apps/runner/public`, and records source provenance.
+
+Runtime sheets are required to have a production-code or data reference. Only `comfy_badger_run_grid` and the superseded generated `mirror_palace_parallax` are explicitly classified as archival source material. The current terrain renderer tiles stage-specific sprite atlases over collision geometry, so imported world boards are visible gameplay art rather than unused manifest inventory.
 
 ## Repository map
 

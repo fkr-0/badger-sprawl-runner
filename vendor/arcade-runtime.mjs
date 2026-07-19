@@ -375,6 +375,696 @@ export function getElapsedCooldownStatus(now, lastTriggeredAt, duration) {
 
 const DEFAULT_SNAPSHOT_PRECISION = 6;
 
+const ARCADE_SPRITE_DEFAULT_VERSION = '1.0.0';
+
+function isArcadeSpriteRecord(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isArcadeSpritePositiveInteger(value) {
+  return Number.isInteger(value) && Number(value) > 0;
+}
+
+function isArcadeSpriteNonNegativeInteger(value) {
+  return Number.isInteger(value) && Number(value) >= 0;
+}
+
+function isArcadeSpriteFiniteNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function validateArcadeSpriteBox(value) {
+  return isArcadeSpriteRecord(value)
+    && isArcadeSpriteFiniteNumber(value.x)
+    && isArcadeSpriteFiniteNumber(value.y)
+    && isArcadeSpriteFiniteNumber(value.w)
+    && isArcadeSpriteFiniteNumber(value.h)
+    && value.w > 0
+    && value.h > 0
+    && (value.label === undefined || typeof value.label === 'string');
+}
+
+function validateArcadeSpriteEvent(value, frameCount) {
+  return isArcadeSpriteRecord(value)
+    && isArcadeSpriteNonNegativeInteger(value.frame)
+    && value.frame < frameCount
+    && typeof value.kind === 'string'
+    && value.kind.length > 0
+    && (value.name === undefined || typeof value.name === 'string')
+    && (value.payload === undefined || isArcadeSpriteRecord(value.payload));
+}
+
+function validateArcadeSpriteAnimation(value, totalFrames) {
+  if (!isArcadeSpriteRecord(value)) return false;
+  if (!isArcadeSpritePositiveInteger(value.frames)) return false;
+  if (!isArcadeSpriteFiniteNumber(value.fps) || value.fps <= 0) return false;
+
+  const frameCount = Number(value.frames);
+  if (value.order !== undefined) {
+    if (!Array.isArray(value.order) || value.order.length !== frameCount) return false;
+    for (const frame of value.order) {
+      if (!isArcadeSpriteNonNegativeInteger(frame) || frame >= totalFrames) return false;
+    }
+  }
+  if (value.loop !== undefined && typeof value.loop !== 'boolean') return false;
+  if (value.anchor !== undefined) {
+    if (!Array.isArray(value.anchor)
+      || value.anchor.length !== 2
+      || !value.anchor.every(isArcadeSpriteFiniteNumber)) return false;
+  }
+  for (const key of ['hitboxes', 'hurtboxes']) {
+    if (value[key] !== undefined
+      && (!Array.isArray(value[key]) || !value[key].every(validateArcadeSpriteBox))) return false;
+  }
+  if (value.events !== undefined
+    && (!Array.isArray(value.events)
+      || !value.events.every((event) => validateArcadeSpriteEvent(event, frameCount)))) return false;
+  if (value.tags !== undefined
+    && (!Array.isArray(value.tags) || !value.tags.every((tag) => typeof tag === 'string'))) return false;
+  return true;
+}
+
+function arcadeSpriteSourceSheets(manifest) {
+  return manifest.sheets ?? manifest.spriteSheets;
+}
+
+/**
+ * Validate either the normalized runtime sprite-manifest shape
+ * `{ version, sheets }` or Badger's project-data alias
+ * `{ schemaVersion, spriteSheets }`.
+ */
+export function validateArcadeSpriteManifest(manifest) {
+  if (!isArcadeSpriteRecord(manifest)) return false;
+  if (!(typeof manifest.version === 'string'
+    || typeof manifest.schemaVersion === 'string'
+    || typeof manifest.schemaVersion === 'number')) return false;
+
+  const sheets = arcadeSpriteSourceSheets(manifest);
+  if (!Array.isArray(sheets)) return false;
+
+  const seenIds = new Set();
+  for (const sheet of sheets) {
+    if (!isArcadeSpriteRecord(sheet)) return false;
+    if (typeof sheet.id !== 'string' || sheet.id.length === 0 || seenIds.has(sheet.id)) return false;
+    seenIds.add(sheet.id);
+    if (typeof sheet.file !== 'string' || sheet.file.length === 0) return false;
+    if (!Array.isArray(sheet.frameSize)
+      || sheet.frameSize.length !== 2
+      || !sheet.frameSize.every(isArcadeSpritePositiveInteger)) return false;
+
+    let totalGridFrames;
+    if (sheet.grid !== undefined) {
+      if (!isArcadeSpriteRecord(sheet.grid)
+        || !isArcadeSpritePositiveInteger(sheet.grid.columns)
+        || !isArcadeSpritePositiveInteger(sheet.grid.rows)) return false;
+      totalGridFrames = sheet.grid.columns * sheet.grid.rows;
+    }
+
+    if (!isArcadeSpriteRecord(sheet.animations) || Object.keys(sheet.animations).length === 0) return false;
+    for (const animation of Object.values(sheet.animations)) {
+      const frameCount = isArcadeSpriteRecord(animation) && isArcadeSpritePositiveInteger(animation.frames)
+        ? animation.frames
+        : 0;
+      if (!validateArcadeSpriteAnimation(animation, totalGridFrames ?? frameCount)) return false;
+    }
+    if (sheet.source !== undefined && !isArcadeSpriteRecord(sheet.source)) return false;
+  }
+  return true;
+}
+
+function freezeArcadeSpriteBox(box) {
+  return Object.freeze({
+    x: box.x,
+    y: box.y,
+    w: box.w,
+    h: box.h,
+    ...(box.label === undefined ? {} : { label: box.label }),
+  });
+}
+
+function freezeArcadeSpriteEvent(event) {
+  return Object.freeze({
+    frame: event.frame,
+    kind: event.kind,
+    ...(event.name === undefined ? {} : { name: event.name }),
+    ...(event.payload === undefined ? {} : { payload: Object.freeze({ ...event.payload }) }),
+  });
+}
+
+function normalizeArcadeSpriteAnimation(animation) {
+  return Object.freeze({
+    frames: animation.frames,
+    fps: animation.fps,
+    ...(animation.order === undefined ? {} : { order: Object.freeze([...animation.order]) }),
+    ...(animation.loop === undefined ? {} : { loop: animation.loop }),
+    ...(animation.anchor === undefined ? {} : { anchor: Object.freeze([...animation.anchor]) }),
+    ...(animation.hitboxes === undefined
+      ? {}
+      : { hitboxes: Object.freeze(animation.hitboxes.map(freezeArcadeSpriteBox)) }),
+    ...(animation.hurtboxes === undefined
+      ? {}
+      : { hurtboxes: Object.freeze(animation.hurtboxes.map(freezeArcadeSpriteBox)) }),
+    ...(animation.events === undefined
+      ? {}
+      : { events: Object.freeze(animation.events.map(freezeArcadeSpriteEvent)) }),
+    ...(animation.tags === undefined ? {} : { tags: Object.freeze([...animation.tags]) }),
+  });
+}
+
+function normalizeArcadeSpriteSheet(sheet) {
+  const animations = Object.fromEntries(
+    Object.entries(sheet.animations).map(([name, animation]) => [name, normalizeArcadeSpriteAnimation(animation)]),
+  );
+  return Object.freeze({
+    id: sheet.id,
+    file: sheet.file,
+    frameSize: Object.freeze([...sheet.frameSize]),
+    ...(sheet.grid === undefined
+      ? {}
+      : { grid: Object.freeze({ columns: sheet.grid.columns, rows: sheet.grid.rows }) }),
+    animations: Object.freeze(animations),
+    ...(sheet.source === undefined ? {} : { source: Object.freeze({ ...sheet.source }) }),
+  });
+}
+
+export function normalizeArcadeSpriteManifest(manifest) {
+  if (!validateArcadeSpriteManifest(manifest)) throw new Error('Invalid arcade sprite manifest');
+  const sheets = arcadeSpriteSourceSheets(manifest).map(normalizeArcadeSpriteSheet);
+  return Object.freeze({
+    version: String(manifest.version ?? manifest.schemaVersion ?? ARCADE_SPRITE_DEFAULT_VERSION),
+    sheets: Object.freeze(sheets),
+  });
+}
+
+/** Resolve one local animation frame to its source rectangle and anchor. */
+export function resolveArcadeSpriteFrame(sheet, animationName, frameIndex) {
+  const animation = sheet?.animations?.[animationName];
+  if (!animation || !Array.isArray(sheet.frameSize) || animation.frames <= 0) return null;
+  const localFrame = Math.max(0, Math.floor(finiteNumber(frameIndex, 0))) % animation.frames;
+  const absoluteFrame = animation.order?.[localFrame] ?? localFrame;
+  const [frameWidth, frameHeight] = sheet.frameSize;
+  let sourceX;
+  let sourceY;
+  if (sheet.grid) {
+    sourceX = (absoluteFrame % sheet.grid.columns) * frameWidth;
+    sourceY = Math.floor(absoluteFrame / sheet.grid.columns) * frameHeight;
+  } else {
+    const animationRow = Object.keys(sheet.animations).indexOf(animationName);
+    if (animationRow < 0) return null;
+    sourceX = absoluteFrame * frameWidth;
+    sourceY = animationRow * frameHeight;
+  }
+  const [anchorX, anchorY] = animation.anchor ?? [frameWidth / 2, frameHeight];
+  return Object.freeze({
+    sheetId: sheet.id,
+    animationName,
+    localFrame,
+    absoluteFrame,
+    sourceX,
+    sourceY,
+    frameWidth,
+    frameHeight,
+    anchorX,
+    anchorY,
+    pivotX: anchorX / frameWidth,
+    pivotY: anchorY / frameHeight,
+    anchorUnits: 'pixels',
+  });
+}
+
+/** Compile a sheet animation into the animation-clock and renderer-neutral clip IR. */
+export function compileArcadeSpriteClip(sheet, animationName) {
+  const animation = sheet?.animations?.[animationName];
+  if (!animation) return null;
+  const frameDuration = 1 / animation.fps;
+  const frames = [];
+  for (let index = 0; index < animation.frames; index += 1) {
+    const address = resolveArcadeSpriteFrame(sheet, animationName, index);
+    if (!address) return null;
+    frames.push(Object.freeze({ frameIndex: index, duration: frameDuration, address }));
+  }
+  return Object.freeze({
+    id: `${sheet.id}:${animationName}`,
+    sheetId: sheet.id,
+    animationName,
+    frameCount: animation.frames,
+    fps: animation.fps,
+    frameDuration,
+    frameDurationMs: frameDuration * 1000,
+    mode: animation.loop === false ? 'once' : 'loop',
+    anchor: Object.freeze([...(animation.anchor ?? [sheet.frameSize[0] / 2, sheet.frameSize[1]])]),
+    hitboxes: Object.freeze([...(animation.hitboxes ?? [])]),
+    hurtboxes: Object.freeze([...(animation.hurtboxes ?? [])]),
+    tags: Object.freeze([...(animation.tags ?? [])]),
+    frames: Object.freeze(frames),
+  });
+}
+
+/**
+ * Select events for every frame actually crossed by an animation clock.
+ * Repeated frame indexes intentionally repeat their events after loop wrap.
+ */
+export function collectArcadeSpriteAnimationEvents(animation, advancedFrames = []) {
+  if (!animation || !Array.isArray(advancedFrames) || !Array.isArray(animation.events)) return Object.freeze([]);
+  const byFrame = new Map();
+  for (const event of animation.events) {
+    const list = byFrame.get(event.frame) ?? [];
+    list.push(event);
+    byFrame.set(event.frame, list);
+  }
+  const selected = [];
+  for (const frame of advancedFrames) {
+    for (const event of byFrame.get(frame) ?? []) selected.push(event);
+  }
+  return Object.freeze(selected);
+}
+
+export function createArcadeSpriteManifestIndex(manifest) {
+  const normalized = normalizeArcadeSpriteManifest(manifest);
+  const sheets = new Map(normalized.sheets.map((sheet) => [sheet.id, sheet]));
+  return Object.freeze({
+    manifest: normalized,
+    size: sheets.size,
+    ids: Object.freeze([...sheets.keys()]),
+    has: (id) => sheets.has(id),
+    get: (id) => sheets.get(id) ?? null,
+  });
+}
+
+function arcadeSpriteInspectionInvariant(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function arcadeSpriteInspectionFinite(value, fallback = 0) {
+  return Number.isFinite(value) ? Number(value) : fallback;
+}
+
+function arcadeSpriteInspectionPositiveInteger(value, label) {
+  const resolved = Math.floor(arcadeSpriteInspectionFinite(value, Number.NaN));
+  arcadeSpriteInspectionInvariant(
+    Number.isFinite(resolved) && resolved > 0,
+    `${label} must be a positive integer`,
+  );
+  return resolved;
+}
+
+function arcadeSpriteInspectionFrame(frame = {}) {
+  const sourceX = Math.floor(arcadeSpriteInspectionFinite(frame.sourceX ?? frame.x, 0));
+  const sourceY = Math.floor(arcadeSpriteInspectionFinite(frame.sourceY ?? frame.y, 0));
+  const frameWidth = arcadeSpriteInspectionPositiveInteger(
+    frame.frameWidth ?? frame.width,
+    'sprite frame width',
+  );
+  const frameHeight = arcadeSpriteInspectionPositiveInteger(
+    frame.frameHeight ?? frame.height,
+    'sprite frame height',
+  );
+  const absoluteFrame = Math.max(
+    0,
+    Math.floor(arcadeSpriteInspectionFinite(frame.absoluteFrame ?? frame.index, 0)),
+  );
+  const anchor = frame.pivot ?? frame.anchor;
+  const explicitPixelAnchor = frame.anchorUnits === 'pixels';
+  const rawAnchorX = arcadeSpriteInspectionFinite(
+    explicitPixelAnchor
+      ? frame.anchorX ?? frame.pivotX ?? anchor?.[0] ?? anchor?.x
+      : frame.pivotX ?? frame.anchorX ?? anchor?.[0] ?? anchor?.x,
+    explicitPixelAnchor ? frameWidth / 2 : 0.5,
+  );
+  const rawAnchorY = arcadeSpriteInspectionFinite(
+    explicitPixelAnchor
+      ? frame.anchorY ?? frame.pivotY ?? anchor?.[1] ?? anchor?.y
+      : frame.pivotY ?? frame.anchorY ?? anchor?.[1] ?? anchor?.y,
+    explicitPixelAnchor ? frameHeight : 1,
+  );
+  const legacyPixelAnchor = frame.anchorUnits === undefined
+    && frame.pivotX === undefined
+    && frame.pivotY === undefined
+    && frame.pivot === undefined
+    && (Math.abs(rawAnchorX) > 1 || Math.abs(rawAnchorY) > 1);
+  const anchorX = explicitPixelAnchor || legacyPixelAnchor ? rawAnchorX / frameWidth : rawAnchorX;
+  const anchorY = explicitPixelAnchor || legacyPixelAnchor ? rawAnchorY / frameHeight : rawAnchorY;
+  arcadeSpriteInspectionInvariant(sourceX >= 0, 'sprite frame sourceX must be non-negative');
+  arcadeSpriteInspectionInvariant(sourceY >= 0, 'sprite frame sourceY must be non-negative');
+  arcadeSpriteInspectionInvariant(Number.isFinite(anchorX), 'sprite frame anchorX must be finite');
+  arcadeSpriteInspectionInvariant(Number.isFinite(anchorY), 'sprite frame anchorY must be finite');
+  return Object.freeze({
+    absoluteFrame,
+    sourceX,
+    sourceY,
+    frameWidth,
+    frameHeight,
+    anchorX,
+    anchorY,
+    anchorUnits: 'normalized',
+  });
+}
+
+function arcadeSpriteInspectionSourceSize(source) {
+  const width = arcadeSpriteInspectionPositiveInteger(source?.width, 'sprite source width');
+  const height = arcadeSpriteInspectionPositiveInteger(source?.height, 'sprite source height');
+  return Object.freeze({ width, height });
+}
+
+function arcadeSpriteInspectionCacheKey(source, frame, options) {
+  let sourceKey;
+  if (typeof options.cacheKey === 'function') {
+    const resolved = options.cacheKey(source, frame);
+    sourceKey = resolved === undefined || resolved === null ? null : String(resolved);
+  } else if (options.cacheKey !== undefined && options.cacheKey !== null) {
+    sourceKey = String(options.cacheKey);
+  } else {
+    const resolved = source?.cacheKey ?? source?.id;
+    sourceKey = resolved === undefined || resolved === null ? null : String(resolved);
+  }
+  if (sourceKey === null) return null;
+  return [
+    sourceKey,
+    frame.absoluteFrame,
+    frame.sourceX,
+    frame.sourceY,
+    frame.frameWidth,
+    frame.frameHeight,
+    arcadeSpriteInspectionFinite(options.alphaThreshold, 16),
+    arcadeSpriteInspectionFinite(options.edgeWidth, -1),
+    arcadeSpriteInspectionFinite(options.blankCoverageThreshold, 0.01),
+    arcadeSpriteInspectionFinite(options.backgroundLeakCoverageThreshold, 0.72),
+    arcadeSpriteInspectionFinite(options.backgroundLeakEdgeThreshold, 0.58),
+  ].join(':');
+}
+
+function arcadeSpriteInspectionCacheGet(cache, key) {
+  if (!cache || key === null) return undefined;
+  return typeof cache.get === 'function' ? cache.get(key) : undefined;
+}
+
+function arcadeSpriteInspectionCacheSet(cache, key, value) {
+  if (!cache || key === null || typeof cache.set !== 'function') return;
+  cache.set(key, value);
+}
+
+function arcadeSpriteInspectionNormalizePixels(value, expectedWidth, expectedHeight) {
+  arcadeSpriteInspectionInvariant(value && value.data !== undefined, 'sprite pixel adapter returned no data');
+  const width = arcadeSpriteInspectionPositiveInteger(value.width, 'sprite pixel width');
+  const height = arcadeSpriteInspectionPositiveInteger(value.height, 'sprite pixel height');
+  arcadeSpriteInspectionInvariant(
+    width === expectedWidth && height === expectedHeight,
+    `sprite pixel adapter returned ${width}x${height}; expected ${expectedWidth}x${expectedHeight}`,
+  );
+  arcadeSpriteInspectionInvariant(
+    typeof value.data.length === 'number' && value.data.length >= width * height * 4,
+    'sprite pixel data must contain RGBA values for every pixel',
+  );
+  return Object.freeze({ data: value.data, width, height });
+}
+
+function arcadeSpriteInspectionExtractPixels(source, sourceSize, frame) {
+  arcadeSpriteInspectionInvariant(
+    source?.data !== undefined,
+    'sprite frame inspection requires source RGBA data or an injected readPixels adapter',
+  );
+  arcadeSpriteInspectionInvariant(
+    typeof source.data.length === 'number' && source.data.length >= sourceSize.width * sourceSize.height * 4,
+    'sprite source data must contain RGBA values for every source pixel',
+  );
+  const data = new Uint8ClampedArray(frame.frameWidth * frame.frameHeight * 4);
+  for (let y = 0; y < frame.frameHeight; y += 1) {
+    const sourceOffset = ((frame.sourceY + y) * sourceSize.width + frame.sourceX) * 4;
+    const targetOffset = y * frame.frameWidth * 4;
+    for (let x = 0; x < frame.frameWidth * 4; x += 1) {
+      data[targetOffset + x] = source.data[sourceOffset + x] ?? 0;
+    }
+  }
+  return Object.freeze({ data, width: frame.frameWidth, height: frame.frameHeight });
+}
+
+function arcadeSpriteInspectionReadPixels(source, sourceSize, frame, options, cacheKey) {
+  const processedKey = cacheKey === null ? null : `${cacheKey}:processed`;
+  const cached = arcadeSpriteInspectionCacheGet(options.processedFrameCache, processedKey);
+  if (cached !== undefined) {
+    return arcadeSpriteInspectionNormalizePixels(cached, frame.frameWidth, frame.frameHeight);
+  }
+
+  const rectangle = Object.freeze({
+    x: frame.sourceX,
+    y: frame.sourceY,
+    width: frame.frameWidth,
+    height: frame.frameHeight,
+  });
+  let pixels;
+  if (typeof options.readPixels === 'function') {
+    pixels = options.readPixels(source, rectangle, frame);
+  } else if (typeof source?.readPixels === 'function') {
+    pixels = source.readPixels(rectangle, frame);
+  } else if (typeof source?.getImageData === 'function') {
+    pixels = source.getImageData(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+  } else {
+    pixels = arcadeSpriteInspectionExtractPixels(source, sourceSize, frame);
+  }
+  pixels = arcadeSpriteInspectionNormalizePixels(pixels, frame.frameWidth, frame.frameHeight);
+  if (typeof options.processPixels === 'function') {
+    const processed = options.processPixels(pixels, Object.freeze({ source, frame, rectangle }));
+    if (processed !== undefined) {
+      pixels = arcadeSpriteInspectionNormalizePixels(
+        processed,
+        frame.frameWidth,
+        frame.frameHeight,
+      );
+    }
+  }
+  arcadeSpriteInspectionCacheSet(options.processedFrameCache, processedKey, pixels);
+  return pixels;
+}
+
+export function inspectArcadeSpriteFrame(source, rawFrame, options = {}) {
+  const frame = arcadeSpriteInspectionFrame(rawFrame);
+  const sourceSize = arcadeSpriteInspectionSourceSize(source);
+  arcadeSpriteInspectionInvariant(
+    frame.sourceX + frame.frameWidth <= sourceSize.width
+      && frame.sourceY + frame.frameHeight <= sourceSize.height,
+    `sprite frame ${frame.absoluteFrame} source rectangle is outside ${sourceSize.width}x${sourceSize.height}`,
+  );
+
+  const cacheKey = arcadeSpriteInspectionCacheKey(source, frame, options);
+  const cached = arcadeSpriteInspectionCacheGet(options.cache, cacheKey);
+  if (cached !== undefined) return cached;
+
+  const pixels = arcadeSpriteInspectionReadPixels(source, sourceSize, frame, options, cacheKey);
+  const alphaThreshold = Math.max(0, Math.min(255, arcadeSpriteInspectionFinite(options.alphaThreshold, 16)));
+  const edgeWidth = options.edgeWidth === undefined
+    ? Math.min(2, Math.max(1, Math.floor(Math.min(pixels.width, pixels.height) / 16)))
+    : Math.max(0, Math.min(
+      Math.min(pixels.width, pixels.height),
+      Math.floor(arcadeSpriteInspectionFinite(options.edgeWidth, 0)),
+    ));
+  const blankCoverageThreshold = Math.max(
+    0,
+    arcadeSpriteInspectionFinite(options.blankCoverageThreshold, 0.01),
+  );
+  const backgroundLeakCoverageThreshold = Math.max(
+    0,
+    arcadeSpriteInspectionFinite(options.backgroundLeakCoverageThreshold, 0.72),
+  );
+  const backgroundLeakEdgeThreshold = Math.max(
+    0,
+    arcadeSpriteInspectionFinite(options.backgroundLeakEdgeThreshold, 0.58),
+  );
+
+  let opaquePixels = 0;
+  let edgePixels = 0;
+  let opaqueEdgePixels = 0;
+  let minOpaqueX = pixels.width;
+  let minOpaqueY = pixels.height;
+  let maxOpaqueX = -1;
+  let maxOpaqueY = -1;
+  for (let y = 0; y < pixels.height; y += 1) {
+    for (let x = 0; x < pixels.width; x += 1) {
+      const alpha = pixels.data[(y * pixels.width + x) * 4 + 3] ?? 0;
+      if (alpha > alphaThreshold) {
+        opaquePixels += 1;
+        minOpaqueX = Math.min(minOpaqueX, x);
+        minOpaqueY = Math.min(minOpaqueY, y);
+        maxOpaqueX = Math.max(maxOpaqueX, x);
+        maxOpaqueY = Math.max(maxOpaqueY, y);
+      }
+      const onTopOrSide = edgeWidth > 0
+        && (y < edgeWidth || x < edgeWidth || x >= pixels.width - edgeWidth);
+      if (onTopOrSide) {
+        edgePixels += 1;
+        if (alpha > alphaThreshold) opaqueEdgePixels += 1;
+      }
+    }
+  }
+
+  const pixelCount = Math.max(1, pixels.width * pixels.height);
+  const opaqueCoverage = opaquePixels / pixelCount;
+  const topAndSideEdgeCoverage = opaqueEdgePixels / Math.max(1, edgePixels);
+  const transparent = opaquePixels === 0;
+  const opaqueBounds = Object.freeze({
+    x: transparent ? 0 : minOpaqueX,
+    y: transparent ? 0 : minOpaqueY,
+    width: transparent ? 0 : maxOpaqueX - minOpaqueX + 1,
+    height: transparent ? 0 : maxOpaqueY - minOpaqueY + 1,
+  });
+  const pivotValid = frame.anchorX >= 0 && frame.anchorX <= 1
+    && frame.anchorY >= 0 && frame.anchorY <= 1;
+  const blank = opaqueCoverage < blankCoverageThreshold;
+  const backgroundLeak = opaqueCoverage > backgroundLeakCoverageThreshold
+    || topAndSideEdgeCoverage > backgroundLeakEdgeThreshold;
+  const diagnostics = [];
+  if (transparent) diagnostics.push('transparent-frame');
+  else if (blank) diagnostics.push('low-opaque-coverage');
+  if (!pivotValid) diagnostics.push('pivot-outside-frame');
+  if (backgroundLeak) diagnostics.push('background-leak');
+
+  const inspection = Object.freeze({
+    frameIndex: frame.absoluteFrame,
+    width: pixels.width,
+    height: pixels.height,
+    sourceRect: Object.freeze({
+      x: frame.sourceX,
+      y: frame.sourceY,
+      width: frame.frameWidth,
+      height: frame.frameHeight,
+    }),
+    opaqueBounds,
+    opaquePixels,
+    opaqueCoverage,
+    topAndSideEdgeCoverage,
+    boundsValid: true,
+    pivotValid,
+    transparent,
+    opaque: !transparent,
+    blank,
+    backgroundLeak,
+    diagnostics: Object.freeze(diagnostics),
+  });
+  arcadeSpriteInspectionCacheSet(options.cache, cacheKey, inspection);
+  return inspection;
+}
+
+function arcadeSpriteVisibleScaleFrames(atlas, options) {
+  const frames = options.frames ?? atlas?.frames;
+  arcadeSpriteInspectionInvariant(Array.isArray(frames), 'sprite atlas frames must be an array');
+  const selected = options.frameIndexes === undefined
+    ? frames
+    : (() => {
+      const indexes = new Set(options.frameIndexes.map((value) => Number(value)));
+      return frames.filter((frame, index) => indexes.has(
+        Number(frame?.absoluteFrame ?? frame?.index ?? index),
+      ));
+    })();
+  arcadeSpriteInspectionInvariant(selected.length > 0, 'sprite visible scale requires at least one frame');
+  return selected;
+}
+
+function arcadeSpriteRepresentativeHeight(heights, mode) {
+  const ordered = [...heights].sort((left, right) => left - right);
+  if (typeof mode === 'function') {
+    const value = arcadeSpriteInspectionFinite(mode(Object.freeze(ordered)), Number.NaN);
+    arcadeSpriteInspectionInvariant(value > 0, 'sprite visible-height resolver must return a positive value');
+    return value;
+  }
+  if (mode === 'mean') return ordered.reduce((sum, value) => sum + value, 0) / ordered.length;
+  if (mode === 'min') return ordered[0];
+  if (mode === 'max') return ordered[ordered.length - 1];
+  return ordered[Math.floor(ordered.length / 2)];
+}
+
+export function resolveArcadeSpriteVisibleScale(atlas, options = {}) {
+  const source = options.source ?? atlas?.source ?? atlas?.image;
+  arcadeSpriteInspectionInvariant(source, 'sprite atlas source is required');
+  const frames = arcadeSpriteVisibleScaleFrames(atlas, options);
+  const inspect = options.inspect ?? inspectArcadeSpriteFrame;
+  arcadeSpriteInspectionInvariant(typeof inspect === 'function', 'sprite inspection callback must be a function');
+  const heights = frames
+    .map((frame) => inspect(source, frame, options.inspectionOptions).opaqueBounds.height)
+    .filter((height) => Number.isFinite(height) && height > 0);
+  const fallbackHeight = arcadeSpriteInspectionFinite(
+    options.fallbackVisibleHeight ?? atlas?.frameHeight ?? frames[0]?.frameHeight ?? frames[0]?.height,
+    0,
+  );
+  if (heights.length === 0 && fallbackHeight > 0) heights.push(fallbackHeight);
+  arcadeSpriteInspectionInvariant(heights.length > 0, 'sprite atlas has no visible frame height');
+  const representativeHeight = arcadeSpriteRepresentativeHeight(
+    heights,
+    options.representative ?? 'median',
+  );
+  const targetVisibleHeight = arcadeSpriteInspectionFinite(options.targetVisibleHeight, 1);
+  arcadeSpriteInspectionInvariant(targetVisibleHeight > 0, 'target sprite visible height must be positive');
+  const multiplier = arcadeSpriteInspectionFinite(options.multiplier, 1);
+  arcadeSpriteInspectionInvariant(multiplier >= 0, 'sprite visible scale multiplier must be non-negative');
+  const minimum = arcadeSpriteInspectionFinite(options.minimum, 0);
+  const maximum = arcadeSpriteInspectionFinite(options.maximum, Number.POSITIVE_INFINITY);
+  arcadeSpriteInspectionInvariant(minimum >= 0, 'minimum sprite scale must be non-negative');
+  arcadeSpriteInspectionInvariant(maximum >= minimum, 'maximum sprite scale must be at least minimum');
+  return Math.max(
+    minimum,
+    Math.min(maximum, (targetVisibleHeight / representativeHeight) * multiplier),
+  );
+}
+
+export function createArcadeSpriteFrameGeometry(rawFrame, transform = {}) {
+  const frame = arcadeSpriteInspectionFrame(rawFrame);
+  const x = arcadeSpriteInspectionFinite(transform.x, 0)
+    + arcadeSpriteInspectionFinite(transform.offsetX, 0);
+  const y = arcadeSpriteInspectionFinite(transform.y, 0)
+    + arcadeSpriteInspectionFinite(transform.offsetY, 0);
+  const commonScale = Math.abs(arcadeSpriteInspectionFinite(transform.scale, 1));
+  const scaleX = commonScale * Math.abs(arcadeSpriteInspectionFinite(transform.scaleX, 1));
+  const scaleY = commonScale * Math.abs(arcadeSpriteInspectionFinite(transform.scaleY, 1));
+  const signedScaleX = transform.flipX === true ? -scaleX : scaleX;
+  const localX = -frame.frameWidth * frame.anchorX;
+  const localY = -frame.frameHeight * frame.anchorY;
+  const firstX = x + localX * signedScaleX;
+  const secondX = x + (localX + frame.frameWidth) * signedScaleX;
+  const firstY = y + localY * scaleY;
+  const secondY = y + (localY + frame.frameHeight) * scaleY;
+  const destinationX = Math.min(firstX, secondX);
+  const destinationY = Math.min(firstY, secondY);
+  const destinationWidth = Math.abs(secondX - firstX);
+  const destinationHeight = Math.abs(secondY - firstY);
+  return Object.freeze({
+    source: Object.freeze({
+      x: frame.sourceX,
+      y: frame.sourceY,
+      width: frame.frameWidth,
+      height: frame.frameHeight,
+    }),
+    local: Object.freeze({
+      x: localX,
+      y: localY,
+      width: frame.frameWidth,
+      height: frame.frameHeight,
+    }),
+    destination: Object.freeze({
+      x: destinationX,
+      y: destinationY,
+      width: destinationWidth,
+      height: destinationHeight,
+    }),
+    pivot: Object.freeze({
+      sourceX: frame.frameWidth * frame.anchorX,
+      sourceY: frame.frameHeight * frame.anchorY,
+      x,
+      y,
+      destinationX: x - destinationX,
+      destinationY: y - destinationY,
+    }),
+    matrix: Object.freeze({
+      a: signedScaleX,
+      b: 0,
+      c: 0,
+      d: scaleY,
+      tx: x,
+      ty: y,
+    }),
+    flipX: transform.flipX === true,
+    scaleX,
+    scaleY,
+  });
+}
+
 function normalizeSnapshotNumber(value, precision) {
   if (!Number.isFinite(value)) return 0;
   const scale = 10 ** precision;

@@ -107,8 +107,9 @@ export class SpriteRenderer {
 	): SpriteAnimationEvent[] {
 		const sheet = this.sheets.get(sheetId);
 		const animation = sheet?.sheet.animations[animName];
-		if (!animation?.events) return [];
+		if (!animation) return [];
 		const frame = Math.max(0, frameIndex) % animation.frames;
+		if (!animation.events) return [];
 		return animation.events.filter((event) => event.frame === frame);
 	}
 

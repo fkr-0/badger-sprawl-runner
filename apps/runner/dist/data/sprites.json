@@ -1127,12 +1127,12 @@
       "world": "lower_sprawl",
       "role": "tiles",
       "source": {
-        "tool": "OpenAI image generation",
-        "mode": "built-in default",
-        "sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
-        "promptSet": "generated/source_previews/production-prompt-set.json",
-        "revision": "2026-07-17-production",
-        "note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+        "tool": "OpenAI DALL-E",
+        "sourceSheet": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/055_unknown.png",
+        "mapping": "matching.txt",
+        "importer": "scripts/import-dalle-sprites.py",
+        "revision": "2026-07-19-dalle-import",
+        "description": "cyberpunk urban brick, wet asphalt, cables, awnings, neon street props"
       }
     },
     {
@@ -2409,12 +2409,12 @@
       "world": "drainmarket",
       "role": "tiles",
       "source": {
-        "tool": "OpenAI image generation",
-        "mode": "built-in default",
-        "sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
-        "promptSet": "generated/source_previews/production-prompt-set.json",
-        "revision": "2026-07-17-production",
-        "note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+        "tool": "OpenAI DALL-E",
+        "sourceSheet": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/059_unknown.png",
+        "mapping": "matching.txt",
+        "importer": "scripts/import-dalle-sprites.py",
+        "revision": "2026-07-19-dalle-import",
+        "description": "sump brick, clinic floor, rusted grates, medical tubing, leaking valves"
       }
     },
     {
@@ -2500,12 +2500,12 @@
         }
       },
       "source": {
-        "tool": "OpenAI image generation",
-        "mode": "built-in default",
-        "sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
-        "promptSet": "generated/source_previews/production-prompt-set.json",
-        "revision": "2026-07-17-production",
-        "note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+        "tool": "OpenAI DALL-E",
+        "sourceSheet": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/056_unknown.png",
+        "mapping": "matching.txt",
+        "importer": "scripts/import-dalle-sprites.py",
+        "revision": "2026-07-19-dalle-import",
+        "description": "polished chrome floors, glass lattice, elevator rails, luxury ad panels"
       }
     },
     {
@@ -2933,12 +2933,12 @@
         }
       },
       "source": {
-        "tool": "OpenAI image generation",
-        "mode": "built-in default",
-        "sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
-        "promptSet": "generated/source_previews/production-prompt-set.json",
-        "revision": "2026-07-17-production",
-        "note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+        "tool": "OpenAI DALL-E",
+        "sourceSheet": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/057_unknown.png",
+        "mapping": "matching.txt",
+        "importer": "scripts/import-dalle-sprites.py",
+        "revision": "2026-07-19-dalle-import",
+        "description": "cyber-organic speakerstone, cable vines, solar cloth, studio machinery"
       }
     },
     {
@@ -3242,12 +3242,12 @@
         }
       },
       "source": {
-        "tool": "OpenAI image generation",
-        "mode": "built-in default",
-        "sourceSheet": "generated/source_previews/sprawl-world-tiles-production-board.png",
-        "promptSet": "generated/source_previews/production-prompt-set.json",
-        "revision": "2026-07-17-production",
-        "note": "Chroma-cleaned, edge-despilled, anchor-normalized and packed to the declared runtime animation rows."
+        "tool": "OpenAI DALL-E",
+        "sourceSheet": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/058_unknown.png",
+        "mapping": "matching.txt",
+        "importer": "scripts/import-dalle-sprites.py",
+        "revision": "2026-07-19-dalle-import",
+        "description": "industrial lift grating, cargo straps, vacuum doors, warning machinery"
       }
     },
     {

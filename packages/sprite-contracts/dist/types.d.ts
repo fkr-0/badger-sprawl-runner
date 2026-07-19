@@ -1,50 +1,22 @@
-export interface SpriteBox {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    label?: string;
-}
-export interface SpriteAnimationEvent {
-    frame: number;
-    kind: string;
-    name?: string;
-    payload?: Record<string, unknown>;
-}
-export interface SpriteGrid {
-    columns: number;
-    rows: number;
-}
-export interface AnimationDef {
-    frames: number;
-    fps: number;
-    order?: number[];
-    loop?: boolean;
-    anchor?: [number, number];
-    hitboxes?: SpriteBox[];
-    hurtboxes?: SpriteBox[];
-    events?: SpriteAnimationEvent[];
-    tags?: string[];
-}
-export interface SpriteSheet {
-    id: string;
-    file: string;
-    frameSize: [number, number];
-    grid?: SpriteGrid;
-    animations: Record<string, AnimationDef>;
-    source?: Record<string, unknown>;
-}
-export interface SpriteManifest {
-    version: string;
-    sheets: SpriteSheet[];
-}
-export interface SpriteManifestSource {
-    version?: string;
-    schemaVersion?: string | number;
-    sheets?: SpriteSheet[];
-    spriteSheets?: SpriteSheet[];
-    baseGrid?: number;
-}
+import type { ArcadeSpriteAnimation, ArcadeSpriteAnimationEvent, ArcadeSpriteBox, ArcadeSpriteGrid, ArcadeSpriteManifest, ArcadeSpriteManifestSource, ArcadeSpriteSheet } from '../../../vendor/arcade-runtime.mjs';
+/** @deprecated Import ArcadeSpriteBox from the shared runtime for new code. */
+export type SpriteBox = ArcadeSpriteBox;
+/** @deprecated Import ArcadeSpriteAnimationEvent from the shared runtime for new code. */
+export type SpriteAnimationEvent = ArcadeSpriteAnimationEvent;
+/** @deprecated Import ArcadeSpriteGrid from the shared runtime for new code. */
+export type SpriteGrid = ArcadeSpriteGrid;
+/** @deprecated Import ArcadeSpriteAnimation from the shared runtime for new code. */
+export type AnimationDef = ArcadeSpriteAnimation;
+/** @deprecated Import ArcadeSpriteSheet from the shared runtime for new code. */
+export type SpriteSheet = ArcadeSpriteSheet;
+/** @deprecated Import ArcadeSpriteManifest from the shared runtime for new code. */
+export type SpriteManifest = ArcadeSpriteManifest;
+/** @deprecated Import ArcadeSpriteManifestSource from the shared runtime for new code. */
+export type SpriteManifestSource = ArcadeSpriteManifestSource;
+/**
+ * Browser-owned image handle retained by Badger while manifest, addressing,
+ * clip, and event semantics live in @arcade/runtime.
+ */
 export interface LoadedSheet {
     sheet: SpriteSheet;
     image: HTMLImageElement;

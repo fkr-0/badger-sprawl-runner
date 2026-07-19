@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
 		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
-		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && pnpm -r test",
+		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",

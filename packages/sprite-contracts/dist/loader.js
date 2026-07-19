@@ -1,29 +1,15 @@
+import { resolveArcadeSpriteFrame } from '../../../vendor/arcade-runtime.mjs';
 function getOrderedFrame(sheet, animName, frameIndex) {
-    const anim = sheet.animations[animName];
-    if (!anim)
-        return null;
-    const wrappedFrame = Math.max(0, frameIndex) % anim.frames;
-    return anim.order?.[wrappedFrame] ?? wrappedFrame;
+    return resolveArcadeSpriteFrame(sheet, animName, frameIndex)?.absoluteFrame ?? null;
 }
 function getFrameSource(sheet, animName, frameIndex) {
-    const absoluteFrame = getOrderedFrame(sheet, animName, frameIndex);
-    if (absoluteFrame === null)
-        return null;
-    const [frameW, frameH] = sheet.frameSize;
-    if (sheet.grid) {
-        const column = absoluteFrame % sheet.grid.columns;
-        const row = Math.floor(absoluteFrame / sheet.grid.columns);
-        return [column * frameW, row * frameH];
-    }
-    const animNames = Object.keys(sheet.animations);
-    const animRow = animNames.indexOf(animName);
-    if (animRow < 0)
-        return null;
-    return [absoluteFrame * frameW, animRow * frameH];
+    const frame = resolveArcadeSpriteFrame(sheet, animName, frameIndex);
+    return frame ? [frame.sourceX, frame.sourceY] : null;
 }
 /**
- * Load a sprite sheet from a sheet definition.
- * Supports both row-per-animation sheets and explicit grid/order sheets.
+ * Browser image loading remains consumer-owned for this migration step. Frame
+ * addressing is delegated to @arcade/runtime so Canvas and future Pixi paths
+ * consume the same sheet/grid/order contract.
  */
 export function loadSpriteSheet(sheet, ctx) {
     return new Promise((resolve, reject) => {
@@ -33,19 +19,18 @@ export function loadSpriteSheet(sheet, ctx) {
                 sheet,
                 image: img,
                 drawFrame(ctx, animName, frameIndex, x, y, flipX = false) {
-                    const source = getFrameSource(sheet, animName, frameIndex);
-                    if (!source)
+                    const frame = resolveArcadeSpriteFrame(sheet, animName, frameIndex);
+                    if (!frame)
                         return;
-                    const [frameW, frameH] = sheet.frameSize;
-                    const [srcX, srcY] = source;
+                    const { sourceX, sourceY, frameWidth, frameHeight } = frame;
                     ctx.save();
                     if (flipX) {
-                        ctx.translate(x + frameW, y);
+                        ctx.translate(x + frameWidth, y);
                         ctx.scale(-1, 1);
-                        ctx.drawImage(img, srcX, srcY, frameW, frameH, 0, 0, frameW, frameH);
+                        ctx.drawImage(img, sourceX, sourceY, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
                     }
                     else {
-                        ctx.drawImage(img, srcX, srcY, frameW, frameH, x, y, frameW, frameH);
+                        ctx.drawImage(img, sourceX, sourceY, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
                     }
                     ctx.restore();
                 },

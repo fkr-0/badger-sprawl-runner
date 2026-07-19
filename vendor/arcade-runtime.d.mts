@@ -164,6 +164,293 @@ export declare function getElapsedCooldownStatus(
   progress: number;
 };
 
+export interface ArcadeSpriteBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label?: string;
+}
+
+export interface ArcadeSpriteAnimationEvent {
+  frame: number;
+  kind: string;
+  name?: string;
+  payload?: Readonly<Record<string, unknown>>;
+}
+
+export interface ArcadeSpriteGrid {
+  columns: number;
+  rows: number;
+}
+
+export interface ArcadeSpriteAnimation {
+  frames: number;
+  fps: number;
+  order?: readonly number[];
+  loop?: boolean;
+  anchor?: readonly [number, number];
+  hitboxes?: readonly ArcadeSpriteBox[];
+  hurtboxes?: readonly ArcadeSpriteBox[];
+  events?: readonly ArcadeSpriteAnimationEvent[];
+  tags?: readonly string[];
+}
+
+export interface ArcadeSpriteSheet {
+  id: string;
+  file: string;
+  frameSize: readonly [number, number];
+  grid?: ArcadeSpriteGrid;
+  animations: Readonly<Record<string, ArcadeSpriteAnimation>>;
+  source?: Readonly<Record<string, unknown>>;
+}
+
+export interface ArcadeSpriteManifest {
+  version: string;
+  sheets: readonly ArcadeSpriteSheet[];
+}
+
+export interface ArcadeSpriteManifestSource {
+  version?: string;
+  schemaVersion?: string | number;
+  sheets?: readonly ArcadeSpriteSheet[];
+  spriteSheets?: readonly ArcadeSpriteSheet[];
+  baseGrid?: number;
+}
+
+export interface ArcadeSpriteFrameAddress {
+  sheetId: string;
+  animationName: string;
+  localFrame: number;
+  absoluteFrame: number;
+  sourceX: number;
+  sourceY: number;
+  frameWidth: number;
+  frameHeight: number;
+  anchorX: number;
+  anchorY: number;
+  pivotX: number;
+  pivotY: number;
+  anchorUnits: 'pixels';
+}
+
+export interface ArcadeSpriteCompiledFrame {
+  frameIndex: number;
+  duration: number;
+  address: ArcadeSpriteFrameAddress;
+}
+
+export interface ArcadeSpriteClip {
+  id: string;
+  sheetId: string;
+  animationName: string;
+  frameCount: number;
+  fps: number;
+  frameDuration: number;
+  frameDurationMs: number;
+  mode: 'loop' | 'once';
+  anchor: readonly [number, number];
+  hitboxes: readonly ArcadeSpriteBox[];
+  hurtboxes: readonly ArcadeSpriteBox[];
+  tags: readonly string[];
+  frames: readonly ArcadeSpriteCompiledFrame[];
+}
+
+export interface ArcadeSpriteManifestIndex {
+  manifest: ArcadeSpriteManifest;
+  size: number;
+  ids: readonly string[];
+  has(id: string): boolean;
+  get(id: string): ArcadeSpriteSheet | null;
+}
+
+export declare function validateArcadeSpriteManifest(value: unknown): value is ArcadeSpriteManifestSource;
+export declare function normalizeArcadeSpriteManifest(value: unknown): ArcadeSpriteManifest;
+export declare function resolveArcadeSpriteFrame(
+  sheet: ArcadeSpriteSheet,
+  animationName: string,
+  frameIndex: number,
+): ArcadeSpriteFrameAddress | null;
+export declare function compileArcadeSpriteClip(
+  sheet: ArcadeSpriteSheet,
+  animationName: string,
+): ArcadeSpriteClip | null;
+export declare function collectArcadeSpriteAnimationEvents(
+  animation: ArcadeSpriteAnimation | null | undefined,
+  advancedFrames?: readonly number[],
+): readonly ArcadeSpriteAnimationEvent[];
+export declare function createArcadeSpriteManifestIndex(value: unknown): ArcadeSpriteManifestIndex;
+
+export type ArcadeSpritePixelData = Readonly<{
+  data: ArrayLike<number>;
+  width: number;
+  height: number;
+}>;
+
+export type ArcadeSpritePixelRectangle = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}>;
+
+export type ArcadeSpriteInspectableFrame = Readonly<{
+  absoluteFrame?: number;
+  index?: number;
+  sourceX?: number;
+  sourceY?: number;
+  x?: number;
+  y?: number;
+  frameWidth?: number;
+  frameHeight?: number;
+  width?: number;
+  height?: number;
+  anchorX?: number;
+  anchorY?: number;
+  pivotX?: number;
+  pivotY?: number;
+  anchorUnits?: 'pixels' | 'normalized';
+  anchor?: readonly [number, number] | Readonly<{ x: number; y: number }>;
+  pivot?: readonly [number, number] | Readonly<{ x: number; y: number }>;
+}>;
+
+export type ArcadeSpritePixelSource = Readonly<{
+  width: number;
+  height: number;
+  data?: ArrayLike<number>;
+  id?: PropertyKey;
+  cacheKey?: PropertyKey;
+  readPixels?(
+    rectangle: ArcadeSpritePixelRectangle,
+    frame: ArcadeSpriteInspectableFrame,
+  ): ArcadeSpritePixelData;
+  getImageData?(x: number, y: number, width: number, height: number): ArcadeSpritePixelData;
+}>;
+
+export type ArcadeSpriteFrameInspection = Readonly<{
+  frameIndex: number;
+  width: number;
+  height: number;
+  sourceRect: ArcadeSpritePixelRectangle;
+  opaqueBounds: ArcadeSpritePixelRectangle;
+  opaquePixels: number;
+  opaqueCoverage: number;
+  topAndSideEdgeCoverage: number;
+  boundsValid: true;
+  pivotValid: boolean;
+  transparent: boolean;
+  opaque: boolean;
+  blank: boolean;
+  backgroundLeak: boolean;
+  diagnostics: readonly string[];
+}>;
+
+export type ArcadeSpriteFrameCache<Value> = {
+  get(key: string): Value | undefined;
+  set(key: string, value: Value): unknown;
+};
+
+export type ArcadeSpriteInspectionOptions = {
+  alphaThreshold?: number;
+  edgeWidth?: number;
+  blankCoverageThreshold?: number;
+  backgroundLeakCoverageThreshold?: number;
+  backgroundLeakEdgeThreshold?: number;
+  cacheKey?: PropertyKey | ((source: ArcadeSpritePixelSource, frame: ArcadeSpriteInspectableFrame) => PropertyKey | null | undefined);
+  cache?: ArcadeSpriteFrameCache<ArcadeSpriteFrameInspection>;
+  processedFrameCache?: ArcadeSpriteFrameCache<ArcadeSpritePixelData>;
+  readPixels?(
+    source: ArcadeSpritePixelSource | unknown,
+    rectangle: ArcadeSpritePixelRectangle,
+    frame: ArcadeSpriteInspectableFrame,
+  ): ArcadeSpritePixelData;
+  processPixels?(
+    pixels: ArcadeSpritePixelData,
+    context: Readonly<{
+      source: ArcadeSpritePixelSource | unknown;
+      frame: ArcadeSpriteInspectableFrame;
+      rectangle: ArcadeSpritePixelRectangle;
+    }>,
+  ): ArcadeSpritePixelData | void;
+};
+
+export declare function inspectArcadeSpriteFrame(
+  source: ArcadeSpritePixelSource | unknown,
+  frame: ArcadeSpriteInspectableFrame,
+  options?: ArcadeSpriteInspectionOptions,
+): ArcadeSpriteFrameInspection;
+
+export type ArcadeSpriteInspectableAtlas = Readonly<{
+  source?: ArcadeSpritePixelSource | unknown;
+  image?: ArcadeSpritePixelSource | unknown;
+  frames: readonly ArcadeSpriteInspectableFrame[];
+  frameHeight?: number;
+}>;
+
+export type ArcadeSpriteVisibleScaleOptions = {
+  source?: ArcadeSpritePixelSource | unknown;
+  frames?: readonly ArcadeSpriteInspectableFrame[];
+  frameIndexes?: readonly number[];
+  targetVisibleHeight?: number;
+  fallbackVisibleHeight?: number;
+  multiplier?: number;
+  minimum?: number;
+  maximum?: number;
+  representative?: 'median' | 'mean' | 'min' | 'max' | ((orderedHeights: readonly number[]) => number);
+  inspectionOptions?: ArcadeSpriteInspectionOptions;
+  inspect?: (
+    source: ArcadeSpritePixelSource | unknown,
+    frame: ArcadeSpriteInspectableFrame,
+    options?: ArcadeSpriteInspectionOptions,
+  ) => ArcadeSpriteFrameInspection;
+};
+
+export declare function resolveArcadeSpriteVisibleScale(
+  atlas: ArcadeSpriteInspectableAtlas,
+  options?: ArcadeSpriteVisibleScaleOptions,
+): number;
+
+export type ArcadeSpriteFrameTransform = Readonly<{
+  x?: number;
+  y?: number;
+  offsetX?: number;
+  offsetY?: number;
+  scale?: number;
+  scaleX?: number;
+  scaleY?: number;
+  flipX?: boolean;
+}>;
+
+export type ArcadeSpriteFrameGeometry = Readonly<{
+  source: ArcadeSpritePixelRectangle;
+  local: ArcadeSpritePixelRectangle;
+  destination: ArcadeSpritePixelRectangle;
+  pivot: Readonly<{
+    sourceX: number;
+    sourceY: number;
+    x: number;
+    y: number;
+    destinationX: number;
+    destinationY: number;
+  }>;
+  matrix: Readonly<{
+    a: number;
+    b: 0;
+    c: 0;
+    d: number;
+    tx: number;
+    ty: number;
+  }>;
+  flipX: boolean;
+  scaleX: number;
+  scaleY: number;
+}>;
+
+export declare function createArcadeSpriteFrameGeometry(
+  frame: ArcadeSpriteInspectableFrame,
+  transform?: ArcadeSpriteFrameTransform,
+): ArcadeSpriteFrameGeometry;
+
 export type SnapshotValue =
   | null
   | boolean

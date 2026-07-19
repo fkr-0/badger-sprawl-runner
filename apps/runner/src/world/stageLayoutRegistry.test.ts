@@ -54,7 +54,7 @@ describe('stageLayoutRegistry', () => {
 		]);
 		expect(cloneStageLayout('orbital-lift').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
 			'enemy_customs_lancer',
-			'enemy_manifest_monk',
+			'enemy_contract_servitor',
 			'enemy_vane_air_bailiff',
 		]);
 		expect(cloneStageLayout('asteroid-redoubt').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
