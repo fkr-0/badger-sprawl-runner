@@ -1,0 +1,8 @@
+{
+  "package": "@arcade/runtime",
+  "version": "0.8.0",
+  "module": "arcade-runtime.mjs",
+  "types": "arcade-runtime.d.mts",
+  "sha256": "dfb319bb02e880d72d955d76598e614317948c137886ca44750fc18e09ae3b62",
+  "typesSha256": "46227a04387f72a2ac222d0261b69790ded63f30029b52d138f88a1266df42c5"
+}
