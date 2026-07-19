@@ -1,12 +1,12 @@
 import {
 	createCanvasTexturePassOptions,
 	installArcadeRenderPlan,
-} from '../../../../vendor/arcade-pixi-runtime.mjs';
+} from '../../../../vendor/arcade-runtime.mjs';
 import type {
 	ArcadePixiFrame,
 	ArcadePixiNamespace,
 	ArcadePixiRuntime,
-} from '../../../../vendor/arcade-pixi-runtime.mjs';
+} from '../../../../vendor/arcade-runtime.mjs';
 import { BADGER_PIXI_BRIDGE_PASSES } from './ArcadeRuntimeContract';
 
 export type BadgerCanvasBridgePassName =

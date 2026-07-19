@@ -1,4 +1,4 @@
-import { integrateAcceleration } from '../../../../vendor/arcade-core.mjs';
+import { integrateAcceleration } from '../../../../vendor/arcade-runtime.mjs';
 import type { PhysicsParams } from '../PhysicsParams';
 
 /** Pure gravity integration delegated to the shared arcade numeric core. */

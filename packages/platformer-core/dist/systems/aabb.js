@@ -1,4 +1,6 @@
+/** Shared arcade-core AABB collision test. */
+import { aabbOverlap } from '../../../../vendor/arcade-runtime.mjs';
 export function aabb(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    return aabbOverlap(a, b);
 }
 //# sourceMappingURL=aabb.js.map

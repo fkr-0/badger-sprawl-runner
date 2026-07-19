@@ -4,7 +4,7 @@ import {
 	createActionInput,
 	type ActionBinding,
 	type ActionState,
-} from '../../../../vendor/arcade-core.mjs';
+} from '../../../../vendor/arcade-runtime.mjs';
 
 export interface ActionMap {
 	moveLeft: boolean;

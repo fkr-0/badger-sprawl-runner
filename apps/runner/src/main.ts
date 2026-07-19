@@ -1,4 +1,4 @@
-import type { ArcadePerformanceSummary } from '../../../vendor/arcade-pixi-runtime.mjs';
+import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
 import { createBadgerPixiBridge, isBadgerPixiBridgeRequested } from './renderer/BadgerPixiBridge';
@@ -54,7 +54,9 @@ export interface BadgerTestHarness {
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
 	getTraining: () => ReturnType<TrainingScene['getTrainingState']> | null;
 	getGameplayHudLayout: () => ReturnType<StageRunScene['getGameplayHudLayoutSnapshot']> | null;
-	getActorRenderContract: () => ReturnType<RunnerApp['getRenderer']>['getActorRenderContract'] extends () => infer T
+	getActorRenderContract: () => ReturnType<
+		RunnerApp['getRenderer']
+	>['getActorRenderContract'] extends () => infer T
 		? T
 		: never;
 	teleportPlayer: (x: number, y: number) => void;

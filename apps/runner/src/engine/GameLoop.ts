@@ -1,6 +1,6 @@
 /** Shared arcade-core fixed-timestep adapter. */
 
-import { createFixedStepLoop } from '../../../../vendor/arcade-core.mjs';
+import { createFixedStepLoop } from '../../../../vendor/arcade-runtime.mjs';
 
 export type UpdateFn = (dt: number) => void;
 export type RenderFn = (alpha: number) => void;

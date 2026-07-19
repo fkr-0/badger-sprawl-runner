@@ -1,4 +1,4 @@
-import { resolveOneWayPlatforms } from '../../../../vendor/arcade-core.mjs';
+import { resolveOneWayPlatforms } from '../../../../vendor/arcade-runtime.mjs';
 
 export interface PlatformStepInput {
 	x: number;

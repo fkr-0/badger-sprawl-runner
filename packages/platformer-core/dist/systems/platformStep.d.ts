@@ -21,9 +21,6 @@ export interface PlatformStepOutput {
     onGround: boolean;
     coyoteLeft: number;
 }
-/**
- * Pure function: resolve platform collision
- * Snap player to platform if landing, reset coyote time
- */
+/** Resolve one-way platform landing through the shared arcade collision primitive. */
 export declare function platformStep(input: PlatformStepInput): PlatformStepOutput;
 //# sourceMappingURL=platformStep.d.ts.map

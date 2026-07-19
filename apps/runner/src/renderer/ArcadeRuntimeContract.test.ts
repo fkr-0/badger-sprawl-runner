@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import {
 	BADGER_ARCADE_PIXI_RUNTIME_VERSION,
+	BADGER_ARCADE_RUNTIME_VERSION,
 	BADGER_CANVAS_PASS_TO_PIXI_LAYER,
 	BADGER_PIXI_BRIDGE_PASSES,
 	BADGER_PIXI_LAYERS,
@@ -11,7 +12,8 @@ import {
 
 describe('shared Pixi runtime contract', () => {
 	it('pins the common runtime and preserves deterministic pass order', () => {
-		expect(BADGER_ARCADE_PIXI_RUNTIME_VERSION).toBe('0.5.0');
+		expect(BADGER_ARCADE_RUNTIME_VERSION).toBe('0.8.0');
+		expect(BADGER_ARCADE_PIXI_RUNTIME_VERSION).toBe(BADGER_ARCADE_RUNTIME_VERSION);
 		expect(BADGER_PIXI_LAYERS).toEqual([
 			'backdrop',
 			'world-back',
@@ -45,15 +47,20 @@ describe('shared Pixi runtime contract', () => {
 		]);
 
 		const runtimeModule = readFileSync(
-			new URL('../../../../vendor/arcade-pixi-runtime.mjs', import.meta.url)
+			new URL('../../../../vendor/arcade-runtime.mjs', import.meta.url)
 		);
 		const metadata = JSON.parse(
 			readFileSync(
-				new URL('../../../../vendor/arcade-pixi-runtime.meta.json', import.meta.url),
+				new URL('../../../../vendor/arcade-runtime.meta.json', import.meta.url),
 				'utf8'
 			)
-		) as { version: string; sha256: string };
-		expect(metadata.version).toBe(BADGER_ARCADE_PIXI_RUNTIME_VERSION);
+		) as { package: string; version: string; sha256: string; typesSha256: string };
+		expect(metadata.package).toBe('@arcade/runtime');
+		expect(metadata.version).toBe(BADGER_ARCADE_RUNTIME_VERSION);
 		expect(createHash('sha256').update(runtimeModule).digest('hex')).toBe(metadata.sha256);
+		const runtimeTypes = readFileSync(
+			new URL('../../../../vendor/arcade-runtime.d.mts', import.meta.url)
+		);
+		expect(createHash('sha256').update(runtimeTypes).digest('hex')).toBe(metadata.typesSha256);
 	});
 });

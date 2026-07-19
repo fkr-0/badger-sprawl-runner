@@ -1,4 +1,4 @@
-import { approach, clampNumber } from '../../../../vendor/arcade-core.mjs';
+import { approach, clampNumber } from '../../../../vendor/arcade-runtime.mjs';
 import type { PhysicsParams } from '../PhysicsParams';
 
 /**

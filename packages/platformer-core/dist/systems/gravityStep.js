@@ -1,13 +1,7 @@
-/**
- * Pure function: apply gravity to velocity
- * Input: current vy, physics params, time delta
- * Output: new vy (capped at maxFallSpeed)
- */
+import { integrateAcceleration } from '../../../../vendor/arcade-runtime.mjs';
+/** Pure gravity integration delegated to the shared arcade numeric core. */
 export function gravityStep(vy, params, dt) {
-    return Math.min(params.maxFallSpeed, vy + params.gravity * dt);
+    return integrateAcceleration(vy, params.gravity, dt, -Infinity, params.maxFallSpeed);
 }
-/**
- * Pure function: decay velocity downward and reduce speed
- */
 export const gravityStepModule = { gravityStep };
 //# sourceMappingURL=gravityStep.js.map

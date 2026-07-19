@@ -92,7 +92,7 @@ agent:
     - Keep this original; avoid direct use of protected cyberpunk novel canon.
     - The user-facing artifact is the Vite production build published to dist/.
     - Data manifests are intended to survive extraction into a standalone library.
-    - Canvas2D remains production-authoritative; use the verified vendored arcade-pixi-runtime v0.4 render plan and bridge adapter for incremental migration.
+    - Canvas2D remains production-authoritative; use the verified vendored arcade-runtime v0.8 merged core/Pixi render plan and bridge adapter for incremental migration.
   tasks:
     - Continue replacing remaining generated fallback sheets with authored production animation sheets.
     - Split minigame engine into its own package when API stabilizes.

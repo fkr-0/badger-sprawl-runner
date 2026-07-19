@@ -1,8 +1,0 @@
-{
-  "package": "@arcade/pixi-runtime",
-  "version": "0.7.0",
-  "module": "arcade-pixi-runtime.mjs",
-  "types": "arcade-pixi-runtime.d.mts",
-  "sha256": "43240924071b8d005da19a4db07137c712d8f1bbdacab43d988716f9b0b3c304",
-  "typesSha256": "9b2ac86117b89b4543fb33973d372804942386e0478ad184be4cc12e3c36477c"
-}

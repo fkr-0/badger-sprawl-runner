@@ -1,6 +1,6 @@
 /** Shared arcade-core scene stack adapted to Badger's renderer context. */
 
-import { createSceneStack } from '../../../../vendor/arcade-core.mjs';
+import { createSceneStack } from '../../../../vendor/arcade-runtime.mjs';
 import type { Renderer } from '../renderer/Renderer';
 import type { EventBus } from './EventBus';
 

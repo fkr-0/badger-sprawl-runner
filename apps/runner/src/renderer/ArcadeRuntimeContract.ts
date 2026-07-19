@@ -3,9 +3,11 @@
  *
  * Simulation and sprite contracts remain unchanged while rendering passes migrate.
  */
-import { defineArcadeRenderPlan } from '../../../../vendor/arcade-pixi-runtime.mjs';
+import { defineArcadeRenderPlan } from '../../../../vendor/arcade-runtime.mjs';
 
-export const BADGER_ARCADE_PIXI_RUNTIME_VERSION = '0.5.0';
+export const BADGER_ARCADE_RUNTIME_VERSION = '0.8.0';
+/** @deprecated Use BADGER_ARCADE_RUNTIME_VERSION. */
+export const BADGER_ARCADE_PIXI_RUNTIME_VERSION = BADGER_ARCADE_RUNTIME_VERSION;
 
 export const BADGER_PIXI_LAYERS = [
 	'backdrop',

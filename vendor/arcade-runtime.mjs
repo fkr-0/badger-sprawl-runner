@@ -374,7 +374,7 @@ export function installArcadeRenderPlan(runtime, plan, implementations = {}) {
   for (const descriptor of plan) {
     const implementation = implementations[descriptor.name];
     if (!implementation) {
-      if (descriptor.required) throw new Error(`@arcade/pixi-runtime: required render pass "${descriptor.name}" has no implementation`);
+      if (descriptor.required) throw new Error(`@arcade/runtime: required render pass "${descriptor.name}" has no implementation`);
       continue;
     }
     const options = typeof implementation === 'function'
@@ -393,7 +393,7 @@ export function installArcadeRenderPlan(runtime, plan, implementations = {}) {
 }
 
 function invariant(value, message) {
-  if (!value) throw new Error(`@arcade/pixi-runtime: ${message}`);
+  if (!value) throw new Error(`@arcade/runtime: ${message}`);
 }
 
 function resolveMount(mount) {
@@ -472,7 +472,8 @@ export async function createArcadePixiRuntime(options) {
 
   const canvas = app.canvas;
   if (canvasId) canvas.id = canvasId;
-  canvas.dataset.arcadePixiRuntime = ARCADE_PIXI_RUNTIME_VERSION;
+  canvas.dataset.arcadeRuntime = ARCADE_RUNTIME_VERSION;
+  canvas.dataset.arcadePixiRuntime = ARCADE_PIXI_RUNTIME_VERSION; // compatibility probe
   canvas.dataset.arcadeLogicalSize = `${logicalWidth}x${logicalHeight}`;
   canvas.dataset.arcadeState = 'ready';
   canvas.dataset.contextState = 'ready';

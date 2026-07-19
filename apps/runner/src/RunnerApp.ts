@@ -1,5 +1,5 @@
-import { createArcadeFrameProfiler } from '../../../vendor/arcade-pixi-runtime.mjs';
-import type { ArcadePerformanceSummary } from '../../../vendor/arcade-pixi-runtime.mjs';
+import { createArcadeFrameProfiler } from '../../../vendor/arcade-runtime.mjs';
+import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
 import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
 import { type Scene, SceneManager } from './engine/SceneManager';

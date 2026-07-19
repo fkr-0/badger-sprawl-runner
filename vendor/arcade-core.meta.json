@@ -1,8 +1,0 @@
-{
-  "package": "@arcade/core",
-  "version": "0.1.0",
-  "module": "arcade-core.mjs",
-  "types": "arcade-core.d.mts",
-  "sha256": "904ea6f115e4870a99a6540205dd8cf600a591e58e4a71584c5e8e59f07a5390",
-  "typesSha256": "2f3c501cbf0dbf52a858e90d5dfb4726e2493ba15c721ba494ef69587c5ec69f"
-}

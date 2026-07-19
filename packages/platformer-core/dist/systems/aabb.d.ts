@@ -1,6 +1,4 @@
-/**
- * AABB collision test
- */
+/** Shared arcade-core AABB collision test. */
 export interface Rect {
     x: number;
     y: number;

@@ -2,7 +2,7 @@
  * Renderer - central canvas context wrapper and render coordination
  */
 
-import { createArcadeCameraTransform } from '../../../../vendor/arcade-pixi-runtime.mjs';
+import { createArcadeCameraTransform } from '../../../../vendor/arcade-runtime.mjs';
 import type { Player } from '../actors/MossBadger';
 import type { Camera } from '../systems/CameraSystem';
 import type { CombatEntity } from '../systems/CombatSystem';
@@ -472,8 +472,9 @@ export class Renderer {
 		bossTargetHeight: number;
 		bossToPlayerHeightRatio: number;
 	} {
-		const [playerFrameWidth, playerFrameHeight] = this.spriteRenderer
-			.getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet.frameSize ?? [48, 48];
+		const [playerFrameWidth, playerFrameHeight] = this.spriteRenderer.getSheet(
+			PLAYER_SPRITE_SHEET_ID
+		)?.sheet.frameSize ?? [48, 48];
 		return {
 			playerFrameWidth,
 			playerFrameHeight,

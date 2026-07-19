@@ -1,3 +1,4 @@
+import { approach, clampNumber } from '../../../../vendor/arcade-runtime.mjs';
 export function movementStep(input) {
     let { vx, vy, x, y, onGround, axisInput, isFastFalling, params, dt } = input;
     // Horizontal acceleration
@@ -5,11 +6,10 @@ export function movementStep(input) {
     vx += axisInput * accel * dt;
     // Friction on ground
     if (axisInput === 0 && onGround) {
-        const friction = Math.sign(vx) * params.friction * dt;
-        vx = Math.abs(friction) > Math.abs(vx) ? 0 : vx - friction;
+        vx = approach(vx, 0, params.friction * dt);
     }
     // Clamp speed
-    vx = Math.max(-params.maxRunSpeed, Math.min(params.maxRunSpeed, vx));
+    vx = clampNumber(vx, -params.maxRunSpeed, params.maxRunSpeed);
     // Fast fall multiplier
     if (isFastFalling && vy > 0) {
         vy += params.gravity * (params.fastFallMultiplier - 1) * dt;

@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
-import { createArcadePixiRuntime } from '../../../../vendor/arcade-pixi-runtime.mjs';
+import { createArcadePixiRuntime } from '../../../../vendor/arcade-runtime.mjs';
 import type {
 	ArcadePerformanceSummary,
 	ArcadePixiRuntime,
-} from '../../../../vendor/arcade-pixi-runtime.mjs';
+} from '../../../../vendor/arcade-runtime.mjs';
 import { installBadgerCanvasBridgePasses } from './ArcadeRuntimeAdapter';
 import { BADGER_PIXI_LAYERS } from './ArcadeRuntimeContract';
 import type { BadgerBridgePassName, BadgerRendererBridgeSink } from './Renderer';
