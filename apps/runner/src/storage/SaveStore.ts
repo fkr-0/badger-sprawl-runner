@@ -4,6 +4,10 @@ import {
 	type MetaState,
 	type StoryProgress,
 } from '../game/GameFlow';
+import {
+	createMemoryStorageAdapter,
+	createStorageAdapter,
+} from '../../../../vendor/arcade-runtime.mjs';
 import { STORY_PROGRESS_SCHEMA_VERSION, migrateStoryProgress } from '../game/StoryProgressMigration';
 
 export const SAVE_KEY = 'badger-sprawl-runner.save.v1';
@@ -44,20 +48,11 @@ export function loadGameFlow(driver: SaveDriver): GameFlow {
 }
 
 export function createLocalStorageSaveDriver(storage: Storage): SaveDriver {
-	return {
-		getItem: (key) => storage.getItem(key),
-		setItem: (key, value) => storage.setItem(key, value),
-	};
+	return createStorageAdapter(storage);
 }
 
 export function createMemorySaveDriver(seed: Record<string, string> = {}): SaveDriver {
-	const data = new Map(Object.entries(seed));
-	return {
-		getItem: (key) => data.get(key) ?? null,
-		setItem: (key, value) => {
-			data.set(key, value);
-		},
-	};
+	return createMemoryStorageAdapter(seed);
 }
 
 function sanitizeStoryProgress(progress: unknown): Partial<StoryProgress> {

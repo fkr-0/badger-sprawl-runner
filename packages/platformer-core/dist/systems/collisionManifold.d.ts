@@ -12,6 +12,8 @@ export interface CollisionManifold {
 export interface ManifoldBody extends Rect {
     id: string;
 }
+/** Shared deterministic manifold implementation with Badger-compatible types. */
 export declare function computeCollisionManifold(aBody: ManifoldBody, bBody: ManifoldBody): CollisionManifold | null;
+/** Shared deterministic manifold ordering with Badger-compatible types. */
 export declare function manifoldsFromSpatialPairs(pairs: readonly SpatialPair[]): CollisionManifold[];
 //# sourceMappingURL=collisionManifold.d.ts.map

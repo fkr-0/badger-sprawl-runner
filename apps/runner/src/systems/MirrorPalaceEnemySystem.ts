@@ -169,7 +169,7 @@ export class MirrorPalaceEnemySystem {
 			runtime.state === 'windup'
 				? 1 - Math.min(1, runtime.timer / Math.max(0.01, runtime.windupDuration))
 				: 0;
-		enemy.spriteSheetId = family === 'usher' ? 'enemy_chrome_bellhop' : 'enemy_mirror_sentinel';
+		enemy.spriteSheetId = family === 'usher' ? 'enemy_masque_duelist' : 'enemy_mirror_sentinel';
 		enemy.spriteAnimation =
 			runtime.state === 'windup'
 				? 'windup'

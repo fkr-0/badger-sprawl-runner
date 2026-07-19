@@ -177,7 +177,10 @@ The initial Chromium benchmark deliberately keeps Canvas as the default: uploadi
 | Melee | J |
 | Shoot | K |
 | Parry | L |
-| Context interaction: scan, synchronize, deliver invoice, triage | M |
+| Context interaction: scan, synchronize, deliver invoice, triage, open late-stage console | M |
+| FastType console | Type the shown repair line, Backspace to edit, Enter to submit |
+| Cargo router / broadcast composer | Arrow keys to focus/change clauses, 1–3 to select, Enter to submit |
+| Close an active late-stage console | Escape |
 | Use active item | E |
 | Select item | 1, 2, 3 |
 | Start selected story stage | R |
@@ -188,6 +191,8 @@ The initial Chromium benchmark deliberately keeps Canvas as the default: uploadi
 | Training kit | 1–4 |
 | Training reset / random-stage reroll | R / N |
 | Return to title | Escape |
+
+Late-stage consoles preserve verified work after a failed submission and grade results as `clean`, `recovered`, or `assisted`. After three failures, public assist pauses the timer and exposes incremental clues so the campaign cannot be blocked by a terminal challenge.
 
 ## Release commands
 
@@ -202,6 +207,7 @@ pnpm run test:e2e:drainmarket # Stage 2 acceptance in Chromium and Firefox
 pnpm run test:e2e:chrome-arcology # Stage 3 acceptance in Chromium and Firefox
 pnpm run test:e2e:mirror-palace # Chapter 4 story and animation acceptance
 pnpm run test:e2e:dub-colony # Chapter 5 vote, beat, companion, and boss acceptance
+pnpm run test:e2e:late-campaign # Chapters 6–8 dedicated minigames through the final ending card
 pnpm run test:e2e:progression # expanded item and four-track skill acceptance
 pnpm run test:e2e:training # random-stage dummy dojo and gameplay UI contracts in Chromium and Firefox
 pnpm run sprites:progression # regenerate extended item, pickup, and skill atlases

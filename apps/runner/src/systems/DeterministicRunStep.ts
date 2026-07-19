@@ -6,6 +6,10 @@ import {
 	type PhysicsWorldState,
 	type ProjectileHit,
 } from '@badger/platformer-core';
+import {
+	createSystemPipeline,
+	type SystemPipelineSnapshot,
+} from '../../../../vendor/arcade-runtime.mjs';
 import type { CombatEntity, CombatEvent } from './CombatSystem';
 import { resolveMaterialEventsAsCombat } from './PhysicsCombatBridge';
 import { resolveProjectileHitsAsCombat } from './ProjectileCombatBridge';
@@ -48,6 +52,19 @@ export interface DeterministicRunStepOutput {
 	combatEvents: CombatEvent[];
 	itemEvents: ItemUseEvent[];
 	frameHash: string;
+}
+
+type PhysicsStepResult = ReturnType<typeof stepPhysicsWorld>;
+type ItemProcessResult = ReturnType<typeof processItems>;
+
+interface DeterministicRunPipelineContext {
+	input: DeterministicRunStepInput;
+	nextTime: number;
+	combatEvents: CombatEvent[];
+	events: { onEvent: (event: CombatEvent) => void };
+	physicsStep?: PhysicsStepResult;
+	combatants: CombatEntity[];
+	itemResult?: ItemProcessResult;
 }
 
 function cloneCombatant(combatant: CombatEntity): CombatEntity {
@@ -121,47 +138,106 @@ function processItems(
 	return { items: nextItems, combatants: nextCombatants, events };
 }
 
+const deterministicRunPipeline = createSystemPipeline<DeterministicRunPipelineContext>({
+	phases: ['physics', 'state', 'contacts'],
+});
+
+deterministicRunPipeline.add(
+	'physics-world',
+	(context) => {
+		context.physicsStep = stepPhysicsWorld({
+			world: context.input.state.physics,
+			params: context.input.params,
+			dt: context.input.dt,
+			fluid: context.input.fluid,
+		});
+	},
+	{ phase: 'physics' }
+);
+deterministicRunPipeline.add(
+	'sync-combatants',
+	(context) => {
+		if (!context.physicsStep) throw new Error('Missing deterministic physics step');
+		context.combatants = syncCombatantsFromPhysics(
+			context.physicsStep.world,
+			context.input.state.combatants.map(cloneCombatant)
+		);
+	},
+	{ phase: 'state' }
+);
+deterministicRunPipeline.add(
+	'item-state',
+	(context) => {
+		context.itemResult = processItems(
+			context.input.state.items,
+			context.combatants,
+			context.input.dt,
+			context.nextTime
+		);
+		context.combatants = context.itemResult.combatants;
+	},
+	{ phase: 'state', after: 'sync-combatants' }
+);
+deterministicRunPipeline.add(
+	'material-contacts',
+	(context) => {
+		if (!context.physicsStep) throw new Error('Missing deterministic physics step');
+		resolveMaterialEventsAsCombat({
+			materialEvents: context.physicsStep.materialEvents,
+			combatants: context.combatants,
+			time: context.nextTime,
+			events: context.events,
+			statusByMaterialTag: context.input.statusByMaterialTag,
+		});
+	},
+	{ phase: 'contacts' }
+);
+deterministicRunPipeline.add(
+	'projectile-contacts',
+	(context) => {
+		if (!context.physicsStep) throw new Error('Missing deterministic physics step');
+		const attacker =
+			context.combatants.find(
+				(combatant) => combatant.id === context.input.projectileAttackerId
+			) ?? context.combatants[0];
+		if (!attacker || context.physicsStep.projectileHits.length === 0) return;
+		resolveProjectileHitsAsCombat({
+			attacker,
+			targets: context.combatants,
+			hits: context.physicsStep.projectileHits,
+			time: context.nextTime,
+			events: context.events,
+			statusByProjectileKind: context.input.statusByProjectileKind,
+		});
+	},
+	{ phase: 'contacts', after: 'material-contacts' }
+);
+
+export function getDeterministicRunPipelineSnapshot(): SystemPipelineSnapshot {
+	return deterministicRunPipeline.snapshot();
+}
+
 export function stepDeterministicRun(input: DeterministicRunStepInput): DeterministicRunStepOutput {
 	if (!Number.isFinite(input.dt) || input.dt < 0) throw new Error(`Invalid run dt: ${input.dt}`);
 	const nextTime = input.state.time + input.dt;
 	const combatEvents: CombatEvent[] = [];
 	const events = { onEvent: (event: CombatEvent) => combatEvents.push(event) };
-
-	const physicsStep = stepPhysicsWorld({
-		world: input.state.physics,
-		params: input.params,
-		dt: input.dt,
-		fluid: input.fluid,
-	});
-
-	let combatants = syncCombatantsFromPhysics(physicsStep.world, input.state.combatants.map(cloneCombatant));
-	const itemResult = processItems(input.state.items, combatants, input.dt, nextTime);
-	combatants = itemResult.combatants;
-
-	resolveMaterialEventsAsCombat({
-		materialEvents: physicsStep.materialEvents,
-		combatants,
-		time: nextTime,
+	const context: DeterministicRunPipelineContext = {
+		input,
+		nextTime,
+		combatEvents,
 		events,
-		statusByMaterialTag: input.statusByMaterialTag,
-	});
-
-	const attacker = combatants.find((combatant) => combatant.id === input.projectileAttackerId) ?? combatants[0];
-	if (attacker && physicsStep.projectileHits.length > 0) {
-		resolveProjectileHitsAsCombat({
-			attacker,
-			targets: combatants,
-			hits: physicsStep.projectileHits,
-			time: nextTime,
-			events,
-			statusByProjectileKind: input.statusByProjectileKind,
-		});
+		combatants: [],
+	};
+	deterministicRunPipeline.run(context);
+	if (!context.physicsStep || !context.itemResult) {
+		throw new Error('Deterministic run pipeline did not produce a complete frame');
 	}
 
 	const state: DeterministicRunState = {
-		physics: physicsStep.world,
-		combatants,
-		items: itemResult.items,
+		physics: context.physicsStep.world,
+		combatants: context.combatants,
+		items: context.itemResult.items,
 		tick: input.state.tick + 1,
 		time: nextTime,
 	};
@@ -169,7 +245,7 @@ export function stepDeterministicRun(input: DeterministicRunStepInput): Determin
 	return {
 		state,
 		combatEvents,
-		itemEvents: itemResult.events,
+		itemEvents: context.itemResult.events,
 		frameHash: deterministicHash(state),
 	};
 }

@@ -5,7 +5,11 @@ import {
 } from '@badger/platformer-core';
 import { describe, expect, it } from 'vitest';
 import type { CombatEntity } from './CombatSystem';
-import { type DeterministicRunState, stepDeterministicRun } from './DeterministicRunStep';
+import {
+	type DeterministicRunState,
+	getDeterministicRunPipelineSnapshot,
+	stepDeterministicRun,
+} from './DeterministicRunStep';
 import { type ItemUseDefinition, createItemUseState } from './ItemUseSystem';
 
 function actor(overrides: Partial<PhysicsActorState> = {}): PhysicsActorState {
@@ -122,6 +126,25 @@ function state(): DeterministicRunState {
 }
 
 describe('DeterministicRunStep', () => {
+	it('runs the integrated frame through the shared ordered system pipeline', () => {
+		const beforeRuns = getDeterministicRunPipelineSnapshot().runs;
+		stepDeterministicRun({
+			state: state(),
+			params: defaultParams,
+			dt: 0.1,
+			projectileAttackerId: 'player',
+		});
+		const snapshot = getDeterministicRunPipelineSnapshot();
+		expect(snapshot.runs).toBe(beforeRuns + 1);
+		expect(snapshot.systems.map((system) => system.name)).toEqual([
+			'physics-world',
+			'sync-combatants',
+			'item-state',
+			'material-contacts',
+			'projectile-contacts',
+		]);
+	});
+
 	it('replays the same integrated frame into the same state hash', () => {
 		const first = stepDeterministicRun({
 			state: state(),

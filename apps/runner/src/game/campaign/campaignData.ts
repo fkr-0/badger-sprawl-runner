@@ -172,9 +172,9 @@ export const CAMPAIGN: CampaignDefinition = {
 			dramaticQuestion: 'Who profits from injury?',
 			placard: 'A market under the street sells medicine priced by fear.',
 			briefing: {
-				speaker: 'Auntie Subharmonic',
+				speaker: 'DJ Calculus',
 				lines: [
-					'The drainmarket has stims, rumors, and knives with invoices.',
+					'Four bars, two breaks, and a clinic billing fear by the measure.',
 					'Take the cache; leave the people less afraid than you found them.',
 				],
 			},

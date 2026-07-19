@@ -6,6 +6,14 @@ import type { GameFlow } from './GameFlow';
 import { buildStageRuntimeConfig } from './StageRuntimeConfig';
 import { buildStoryBalanceRules } from './StoryBalanceRules';
 
+function phaseLabel(value: string): string {
+	return value
+		.split(/[-_]/)
+		.filter(Boolean)
+		.map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`)
+		.join(' ');
+}
+
 export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions {
 	const stage = flow.getCurrentStage();
 	const storyProgress = flow.getStoryProgress();
@@ -32,6 +40,20 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 				gameplayHooks: branchGameplayHooks,
 			})
 		: [];
+	const boss = stage?.boss;
+	const bossPhases =
+		boss?.phases?.map((phase) => ({ ...phase })) ??
+		boss?.behavior?.phases.map((phase) => ({
+			id: phase.id,
+			label: phaseLabel(phase.id),
+			mechanic: phase.mechanic,
+		})) ??
+		boss?.hackDuel?.mechanics.map((mechanic, index) => ({
+			id: `hack-duel-${index + 1}`,
+			label: `${boss.hackDuel?.label ?? 'Hack Duel'} ${index + 1}`,
+			mechanic,
+		})) ??
+		[];
 
 	return {
 		stageId,
@@ -45,13 +67,13 @@ export function buildStageRunSceneOptions(flow: GameFlow): StageRunSceneOptions 
 		skillRanks: meta.skillRanks,
 		generatedEnemyPacks,
 		generatedSideRooms,
-		bossPhases: stage?.boss?.phases?.map((phase) => ({ ...phase })) ?? [],
-		bossPlaceholder: stage?.boss
+		bossPhases,
+		bossPlaceholder: boss
 			? {
-					id: stage.boss.id,
-					name: stage.boss.name,
-					argument: stage.boss.argument,
-					phaseCount: stage.boss.phaseCount,
+					id: boss.id,
+					name: boss.name,
+					argument: boss.argument,
+					phaseCount: boss.phaseCount,
 				}
 			: undefined,
 		tutorialBeats: stage?.tutorialBeats?.map((beat) => ({ ...beat })) ?? [],

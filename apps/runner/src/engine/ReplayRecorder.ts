@@ -1,6 +1,8 @@
 /**
- * Input frame recording for debug and determinism
+ * Compatibility wrapper over the shared ticked command recorder.
  */
+
+import { createCommandRecorder } from '../../../../vendor/arcade-runtime.mjs';
 
 export interface InputFrame {
 	frame: number;
@@ -8,22 +10,23 @@ export interface InputFrame {
 }
 
 export class ReplayRecorder {
-	private frames: InputFrame[] = [];
-	private frameCount = 0;
+	private readonly recorder = createCommandRecorder<Record<string, boolean>>({
+		metadata: { game: 'badger-sprawl-runner', stream: 'input-actions' },
+	});
 
 	record(actionMap: Record<string, boolean>): void {
-		this.frames.push({
-			frame: this.frameCount++,
-			actionMap: { ...actionMap },
-		});
+		this.recorder.record({ ...actionMap });
+		this.recorder.advance();
 	}
 
 	getRecording(): InputFrame[] {
-		return [...this.frames];
+		return this.recorder.snapshot().entries.map((entry) => ({
+			frame: entry.tick,
+			actionMap: { ...entry.command },
+		}));
 	}
 
 	clear(): void {
-		this.frames = [];
-		this.frameCount = 0;
+		this.recorder.clear();
 	}
 }

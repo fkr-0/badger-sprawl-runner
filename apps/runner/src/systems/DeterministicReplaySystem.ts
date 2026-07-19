@@ -1,4 +1,5 @@
 import type { PhysicsParams, ProjectileHit } from '@badger/platformer-core';
+import { verifyReplayHashes as verifyArcadeReplayHashes } from '../../../../vendor/arcade-runtime.mjs';
 import {
 	stepDeterministicRun,
 	type DeterministicRunState,
@@ -103,12 +104,5 @@ export function replayDeterministicRun(
 }
 
 export function verifyReplayHashes(actual: ReplayResult, expectedHashes: readonly string[]): ReplayMismatch[] {
-	const mismatches: ReplayMismatch[] = [];
-	const count = Math.max(actual.frames.length, expectedHashes.length);
-	for (let index = 0; index < count; index += 1) {
-		const actualHash = actual.frames[index]?.frameHash ?? '<missing>';
-		const expectedHash = expectedHashes[index] ?? '<missing>';
-		if (actualHash !== expectedHash) mismatches.push({ index, expected: expectedHash, actual: actualHash });
-	}
-	return mismatches;
+	return verifyArcadeReplayHashes(actual, expectedHashes);
 }

@@ -24,5 +24,6 @@ export interface SweepResult {
     vy: number;
     hit: SweepHit | null;
 }
+/** Shared swept-AABB implementation with Badger's existing public contract. */
 export declare function sweepAabb(input: SweepInput): SweepResult;
 //# sourceMappingURL=sweptAabb.d.ts.map

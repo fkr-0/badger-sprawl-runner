@@ -177,4 +177,39 @@ describe('StoryFlowScene stage launch', () => {
 			})
 		);
 	});
+
+	it('returns to the title after the final debrief marks the campaign complete', () => {
+		const flow = createGameFlow(undefined, { currentStageId: 'asteroid-redoubt' });
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		expect(flow.chooseStageChoice(2)).toMatchObject({
+			ok: true,
+			resultFlag: 'broadcast_publish_tools',
+		});
+		flow.completeStage();
+		const onReturnToTitle = vi.fn();
+		const onAutosave = vi.fn(() => ({
+			reason: 'stage-complete' as const,
+			label: 'Campaign complete',
+			timestamp: 84,
+		}));
+		const scene = new StoryFlowScene(flow, { onReturnToTitle, onAutosave });
+		scene.onEnter({
+			eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
+			canvas: document.createElement('canvas'),
+		});
+
+		for (let safety = 0; safety < 8 && flow.getState().mode === 'debrief'; safety += 1) {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+		}
+		scene.onExit();
+
+		expect(flow.getStoryProgress()).toMatchObject({
+			campaignComplete: true,
+			finalBroadcastDoctrine: 'publish-tools',
+		});
+		expect(flow.getState()).toEqual({ mode: 'menu' });
+		expect(onAutosave).toHaveBeenCalledWith('stage-complete');
+		expect(onReturnToTitle).toHaveBeenCalledOnce();
+	});
 });

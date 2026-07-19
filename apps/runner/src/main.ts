@@ -33,6 +33,7 @@ export interface BadgerTestHarness {
 		StageRunScene['getMirrorPalaceObjectiveSnapshot']
 	> | null;
 	getDubColonyObjectives: () => ReturnType<StageRunScene['getDubColonyObjectiveSnapshot']> | null;
+	getLateStageObjectives: () => ReturnType<StageRunScene['getLateStageObjectiveSnapshot']> | null;
 	getBossPhase: () => ReturnType<StageRunScene['getBossPhaseSnapshot']> | null;
 	getCaptainGrin: () => ReturnType<StageRunScene['getCaptainGrinSnapshot']> | null;
 	getKnifeDroneNest: () => ReturnType<StageRunScene['getKnifeDroneNestSnapshot']> | null;
@@ -115,6 +116,12 @@ function installTestHarness(app: RunnerApp): void {
 			const s = app.getCurrentScene();
 			return s && 'getDubColonyObjectiveSnapshot' in s
 				? (s as StageRunScene).getDubColonyObjectiveSnapshot()
+				: null;
+		},
+		getLateStageObjectives: () => {
+			const s = app.getCurrentScene();
+			return s && 'getLateStageObjectiveSnapshot' in s
+				? (s as StageRunScene).getLateStageObjectiveSnapshot()
 				: null;
 		},
 		getStoryPresentation: () => {

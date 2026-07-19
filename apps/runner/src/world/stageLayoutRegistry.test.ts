@@ -46,6 +46,24 @@ describe('stageLayoutRegistry', () => {
 		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'knife_drone')).toBe(true);
 	});
 
+	it('places authored sprite rosters into the three unfinished late stages', () => {
+		expect(cloneStageLayout('antenna-barrens').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
+			'enemy_error_mite',
+			'enemy_manifest_monk',
+			'enemy_debt_wraith',
+		]);
+		expect(cloneStageLayout('orbital-lift').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
+			'enemy_customs_lancer',
+			'enemy_manifest_monk',
+			'enemy_vane_air_bailiff',
+		]);
+		expect(cloneStageLayout('asteroid-redoubt').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
+			'enemy_command_lock_partisan',
+			'enemy_vane_air_bailiff',
+			'enemy_command_lock_partisan',
+		]);
+	});
+
 	it('maps story payload pickups to the requested stage payload', () => {
 		const layout = cloneStageLayout('orbital-lift');
 		const payload = layout.pickups.find((pickup) => pickup.persistence === 'story_payload');

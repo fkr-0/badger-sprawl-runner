@@ -1,16 +1,14 @@
+import {
+	type TimedEffectState,
+	applyTimedEffect,
+	hasTimedEffect,
+	stepTimedEffects,
+} from '../../../../vendor/arcade-runtime.mjs';
+
 export type StatusEffectKind = 'bleed' | 'burn' | 'emp' | 'slow' | 'stagger' | 'regen' | 'shield';
 
-export interface StatusEffect {
-	id: string;
-	kind: StatusEffectKind;
+export interface StatusEffect extends TimedEffectState<StatusEffectKind> {
 	sourceId: string;
-	duration: number;
-	remaining: number;
-	stacks: number;
-	maxStacks: number;
-	tickInterval?: number;
-	tickTimer?: number;
-	magnitude: number;
 }
 
 export interface StatusTarget {
@@ -42,59 +40,80 @@ function cloneEffect(effect: StatusEffect): StatusEffect {
 }
 
 export function applyStatusEffect(target: StatusTarget, incoming: StatusEffect): StatusStepResult {
-	const effects = (target.statusEffects ?? []).map(cloneEffect);
-	const existing = effects.find((effect) => effect.id === incoming.id || effect.kind === incoming.kind);
-	const events: StatusEvent[] = [];
-
-	if (existing) {
-		existing.remaining = Math.max(existing.remaining, incoming.duration);
-		existing.duration = Math.max(existing.duration, incoming.duration);
-		existing.stacks = Math.min(existing.maxStacks, existing.stacks + incoming.stacks);
-		existing.magnitude = Math.max(existing.magnitude, incoming.magnitude);
-		events.push({ kind: 'stacked', targetId: target.id, effectId: existing.id, effectKind: existing.kind });
-	} else {
-		effects.push({ ...incoming, remaining: incoming.duration, tickTimer: incoming.tickInterval ?? incoming.tickTimer ?? 0 });
-		events.push({ kind: 'applied', targetId: target.id, effectId: incoming.id, effectKind: incoming.kind });
-	}
-
-	return { target: { ...target, statusEffects: effects }, events };
+	const applied = applyTimedEffect(target.statusEffects ?? [], incoming, {
+		match: 'id-or-kind',
+		merge: 'stack',
+		refreshDuration: 'max',
+		magnitude: 'max',
+	});
+	const effect = applied.event.effect;
+	return {
+		target: {
+			...target,
+			statusEffects: applied.effects.map((entry) => cloneEffect(entry as StatusEffect)),
+		},
+		events: [
+			{
+				kind: applied.event.kind === 'stacked' ? 'stacked' : 'applied',
+				targetId: target.id,
+				effectId: effect.id,
+				effectKind: effect.kind,
+			},
+		],
+	};
 }
 
 export function stepStatusEffects(target: StatusTarget, dt: number): StatusStepResult {
 	if (!Number.isFinite(dt) || dt < 0) throw new Error(`Invalid status dt: ${dt}`);
 
+	const stepped = stepTimedEffects(target.statusEffects ?? [], dt);
 	const events: StatusEvent[] = [];
-	const surviving: StatusEffect[] = [];
 	const next: StatusTarget = { ...target, statusEffects: [] };
 
-	for (const effect of target.statusEffects ?? []) {
-		const stepped = { ...effect, remaining: Math.max(0, effect.remaining - dt) };
-		if (stepped.tickInterval !== undefined) {
-			stepped.tickTimer = (stepped.tickTimer ?? stepped.tickInterval) - dt;
-			while ((stepped.tickTimer ?? 0) <= 0 && stepped.remaining > 0) {
-				const amount = stepped.magnitude * stepped.stacks;
-				if (stepped.kind === 'bleed' || stepped.kind === 'burn') next.hp = Math.max(0, next.hp - amount);
-				if (stepped.kind === 'regen') next.hp = Math.min(next.maxHp, next.hp + amount);
-				if (stepped.kind === 'emp') next.stun = Math.max(next.stun, amount);
-				events.push({ kind: 'tick', targetId: target.id, effectId: stepped.id, effectKind: stepped.kind, amount });
-				stepped.tickTimer = (stepped.tickTimer ?? 0) + stepped.tickInterval;
-			}
+	for (const event of stepped.events) {
+		const effect = event.effect as StatusEffect;
+		if (event.kind === 'tick') {
+			const amount = effect.magnitude * effect.stacks;
+			if (effect.kind === 'bleed' || effect.kind === 'burn')
+				next.hp = Math.max(0, next.hp - amount);
+			if (effect.kind === 'regen') next.hp = Math.min(next.maxHp, next.hp + amount);
+			if (effect.kind === 'emp') next.stun = Math.max(next.stun, amount);
+			events.push({
+				kind: 'tick',
+				targetId: target.id,
+				effectId: effect.id,
+				effectKind: effect.kind,
+				amount,
+			});
+		} else {
+			events.push({
+				kind: 'expired',
+				targetId: target.id,
+				effectId: effect.id,
+				effectKind: effect.kind,
+			});
 		}
-
-		if (stepped.kind === 'slow') {
-			const multiplier = Math.max(0, 1 - stepped.magnitude * stepped.stacks);
-			next.vx *= multiplier;
-		}
-		if (stepped.kind === 'stagger') next.stun = Math.max(next.stun, stepped.magnitude * stepped.stacks);
-		if (stepped.kind === 'shield') next.invuln = Math.max(next.invuln, stepped.magnitude);
-
-		if (stepped.remaining > 0) surviving.push(stepped);
-		else events.push({ kind: 'expired', targetId: target.id, effectId: stepped.id, effectKind: stepped.kind });
 	}
 
-	return { target: { ...next, statusEffects: surviving }, events };
+	for (const effect of stepped.advanced as readonly StatusEffect[]) {
+		if (effect.kind === 'slow') {
+			const multiplier = Math.max(0, 1 - effect.magnitude * effect.stacks);
+			next.vx *= multiplier;
+		}
+		if (effect.kind === 'stagger')
+			next.stun = Math.max(next.stun, effect.magnitude * effect.stacks);
+		if (effect.kind === 'shield') next.invuln = Math.max(next.invuln, effect.magnitude);
+	}
+
+	return {
+		target: {
+			...next,
+			statusEffects: stepped.effects.map((effect) => cloneEffect(effect as StatusEffect)),
+		},
+		events,
+	};
 }
 
 export function hasStatus(target: StatusTarget, kind: StatusEffectKind): boolean {
-	return Boolean(target.statusEffects?.some((effect) => effect.kind === kind && effect.remaining > 0));
+	return hasTimedEffect(target.statusEffects ?? [], kind, { field: 'kind' });
 }

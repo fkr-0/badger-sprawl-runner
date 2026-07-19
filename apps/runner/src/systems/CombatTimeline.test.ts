@@ -51,4 +51,12 @@ describe('CombatTimeline', () => {
 
 		expect(run()).toEqual(run());
 	});
+
+	it('anchors relative waits when they are enqueued instead of sliding them every step', () => {
+		const timeline = enqueueTimelineAction(createCombatTimeline(), { kind: 'wait', duration: 0.2 });
+		const early = stepCombatTimeline(timeline, [], 0.1);
+		expect(early.processed).toEqual([]);
+		const due = stepCombatTimeline(early.state, [], 0.1);
+		expect(due.processed).toEqual([{ kind: 'wait', duration: 0.2, at: 0.2 }]);
+	});
 });

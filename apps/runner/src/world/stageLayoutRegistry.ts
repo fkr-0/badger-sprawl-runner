@@ -1,3 +1,4 @@
+import { getLateStageEnemySpriteSheet } from '../game/LateStageSpriteBindings';
 import { cloneChromeArcologyLayout } from './chromeArcologyLayout';
 import { cloneDrainmarketLayout } from './drainmarketLayout';
 import { cloneDubColonyLayout } from './dubColonyLayout';
@@ -108,6 +109,8 @@ export function cloneStageLayout(stageId = 'lower-sprawl'): StageLayout {
 			x: enemy.x + theme.accentOffset + index * 16,
 			hp: enemy.hp + theme.enemyHpBonus,
 			maxHp: enemy.maxHp + theme.enemyHpBonus,
+			spriteSheetId: getLateStageEnemySpriteSheet(runtimeStageId, index),
+			spriteAnimation: 'idle',
 		})),
 	};
 }

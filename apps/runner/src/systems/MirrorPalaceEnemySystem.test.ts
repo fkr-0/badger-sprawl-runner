@@ -33,7 +33,7 @@ describe('MirrorPalaceEnemySystem', () => {
 		const events = system.step([usher], player, 0.5, combat);
 
 		expect(events).toContainEqual({ kind: 'enemy-telegraph', enemyId: 'usher', attack: 'applause-lunge' });
-		expect(usher.spriteSheetId).toBe('enemy_chrome_bellhop');
+		expect(usher.spriteSheetId).toBe('enemy_masque_duelist');
 		expect(usher.spriteAnimation).toBe('windup');
 	});
 

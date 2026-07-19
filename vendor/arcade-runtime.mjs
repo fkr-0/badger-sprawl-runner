@@ -1,4 +1,7 @@
-export const ARCADE_RUNTIME_VERSION = '0.10.0';
+// GENERATED FILE — DO NOT EDIT DIRECTLY.
+// Edit source/runtime/*.js.inc and run `npm run source:build`.
+
+export const ARCADE_RUNTIME_VERSION = '1.4.1';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -368,6 +371,1095 @@ export function getElapsedCooldownStatus(now, lastTriggeredAt, duration) {
     remaining,
     progress: resolvedDuration <= 0 ? 1 : clampNumber(elapsed / resolvedDuration, 0, 1),
   };
+}
+
+const DEFAULT_SNAPSHOT_PRECISION = 6;
+
+function normalizeSnapshotNumber(value, precision) {
+  if (!Number.isFinite(value)) return 0;
+  const scale = 10 ** precision;
+  const rounded = Math.round(value * scale) / scale;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function isPlainSnapshotObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function stableSnapshotValue(value, options, seen, path) {
+  const precision = Math.max(0, Math.floor(finiteNumber(options.precision, DEFAULT_SNAPSHOT_PRECISION)));
+  const ignore = options.ignoreKeysSet;
+  if (value === null) return null;
+  if (typeof value === 'number') return normalizeSnapshotNumber(value, precision);
+  if (typeof value === 'boolean' || typeof value === 'string') return value;
+  coreInvariant(value !== undefined, `snapshot value at ${path} is undefined`);
+  coreInvariant(typeof value === 'object', `snapshot value at ${path} must be JSON-compatible`);
+  coreInvariant(!seen.has(value), `snapshot value at ${path} contains a cycle`);
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      return value.map((entry, index) => stableSnapshotValue(entry, options, seen, `${path}[${index}]`));
+    }
+    coreInvariant(isPlainSnapshotObject(value), `snapshot value at ${path} must be a plain object`);
+    const sorted = {};
+    for (const key of Object.keys(value).sort()) {
+      if (ignore.has(key) || value[key] === undefined) continue;
+      sorted[key] = stableSnapshotValue(value[key], options, seen, path === '$' ? key : `${path}.${key}`);
+    }
+    return sorted;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+export function stableSnapshot(value, options = {}) {
+  return stableSnapshotValue(value, {
+    precision: options.precision,
+    ignoreKeysSet: new Set(options.ignoreKeys ?? []),
+  }, new WeakSet(), '$');
+}
+
+export function stableSnapshotString(value, options = {}) {
+  return JSON.stringify(stableSnapshot(value, options));
+}
+
+export function fnv1a32(input) {
+  const text = String(input ?? '');
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+export function deterministicHash(value, options = {}) {
+  return fnv1a32(stableSnapshotString(value, options));
+}
+
+function cloneCommandValue(value, path = '$', seen = new WeakSet()) {
+  if (value === null || typeof value === 'boolean' || typeof value === 'string') return value;
+  if (typeof value === 'number') {
+    coreInvariant(Number.isFinite(value), `command value at ${path} must be finite`);
+    return Object.is(value, -0) ? 0 : value;
+  }
+  coreInvariant(value !== undefined, `command value at ${path} is undefined`);
+  coreInvariant(typeof value === 'object', `command value at ${path} must be JSON-compatible`);
+  coreInvariant(!seen.has(value), `command value at ${path} contains a cycle`);
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      return value.map((entry, index) => cloneCommandValue(entry, `${path}[${index}]`, seen));
+    }
+    coreInvariant(isPlainSnapshotObject(value), `command value at ${path} must be a plain object`);
+    const cloned = {};
+    for (const key of Object.keys(value).sort()) {
+      if (value[key] === undefined) continue;
+      cloned[key] = cloneCommandValue(value[key], path === '$' ? key : `${path}.${key}`, seen);
+    }
+    return cloned;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+function commandTick(value, label) {
+  const tick = Number(value);
+  coreInvariant(Number.isInteger(tick) && tick >= 0, `${label} must be a non-negative integer`);
+  return tick;
+}
+
+function normalizeCommandStream(stream) {
+  coreInvariant(stream && typeof stream === 'object', 'command stream must be an object');
+  coreInvariant(Number(stream.version) === 1, 'command stream version must be 1');
+  const startTick = commandTick(stream.startTick ?? 0, 'command stream startTick');
+  const endTick = commandTick(stream.endTick ?? startTick, 'command stream endTick');
+  coreInvariant(endTick >= startTick, 'command stream endTick must not precede startTick');
+  coreInvariant(Array.isArray(stream.entries), 'command stream entries must be an array');
+  let previousTick = startTick;
+  let previousSequence = -1;
+  const entries = stream.entries.map((entry, index) => {
+    coreInvariant(entry && typeof entry === 'object', `command entry ${index} must be an object`);
+    const tick = commandTick(entry.tick, `command entry ${index} tick`);
+    const sequence = commandTick(entry.sequence ?? index, `command entry ${index} sequence`);
+    coreInvariant(tick >= startTick && tick <= endTick, `command entry ${index} tick is outside the stream range`);
+    coreInvariant(tick >= previousTick, `command entry ${index} tick must be monotonic`);
+    coreInvariant(sequence > previousSequence, `command entry ${index} sequence must be strictly increasing`);
+    previousTick = tick;
+    previousSequence = sequence;
+    return { tick, sequence, command: cloneCommandValue(entry.command) };
+  });
+  return {
+    version: 1,
+    startTick,
+    endTick,
+    metadata: stream.metadata === undefined ? null : cloneCommandValue(stream.metadata),
+    entries,
+  };
+}
+
+export function createCommandRecorder(options = {}) {
+  const originTick = commandTick(options.startTick ?? 0, 'command recorder startTick');
+  const capacity = options.capacity === undefined
+    ? Number.POSITIVE_INFINITY
+    : Math.max(0, Math.floor(finiteNumber(options.capacity, 0)));
+  const metadata = options.metadata === undefined ? null : cloneCommandValue(options.metadata);
+  let tick = originTick;
+  let sequence = 0;
+  let entries = [];
+
+  const recorder = {
+    record(command, atTick = tick) {
+      const resolvedTick = commandTick(atTick, 'command tick');
+      const previousTick = entries.at(-1)?.tick ?? originTick;
+      coreInvariant(resolvedTick >= previousTick, 'recorded command ticks must be monotonic');
+      const entry = {
+        tick: resolvedTick,
+        sequence: sequence++,
+        command: cloneCommandValue(command),
+      };
+      if (capacity > 0) {
+        entries.push(entry);
+        if (entries.length > capacity) entries.splice(0, entries.length - capacity);
+      }
+      tick = Math.max(tick, resolvedTick);
+      return { ...entry, command: cloneCommandValue(entry.command) };
+    },
+    advance(amount = 1) {
+      const delta = commandTick(amount, 'command recorder advance');
+      tick += delta;
+      return tick;
+    },
+    setTick(nextTick) {
+      const resolvedTick = commandTick(nextTick, 'command recorder tick');
+      const minimum = entries.at(-1)?.tick ?? originTick;
+      coreInvariant(resolvedTick >= minimum, 'command recorder tick cannot move before recorded commands');
+      tick = resolvedTick;
+      return tick;
+    },
+    snapshot() {
+      return normalizeCommandStream({
+        version: 1,
+        startTick: entries[0]?.tick ?? originTick,
+        endTick: Math.max(tick, entries.at(-1)?.tick ?? originTick),
+        metadata,
+        entries,
+      });
+    },
+    serialize() {
+      return serializeCommandStream(recorder.snapshot());
+    },
+    clear(nextTick = originTick) {
+      tick = commandTick(nextTick, 'command recorder clear tick');
+      sequence = 0;
+      entries = [];
+      return recorder;
+    },
+    get tick() {
+      return tick;
+    },
+    get size() {
+      return entries.length;
+    },
+  };
+  return recorder;
+}
+
+export function serializeCommandStream(stream) {
+  return JSON.stringify(normalizeCommandStream(stream));
+}
+
+export function parseCommandStream(serialized) {
+  coreInvariant(typeof serialized === 'string', 'serialized command stream must be a string');
+  let parsed;
+  try {
+    parsed = JSON.parse(serialized);
+  } catch (error) {
+    throw new Error(`@arcade/runtime: invalid command stream JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  return normalizeCommandStream(parsed);
+}
+
+export function replayCommandStream(options = {}) {
+  coreInvariant(typeof options.reduce === 'function', 'command replay requires a reduce function');
+  const stream = typeof options.stream === 'string'
+    ? parseCommandStream(options.stream)
+    : normalizeCommandStream(options.stream);
+  const snapshotState = options.snapshot ?? ((state) => state);
+  coreInvariant(typeof snapshotState === 'function', 'command replay snapshot must be a function');
+  let state = options.cloneInitialState ? options.cloneInitialState(options.initialState) : options.initialState;
+  const frames = [];
+  for (const [index, entry] of stream.entries.entries()) {
+    const context = Object.freeze({
+      index,
+      tick: entry.tick,
+      sequence: entry.sequence,
+      command: entry.command,
+      stream,
+    });
+    state = options.reduce(state, cloneCommandValue(entry.command), context);
+    const snapshot = stableSnapshot(snapshotState(state, context), options.hashOptions);
+    frames.push({
+      index,
+      tick: entry.tick,
+      sequence: entry.sequence,
+      hash: fnv1a32(JSON.stringify(snapshot)),
+      ...(options.includeSnapshots ? { snapshot } : {}),
+    });
+  }
+  return {
+    stream,
+    finalState: state,
+    frames,
+    finalHash: frames.at(-1)?.hash ?? deterministicHash(snapshotState(state, Object.freeze({
+      index: -1,
+      tick: stream.startTick,
+      sequence: -1,
+      command: null,
+      stream,
+    })), options.hashOptions),
+  };
+}
+
+export function verifyReplayHashes(actual, expectedHashes) {
+  const frames = Array.isArray(actual) ? actual : actual?.frames ?? [];
+  coreInvariant(Array.isArray(frames), 'replay frames must be an array');
+  coreInvariant(Array.isArray(expectedHashes), 'expected replay hashes must be an array');
+  const mismatches = [];
+  const count = Math.max(frames.length, expectedHashes.length);
+  for (let index = 0; index < count; index += 1) {
+    const frame = frames[index];
+    const actualHash = frame?.hash ?? frame?.frameHash ?? '<missing>';
+    const expectedHash = expectedHashes[index] ?? '<missing>';
+    if (actualHash !== expectedHash) mismatches.push({ index, expected: expectedHash, actual: actualHash });
+  }
+  return mismatches;
+}
+
+function snapshotPathMatches(path, ignorePaths) {
+  return ignorePaths.some((ignore) => path === ignore || path.startsWith(`${ignore}.`) || path.startsWith(`${ignore}[`));
+}
+
+function snapshotObjectKeys(left, right) {
+  const keys = new Set();
+  if (isPlainSnapshotObject(left)) for (const key of Object.keys(left)) keys.add(key);
+  if (isPlainSnapshotObject(right)) for (const key of Object.keys(right)) keys.add(key);
+  return [...keys].sort((a, b) => a.localeCompare(b));
+}
+
+function diffSnapshotValues(left, right, path, ignorePaths, entries) {
+  if (path && snapshotPathMatches(path, ignorePaths)) return;
+  if (JSON.stringify(left) === JSON.stringify(right)) return;
+  const leftIsArray = Array.isArray(left);
+  const rightIsArray = Array.isArray(right);
+  if (leftIsArray || rightIsArray) {
+    const count = Math.max(leftIsArray ? left.length : 0, rightIsArray ? right.length : 0);
+    for (let index = 0; index < count; index += 1) {
+      diffSnapshotValues(leftIsArray ? left[index] : undefined, rightIsArray ? right[index] : undefined, `${path}[${index}]`, ignorePaths, entries);
+    }
+    return;
+  }
+  const leftIsObject = isPlainSnapshotObject(left);
+  const rightIsObject = isPlainSnapshotObject(right);
+  if (leftIsObject || rightIsObject) {
+    for (const key of snapshotObjectKeys(left, right)) {
+      diffSnapshotValues(leftIsObject ? left[key] : undefined, rightIsObject ? right[key] : undefined, path ? `${path}.${key}` : key, ignorePaths, entries);
+    }
+    return;
+  }
+  entries.push({ path, left, right });
+}
+
+export function diffSnapshots(input = {}) {
+  const left = stableSnapshot(input.left, input.hashOptions);
+  const right = stableSnapshot(input.right, input.hashOptions);
+  const entries = [];
+  diffSnapshotValues(left, right, '', input.ignorePaths ?? [], entries);
+  return entries.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export function createEventBus() {
+  const listeners = new Map();
+  let emittedEvents = 0;
+
+  const bus = {
+    on(event, handler) {
+      coreInvariant(event !== undefined && event !== null, 'event bus key is required');
+      coreInvariant(typeof handler === 'function', 'event bus handler must be a function');
+      const handlers = listeners.get(event) ?? new Set();
+      handlers.add(handler);
+      listeners.set(event, handlers);
+      return () => bus.off(event, handler);
+    },
+    once(event, handler) {
+      coreInvariant(typeof handler === 'function', 'event bus once handler must be a function');
+      let unsubscribe = () => {};
+      const wrapped = (payload) => {
+        unsubscribe();
+        handler(payload);
+      };
+      unsubscribe = bus.on(event, wrapped);
+      return unsubscribe;
+    },
+    off(event, handler) {
+      if (event === undefined) {
+        const hadListeners = listeners.size > 0;
+        listeners.clear();
+        return hadListeners;
+      }
+      const handlers = listeners.get(event);
+      if (!handlers) return false;
+      if (handler === undefined) return listeners.delete(event);
+      const removed = handlers.delete(handler);
+      if (handlers.size === 0) listeners.delete(event);
+      return removed;
+    },
+    clear(event) {
+      return bus.off(event);
+    },
+    emit(event, payload) {
+      emittedEvents += 1;
+      const handlers = listeners.get(event);
+      if (!handlers) return 0;
+      const snapshot = [...handlers];
+      for (const handler of snapshot) handler(payload);
+      return snapshot.length;
+    },
+    hasListeners(event) {
+      return (listeners.get(event)?.size ?? 0) > 0;
+    },
+    listenerCount(event) {
+      if (event !== undefined) return listeners.get(event)?.size ?? 0;
+      let count = 0;
+      for (const handlers of listeners.values()) count += handlers.size;
+      return count;
+    },
+    snapshot() {
+      const events = [...listeners.entries()]
+        .map(([event, handlers]) => ({ event, listeners: handlers.size }))
+        .sort((left, right) => String(left.event).localeCompare(String(right.event)));
+      return Object.freeze({
+        eventCount: events.length,
+        listenerCount: events.reduce((total, entry) => total + entry.listeners, 0),
+        emittedEvents,
+        events: Object.freeze(events.map((entry) => Object.freeze(entry))),
+      });
+    },
+  };
+  return bus;
+}
+
+export function createRecyclingPool(options = {}) {
+  const capacity = Math.floor(finiteNumber(options.capacity, 0));
+  coreInvariant(capacity > 0, 'recycling pool capacity must be a positive integer');
+  coreInvariant(typeof options.create === 'function', 'recycling pool requires a create function');
+  coreInvariant(options.reset === undefined || typeof options.reset === 'function', 'recycling pool reset must be a function');
+
+  const slots = Array.from({ length: capacity }, (_, index) => ({
+    value: options.create(index),
+    active: false,
+    generation: 0,
+  }));
+  const slotByValue = new Map();
+  for (const [index, slot] of slots.entries()) {
+    coreInvariant(!slotByValue.has(slot.value), 'recycling pool create function must return unique values');
+    slotByValue.set(slot.value, index);
+  }
+
+  let cursor = 0;
+  let acquired = 0;
+  let released = 0;
+  let recycled = 0;
+
+  const resetSlot = (slot, index, reason, wasRecycled = false) => {
+    options.reset?.(slot.value, Object.freeze({
+      index,
+      reason,
+      recycled: wasRecycled,
+      generation: slot.generation,
+    }));
+  };
+
+  const pool = {
+    acquire(initializer) {
+      coreInvariant(initializer === undefined || typeof initializer === 'function', 'recycling pool initializer must be a function');
+      let index = -1;
+      for (let offset = 0; offset < capacity; offset += 1) {
+        const candidate = (cursor + offset) % capacity;
+        if (!slots[candidate].active) {
+          index = candidate;
+          break;
+        }
+      }
+      const wasRecycled = index === -1;
+      if (wasRecycled) {
+        index = cursor;
+        recycled += 1;
+      }
+      const slot = slots[index];
+      slot.active = true;
+      slot.generation += 1;
+      cursor = (index + 1) % capacity;
+      acquired += 1;
+      resetSlot(slot, index, 'acquire', wasRecycled);
+      const context = Object.freeze({
+        index,
+        recycled: wasRecycled,
+        generation: slot.generation,
+      });
+      initializer?.(slot.value, context);
+      return slot.value;
+    },
+    release(value) {
+      const index = slotByValue.get(value);
+      if (index === undefined || !slots[index].active) return false;
+      const slot = slots[index];
+      slot.active = false;
+      released += 1;
+      resetSlot(slot, index, 'release');
+      return true;
+    },
+    clear() {
+      let cleared = 0;
+      for (const [index, slot] of slots.entries()) {
+        if (!slot.active) continue;
+        slot.active = false;
+        cleared += 1;
+        released += 1;
+        resetSlot(slot, index, 'clear');
+      }
+      return cleared;
+    },
+    forEachActive(callback) {
+      coreInvariant(typeof callback === 'function', 'recycling pool callback must be a function');
+      for (const [index, slot] of slots.entries()) {
+        if (slot.active) callback(slot.value, index, slot.generation);
+      }
+    },
+    activeValues() {
+      return slots.filter((slot) => slot.active).map((slot) => slot.value);
+    },
+    values() {
+      return slots.map((slot) => slot.value);
+    },
+    isActive(value) {
+      const index = slotByValue.get(value);
+      return index !== undefined && slots[index].active;
+    },
+    snapshot() {
+      const active = slots.reduce((count, slot) => count + Number(slot.active), 0);
+      return Object.freeze({ capacity, active, acquired, released, recycled });
+    },
+    get capacity() {
+      return capacity;
+    },
+  };
+  return pool;
+}
+
+function freezeTimelineState(time, nextSequence, entries) {
+  return Object.freeze({
+    time,
+    nextSequence,
+    entries: Object.freeze(entries.map((entry) => Object.freeze({ ...entry }))),
+  });
+}
+
+function sortTimelineEntries(entries) {
+  return [...entries].sort((left, right) => left.at - right.at || left.sequence - right.sequence);
+}
+
+export function createTimelineQueue(values = [], options = {}) {
+  const time = finiteNumber(options.time, 0);
+  const getAt = options.getAt ?? ((value) => value?.at);
+  coreInvariant(typeof getAt === 'function', 'timeline getAt must be a function');
+  const entries = values.map((value, sequence) => ({
+    at: finiteNumber(getAt(value, time, sequence), time),
+    sequence,
+    value,
+  }));
+  return freezeTimelineState(time, entries.length, sortTimelineEntries(entries));
+}
+
+export function enqueueTimelineEntry(state, value, options = {}) {
+  coreInvariant(state && Array.isArray(state.entries), 'timeline state is required');
+  const time = finiteNumber(state.time, 0);
+  const sequence = Math.max(0, Math.floor(finiteNumber(state.nextSequence, state.entries.length)));
+  const at = finiteNumber(
+    options.at ?? options.getAt?.(value, time, sequence) ?? value?.at,
+    time,
+  );
+  const entries = sortTimelineEntries([...state.entries, { at, sequence, value }]);
+  return freezeTimelineState(time, sequence + 1, entries);
+}
+
+export function stepTimelineQueue(state, delta) {
+  coreInvariant(state && Array.isArray(state.entries), 'timeline state is required');
+  const normalizedDelta = finiteNumber(delta, Number.NaN);
+  coreInvariant(Number.isFinite(normalizedDelta) && normalizedDelta >= 0, 'timeline delta must be finite and non-negative');
+  const nextTime = finiteNumber(state.time, 0) + normalizedDelta;
+  const due = [];
+  const pending = [];
+  for (const entry of state.entries) {
+    if (entry.at <= nextTime) due.push(entry);
+    else pending.push(entry);
+  }
+  return Object.freeze({
+    state: freezeTimelineState(nextTime, state.nextSequence, pending),
+    due: Object.freeze(due.map((entry) => entry.value)),
+    pending: Object.freeze(pending.map((entry) => entry.value)),
+  });
+}
+
+function normalizeTimedEffect(effect = {}) {
+  const id = String(effect.id ?? '');
+  coreInvariant(id.length > 0, 'timed effect id is required');
+  const duration = Math.max(0, finiteNumber(effect.duration, 0));
+  const stacks = Math.max(1, Math.floor(finiteNumber(effect.stacks, 1)));
+  const maxStacks = Math.max(stacks, Math.floor(finiteNumber(effect.maxStacks, stacks)));
+  const tickInterval = Number.isFinite(effect.tickInterval) && effect.tickInterval > 0
+    ? Number(effect.tickInterval)
+    : undefined;
+  return {
+    ...effect,
+    id,
+    kind: String(effect.kind ?? id),
+    duration,
+    remaining: Math.max(0, finiteNumber(effect.remaining, duration)),
+    stacks,
+    maxStacks,
+    magnitude: finiteNumber(effect.magnitude, 0),
+    tickInterval,
+    tickTimer: tickInterval === undefined
+      ? undefined
+      : finiteNumber(effect.tickTimer, tickInterval),
+  };
+}
+
+function timedEffectMatches(effect, incoming, match) {
+  if (match === 'kind') return effect.kind === incoming.kind;
+  if (match === 'id-or-kind') return effect.id === incoming.id || effect.kind === incoming.kind;
+  return effect.id === incoming.id;
+}
+
+export function applyTimedEffect(effects, incoming, options = {}) {
+  coreInvariant(Array.isArray(effects), 'timed effects must be an array');
+  const normalized = normalizeTimedEffect(incoming);
+  const match = options.match ?? 'id';
+  const index = effects.findIndex((effect) => timedEffectMatches(effect, normalized, match));
+  if (index < 0) {
+    const next = [...effects.map(normalizeTimedEffect), normalized];
+    return Object.freeze({
+      effects: Object.freeze(next),
+      event: Object.freeze({ kind: 'applied', effect: Object.freeze({ ...normalized }) }),
+    });
+  }
+
+  const current = normalizeTimedEffect(effects[index]);
+  const merge = options.merge ?? 'replace';
+  let nextEffect = normalized;
+  let eventKind = 'replaced';
+  if (merge === 'stack') {
+    const maxStacks = Math.max(current.maxStacks, normalized.maxStacks);
+    const remaining = options.refreshDuration === 'incoming'
+      ? normalized.duration
+      : Math.max(current.remaining, normalized.duration);
+    const duration = options.refreshDuration === 'incoming'
+      ? normalized.duration
+      : Math.max(current.duration, normalized.duration);
+    const magnitude = options.magnitude === 'add'
+      ? current.magnitude + normalized.magnitude
+      : options.magnitude === 'incoming'
+        ? normalized.magnitude
+        : Math.max(current.magnitude, normalized.magnitude);
+    nextEffect = {
+      ...current,
+      duration,
+      remaining,
+      stacks: Math.min(maxStacks, current.stacks + normalized.stacks),
+      maxStacks,
+      magnitude,
+      sourceId: normalized.sourceId ?? current.sourceId,
+      tickInterval: normalized.tickInterval ?? current.tickInterval,
+      tickTimer: current.tickTimer ?? normalized.tickTimer,
+    };
+    eventKind = 'stacked';
+  }
+
+  const next = effects.map(normalizeTimedEffect);
+  if (options.position === 'append') {
+    next.splice(index, 1);
+    next.push(nextEffect);
+  } else {
+    next[index] = nextEffect;
+  }
+  return Object.freeze({
+    effects: Object.freeze(next),
+    event: Object.freeze({ kind: eventKind, effect: Object.freeze({ ...nextEffect }) }),
+  });
+}
+
+export function stepTimedEffects(effects, delta) {
+  coreInvariant(Array.isArray(effects), 'timed effects must be an array');
+  const normalizedDelta = finiteNumber(delta, Number.NaN);
+  coreInvariant(Number.isFinite(normalizedDelta) && normalizedDelta >= 0, 'timed effect delta must be finite and non-negative');
+  const surviving = [];
+  const advanced = [];
+  const events = [];
+  for (const rawEffect of effects) {
+    const effect = normalizeTimedEffect(rawEffect);
+    const remaining = Math.max(0, effect.remaining - normalizedDelta);
+    let tickTimer = effect.tickTimer;
+    const tickInterval = effect.tickInterval;
+    if (tickInterval !== undefined) {
+      tickTimer = finiteNumber(tickTimer, tickInterval) - normalizedDelta;
+      let tickIndex = 0;
+      while (tickTimer <= 0 && remaining > 0) {
+        tickIndex += 1;
+        const tickEffect = Object.freeze({ ...effect, remaining, tickTimer });
+        events.push(Object.freeze({ kind: 'tick', effect: tickEffect, tickIndex }));
+        tickTimer += tickInterval;
+        coreInvariant(tickIndex < 10000, 'timed effect produced too many ticks in one step');
+      }
+    }
+    const stepped = Object.freeze({ ...effect, remaining, tickTimer });
+    advanced.push(stepped);
+    if (remaining > 0) surviving.push(stepped);
+    else events.push(Object.freeze({ kind: 'expired', effect: stepped }));
+  }
+  return Object.freeze({
+    effects: Object.freeze(surviving),
+    advanced: Object.freeze(advanced),
+    events: Object.freeze(events),
+  });
+}
+
+export function hasTimedEffect(effects, value, options = {}) {
+  coreInvariant(Array.isArray(effects), 'timed effects must be an array');
+  const field = options.field ?? 'id';
+  return effects.some((effect) => effect?.[field] === value && finiteNumber(effect.remaining, 0) > 0);
+}
+
+function normalizeSystemDependencyList(value) {
+  if (value === undefined) return [];
+  const entries = Array.isArray(value) ? value : [value];
+  return [...new Set(entries.map((entry) => String(entry)).filter(Boolean))];
+}
+
+function freezeSystemDescriptor(system) {
+  return Object.freeze({
+    name: system.name,
+    phase: system.phase,
+    order: system.order,
+    priority: system.priority,
+    enabled: system.enabled,
+    before: Object.freeze([...system.before]),
+    after: Object.freeze([...system.after]),
+    sequence: system.sequence,
+  });
+}
+
+export function createSystemPipeline(options = {}) {
+  const phaseNames = options.phases?.length ? [...options.phases] : ['update'];
+  coreInvariant(
+    phaseNames.every((phase) => typeof phase === 'string' && phase.length > 0),
+    'system pipeline phases must be non-empty strings',
+  );
+  coreInvariant(new Set(phaseNames).size === phaseNames.length, 'system pipeline phases must be unique');
+  const phaseOrder = new Map(phaseNames.map((phase, index) => [phase, index]));
+  const systems = new Map();
+  let registrationSequence = 0;
+  let runCount = 0;
+  let executionCount = 0;
+
+  const compareSystems = (left, right) => (
+    left.order - right.order
+    || right.priority - left.priority
+    || left.sequence - right.sequence
+    || left.name.localeCompare(right.name)
+  );
+
+  const orderedPhaseSystems = (phase) => {
+    const candidates = [...systems.values()]
+      .filter((system) => system.phase === phase)
+      .sort(compareSystems);
+    const byName = new Map(candidates.map((system) => [system.name, system]));
+    const outgoing = new Map(candidates.map((system) => [system.name, new Set()]));
+    const indegree = new Map(candidates.map((system) => [system.name, 0]));
+    const addEdge = (from, to) => {
+      if (from === to || outgoing.get(from)?.has(to)) return;
+      coreInvariant(
+        byName.has(from),
+        `system dependency references unknown system "${from}" in phase "${phase}"`,
+      );
+      coreInvariant(
+        byName.has(to),
+        `system dependency references unknown system "${to}" in phase "${phase}"`,
+      );
+      outgoing.get(from).add(to);
+      indegree.set(to, indegree.get(to) + 1);
+    };
+    for (const system of candidates) {
+      for (const target of system.before) addEdge(system.name, target);
+      for (const source of system.after) addEdge(source, system.name);
+    }
+    const ready = candidates.filter((system) => indegree.get(system.name) === 0).sort(compareSystems);
+    const ordered = [];
+    while (ready.length > 0) {
+      const system = ready.shift();
+      ordered.push(system);
+      for (const target of outgoing.get(system.name)) {
+        indegree.set(target, indegree.get(target) - 1);
+        if (indegree.get(target) === 0) {
+          ready.push(byName.get(target));
+          ready.sort(compareSystems);
+        }
+      }
+    }
+    coreInvariant(
+      ordered.length === candidates.length,
+      `system dependency cycle detected in phase "${phase}"`,
+    );
+    return ordered;
+  };
+
+  const orderedSystems = () => phaseNames.flatMap(orderedPhaseSystems);
+  const pipeline = {
+    add(name, update, systemOptions = {}) {
+      coreInvariant(typeof name === 'string' && name.length > 0, 'system name is required');
+      coreInvariant(typeof update === 'function', `system "${name}" must be a function`);
+      coreInvariant(!systems.has(name), `system "${name}" already exists`);
+      const phase = systemOptions.phase ?? phaseNames[0];
+      coreInvariant(phaseOrder.has(phase), `unknown system phase "${phase}"`);
+      systems.set(name, {
+        name,
+        update,
+        phase,
+        order: finiteNumber(systemOptions.order, 0),
+        priority: finiteNumber(systemOptions.priority, 0),
+        enabled: systemOptions.enabled !== false,
+        when: systemOptions.when,
+        before: normalizeSystemDependencyList(systemOptions.before),
+        after: normalizeSystemDependencyList(systemOptions.after),
+        sequence: registrationSequence++,
+        executions: 0,
+      });
+      return () => pipeline.remove(name);
+    },
+    remove(name) {
+      return systems.delete(String(name));
+    },
+    has(name) {
+      return systems.has(String(name));
+    },
+    setEnabled(name, enabled) {
+      const system = systems.get(String(name));
+      coreInvariant(system, `unknown system "${name}"`);
+      system.enabled = Boolean(enabled);
+      return pipeline;
+    },
+    run(context, runOptions = {}) {
+      const selectedPhases = runOptions.phases === undefined
+        ? null
+        : new Set(Array.isArray(runOptions.phases) ? runOptions.phases : [runOptions.phases]);
+      if (selectedPhases) {
+        for (const phase of selectedPhases) {
+          coreInvariant(phaseOrder.has(phase), `unknown system phase "${phase}"`);
+        }
+      }
+      const skippedPhases = new Set();
+      const executed = [];
+      const results = [];
+      let halted = false;
+      runCount += 1;
+      for (const system of orderedSystems()) {
+        if (selectedPhases && !selectedPhases.has(system.phase)) continue;
+        if (skippedPhases.has(system.phase) || !system.enabled) continue;
+        if (typeof system.when === 'function' && !system.when(context)) continue;
+        const frame = Object.freeze({
+          pipeline,
+          run: runCount,
+          index: executed.length,
+          name: system.name,
+          phase: system.phase,
+        });
+        const result = system.update(context, frame);
+        system.executions += 1;
+        executionCount += 1;
+        executed.push(system.name);
+        results.push(Object.freeze({ name: system.name, phase: system.phase, result }));
+        if (result?.skipPhase === true) skippedPhases.add(system.phase);
+        else if (typeof result?.skipPhase === 'string') skippedPhases.add(result.skipPhase);
+        for (const phase of result?.skipPhases ?? []) {
+          coreInvariant(phaseOrder.has(phase), `unknown skipped system phase "${phase}"`);
+          skippedPhases.add(phase);
+        }
+        if (result?.halt === true) {
+          halted = true;
+          break;
+        }
+      }
+      return Object.freeze({
+        context,
+        halted,
+        executed: Object.freeze(executed),
+        skippedPhases: Object.freeze([...skippedPhases]),
+        results: Object.freeze(results),
+      });
+    },
+    names() {
+      return orderedSystems().map((system) => system.name);
+    },
+    snapshot() {
+      return Object.freeze({
+        phases: Object.freeze([...phaseNames]),
+        runs: runCount,
+        executions: executionCount,
+        systems: Object.freeze(orderedSystems().map((system) => Object.freeze({
+          ...freezeSystemDescriptor(system),
+          executions: system.executions,
+        }))),
+      });
+    },
+  };
+  return pipeline;
+}
+
+function normalizeHitContactRecord(record = {}) {
+  return {
+    hits: Math.max(0, Math.floor(finiteNumber(record.hits, 0))),
+    lastHitTick: finiteNumber(record.lastHitTick ?? record.lastHitFrame, -1),
+  };
+}
+
+function hitContactTargetId(value) {
+  coreInvariant(value !== null && value !== undefined, 'hit contact target id is required');
+  const id = String(value);
+  coreInvariant(id.length > 0, 'hit contact target id is required');
+  return id;
+}
+
+export function createHitContactLedger(options = {}) {
+  const records = new Map();
+  const initialRecords = options.records;
+  if (initialRecords instanceof Map) {
+    for (const [targetId, record] of initialRecords) records.set(hitContactTargetId(targetId), normalizeHitContactRecord(record));
+  } else if (Array.isArray(initialRecords)) {
+    for (const entry of initialRecords) {
+      if (typeof entry === 'string') records.set(hitContactTargetId(entry), { hits: 1, lastHitTick: -1 });
+      else if (entry?.targetId !== undefined) records.set(hitContactTargetId(entry.targetId), normalizeHitContactRecord(entry));
+    }
+  } else if (initialRecords && typeof initialRecords === 'object') {
+    for (const [targetId, record] of Object.entries(initialRecords)) records.set(targetId, normalizeHitContactRecord(record));
+  }
+
+  const ledger = {
+    canRegister(targetId, tick, policy = {}) {
+      const id = hitContactTargetId(targetId);
+      const currentTick = finiteNumber(tick, 0);
+      const maxHitsPerTarget = Math.max(1, Math.floor(finiteNumber(policy.maxHitsPerTarget, 1)));
+      const rehitDelayTicks = Math.max(0, finiteNumber(policy.rehitDelayTicks ?? policy.rehitDelayFrames, 0));
+      const record = records.get(id);
+      if (!record) return true;
+      if (record.hits >= maxHitsPerTarget) return false;
+      return currentTick - record.lastHitTick >= rehitDelayTicks;
+    },
+    register(targetId, tick, amount = 1) {
+      const id = hitContactTargetId(targetId);
+      const current = records.get(id) ?? { hits: 0, lastHitTick: -1 };
+      const next = {
+        hits: current.hits + Math.max(1, Math.floor(finiteNumber(amount, 1))),
+        lastHitTick: finiteNumber(tick, 0),
+      };
+      records.set(id, next);
+      return Object.freeze({ ...next });
+    },
+    get(targetId) {
+      const record = records.get(hitContactTargetId(targetId));
+      return record ? Object.freeze({ ...record }) : undefined;
+    },
+    has(targetId) {
+      return records.has(hitContactTargetId(targetId));
+    },
+    clear(targetId) {
+      if (targetId !== undefined) return records.delete(hitContactTargetId(targetId));
+      const count = records.size;
+      records.clear();
+      return count;
+    },
+    targetIds() {
+      return [...records.keys()].sort();
+    },
+    snapshot() {
+      const entries = [...records.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([targetId, record]) => Object.freeze({ targetId, ...record }));
+      return Object.freeze({ size: entries.length, records: Object.freeze(entries) });
+    },
+  };
+  return ledger;
+}
+
+function cameraBlendFactor(delta, blend, rate, mode = 'linear') {
+  if (Number.isFinite(blend)) return clampNumber(blend, 0, 1);
+  const normalizedRate = Math.max(0, finiteNumber(rate, 0));
+  const normalizedDelta = Math.max(0, finiteNumber(delta, 0));
+  return mode === 'exponential'
+    ? 1 - Math.exp(-normalizedRate * normalizedDelta)
+    : Math.min(1, normalizedRate * normalizedDelta);
+}
+
+export function createCameraRig(initial = {}) {
+  const state = {
+    x: finiteNumber(initial.x, 0),
+    y: finiteNumber(initial.y, 0),
+    zoom: positiveNumber(initial.zoom, 1),
+    targetX: finiteNumber(initial.targetX, initial.x ?? 0),
+    targetY: finiteNumber(initial.targetY, initial.y ?? 0),
+    lookaheadX: finiteNumber(initial.lookaheadX, 0),
+    lookaheadY: finiteNumber(initial.lookaheadY, 0),
+    shake: Math.max(0, finiteNumber(initial.shake, 0)),
+    shakeX: finiteNumber(initial.shakeX ?? initial.shakeOffsetX, 0),
+    shakeY: finiteNumber(initial.shakeY ?? initial.shakeOffsetY, 0),
+  };
+
+  const snapshot = () => Object.freeze({ ...state });
+  const rig = {
+    set(patch = {}) {
+      for (const key of ['x', 'y', 'targetX', 'targetY', 'lookaheadX', 'lookaheadY', 'shake', 'shakeX', 'shakeY']) {
+        if (key in patch) state[key] = finiteNumber(patch[key], state[key]);
+      }
+      if ('shakeOffsetX' in patch) state.shakeX = finiteNumber(patch.shakeOffsetX, state.shakeX);
+      if ('shakeOffsetY' in patch) state.shakeY = finiteNumber(patch.shakeOffsetY, state.shakeY);
+      if ('zoom' in patch) state.zoom = positiveNumber(patch.zoom, state.zoom);
+      state.shake = Math.max(0, state.shake);
+      return rig;
+    },
+    follow(targets, options = {}) {
+      const available = [...(targets ?? [])].filter((target) => Number.isFinite(target?.x) && Number.isFinite(target?.y));
+      if (available.length === 0) return rig;
+      let totalWeight = 0;
+      let x = 0;
+      let y = 0;
+      for (const target of available) {
+        const weight = Math.max(0, finiteNumber(target.weight, 1));
+        totalWeight += weight;
+        x += target.x * weight;
+        y += target.y * weight;
+      }
+      if (totalWeight <= 0) return rig;
+      state.targetX = x / totalWeight + finiteNumber(options.offsetX, 0);
+      state.targetY = y / totalWeight + finiteNumber(options.offsetY, 0);
+      return rig;
+    },
+    target(x, y = state.targetY) {
+      state.targetX = finiteNumber(x, state.targetX);
+      state.targetY = finiteNumber(y, state.targetY);
+      return rig;
+    },
+    addShake(intensity) {
+      state.shake = Math.max(state.shake, Math.max(0, finiteNumber(intensity, 0)));
+      return rig;
+    },
+    step(delta = 1, options = {}) {
+      const velocityX = finiteNumber(options.velocityX, 0);
+      const velocityY = finiteNumber(options.velocityY, 0);
+      const desiredLookaheadX = clampNumber(
+        velocityX * finiteNumber(options.lookaheadScaleX, 0),
+        finiteNumber(options.lookaheadMinX, Number.NEGATIVE_INFINITY),
+        finiteNumber(options.lookaheadMaxX, Number.POSITIVE_INFINITY),
+      );
+      const desiredLookaheadY = clampNumber(
+        velocityY * finiteNumber(options.lookaheadScaleY, 0),
+        finiteNumber(options.lookaheadMinY, Number.NEGATIVE_INFINITY),
+        finiteNumber(options.lookaheadMaxY, Number.POSITIVE_INFINITY),
+      );
+      const sameDirectionX = Math.sign(desiredLookaheadX) === Math.sign(state.lookaheadX);
+      const sameDirectionY = Math.sign(desiredLookaheadY) === Math.sign(state.lookaheadY);
+      const lookaheadFactorX = cameraBlendFactor(
+        delta,
+        options.lookaheadBlendX ?? options.lookaheadBlend,
+        sameDirectionX
+          ? options.lookaheadRateSameX ?? options.lookaheadRateSame ?? options.lookaheadRateX ?? options.lookaheadRate
+          : options.lookaheadRateOppositeX ?? options.lookaheadRateOpposite ?? options.lookaheadRateX ?? options.lookaheadRate,
+        options.rateMode,
+      );
+      const lookaheadFactorY = cameraBlendFactor(
+        delta,
+        options.lookaheadBlendY ?? options.lookaheadBlend,
+        sameDirectionY
+          ? options.lookaheadRateSameY ?? options.lookaheadRateSame ?? options.lookaheadRateY ?? options.lookaheadRate
+          : options.lookaheadRateOppositeY ?? options.lookaheadRateOpposite ?? options.lookaheadRateY ?? options.lookaheadRate,
+        options.rateMode,
+      );
+      state.lookaheadX += (desiredLookaheadX - state.lookaheadX) * lookaheadFactorX;
+      state.lookaheadY += (desiredLookaheadY - state.lookaheadY) * lookaheadFactorY;
+
+      const desiredX = state.targetX + state.lookaheadX + finiteNumber(options.offsetX, 0);
+      const desiredY = state.targetY + state.lookaheadY + finiteNumber(options.offsetY, 0);
+      const diffX = desiredX - state.x;
+      const diffY = desiredY - state.y;
+      const farThreshold = Math.max(0, finiteNumber(options.farThreshold, Number.POSITIVE_INFINITY));
+      const followRateX = Math.abs(diffX) > farThreshold
+        ? options.followRateFarX ?? options.followRateFar ?? options.followRateX ?? options.followRate
+        : options.followRateX ?? options.followRate;
+      const followRateY = Math.abs(diffY) > farThreshold
+        ? options.followRateFarY ?? options.followRateFar ?? options.followRateY ?? options.followRate
+        : options.followRateY ?? options.followRate;
+      const followFactorX = cameraBlendFactor(delta, options.followBlendX ?? options.followBlend, followRateX, options.rateMode);
+      const followFactorY = cameraBlendFactor(delta, options.followBlendY ?? options.followBlend, followRateY, options.rateMode);
+      state.x += diffX * followFactorX;
+      state.y += diffY * followFactorY;
+
+      state.x = clampNumber(
+        state.x,
+        finiteNumber(options.minX, Number.NEGATIVE_INFINITY),
+        finiteNumber(options.maxX, Number.POSITIVE_INFINITY),
+      );
+      state.y = clampNumber(
+        state.y,
+        finiteNumber(options.minY, Number.NEGATIVE_INFINITY),
+        finiteNumber(options.maxY, Number.POSITIVE_INFINITY),
+      );
+
+      const zoomTarget = positiveNumber(options.zoomTarget, state.zoom);
+      const zoomFactor = cameraBlendFactor(delta, options.zoomBlend, options.zoomRate, options.rateMode);
+      state.zoom += (zoomTarget - state.zoom) * zoomFactor;
+
+      if (state.shake > 0) {
+        if (Number.isFinite(options.shakeDecayMultiplier)) state.shake *= clampNumber(options.shakeDecayMultiplier, 0, 1);
+        else if (Number.isFinite(options.shakeDecayRate)) state.shake *= Math.exp(-Math.max(0, options.shakeDecayRate) * Math.max(0, delta));
+        const random = options.random ?? Math.random;
+        const scale = Math.max(0, finiteNumber(options.shakeScale, 1));
+        state.shakeX = (random() - 0.5) * state.shake * 2 * scale;
+        state.shakeY = (random() - 0.5) * state.shake * 2 * scale;
+        if (state.shake < Math.max(0, finiteNumber(options.shakeEpsilon, 0.1))) {
+          state.shake = 0;
+          state.shakeX = 0;
+          state.shakeY = 0;
+        }
+      } else {
+        state.shakeX = 0;
+        state.shakeY = 0;
+      }
+      return snapshot();
+    },
+    snapshot,
+  };
+
+  for (const key of Object.keys(state)) {
+    Object.defineProperty(rig, key, {
+      enumerable: true,
+      get: () => state[key],
+      set: (value) => {
+        state[key] = key === 'zoom' ? positiveNumber(value, state[key]) : finiteNumber(value, state[key]);
+        if (key === 'shake') state.shake = Math.max(0, state.shake);
+      },
+    });
+  }
+  return rig;
 }
 
 export function createArcadeCameraTransform(initial = {}) {
@@ -1816,3 +2908,1928 @@ export function createLifecycleController(options = {}) {
   };
 }
 // END MERGED ARCADE CORE
+
+
+// BEGIN ARCADE SERVICES 0.13-0.16
+
+function arcadeRectSize(rect) {
+  return {
+    width: finiteNumber(rect?.w ?? rect?.width, 0),
+    height: finiteNumber(rect?.h ?? rect?.height, 0),
+  };
+}
+
+function arcadeClone(value) {
+  if (value === undefined) return undefined;
+  if (typeof structuredClone === 'function') return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+export function createArcadeRuntimeHost(options = {}) {
+  const events = options.events ?? createEventBus();
+  const services = new Map();
+  const disposers = [];
+  let destroyed = false;
+  let state = 'idle';
+  let tick = 0;
+
+  const host = {
+    version: ARCADE_RUNTIME_VERSION,
+    events,
+    register(name, service, disposer) {
+      coreInvariant(typeof name === 'string' && name.length > 0, 'host service name is required');
+      coreInvariant(!services.has(name), `host service already exists: ${name}`);
+      services.set(name, service);
+      if (typeof disposer === 'function') disposers.push(disposer);
+      else if (service && typeof service.destroy === 'function') disposers.push(() => service.destroy());
+      return service;
+    },
+    service(name) {
+      coreInvariant(services.has(name), `unknown host service: ${name}`);
+      return services.get(name);
+    },
+    has(name) {
+      return services.has(name);
+    },
+    track(disposer) {
+      coreInvariant(typeof disposer === 'function', 'host disposer must be a function');
+      disposers.push(disposer);
+      return disposer;
+    },
+    start(reason = 'start') {
+      coreInvariant(!destroyed, 'arcade host is destroyed');
+      if (state === 'running') return false;
+      state = 'running';
+      options.loop?.start?.();
+      events.emit('host:start', Object.freeze({ reason, host }));
+      return true;
+    },
+    pause(reason = 'pause') {
+      if (destroyed || state === 'paused') return false;
+      state = 'paused';
+      options.loop?.pause?.();
+      events.emit('host:pause', Object.freeze({ reason, host }));
+      return true;
+    },
+    resume(reason = 'resume') {
+      coreInvariant(!destroyed, 'arcade host is destroyed');
+      if (state === 'running') return false;
+      state = 'running';
+      options.loop?.resume?.();
+      events.emit('host:resume', Object.freeze({ reason, host }));
+      return true;
+    },
+    stop(reason = 'stop') {
+      if (destroyed || state === 'stopped') return false;
+      state = 'stopped';
+      options.loop?.stop?.();
+      events.emit('host:stop', Object.freeze({ reason, host }));
+      return true;
+    },
+    step(delta, command) {
+      coreInvariant(!destroyed, 'arcade host is destroyed');
+      tick += 1;
+      const frame = Object.freeze({ tick, delta, command, host });
+      events.emit('host:before-step', frame);
+      options.update?.(delta, command, frame);
+      events.emit('host:after-step', frame);
+      return frame;
+    },
+    render(alpha = 0) {
+      coreInvariant(!destroyed, 'arcade host is destroyed');
+      const frame = Object.freeze({ tick, alpha, host });
+      options.render?.(alpha, frame);
+      events.emit('host:render', frame);
+      return frame;
+    },
+    snapshot() {
+      return Object.freeze({
+        version: ARCADE_RUNTIME_VERSION,
+        state,
+        tick,
+        destroyed,
+        services: Object.freeze([...services.keys()].sort()),
+        events: events.snapshot?.(),
+      });
+    },
+    destroy() {
+      if (destroyed) return false;
+      host.stop('destroy');
+      destroyed = true;
+      for (const disposer of disposers.splice(0).reverse()) disposer();
+      services.clear();
+      events.emit('host:destroy', Object.freeze({ host }));
+      events.clear?.();
+      state = 'destroyed';
+      return true;
+    },
+  };
+
+  for (const [name, service] of Object.entries(options.services ?? {})) host.register(name, service);
+  return host;
+}
+
+function arcadeCellRange(rect, cellSize) {
+  const { width, height } = arcadeRectSize(rect);
+  return {
+    minX: Math.floor(rect.x / cellSize),
+    maxX: Math.floor((rect.x + width) / cellSize),
+    minY: Math.floor(rect.y / cellSize),
+    maxY: Math.floor((rect.y + height) / cellSize),
+  };
+}
+
+function arcadeCellKey(x, y) {
+  return `${x}:${y}`;
+}
+
+export function collisionLayersMatch(a, b) {
+  if (a.layer && Array.isArray(b.mask) && !b.mask.includes(a.layer)) return false;
+  if (b.layer && Array.isArray(a.mask) && !a.mask.includes(b.layer)) return false;
+  return true;
+}
+
+function arcadePairKey(a, b) {
+  return a.id < b.id ? `${a.id}\u0000${b.id}` : `${b.id}\u0000${a.id}`;
+}
+
+export function buildSpatialIndex(bodies, cellSize = 64) {
+  coreInvariant(Number.isFinite(cellSize) && cellSize > 0, `Invalid spatial cell size: ${cellSize}`);
+  const sortedBodies = [...bodies]
+    .filter((body) => body?.enabled !== false)
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const cells = new Map();
+  for (const body of sortedBodies) {
+    coreInvariant(typeof body.id === 'string' && body.id.length > 0, 'spatial body id is required');
+    const range = arcadeCellRange(body, cellSize);
+    for (let y = range.minY; y <= range.maxY; y += 1) {
+      for (let x = range.minX; x <= range.maxX; x += 1) {
+        const key = arcadeCellKey(x, y);
+        const cell = cells.get(key) ?? [];
+        cell.push(body);
+        cells.set(key, cell);
+      }
+    }
+  }
+  for (const [key, cell] of cells) cells.set(key, cell.sort((a, b) => a.id.localeCompare(b.id)));
+  return Object.freeze({ cellSize, cells, bodies: Object.freeze(sortedBodies) });
+}
+
+export function querySpatialIndex(index, rect, options = {}) {
+  const range = arcadeCellRange(rect, index.cellSize);
+  const seen = new Map();
+  const layers = options.layers ? new Set(options.layers) : null;
+  for (let y = range.minY; y <= range.maxY; y += 1) {
+    for (let x = range.minX; x <= range.maxX; x += 1) {
+      for (const body of index.cells.get(arcadeCellKey(x, y)) ?? []) {
+        if (layers && !layers.has(body.layer)) continue;
+        if (options.predicate && !options.predicate(body)) continue;
+        if (aabbOverlap(rect, body)) seen.set(body.id, body);
+      }
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function spatialCollisionPairs(index) {
+  const pairs = new Map();
+  for (const cell of index.cells.values()) {
+    for (let left = 0; left < cell.length; left += 1) {
+      for (let right = left + 1; right < cell.length; right += 1) {
+        const a = cell[left];
+        const b = cell[right];
+        if (!collisionLayersMatch(a, b) || !aabbOverlap(a, b)) continue;
+        const first = a.id < b.id ? a : b;
+        const second = a.id < b.id ? b : a;
+        pairs.set(arcadePairKey(first, second), Object.freeze({ a: first, b: second }));
+      }
+    }
+  }
+  return [...pairs.values()].sort((a, b) => arcadePairKey(a.a, a.b).localeCompare(arcadePairKey(b.a, b.b)));
+}
+
+export function computeCollisionManifold(aBody, bBody) {
+  const [a, b] = aBody.id <= bBody.id ? [aBody, bBody] : [bBody, aBody];
+  if (!aabbOverlap(a, b)) return null;
+  const aSize = arcadeRectSize(a);
+  const bSize = arcadeRectSize(b);
+  const aCenterX = a.x + aSize.width / 2;
+  const aCenterY = a.y + aSize.height / 2;
+  const bCenterX = b.x + bSize.width / 2;
+  const bCenterY = b.y + bSize.height / 2;
+  const overlapX = Math.min(a.x + aSize.width, b.x + bSize.width) - Math.max(a.x, b.x);
+  const overlapY = Math.min(a.y + aSize.height, b.y + bSize.height) - Math.max(a.y, b.y);
+  if (overlapX <= 0 || overlapY <= 0) return null;
+  const horizontal = overlapX < overlapY;
+  return Object.freeze({
+    a: a.id,
+    b: b.id,
+    normalX: horizontal ? (aCenterX <= bCenterX ? 1 : -1) : 0,
+    normalY: horizontal ? 0 : (aCenterY <= bCenterY ? 1 : -1),
+    penetration: Number((horizontal ? overlapX : overlapY).toFixed(6)),
+    overlapX: Number(overlapX.toFixed(6)),
+    overlapY: Number(overlapY.toFixed(6)),
+  });
+}
+
+export function manifoldsFromSpatialPairs(pairs) {
+  return pairs
+    .map((pair) => computeCollisionManifold(pair.a, pair.b))
+    .filter(Boolean)
+    .sort((a, b) => `${a.a}\u0000${a.b}`.localeCompare(`${b.a}\u0000${b.b}`));
+}
+
+function arcadeSweptTime(body, obstacle, vx, vy, dt) {
+  if (obstacle.oneWay && vy <= 0) return null;
+  if (aabbOverlap(body, obstacle)) {
+    return Object.freeze({ obstacle, time: 0, normalX: 0, normalY: -1, remainingTime: dt });
+  }
+  const bodySize = arcadeRectSize(body);
+  const obstacleSize = arcadeRectSize(obstacle);
+  const dxEntry = vx > 0 ? obstacle.x - (body.x + bodySize.width) : obstacle.x + obstacleSize.width - body.x;
+  const dxExit = vx > 0 ? obstacle.x + obstacleSize.width - body.x : obstacle.x - (body.x + bodySize.width);
+  const dyEntry = vy > 0 ? obstacle.y - (body.y + bodySize.height) : obstacle.y + obstacleSize.height - body.y;
+  const dyExit = vy > 0 ? obstacle.y + obstacleSize.height - body.y : obstacle.y - (body.y + bodySize.height);
+  const txEntry = vx === 0 ? Number.NEGATIVE_INFINITY : dxEntry / (vx * dt);
+  const txExit = vx === 0 ? Number.POSITIVE_INFINITY : dxExit / (vx * dt);
+  const tyEntry = vy === 0 ? Number.NEGATIVE_INFINITY : dyEntry / (vy * dt);
+  const tyExit = vy === 0 ? Number.POSITIVE_INFINITY : dyExit / (vy * dt);
+  const entryTime = Math.max(Math.min(txEntry, txExit), Math.min(tyEntry, tyExit));
+  const exitTime = Math.min(Math.max(txEntry, txExit), Math.max(tyEntry, tyExit));
+  if (entryTime > exitTime || entryTime < 0 || entryTime > 1) return null;
+  if (obstacle.oneWay && body.y + bodySize.height > obstacle.y + 0.001) return null;
+  let normalX = 0;
+  let normalY = 0;
+  if (Math.min(txEntry, txExit) > Math.min(tyEntry, tyExit)) normalX = vx > 0 ? -1 : 1;
+  else normalY = vy > 0 ? -1 : 1;
+  return Object.freeze({ obstacle, time: entryTime, normalX, normalY, remainingTime: dt * (1 - entryTime) });
+}
+
+export function sweepAabb(input) {
+  coreInvariant(Number.isFinite(input.dt) && input.dt >= 0, `Invalid sweep dt: ${input.dt}`);
+  const hits = (input.obstacles ?? [])
+    .map((obstacle) => arcadeSweptTime(input.body, obstacle, input.vx, input.vy, input.dt))
+    .filter(Boolean)
+    .sort((a, b) => a.time - b.time || a.obstacle.id.localeCompare(b.obstacle.id));
+  const hit = hits[0] ?? null;
+  if (!hit) {
+    return Object.freeze({
+      x: input.body.x + input.vx * input.dt,
+      y: input.body.y + input.vy * input.dt,
+      vx: input.vx,
+      vy: input.vy,
+      hit: null,
+    });
+  }
+  const epsilon = finiteNumber(input.epsilon, 0.0001);
+  return Object.freeze({
+    x: input.body.x + input.vx * input.dt * hit.time + hit.normalX * epsilon,
+    y: input.body.y + input.vy * input.dt * hit.time + hit.normalY * epsilon,
+    vx: hit.normalX !== 0 ? 0 : input.vx,
+    vy: hit.normalY !== 0 ? 0 : input.vy,
+    hit,
+  });
+}
+
+export function createCollisionWorld(options = {}) {
+  const cellSize = finiteNumber(options.cellSize, 64);
+  const events = options.events ?? createEventBus();
+  const bodies = new Map();
+  let previousContacts = new Map();
+  let lastIndex = buildSpatialIndex([], cellSize);
+
+  const world = {
+    events,
+    upsert(body) {
+      coreInvariant(typeof body?.id === 'string' && body.id.length > 0, 'collision body id is required');
+      const normalized = Object.freeze({ enabled: true, isTrigger: false, ...body });
+      bodies.set(normalized.id, normalized);
+      return normalized;
+    },
+    remove(id) {
+      return bodies.delete(id);
+    },
+    get(id) {
+      return bodies.get(id);
+    },
+    clear() {
+      const count = bodies.size;
+      bodies.clear();
+      previousContacts.clear();
+      lastIndex = buildSpatialIndex([], cellSize);
+      return count;
+    },
+    query(rect, queryOptions) {
+      return querySpatialIndex(lastIndex, rect, queryOptions);
+    },
+    step() {
+      lastIndex = buildSpatialIndex([...bodies.values()], cellSize);
+      const pairs = spatialCollisionPairs(lastIndex);
+      const current = new Map();
+      for (const pair of pairs) {
+        const key = arcadePairKey(pair.a, pair.b);
+        const contact = Object.freeze({
+          id: key,
+          a: pair.a,
+          b: pair.b,
+          trigger: Boolean(pair.a.isTrigger || pair.b.isTrigger),
+          manifold: computeCollisionManifold(pair.a, pair.b),
+        });
+        current.set(key, contact);
+        events.emit(previousContacts.has(key) ? 'contact:stay' : 'contact:begin', contact);
+      }
+      for (const [key, contact] of previousContacts) {
+        if (!current.has(key)) events.emit('contact:end', contact);
+      }
+      previousContacts = current;
+      return Object.freeze({
+        index: lastIndex,
+        pairs: Object.freeze(pairs),
+        contacts: Object.freeze([...current.values()]),
+      });
+    },
+    snapshot() {
+      return Object.freeze({
+        bodyCount: bodies.size,
+        contactCount: previousContacts.size,
+        cellSize,
+        bodyIds: Object.freeze([...bodies.keys()].sort()),
+      });
+    },
+  };
+  return world;
+}
+
+export function resolveHitboxContacts(input = {}) {
+  const hits = [];
+  const hurtboxes = [...(input.hurtboxes ?? [])].sort((a, b) => a.id.localeCompare(b.id));
+  for (const hitbox of [...(input.hitboxes ?? [])].sort((a, b) => a.id.localeCompare(b.id))) {
+    if (hitbox.active === false) continue;
+    for (const hurtbox of hurtboxes) {
+      if (hurtbox.active === false || hitbox.ownerId === hurtbox.actorId) continue;
+      if (hitbox.team !== undefined && hurtbox.team !== undefined && hitbox.team === hurtbox.team) continue;
+      if (!collisionLayersMatch(hitbox, hurtbox) || !aabbOverlap(hitbox, hurtbox)) continue;
+      hits.push(Object.freeze({
+        hitboxId: hitbox.id,
+        hurtboxId: hurtbox.id,
+        attackerId: hitbox.ownerId,
+        targetId: hurtbox.actorId,
+        damage: finiteNumber(hitbox.damage, 0),
+        tags: Object.freeze([...(hitbox.tags ?? [])]),
+      }));
+    }
+  }
+  return Object.freeze(hits);
+}
+
+export function createProjectilePool(options = {}) {
+  const pool = createRecyclingPool({
+    capacity: options.capacity,
+    create: options.create,
+    reset: options.reset,
+  });
+  return {
+    spawn(initializer) {
+      return pool.acquire(initializer);
+    },
+    despawn(projectile) {
+      return pool.release(projectile);
+    },
+    step(delta, update, shouldDespawn = (projectile) => projectile.active === false) {
+      coreInvariant(typeof update === 'function', 'projectile pool update must be a function');
+      const expired = [];
+      pool.forEachActive((projectile, index, generation) => {
+        update(projectile, delta, Object.freeze({ index, generation }));
+        if (shouldDespawn(projectile)) expired.push(projectile);
+      });
+      for (const projectile of expired) pool.release(projectile);
+      return expired.length;
+    },
+    activeValues: () => pool.activeValues(),
+    clear: () => pool.clear(),
+    snapshot: () => pool.snapshot(),
+    pool,
+  };
+}
+
+export function createPixiSceneGraph(options = {}) {
+  const PIXI = options.PIXI;
+  coreInvariant(PIXI?.Container, 'Pixi scene graph requires PIXI.Container');
+  coreInvariant(options.stage?.addChild, 'Pixi scene graph requires a stage');
+  const root = new PIXI.Container();
+  root.label = options.label ?? 'arcade-root';
+  const world = new PIXI.Container();
+  const hud = new PIXI.Container();
+  const overlay = new PIXI.Container();
+  world.label = 'world';
+  hud.label = 'hud';
+  overlay.label = 'overlay';
+  root.addChild(world, hud, overlay);
+  options.stage.addChild(root);
+  const parallax = new Map();
+  let destroyed = false;
+
+  const graph = {
+    root,
+    world,
+    hud,
+    overlay,
+    addParallaxLayer(name, layerOptions = {}) {
+      coreInvariant(!parallax.has(name), `parallax layer already exists: ${name}`);
+      const container = layerOptions.container ?? new PIXI.Container();
+      container.label = name;
+      const entry = {
+        name,
+        container,
+        factorX: finiteNumber(layerOptions.factorX, 1),
+        factorY: finiteNumber(layerOptions.factorY, 1),
+      };
+      parallax.set(name, entry);
+      world.addChild(container);
+      if (Number.isFinite(layerOptions.order)) world.setChildIndex?.(container, Math.max(0, Math.floor(layerOptions.order)));
+      return container;
+    },
+    layer(name) {
+      if (name === 'world') return world;
+      if (name === 'hud') return hud;
+      if (name === 'overlay') return overlay;
+      const entry = parallax.get(name);
+      coreInvariant(entry, `unknown scene graph layer: ${name}`);
+      return entry.container;
+    },
+    applyCamera(cameraState = {}) {
+      const zoom = positiveNumber(cameraState.zoom, 1);
+      const anchorX = finiteNumber(cameraState.anchorX, 0) * positiveNumber(cameraState.viewportWidth, 1);
+      const anchorY = finiteNumber(cameraState.anchorY, 0) * positiveNumber(cameraState.viewportHeight, 1);
+      const x = finiteNumber(cameraState.x, 0);
+      const y = finiteNumber(cameraState.y, 0);
+      const shakeX = finiteNumber(cameraState.shakeX, 0);
+      const shakeY = finiteNumber(cameraState.shakeY, 0);
+      world.position?.set?.(anchorX + shakeX, anchorY + shakeY);
+      world.pivot?.set?.(x, y);
+      world.scale?.set?.(zoom);
+      for (const entry of parallax.values()) {
+        entry.container.pivot?.set?.(x * entry.factorX, y * entry.factorY);
+      }
+      return graph;
+    },
+    snapshot() {
+      return Object.freeze({
+        destroyed,
+        parallax: Object.freeze([...parallax.values()].map((entry) => Object.freeze({
+          name: entry.name,
+          factorX: entry.factorX,
+          factorY: entry.factorY,
+        }))),
+      });
+    },
+    destroy() {
+      if (destroyed) return false;
+      destroyed = true;
+      root.removeFromParent?.();
+      root.destroy?.({ children: true });
+      parallax.clear();
+      return true;
+    },
+  };
+  return graph;
+}
+
+export function createPixiSpritePool(options = {}) {
+  coreInvariant(options.container?.addChild, 'Pixi sprite pool requires a container');
+  const pool = createRecyclingPool({
+    capacity: options.capacity,
+    create(index) {
+      const sprite = options.createSprite(index);
+      sprite.visible = false;
+      sprite.renderable = false;
+      options.container.addChild(sprite);
+      return sprite;
+    },
+    reset(sprite, context) {
+      sprite.visible = context.reason === 'acquire';
+      sprite.renderable = context.reason === 'acquire';
+      options.reset?.(sprite, context);
+    },
+  });
+  return {
+    acquire: (initializer) => pool.acquire(initializer),
+    release: (sprite) => pool.release(sprite),
+    clear: () => pool.clear(),
+    activeValues: () => pool.activeValues(),
+    snapshot: () => pool.snapshot(),
+    destroy() {
+      pool.clear();
+      for (const sprite of pool.values()) sprite.destroy?.();
+    },
+  };
+}
+
+function normalizeAssetManifest(manifest) {
+  coreInvariant(manifest && typeof manifest === 'object', 'asset manifest is required');
+  const assets = [...(manifest.assets ?? [])].map((asset) => Object.freeze({
+    dependencies: [],
+    groups: asset.group ? [asset.group] : [],
+    ...asset,
+    groups: Object.freeze([...(asset.groups ?? (asset.group ? [asset.group] : []))]),
+    dependencies: Object.freeze([...(asset.dependencies ?? [])]),
+  }));
+  const byId = new Map();
+  for (const asset of assets) {
+    coreInvariant(typeof asset.id === 'string' && asset.id.length > 0, 'asset id is required');
+    coreInvariant(typeof asset.type === 'string' && asset.type.length > 0, `asset type is required: ${asset.id}`);
+    coreInvariant(typeof asset.src === 'string' && asset.src.length > 0, `asset src is required: ${asset.id}`);
+    coreInvariant(!byId.has(asset.id), `duplicate asset id: ${asset.id}`);
+    byId.set(asset.id, asset);
+  }
+  for (const asset of assets) {
+    for (const dependency of asset.dependencies) coreInvariant(byId.has(dependency), `missing asset dependency ${dependency} for ${asset.id}`);
+    if (asset.fallbackId) coreInvariant(byId.has(asset.fallbackId), `missing fallback asset ${asset.fallbackId} for ${asset.id}`);
+  }
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (id) => {
+    if (visited.has(id)) return;
+    coreInvariant(!visiting.has(id), `asset dependency cycle at ${id}`);
+    visiting.add(id);
+    const asset = byId.get(id);
+    for (const dependency of [...asset.dependencies, ...(asset.fallbackId ? [asset.fallbackId] : [])]) visit(dependency);
+    visiting.delete(id);
+    visited.add(id);
+  };
+  for (const asset of assets) visit(asset.id);
+  return Object.freeze({ version: manifest.version ?? 1, assets: Object.freeze(assets), byId });
+}
+
+export function validateAssetManifest(manifest) {
+  const normalized = normalizeAssetManifest(manifest);
+  return Object.freeze({ version: normalized.version, assets: normalized.assets });
+}
+
+export function createResourceScope(options = {}) {
+  const entries = [];
+  const children = [];
+  let released = false;
+  const scope = {
+    name: options.name ?? 'scope',
+    track(resource, disposer) {
+      coreInvariant(!released, 'resource scope is released');
+      const resolvedDisposer = disposer ?? ((value) => {
+        if (typeof value?.destroy === 'function') return value.destroy();
+        if (typeof value?.close === 'function') return value.close();
+        if (typeof value?.stop === 'function') return value.stop();
+        return undefined;
+      });
+      entries.push({ resource, disposer: resolvedDisposer });
+      return resource;
+    },
+    child(name) {
+      coreInvariant(!released, 'resource scope is released');
+      const child = createResourceScope({ name });
+      children.push(child);
+      return child;
+    },
+    async release() {
+      if (released) return false;
+      released = true;
+      const errors = [];
+      for (const child of children.splice(0).reverse()) {
+        try {
+          await child.release();
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+      for (const entry of entries.splice(0).reverse()) {
+        try {
+          await entry.disposer?.(entry.resource);
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+      if (errors.length > 0) {
+        throw new AggregateError(errors, `resource scope "${scope.name}" release failed`);
+      }
+      return true;
+    },
+    snapshot() {
+      return Object.freeze({ name: scope.name, released, resources: entries.length, children: children.length });
+    },
+  };
+  return scope;
+}
+
+function selectManifestAssets(normalized, options = {}) {
+  const selected = new Set(options.ids ?? []);
+  const groups = new Set(options.groups ?? []);
+  if (selected.size === 0 && groups.size === 0) for (const asset of normalized.assets) selected.add(asset.id);
+  for (const asset of normalized.assets) {
+    if (asset.groups.some((group) => groups.has(group))) selected.add(asset.id);
+  }
+  const includeDependencies = (id) => {
+    const asset = normalized.byId.get(id);
+    coreInvariant(asset, `unknown asset id: ${id}`);
+    for (const dependency of [...asset.dependencies, ...(asset.fallbackId ? [asset.fallbackId] : [])]) {
+      if (!selected.has(dependency)) selected.add(dependency);
+      includeDependencies(dependency);
+    }
+  };
+  for (const id of [...selected]) includeDependencies(id);
+  const order = [];
+  const visited = new Set();
+  const visit = (id) => {
+    if (visited.has(id)) return;
+    const asset = normalized.byId.get(id);
+    for (const dependency of asset.dependencies) visit(dependency);
+    visited.add(id);
+    order.push(asset);
+  };
+  for (const id of [...selected].sort()) visit(id);
+  return order;
+}
+
+function abortAssetLoadError() {
+  const error = new Error('asset loading aborted');
+  error.name = 'AbortError';
+  return error;
+}
+
+export function createAssetLoader(options = {}) {
+  const loaders = { ...(options.loaders ?? {}) };
+  const cache = new Map();
+  const defaultRetries = Math.max(0, Math.floor(finiteNumber(options.retries, 1)));
+
+  const loader = {
+    cache,
+    has(id) {
+      return cache.has(id);
+    },
+    get(id) {
+      return cache.get(id);
+    },
+    clear(id) {
+      if (id === undefined) {
+        const count = cache.size;
+        cache.clear();
+        return count;
+      }
+      return cache.delete(id);
+    },
+    async loadManifest(manifest, loadOptions = {}) {
+      const normalized = normalizeAssetManifest(manifest);
+      const plan = selectManifestAssets(normalized, loadOptions);
+      const budget = loadOptions.budgetBytes ?? Number.POSITIVE_INFINITY;
+      const declaredBytes = plan.reduce((total, asset) => total + Math.max(0, finiteNumber(asset.bytes, 0)), 0);
+      coreInvariant(declaredBytes <= budget, `asset preload budget exceeded: ${declaredBytes} > ${budget}`);
+      const scope = loadOptions.scope ?? createResourceScope({ name: loadOptions.scopeName ?? 'assets' });
+      const result = new Map();
+      let loadedBytes = 0;
+      let loadedCount = 0;
+
+      const loadOne = async (asset) => {
+        if (loadOptions.signal?.aborted) throw abortAssetLoadError();
+        if (cache.has(asset.id)) return cache.get(asset.id);
+        const typeLoader = loadOptions.loaders?.[asset.type] ?? loaders[asset.type] ?? options.load;
+        coreInvariant(typeof typeLoader === 'function', `no loader registered for asset type: ${asset.type}`);
+        let lastError;
+        const retries = Math.max(0, Math.floor(finiteNumber(asset.retries, defaultRetries)));
+        for (let attempt = 0; attempt <= retries; attempt += 1) {
+          if (loadOptions.signal?.aborted) throw abortAssetLoadError();
+          try {
+            const value = await typeLoader(asset, Object.freeze({ attempt, signal: loadOptions.signal, loader }));
+            cache.set(asset.id, value);
+            scope.track(value, asset.dispose);
+            return value;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        if (asset.fallbackId) {
+          const fallback = await loadOne(normalized.byId.get(asset.fallbackId));
+          cache.set(asset.id, fallback);
+          return fallback;
+        }
+        throw lastError;
+      };
+
+      for (const asset of plan) {
+        const value = await loadOne(asset);
+        result.set(asset.id, value);
+        loadedCount += 1;
+        loadedBytes += Math.max(0, finiteNumber(asset.bytes, 0));
+        loadOptions.onProgress?.(Object.freeze({
+          id: asset.id,
+          loadedCount,
+          totalCount: plan.length,
+          loadedBytes,
+          declaredBytes,
+          progress: plan.length ? loadedCount / plan.length : 1,
+        }));
+      }
+      return Object.freeze({
+        assets: result,
+        scope,
+        get: (id) => result.get(id) ?? cache.get(id),
+        loadedBytes,
+        declaredBytes,
+      });
+    },
+  };
+  return loader;
+}
+
+export function createAudioMixer(options = {}) {
+  const context = options.context ?? options.createContext?.();
+  coreInvariant(context?.createGain, 'audio mixer requires an audio context');
+  const master = context.createGain();
+  master.connect(context.destination);
+  const busNames = options.buses ?? ['music', 'sfx', 'ui', 'voice'];
+  const buses = new Map();
+  const active = new Set();
+  const masterState = { volume: clampNumber(options.masterVolume ?? 1, 0, 1), muted: false, ducks: new Map() };
+
+  const effectiveVolume = (state) => {
+    const duck = [...state.ducks.values()].reduce((value, factor) => value * factor, 1);
+    return state.muted ? 0 : clampNumber(state.volume * duck, 0, 1);
+  };
+  const applyMaster = () => { master.gain.value = effectiveVolume(masterState); };
+  applyMaster();
+  for (const name of busNames) {
+    const node = context.createGain();
+    node.connect(master);
+    const state = { name, node, volume: 1, muted: false, ducks: new Map() };
+    node.gain.value = 1;
+    buses.set(name, state);
+  }
+  const requireBus = (name) => {
+    const bus = buses.get(name);
+    coreInvariant(bus, `unknown audio bus: ${name}`);
+    return bus;
+  };
+  const applyBus = (bus) => { bus.node.gain.value = effectiveVolume(bus); };
+
+  const mixer = {
+    context,
+    master,
+    setMasterVolume(volume) {
+      masterState.volume = clampNumber(volume, 0, 1);
+      applyMaster();
+    },
+    setVolume(name, volume) {
+      const bus = requireBus(name);
+      bus.volume = clampNumber(volume, 0, 1);
+      applyBus(bus);
+    },
+    mute(name, muted = true) {
+      const target = name === 'master' ? masterState : requireBus(name);
+      target.muted = Boolean(muted);
+      name === 'master' ? applyMaster() : applyBus(target);
+    },
+    duck(name, factor, token = Symbol(name)) {
+      const target = name === 'master' ? masterState : requireBus(name);
+      target.ducks.set(token, clampNumber(factor, 0, 1));
+      name === 'master' ? applyMaster() : applyBus(target);
+      return () => {
+        const removed = target.ducks.delete(token);
+        name === 'master' ? applyMaster() : applyBus(target);
+        return removed;
+      };
+    },
+    playBuffer(buffer, playOptions = {}) {
+      const bus = requireBus(playOptions.bus ?? 'sfx');
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      source.loop = Boolean(playOptions.loop);
+      gain.gain.value = clampNumber(playOptions.volume ?? 1, 0, 1);
+      source.connect(gain);
+      let tail = gain;
+      if (Number.isFinite(playOptions.pan) && context.createStereoPanner) {
+        const panner = context.createStereoPanner();
+        panner.pan.value = clampNumber(playOptions.pan, -1, 1);
+        gain.connect(panner);
+        tail = panner;
+      }
+      tail.connect(bus.node);
+      const handle = {
+        source,
+        stop() {
+          if (!active.has(handle)) return false;
+          active.delete(handle);
+          source.stop?.();
+          return true;
+        },
+      };
+      source.onended = () => active.delete(handle);
+      active.add(handle);
+      source.start(playOptions.when ?? 0, playOptions.offset ?? 0);
+      return handle;
+    },
+    async resume() {
+      await context.resume?.();
+    },
+    async suspend() {
+      await context.suspend?.();
+    },
+    snapshot() {
+      return Object.freeze({
+        state: context.state,
+        master: effectiveVolume(masterState),
+        buses: Object.freeze(Object.fromEntries([...buses].map(([name, bus]) => [name, effectiveVolume(bus)]))),
+        activeSources: active.size,
+      });
+    },
+    async destroy() {
+      for (const handle of [...active]) handle.stop();
+      await context.close?.();
+    },
+  };
+  return mixer;
+}
+
+export function resolveSafeAreaLayout(input = {}) {
+  const viewportWidth = positiveNumber(input.viewportWidth, 1);
+  const viewportHeight = positiveNumber(input.viewportHeight, 1);
+  const safe = {
+    top: Math.max(0, finiteNumber(input.safeArea?.top, 0)),
+    right: Math.max(0, finiteNumber(input.safeArea?.right, 0)),
+    bottom: Math.max(0, finiteNumber(input.safeArea?.bottom, 0)),
+    left: Math.max(0, finiteNumber(input.safeArea?.left, 0)),
+  };
+  const availableWidth = Math.max(1, viewportWidth - safe.left - safe.right);
+  const availableHeight = Math.max(1, viewportHeight - safe.top - safe.bottom);
+  const designWidth = positiveNumber(input.designWidth, availableWidth);
+  const designHeight = positiveNumber(input.designHeight, availableHeight);
+  const scaleX = availableWidth / designWidth;
+  const scaleY = availableHeight / designHeight;
+  const mode = input.mode ?? 'contain';
+  const scale = mode === 'cover' ? Math.max(scaleX, scaleY) : mode === 'stretch' ? 1 : Math.min(scaleX, scaleY);
+  const width = mode === 'stretch' ? availableWidth : designWidth * scale;
+  const height = mode === 'stretch' ? availableHeight : designHeight * scale;
+  return Object.freeze({
+    viewport: Object.freeze({ x: 0, y: 0, width: viewportWidth, height: viewportHeight }),
+    safeArea: Object.freeze(safe),
+    available: Object.freeze({ x: safe.left, y: safe.top, width: availableWidth, height: availableHeight }),
+    content: Object.freeze({
+      x: safe.left + (availableWidth - width) / 2,
+      y: safe.top + (availableHeight - height) / 2,
+      width,
+      height,
+    }),
+    scale: Object.freeze({ x: mode === 'stretch' ? scaleX : scale, y: mode === 'stretch' ? scaleY : scale }),
+  });
+}
+
+function focusableItems(items) {
+  return items.filter((item) => item.disabled !== true && item.hidden !== true);
+}
+
+export function createFocusNavigator(options = {}) {
+  let items = [...(options.items ?? [])];
+  let focusedId = options.initialId ?? focusableItems(items)[0]?.id ?? null;
+  const wrap = options.wrap !== false;
+  const events = options.events ?? createEventBus();
+
+  const navigator = {
+    events,
+    setItems(nextItems) {
+      items = [...nextItems];
+      if (!focusableItems(items).some((item) => item.id === focusedId)) focusedId = focusableItems(items)[0]?.id ?? null;
+      return navigator.current();
+    },
+    current() {
+      return items.find((item) => item.id === focusedId) ?? null;
+    },
+    focus(id, reason = 'programmatic') {
+      const item = focusableItems(items).find((candidate) => candidate.id === id);
+      if (!item || item.id === focusedId) return false;
+      const previousId = focusedId;
+      focusedId = item.id;
+      events.emit('focus:change', Object.freeze({ previousId, id: focusedId, reason, item }));
+      return true;
+    },
+    move(direction) {
+      const available = focusableItems(items);
+      if (!available.length) return null;
+      const currentIndex = Math.max(0, available.findIndex((item) => item.id === focusedId));
+      let next = null;
+      if (direction === 'next' || direction === 'right' || direction === 'down') next = currentIndex + 1;
+      else if (direction === 'previous' || direction === 'left' || direction === 'up') next = currentIndex - 1;
+      else throw new Error(`unknown focus direction: ${direction}`);
+      if (wrap) next = (next + available.length) % available.length;
+      else next = clampNumber(next, 0, available.length - 1);
+      navigator.focus(available[next].id, direction);
+      return navigator.current();
+    },
+    activate() {
+      const item = navigator.current();
+      if (!item) return false;
+      item.onActivate?.(item);
+      events.emit('focus:activate', Object.freeze({ id: item.id, item }));
+      return true;
+    },
+    snapshot() {
+      return Object.freeze({ focusedId, items: Object.freeze(items.map((item) => Object.freeze({ id: item.id, disabled: Boolean(item.disabled), hidden: Boolean(item.hidden) }))) });
+    },
+  };
+  return navigator;
+}
+
+export function createInputHintTracker(options = {}) {
+  let device = options.initialDevice ?? 'keyboard';
+  let changedAt = finiteNumber(options.now?.(), 0);
+  const events = options.events ?? createEventBus();
+  return {
+    events,
+    note(nextDevice, timestamp = options.now?.() ?? Date.now()) {
+      coreInvariant(['keyboard', 'gamepad', 'pointer', 'touch'].includes(nextDevice), `unknown input device: ${nextDevice}`);
+      if (nextDevice === device) return false;
+      const previous = device;
+      device = nextDevice;
+      changedAt = timestamp;
+      events.emit('input-device:change', Object.freeze({ previous, device, changedAt }));
+      return true;
+    },
+    noteActionState(state, timestamp) {
+      const sources = Object.values(state ?? {}).map((entry) => entry?.source).filter(Boolean);
+      if (sources.some((source) => source.startsWith('gamepad:'))) return this.note('gamepad', timestamp);
+      if (sources.some((source) => source.startsWith('key:'))) return this.note('keyboard', timestamp);
+      return false;
+    },
+    snapshot: () => Object.freeze({ device, changedAt }),
+  };
+}
+
+export function createAccessibilityPreferences(initial = {}) {
+  const events = createEventBus();
+  let state = {
+    reducedMotion: false,
+    highContrast: false,
+    captions: true,
+    screenReader: false,
+    textScale: 1,
+    ...initial,
+  };
+  state.textScale = clampNumber(state.textScale, 0.75, 2);
+  return {
+    events,
+    set(patch, reason = 'user') {
+      const previous = Object.freeze({ ...state });
+      state = { ...state, ...patch, textScale: clampNumber(patch.textScale ?? state.textScale, 0.75, 2) };
+      const next = Object.freeze({ ...state });
+      events.emit('accessibility:change', Object.freeze({ previous, next, reason }));
+      return next;
+    },
+    snapshot: () => Object.freeze({ ...state }),
+    motion(duration) {
+      return state.reducedMotion ? 0 : Math.max(0, finiteNumber(duration, 0));
+    },
+  };
+}
+
+function messageAt(messages, locale, key) {
+  const parts = key.split('.');
+  let value = messages?.[locale];
+  for (const part of parts) value = value?.[part];
+  return value;
+}
+
+function formatMessage(template, variables) {
+  return String(template).replace(/\{([A-Za-z0-9_]+)\}/g, (_, key) => variables[key] ?? `{${key}}`);
+}
+
+export function createMessageCatalog(options = {}) {
+  let locale = options.locale ?? options.fallbackLocale ?? 'en';
+  const fallbackLocale = options.fallbackLocale ?? locale;
+  let messages = { ...(options.messages ?? {}) };
+  return {
+    setLocale(nextLocale) {
+      locale = nextLocale;
+    },
+    addMessages(nextLocale, nextMessages) {
+      messages = { ...messages, [nextLocale]: { ...(messages[nextLocale] ?? {}), ...nextMessages } };
+    },
+    translate(key, variables = {}) {
+      let value = messageAt(messages, locale, key) ?? messageAt(messages, fallbackLocale, key);
+      if (value && typeof value === 'object') {
+        const count = Number(variables.count);
+        value = count === 1 ? value.one ?? value.other : value.other ?? value.one;
+      }
+      if (value === undefined) return options.missing?.(key, locale) ?? key;
+      return formatMessage(value, variables);
+    },
+    has(key) {
+      return messageAt(messages, locale, key) !== undefined || messageAt(messages, fallbackLocale, key) !== undefined;
+    },
+    snapshot: () => Object.freeze({ locale, fallbackLocale, locales: Object.freeze(Object.keys(messages).sort()) }),
+  };
+}
+
+export function createTextMeasureCache(options = {}) {
+  coreInvariant(typeof options.measure === 'function', 'text measure cache requires a measure function');
+  const cache = new Map();
+  return {
+    measure(text, style = {}) {
+      const key = stableSnapshotString({ text, style }, { precision: 6 });
+      if (!cache.has(key)) cache.set(key, options.measure(text, style));
+      return cache.get(key);
+    },
+    clear() {
+      const count = cache.size;
+      cache.clear();
+      return count;
+    },
+    snapshot: () => Object.freeze({ size: cache.size }),
+  };
+}
+
+export function createMemoryStorageAdapter(seed = {}) {
+  const data = new Map(Object.entries(seed));
+  return {
+    getItem: (key) => data.get(key) ?? null,
+    setItem(key, value) { data.set(key, String(value)); },
+    removeItem(key) { return data.delete(key); },
+    keys: () => [...data.keys()].sort(),
+    snapshot: () => Object.freeze(Object.fromEntries([...data.entries()].sort(([a], [b]) => a.localeCompare(b)))),
+  };
+}
+
+export function createStorageAdapter(storage) {
+  coreInvariant(storage?.getItem && storage?.setItem, 'storage adapter requires getItem and setItem');
+  return {
+    getItem: (key) => storage.getItem(key),
+    setItem: (key, value) => storage.setItem(key, value),
+    removeItem: (key) => storage.removeItem?.(key),
+    keys() {
+      const keys = [];
+      for (let index = 0; index < (storage.length ?? 0); index += 1) {
+        const key = storage.key?.(index);
+        if (key !== null && key !== undefined) keys.push(key);
+      }
+      return keys.sort();
+    },
+  };
+}
+
+function parseStoreEnvelope(raw) {
+  const envelope = JSON.parse(raw);
+  coreInvariant(envelope?.format === 1, 'unsupported store envelope');
+  coreInvariant(Number.isInteger(envelope.version) && envelope.version >= 0, 'invalid store version');
+  coreInvariant(envelope.checksum === deterministicHash(envelope.data), 'store checksum mismatch');
+  return envelope;
+}
+
+export function createVersionedStore(options = {}) {
+  const adapter = options.adapter ?? createMemoryStorageAdapter();
+  const key = options.key;
+  const version = Math.floor(finiteNumber(options.version, 1));
+  coreInvariant(typeof key === 'string' && key.length > 0, 'versioned store key is required');
+  coreInvariant(version >= 1, 'versioned store version must be positive');
+  const backupKey = options.backupKey ?? `${key}.backup`;
+  const tempKey = `${key}.tmp`;
+  const defaults = () => arcadeClone(typeof options.defaults === 'function' ? options.defaults() : options.defaults ?? {});
+  const validate = (data) => options.validate ? options.validate(data) !== false : true;
+
+  const migrate = (envelope) => {
+    let currentVersion = envelope.version;
+    let data = arcadeClone(envelope.data);
+    while (currentVersion < version) {
+      const nextVersion = currentVersion + 1;
+      const migration = options.migrations?.[nextVersion];
+      coreInvariant(typeof migration === 'function', `missing migration to version ${nextVersion}`);
+      data = migration(data, Object.freeze({ from: currentVersion, to: nextVersion }));
+      currentVersion = nextVersion;
+    }
+    coreInvariant(currentVersion === version, `stored version ${currentVersion} is newer than ${version}`);
+    coreInvariant(validate(data), 'stored data failed validation');
+    return { data, migrated: envelope.version !== version };
+  };
+
+  const currentRevision = () => {
+    const raw = adapter.getItem(key);
+    if (raw === null) return -1;
+    try {
+      return Math.max(-1, Math.floor(finiteNumber(parseStoreEnvelope(raw).revision, -1)));
+    } catch {
+      return -1;
+    }
+  };
+
+  const commit = (data, metadata = {}, commitOptions = {}) => {
+      coreInvariant(validate(data), 'save data failed validation');
+      const revision = metadata.revision === undefined
+        ? currentRevision() + 1
+        : Math.max(0, Math.floor(finiteNumber(metadata.revision, 0)));
+      const envelope = {
+        format: 1,
+        version,
+        savedAt: finiteNumber(metadata.savedAt, options.now?.() ?? Date.now()),
+        revision: Math.max(0, revision),
+        data: arcadeClone(data),
+      };
+      envelope.checksum = deterministicHash(envelope.data);
+      const serialized = JSON.stringify(envelope);
+      const previous = adapter.getItem(key);
+      if (commitOptions.backupPrevious !== false && previous !== null) adapter.setItem(backupKey, previous);
+      adapter.setItem(tempKey, serialized);
+      adapter.setItem(key, serialized);
+      adapter.removeItem?.(tempKey);
+      return Object.freeze({ ...envelope, data: arcadeClone(envelope.data) });
+  };
+
+  const store = {
+    save(data, metadata = {}) {
+      return commit(data, metadata);
+    },
+    load() {
+      const candidates = [
+        ['primary', adapter.getItem(key)],
+        ['temporary', adapter.getItem(tempKey)],
+        ['backup', adapter.getItem(backupKey)],
+      ];
+      for (const [source, raw] of candidates) {
+        if (raw === null) continue;
+        try {
+          const envelope = parseStoreEnvelope(raw);
+          const result = migrate(envelope);
+          if (result.migrated || source !== 'primary') {
+            commit(
+              result.data,
+              { savedAt: envelope.savedAt, revision: envelope.revision + 1 },
+              { backupPrevious: source === 'primary' },
+            );
+          }
+          return Object.freeze({ data: arcadeClone(result.data), source, migrated: result.migrated, recovered: source !== 'primary', version });
+        } catch (error) {
+          options.onCorruption?.(Object.freeze({ source, error }));
+        }
+      }
+      return Object.freeze({ data: defaults(), source: 'default', migrated: false, recovered: false, version });
+    },
+    clear() {
+      adapter.removeItem?.(key);
+      adapter.removeItem?.(backupKey);
+      adapter.removeItem?.(tempKey);
+    },
+    inspect() {
+      return Object.freeze({ key, backupKey, tempKey, version, hasPrimary: adapter.getItem(key) !== null, hasBackup: adapter.getItem(backupKey) !== null });
+    },
+  };
+  return store;
+}
+
+export function createProfileStore(options = {}) {
+  const adapter = options.adapter ?? createMemoryStorageAdapter();
+  const indexKey = `${options.key}.profiles`;
+  const maxSlots = Math.max(1, Math.floor(finiteNumber(options.maxSlots, 4)));
+  const profileId = (id) => {
+    coreInvariant(typeof id === 'string' && id.length > 0, 'profile id is required');
+    return id;
+  };
+  const readIndex = () => {
+    try {
+      const parsed = JSON.parse(adapter.getItem(indexKey) ?? '[]');
+      if (!Array.isArray(parsed)) return [];
+      return [...new Set(parsed.filter((id) => typeof id === 'string' && id.length > 0))]
+        .sort()
+        .slice(0, maxSlots);
+    } catch {
+      return [];
+    }
+  };
+  const writeIndex = (ids) => adapter.setItem(indexKey, JSON.stringify([...new Set(ids)].sort().slice(0, maxSlots)));
+  const slot = (id) => createVersionedStore({ ...options, adapter, key: `${options.key}.profile.${profileId(id)}` });
+  return {
+    list: () => Object.freeze(readIndex().sort()),
+    load(id) {
+      return slot(profileId(id)).load();
+    },
+    save(id, data, metadata) {
+      profileId(id);
+      const ids = readIndex();
+      if (!ids.includes(id)) {
+        coreInvariant(ids.length < maxSlots, `profile slot limit reached: ${maxSlots}`);
+        writeIndex([...ids, id]);
+      }
+      return slot(id).save(data, metadata);
+    },
+    remove(id) {
+      const resolvedId = profileId(id);
+      slot(resolvedId).clear();
+      writeIndex(readIndex().filter((candidate) => candidate !== resolvedId));
+    },
+  };
+}
+
+export function resolveStorageConflict(local, remote, options = {}) {
+  if (!local) return Object.freeze({ winner: 'remote', value: remote });
+  if (!remote) return Object.freeze({ winner: 'local', value: local });
+  if (typeof options.merge === 'function') return Object.freeze({ winner: 'merged', value: options.merge(local, remote) });
+  const strategy = options.strategy ?? 'newer';
+  if (strategy === 'local') return Object.freeze({ winner: 'local', value: local });
+  if (strategy === 'remote') return Object.freeze({ winner: 'remote', value: remote });
+  const localTime = finiteNumber(local.savedAt, 0);
+  const remoteTime = finiteNumber(remote.savedAt, 0);
+  if (localTime === remoteTime) {
+    return deterministicHash(local) <= deterministicHash(remote)
+      ? Object.freeze({ winner: 'local', value: local })
+      : Object.freeze({ winner: 'remote', value: remote });
+  }
+  return localTime > remoteTime
+    ? Object.freeze({ winner: 'local', value: local })
+    : Object.freeze({ winner: 'remote', value: remote });
+}
+
+export function createStatisticsService(initial = {}) {
+  const values = new Map(Object.entries(initial).map(([key, value]) => [key, finiteNumber(value, 0)]));
+  return {
+    increment(key, amount = 1) {
+      const next = finiteNumber(values.get(key), 0) + finiteNumber(amount, 0);
+      values.set(key, next);
+      return next;
+    },
+    set(key, value) {
+      values.set(key, finiteNumber(value, 0));
+      return values.get(key);
+    },
+    max(key, value) {
+      return this.set(key, Math.max(finiteNumber(values.get(key), Number.NEGATIVE_INFINITY), finiteNumber(value, 0)));
+    },
+    min(key, value) {
+      return this.set(key, Math.min(finiteNumber(values.get(key), Number.POSITIVE_INFINITY), finiteNumber(value, 0)));
+    },
+    get: (key) => values.get(key) ?? 0,
+    snapshot: () => Object.freeze(Object.fromEntries([...values.entries()].sort(([a], [b]) => a.localeCompare(b)))),
+    reset() { values.clear(); },
+  };
+}
+
+export function createAchievementService(options = {}) {
+  const definitions = new Map((options.definitions ?? []).map((definition) => [definition.id, Object.freeze({ target: 1, ...definition })]));
+  const progress = new Map(Object.entries(options.initial?.progress ?? {}).map(([id, value]) => [id, finiteNumber(value, 0)]));
+  const unlocked = new Set(options.initial?.unlocked ?? []);
+  const events = options.events ?? createEventBus();
+  const service = {
+    events,
+    record(id, amount = 1, context) {
+      const definition = definitions.get(id);
+      coreInvariant(definition, `unknown achievement: ${id}`);
+      if (unlocked.has(id)) return false;
+      const current = progress.get(id) ?? 0;
+      const next = definition.reduce ? definition.reduce(current, amount, context) : current + finiteNumber(amount, 0);
+      progress.set(id, next);
+      events.emit('achievement:progress', Object.freeze({ id, current, progress: next, target: definition.target }));
+      if (next >= definition.target) return service.unlock(id, context);
+      return false;
+    },
+    consume(event, payload) {
+      let changed = 0;
+      for (const definition of [...definitions.values()].sort((a, b) => a.id.localeCompare(b.id))) {
+        if (definition.event !== event || unlocked.has(definition.id)) continue;
+        const amount = definition.select ? definition.select(payload) : 1;
+        if (service.record(definition.id, amount, payload)) changed += 1;
+      }
+      return changed;
+    },
+    unlock(id, context) {
+      const definition = definitions.get(id);
+      coreInvariant(definition, `unknown achievement: ${id}`);
+      if (unlocked.has(id)) return false;
+      unlocked.add(id);
+      progress.set(id, Math.max(progress.get(id) ?? 0, definition.target));
+      events.emit('achievement:unlocked', Object.freeze({ id, definition, context }));
+      return true;
+    },
+    isUnlocked: (id) => unlocked.has(id),
+    snapshot() {
+      return Object.freeze({
+        progress: Object.freeze(Object.fromEntries([...progress.entries()].sort(([a], [b]) => a.localeCompare(b)))),
+        unlocked: Object.freeze([...unlocked].sort()),
+      });
+    },
+  };
+  return service;
+}
+
+export function createRunSummary(input = {}) {
+  const startedAt = finiteNumber(input.startedAt, 0);
+  const endedAt = Math.max(startedAt, finiteNumber(input.endedAt, startedAt));
+  const summary = {
+    version: 1,
+    game: input.game ?? 'unknown',
+    mode: input.mode ?? 'unknown',
+    seed: input.seed ?? 0,
+    startedAt,
+    endedAt,
+    duration: endedAt - startedAt,
+    result: input.result ?? null,
+    score: finiteNumber(input.score, 0),
+    stats: stableSnapshot(input.stats ?? {}),
+    achievements: Object.freeze([...(input.achievements ?? [])].sort()),
+    commandHash: input.commands ? deterministicHash(typeof input.commands === 'string' ? parseCommandStream(input.commands) : input.commands) : null,
+    stateHash: input.finalState === undefined ? null : deterministicHash(input.finalState),
+    metadata: stableSnapshot(input.metadata ?? {}),
+  };
+  return Object.freeze({ ...summary, summaryHash: deterministicHash(summary) });
+}
+
+export function verifyRunSummary(summary) {
+  const { summaryHash, ...payload } = summary;
+  return summaryHash === deterministicHash(payload);
+}
+
+// END ARCADE SERVICES 0.13-0.16
+
+// BEGIN ARCADE SERVICES 0.17-1.0
+
+export const ARCADE_RUNTIME_API_LEVEL = 1;
+
+export const ARCADE_RUNTIME_CAPABILITIES = Object.freeze([
+  'assets',
+  'audio',
+  'collision',
+  'deterministic-replay',
+  'input',
+  'localization',
+  'netcode-adapters',
+  'performance-budgets',
+  'persistence',
+  'pixi-rendering',
+  'runtime-host',
+  'runtime-inspector',
+  'scenes',
+  'system-pipeline',
+  'ui-accessibility',
+]);
+
+export function getArcadeRuntimeCapabilities() {
+  return Object.freeze({
+    package: '@arcade/runtime',
+    version: ARCADE_RUNTIME_VERSION,
+    apiLevel: ARCADE_RUNTIME_API_LEVEL,
+    capabilities: ARCADE_RUNTIME_CAPABILITIES,
+  });
+}
+
+export function assertArcadeRuntimeCompatibility(requirements = {}) {
+  const minimumApiLevel = Math.max(0, Math.floor(finiteNumber(requirements.apiLevel, 0)));
+  coreInvariant(
+    ARCADE_RUNTIME_API_LEVEL >= minimumApiLevel,
+    `arcade runtime API level ${ARCADE_RUNTIME_API_LEVEL} does not satisfy ${minimumApiLevel}`,
+  );
+  const available = new Set(ARCADE_RUNTIME_CAPABILITIES);
+  const missing = [...(requirements.capabilities ?? [])].filter((capability) => !available.has(capability));
+  coreInvariant(missing.length === 0, `missing arcade runtime capabilities: ${missing.join(', ')}`);
+  if (requirements.major !== undefined) {
+    const major = Number.parseInt(ARCADE_RUNTIME_VERSION.split('.')[0], 10);
+    coreInvariant(major === requirements.major, `arcade runtime major ${major} does not satisfy ${requirements.major}`);
+  }
+  return getArcadeRuntimeCapabilities();
+}
+
+function requireFrame(frame, label = 'frame') {
+  const resolved = Math.floor(finiteNumber(frame, -1));
+  coreInvariant(resolved >= 0, `${label} must be a non-negative integer`);
+  return resolved;
+}
+
+export function createInputDelayBuffer(options = {}) {
+  const delayFrames = Math.max(0, Math.floor(finiteNumber(options.delayFrames, 0)));
+  const clone = options.clone ?? arcadeClone;
+  const frames = new Map();
+  let writes = 0;
+
+  const buffer = {
+    delayFrames,
+    put(playerId, inputFrame, input) {
+      coreInvariant(typeof playerId === 'string' && playerId.length > 0, 'input player id is required');
+      const frame = requireFrame(inputFrame, 'input frame');
+      const entries = frames.get(frame) ?? new Map();
+      entries.set(playerId, clone(input));
+      frames.set(frame, entries);
+      writes += 1;
+      return frame + delayFrames;
+    },
+    has(playerId, inputFrame) {
+      return frames.get(requireFrame(inputFrame, 'input frame'))?.has(playerId) ?? false;
+    },
+    get(playerId, inputFrame) {
+      const value = frames.get(requireFrame(inputFrame, 'input frame'))?.get(playerId);
+      return value === undefined ? undefined : clone(value);
+    },
+    resolve(simulationFrame, playerIds, fallback) {
+      const frame = requireFrame(simulationFrame, 'simulation frame');
+      const sourceFrame = frame - delayFrames;
+      const inputs = {};
+      const missing = [];
+      for (const playerId of playerIds) {
+        const value = sourceFrame >= 0 ? frames.get(sourceFrame)?.get(playerId) : undefined;
+        if (value === undefined) {
+          missing.push(playerId);
+          inputs[playerId] = clone(typeof fallback === 'function' ? fallback(playerId, sourceFrame) : fallback);
+        } else {
+          inputs[playerId] = clone(value);
+        }
+      }
+      return Object.freeze({
+        simulationFrame: frame,
+        sourceFrame,
+        inputs: Object.freeze(inputs),
+        missing: Object.freeze(missing),
+        predicted: missing.length > 0,
+      });
+    },
+    prune(beforeInputFrame) {
+      const threshold = requireFrame(beforeInputFrame, 'prune frame');
+      let removed = 0;
+      for (const frame of [...frames.keys()]) {
+        if (frame < threshold) {
+          frames.delete(frame);
+          removed += 1;
+        }
+      }
+      return removed;
+    },
+    snapshot() {
+      return Object.freeze({
+        delayFrames,
+        writes,
+        frames: Object.freeze([...frames.keys()].sort((a, b) => a - b)),
+      });
+    },
+  };
+  return buffer;
+}
+
+export function createStateHistory(options = {}) {
+  const capacity = Math.max(2, Math.floor(finiteNumber(options.capacity, 120)));
+  const clone = options.clone ?? arcadeClone;
+  const snapshotState = options.snapshot ?? ((state) => state);
+  const hashState = options.hash ?? ((state) => deterministicHash(snapshotState(state)));
+  const entries = new Map();
+
+  const history = {
+    capacity,
+    save(frame, state, metadata = {}) {
+      const resolvedFrame = requireFrame(frame);
+      const entry = Object.freeze({
+        frame: resolvedFrame,
+        state: clone(state),
+        hash: hashState(state),
+        metadata: stableSnapshot(metadata),
+      });
+      entries.set(resolvedFrame, entry);
+      while (entries.size > capacity) entries.delete(Math.min(...entries.keys()));
+      return entry;
+    },
+    has(frame) {
+      return entries.has(requireFrame(frame));
+    },
+    get(frame) {
+      const entry = entries.get(requireFrame(frame));
+      return entry ? Object.freeze({ ...entry, state: clone(entry.state) }) : null;
+    },
+    nearestAtOrBefore(frame) {
+      const target = requireFrame(frame);
+      const candidate = [...entries.keys()].filter((value) => value <= target).sort((a, b) => b - a)[0];
+      return candidate === undefined ? null : history.get(candidate);
+    },
+    pruneAfter(frame) {
+      const threshold = requireFrame(frame);
+      let removed = 0;
+      for (const candidate of [...entries.keys()]) {
+        if (candidate > threshold) {
+          entries.delete(candidate);
+          removed += 1;
+        }
+      }
+      return removed;
+    },
+    clear() {
+      const count = entries.size;
+      entries.clear();
+      return count;
+    },
+    frames() {
+      return Object.freeze([...entries.keys()].sort((a, b) => a - b));
+    },
+    snapshot() {
+      const frames = history.frames();
+      return Object.freeze({
+        capacity,
+        size: entries.size,
+        firstFrame: frames[0] ?? null,
+        lastFrame: frames.at(-1) ?? null,
+      });
+    },
+  };
+  return history;
+}
+
+function rollbackInputsEqual(left, right) {
+  if (left === undefined || right === undefined) return left === right;
+  return stableSnapshotString(left) === stableSnapshotString(right);
+}
+
+export function createRollbackSession(options = {}) {
+  coreInvariant(typeof options.step === 'function', 'rollback session requires a step function');
+  const players = Object.freeze([...(options.players ?? [])]);
+  coreInvariant(players.length > 0, 'rollback session requires at least one player');
+  coreInvariant(players.every((playerId) => typeof playerId === 'string' && playerId.length > 0), 'rollback player ids must be non-empty strings');
+  coreInvariant(new Set(players).size === players.length, 'rollback player ids must be unique');
+  const cloneState = options.cloneState ?? options.clone ?? arcadeClone;
+  const cloneInput = options.cloneInput ?? arcadeClone;
+  const events = options.events ?? createEventBus();
+  const delay = options.inputBuffer ?? createInputDelayBuffer({
+    delayFrames: options.inputDelayFrames,
+    clone: cloneInput,
+  });
+  const history = options.history ?? createStateHistory({
+    capacity: options.historyFrames,
+    clone: cloneState,
+    snapshot: options.snapshot,
+  });
+  const usedInputs = new Map();
+  const remoteChecksums = new Map();
+  let state = cloneState(options.initialState);
+  let frame = 0;
+  let rollbackCount = 0;
+  let resimulatedFrames = 0;
+  let rejectedLateInputs = 0;
+  history.save(0, state, { initial: true });
+
+  const pruneRetainedFrames = () => {
+    const oldestFrame = history.snapshot().firstFrame;
+    if (oldestFrame === null) return;
+    for (const candidate of [...usedInputs.keys()]) {
+      if (candidate < oldestFrame) usedInputs.delete(candidate);
+    }
+    delay.prune(Math.max(0, oldestFrame - delay.delayFrames));
+    for (const [key, report] of remoteChecksums) {
+      if (report.frame < oldestFrame) remoteChecksums.delete(key);
+    }
+  };
+
+  const defaultInput = (playerId, inputFrame) => {
+    if (typeof options.defaultInput === 'function') return options.defaultInput(playerId, inputFrame);
+    return options.defaultInput ?? null;
+  };
+
+  const inputsForFrame = (simulationFrame) => {
+    const resolved = delay.resolve(simulationFrame, players, (playerId, inputFrame) => {
+      const previous = usedInputs.get(simulationFrame - 1)?.inputs?.[playerId];
+      return previous === undefined ? defaultInput(playerId, inputFrame) : previous;
+    });
+    return resolved;
+  };
+
+  const simulate = (simulationFrame, resimulation = false) => {
+    const inputFrame = inputsForFrame(simulationFrame);
+    const context = Object.freeze({
+      frame: simulationFrame,
+      sourceFrame: inputFrame.sourceFrame,
+      predictedPlayers: inputFrame.missing,
+      resimulation,
+      session,
+    });
+    state = options.step(cloneState(state), inputFrame.inputs, context);
+    frame = simulationFrame;
+    usedInputs.set(frame, inputFrame);
+    history.save(frame, state, {
+      sourceFrame: inputFrame.sourceFrame,
+      predictedPlayers: inputFrame.missing,
+    });
+    pruneRetainedFrames();
+    if (resimulation) resimulatedFrames += 1;
+    events.emit(resimulation ? 'rollback:resimulate' : 'rollback:advance', Object.freeze({ frame, state: cloneState(state), inputFrame }));
+    return cloneState(state);
+  };
+
+  const rollbackAndReplay = (targetFrame, finalFrame) => {
+    const base = history.get(targetFrame);
+    coreInvariant(base, `rollback history does not contain frame ${targetFrame}`);
+    state = cloneState(base.state);
+    frame = targetFrame;
+    history.pruneAfter(targetFrame);
+    for (const candidate of [...usedInputs.keys()]) if (candidate > targetFrame) usedInputs.delete(candidate);
+    rollbackCount += 1;
+    events.emit('rollback:begin', Object.freeze({ targetFrame, finalFrame }));
+    while (frame < finalFrame) simulate(frame + 1, true);
+    events.emit('rollback:end', Object.freeze({ frame, rollbackCount, resimulatedFrames }));
+  };
+
+  const session = {
+    events,
+    players,
+    delay,
+    history,
+    submitInput(playerId, inputFrame, input) {
+      coreInvariant(players.includes(playerId), `unknown rollback player: ${playerId}`);
+      const simulationFrame = delay.put(playerId, inputFrame, input);
+      if (simulationFrame > 0 && simulationFrame <= frame) {
+        const used = usedInputs.get(simulationFrame)?.inputs?.[playerId];
+        if (!rollbackInputsEqual(used, input)) {
+          const finalFrame = frame;
+          const targetFrame = Math.max(0, simulationFrame - 1);
+          if (!history.has(targetFrame)) {
+            rejectedLateInputs += 1;
+            const report = Object.freeze({
+              playerId,
+              inputFrame: requireFrame(inputFrame, 'input frame'),
+              simulationFrame,
+              currentFrame: frame,
+              oldestFrame: history.snapshot().firstFrame,
+            });
+            events.emit('rollback:input-too-old', report);
+            pruneRetainedFrames();
+          } else {
+            rollbackAndReplay(targetFrame, finalFrame);
+          }
+        }
+      }
+      return simulationFrame;
+    },
+    receiveInput(playerId, inputFrame, input) {
+      return session.submitInput(playerId, inputFrame, input);
+    },
+    advance(inputs = {}) {
+      const inputFrame = frame + 1;
+      for (const [playerId, input] of Object.entries(inputs)) session.submitInput(playerId, inputFrame, input);
+      return simulate(frame + 1, false);
+    },
+    advanceTo(targetFrame, inputProvider) {
+      const target = requireFrame(targetFrame, 'target frame');
+      while (frame < target) session.advance(inputProvider?.(frame + 1, session) ?? {});
+      return cloneState(state);
+    },
+    rollbackTo(targetFrame) {
+      const target = requireFrame(targetFrame, 'rollback frame');
+      coreInvariant(target <= frame, `cannot roll forward to frame ${target}`);
+      rollbackAndReplay(target, target);
+      return cloneState(state);
+    },
+    checksum(targetFrame = frame) {
+      return history.get(targetFrame)?.hash ?? null;
+    },
+    compareRemoteChecksum(peerId, targetFrame, checksum) {
+      const resolvedFrame = requireFrame(targetFrame);
+      const local = session.checksum(resolvedFrame);
+      const match = local === checksum;
+      const report = Object.freeze({ peerId, frame: resolvedFrame, local, remote: checksum, match });
+      remoteChecksums.set(`${peerId}\u0000${resolvedFrame}`, report);
+      events.emit(match ? 'checksum:match' : 'checksum:mismatch', report);
+      return report;
+    },
+    getState() {
+      return cloneState(state);
+    },
+    snapshot() {
+      return Object.freeze({
+        frame,
+        checksum: session.checksum(),
+        rollbackCount,
+        resimulatedFrames,
+        rejectedLateInputs,
+        inputDelayFrames: delay.delayFrames,
+        history: history.snapshot(),
+        retainedInputFrames: usedInputs.size,
+        bufferedInputFrames: delay.snapshot().frames.length,
+        remoteChecksums: remoteChecksums.size,
+      });
+    },
+  };
+  return session;
+}
+
+export function createLocalTransportPair(options = {}) {
+  const schedule = options.schedule ?? ((deliver) => queueMicrotask(deliver));
+  const clone = options.clone ?? arcadeClone;
+  const makeEndpoint = (name) => {
+    const listeners = new Set();
+    const stats = { sent: 0, received: 0, dropped: 0 };
+    let peer = null;
+    let closed = false;
+    const endpoint = {
+      name,
+      send(message) {
+        if (closed || !peer || peer.closed) return false;
+        stats.sent += 1;
+        if (options.drop?.(message, Object.freeze({ from: name, sent: stats.sent }))) {
+          stats.dropped += 1;
+          return false;
+        }
+        const payload = clone(message);
+        schedule(() => peer.deliver(payload), options.latencyMs ?? 0);
+        return true;
+      },
+      onMessage(listener) {
+        coreInvariant(typeof listener === 'function', 'transport listener must be a function');
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      close() {
+        if (closed) return false;
+        closed = true;
+        listeners.clear();
+        return true;
+      },
+      snapshot: () => Object.freeze({ name, closed, ...stats }),
+      get closed() {
+        return closed;
+      },
+      setPeer(nextPeer) {
+        peer = nextPeer;
+      },
+      deliver(message) {
+        if (closed) return;
+        stats.received += 1;
+        for (const listener of [...listeners]) listener(clone(message));
+      },
+    };
+    return endpoint;
+  };
+  const first = makeEndpoint(options.firstName ?? 'a');
+  const second = makeEndpoint(options.secondName ?? 'b');
+  first.setPeer(second);
+  second.setPeer(first);
+  return Object.freeze([first, second]);
+}
+
+export function createRuntimeInspector(options = {}) {
+  const sources = new Map();
+  const captures = [];
+  const capacity = Math.max(1, Math.floor(finiteNumber(options.capacity, 120)));
+  const now = options.now ?? (() => Date.now());
+  let nextCaptureIndex = 0;
+
+  const inspector = {
+    register(name, source) {
+      coreInvariant(typeof name === 'string' && name.length > 0, 'inspector source name is required');
+      coreInvariant(!sources.has(name), `inspector source already exists: ${name}`);
+      sources.set(name, source);
+      return () => sources.delete(name);
+    },
+    inspect(name) {
+      const source = sources.get(name);
+      coreInvariant(source !== undefined, `unknown inspector source: ${name}`);
+      const value = typeof source === 'function' ? source() : source?.snapshot ? source.snapshot() : source;
+      return stableSnapshot(value);
+    },
+    capture(label = 'capture', metadata = {}) {
+      const values = {};
+      for (const name of [...sources.keys()].sort()) values[name] = inspector.inspect(name);
+      const capture = Object.freeze({
+        index: nextCaptureIndex,
+        label,
+        time: now(),
+        metadata: stableSnapshot(metadata),
+        values: Object.freeze(values),
+        hash: deterministicHash({ label, metadata, values }),
+      });
+      captures.push(capture);
+      nextCaptureIndex += 1;
+      if (captures.length > capacity) captures.shift();
+      options.onCapture?.(capture);
+      return capture;
+    },
+    history() {
+      return Object.freeze([...captures]);
+    },
+    export() {
+      return JSON.stringify({ version: 1, captures }, null, 2);
+    },
+    clear() {
+      const count = captures.length;
+      captures.length = 0;
+      return count;
+    },
+    snapshot() {
+      return Object.freeze({ sources: Object.freeze([...sources.keys()].sort()), captures: captures.length, capacity, nextCaptureIndex });
+    },
+  };
+  for (const [name, source] of Object.entries(options.sources ?? {})) inspector.register(name, source);
+  if (options.host) inspector.register('host', options.host);
+  return inspector;
+}
+
+export function createReplayTimeline(options = {}) {
+  const stream = typeof options.stream === 'string' ? parseCommandStream(options.stream) : options.stream;
+  coreInvariant(stream?.entries, 'replay timeline requires a command stream');
+  const entries = Object.freeze([...stream.entries].sort((a, b) => a.tick - b.tick || a.sequence - b.sequence));
+  const frames = options.frames ? Object.freeze([...options.frames]) : Object.freeze([]);
+  let cursor = entries.length ? 0 : -1;
+
+  const timeline = {
+    stream,
+    entries,
+    frames,
+    current() {
+      return cursor < 0 ? null : entries[cursor] ?? null;
+    },
+    seekIndex(index) {
+      if (!entries.length) {
+        cursor = -1;
+        return null;
+      }
+      cursor = clampNumber(Math.floor(finiteNumber(index, 0)), 0, entries.length - 1);
+      return timeline.current();
+    },
+    seekTick(tick) {
+      const target = requireFrame(tick, 'replay tick');
+      let index = entries.findIndex((entry) => entry.tick >= target);
+      if (index < 0) index = entries.length - 1;
+      return timeline.seekIndex(index);
+    },
+    next() {
+      return timeline.seekIndex(cursor + 1);
+    },
+    previous() {
+      return timeline.seekIndex(cursor - 1);
+    },
+    frameAtCursor() {
+      const current = timeline.current();
+      if (!current) return null;
+      return frames.find((frame) => frame.tick === current.tick && frame.sequence === current.sequence) ?? null;
+    },
+    range(fromTick, toTick) {
+      return Object.freeze(entries.filter((entry) => entry.tick >= fromTick && entry.tick <= toTick));
+    },
+    snapshot() {
+      return Object.freeze({ cursor, size: entries.length, current: timeline.current(), frame: timeline.frameAtCursor() });
+    },
+  };
+  return timeline;
+}
+
+export function createPerformanceBudgetMonitor(options = {}) {
+  const profiler = options.profiler ?? createArcadeFrameProfiler({
+    sampleSize: options.sampleSize,
+    now: options.now,
+  });
+  const budgets = new Map(Object.entries(options.budgets ?? {}));
+
+  const monitor = {
+    profiler,
+    setBudget(name, budget) {
+      budgets.set(name, Object.freeze({ ...budget }));
+    },
+    record(name, durationMs) {
+      return profiler.record(name, durationMs);
+    },
+    measure(name, callback) {
+      return profiler.measure(name, callback);
+    },
+    measureAsync(name, callback) {
+      return profiler.measureAsync(name, callback);
+    },
+    evaluate(name) {
+      const summary = profiler.snapshot(name);
+      const budget = budgets.get(name) ?? {};
+      const violations = [];
+      if (Number.isFinite(budget.meanMs) && summary.meanMs > budget.meanMs) violations.push({ metric: 'meanMs', budget: budget.meanMs, actual: summary.meanMs });
+      if (Number.isFinite(budget.p95Ms) && summary.p95Ms > budget.p95Ms) violations.push({ metric: 'p95Ms', budget: budget.p95Ms, actual: summary.p95Ms });
+      if (Number.isFinite(budget.maxMs) && summary.maxMs > budget.maxMs) violations.push({ metric: 'maxMs', budget: budget.maxMs, actual: summary.maxMs });
+      if (Number.isFinite(budget.minimumSamples) && summary.count < budget.minimumSamples) violations.push({ metric: 'count', budget: budget.minimumSamples, actual: summary.count });
+      return Object.freeze({ name, pass: violations.length === 0, summary, budget: Object.freeze({ ...budget }), violations: Object.freeze(violations.map(Object.freeze)) });
+    },
+    evaluateAll() {
+      return Object.freeze([...budgets.keys()].sort().map((name) => monitor.evaluate(name)));
+    },
+    assert(name) {
+      const result = monitor.evaluate(name);
+      coreInvariant(result.pass, `performance budget failed for ${name}: ${result.violations.map((entry) => `${entry.metric} ${entry.actual} > ${entry.budget}`).join(', ')}`);
+      return result;
+    },
+    snapshot() {
+      const results = monitor.evaluateAll();
+      return Object.freeze({ pass: results.every((result) => result.pass), results });
+    },
+  };
+  return monitor;
+}
+
+export async function runHeadlessScenario(options = {}) {
+  coreInvariant(typeof options.step === 'function', 'headless scenario requires a step function');
+  const ticks = Math.max(0, Math.floor(finiteNumber(options.ticks, 0)));
+  let state = arcadeClone(typeof options.setup === 'function' ? await options.setup() : options.initialState);
+  const frames = [];
+  for (let tick = 1; tick <= ticks; tick += 1) {
+    const command = options.command?.(tick, state) ?? null;
+    state = await options.step(state, command, Object.freeze({ tick }));
+    const snapshot = stableSnapshot(options.snapshot ? options.snapshot(state, tick) : state);
+    const frame = Object.freeze({ tick, command: stableSnapshot(command), snapshot, hash: deterministicHash(snapshot) });
+    frames.push(frame);
+    options.assert?.(frame, state);
+  }
+  const result = Object.freeze({
+    name: options.name ?? 'scenario',
+    ticks,
+    state,
+    frames: Object.freeze(frames),
+    finalHash: frames.at(-1)?.hash ?? deterministicHash(options.snapshot ? options.snapshot(state, 0) : state),
+  });
+  options.teardown?.(state, result);
+  return result;
+}
+
+// END ARCADE SERVICES 0.17-1.0

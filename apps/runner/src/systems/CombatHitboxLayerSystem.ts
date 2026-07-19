@@ -1,5 +1,5 @@
-import { aabb } from '@badger/platformer-core';
 import type { Rect } from '@badger/platformer-core';
+import { resolveHitboxContacts } from '../../../../vendor/arcade-runtime.mjs';
 
 export type CombatHitboxLayer = 'high' | 'mid' | 'low' | 'air' | 'projectile' | 'unblockable';
 
@@ -33,7 +33,24 @@ export function resolveLayeredHit(attack: LayeredAttackProfile, target: LayeredH
 	for (const layer of LAYER_ORDER) {
 		const hitbox = attack.hitboxes[layer];
 		const hurtbox = target.hurtboxes[layer];
-		if (!hitbox || !hurtbox || !aabb(hitbox, hurtbox)) continue;
+		if (!hitbox || !hurtbox) continue;
+		const contacts = resolveHitboxContacts({
+			hitboxes: [
+				{
+					id: `${attack.moveId}:${layer}`,
+					ownerId: `attacker:${attack.moveId}`,
+					...hitbox,
+				},
+			],
+			hurtboxes: [
+				{
+					id: `${target.entityId}:${layer}`,
+					actorId: target.entityId,
+					...hurtbox,
+				},
+			],
+		});
+		if (contacts.length === 0) continue;
 		if (attack.parryable && parryLayers.has(layer)) return { result: 'parried', moveId: attack.moveId, entityId: target.entityId, layer };
 		if (layer !== 'unblockable' && guardLayers.has(layer)) return { result: 'blocked', moveId: attack.moveId, entityId: target.entityId, layer };
 		return { result: 'hit', moveId: attack.moveId, entityId: target.entityId, layer };

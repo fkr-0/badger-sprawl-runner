@@ -1,3 +1,4 @@
+import { resolveHitboxContacts } from '../../../../vendor/arcade-runtime.mjs';
 import { flyingObjectStep } from './flyingObjectStep';
 import { aabb } from './aabb';
 function projectileRect(projectile) {
@@ -62,10 +63,29 @@ export function stepProjectiles(input) {
         if (platform)
             next = bounceOffPlatform(next, platform);
         let pierceLeft = next.pierce;
-        for (const target of input.targets) {
-            if (target.id === next.ownerId || !aabb(projectileRect(next), target))
-                continue;
-            hits.push({ projectileId: next.id, targetId: target.id, damage: next.damage, kind: next.kind });
+        const projectileContacts = resolveHitboxContacts({
+            hitboxes: [
+                {
+                    id: next.id,
+                    ownerId: next.ownerId,
+                    damage: next.damage,
+                    tags: next.tags,
+                    ...projectileRect(next),
+                },
+            ],
+            hurtboxes: input.targets.map((target, index) => ({
+                ...target,
+                id: `target:${String(index).padStart(8, '0')}:${target.id}`,
+                actorId: target.id,
+            })),
+        });
+        for (const contact of projectileContacts) {
+            hits.push({
+                projectileId: next.id,
+                targetId: contact.targetId,
+                damage: contact.damage,
+                kind: next.kind,
+            });
             pierceLeft -= 1;
             if (pierceLeft < 0)
                 break;

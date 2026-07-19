@@ -1,6 +1,7 @@
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { CAMPAIGN } from '../game/Campaign';
 import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
+import { getStoryChoiceFigureSheet } from '../game/LateStageSpriteBindings';
 import { buildStageRunSceneOptions } from '../game/StageRunOptions';
 import { getDialoguePortrait } from '../renderer/DialoguePortraitRenderer';
 import type { Renderer } from '../renderer/Renderer';
@@ -191,8 +192,12 @@ export class StoryFlowScene implements Scene {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
 				this.flow.advanceDebrief();
-				if (this.flow.getState().mode !== 'debrief') {
+				const nextState = this.flow.getState();
+				if (nextState.mode !== 'debrief') {
 					this.options.onAutosave?.('stage-complete');
+				}
+				if (nextState.mode === 'menu' && this.flow.getStoryProgress().campaignComplete) {
+					this.options.onReturnToTitle?.();
 				}
 			}
 			return;
@@ -365,7 +370,7 @@ export class StoryFlowScene implements Scene {
 				);
 			}
 		} else if (state.mode === 'stage') {
-			this.renderStageChoicePanel(ctx);
+			this.renderStageChoicePanel(ctx, renderer);
 			this.renderStageDebugPanel(ctx);
 		}
 
@@ -499,7 +504,7 @@ export class StoryFlowScene implements Scene {
 		return lines;
 	}
 
-	private renderStageChoicePanel(ctx: CanvasRenderingContext2D): void {
+	private renderStageChoicePanel(ctx: CanvasRenderingContext2D, renderer: Renderer): void {
 		const stage = this.flow.getCurrentStage();
 		if (!stage?.choiceOutcomes?.length) return;
 		this.syncStageSelection(stage);
@@ -511,6 +516,25 @@ export class StoryFlowScene implements Scene {
 		ctx.fillRect(panelX, panelY, panelW, panelH);
 		ctx.strokeStyle = '#ffb35e';
 		ctx.strokeRect(panelX, panelY, panelW, panelH);
+		const choiceFigureSheet = getStoryChoiceFigureSheet(stage.id);
+		const sprites = renderer.getSpriteRenderer();
+		if (choiceFigureSheet && sprites.hasSheet(choiceFigureSheet)) {
+			const animation = sprites.getSheet(choiceFigureSheet)?.sheet.animations.idle;
+			const frame = animation ? Math.floor(this.storyTime * animation.fps) % animation.frames : 0;
+			ctx.save();
+			ctx.globalAlpha = 0.18;
+			sprites.drawFrame(
+				choiceFigureSheet,
+				'idle',
+				frame,
+				panelX + panelW - 160,
+				panelY + 46,
+				false,
+				2.4,
+				2.4
+			);
+			ctx.restore();
+		}
 		ctx.textAlign = 'left';
 		ctx.fillStyle = '#ffb35e';
 		ctx.font = '700 15px ui-monospace, monospace';

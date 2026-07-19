@@ -1,32 +1,46 @@
-/**
- * Typed event bus for pub/sub communication between systems
- */
+/** Typed compatibility facade over the shared arcade-runtime event engine. */
+
+import {
+	createEventBus,
+	type ArcadeEventBus,
+} from '../../../../vendor/arcade-runtime.mjs';
 
 type EventMap = Record<string, unknown>;
 type EventKey<T extends EventMap> = string & keyof T;
 type EventHandler<T> = (payload: T) => void;
 
 export class EventBus<T extends EventMap = Record<string, unknown>> {
-	private listeners = new Map<EventKey<T>, Set<EventHandler<unknown>>>();
+	private readonly core: ArcadeEventBus<T> = createEventBus<T>();
 
-	on<K extends EventKey<T>>(key: K, handler: EventHandler<T[K]>): void {
-		let handlers = this.listeners.get(key);
-		if (!handlers) {
-			handlers = new Set();
-			this.listeners.set(key, handlers);
-		}
-		handlers.add(handler as EventHandler<unknown>);
+	on<K extends EventKey<T>>(key: K, handler: EventHandler<T[K]>): () => void {
+		return this.core.on(key, handler);
 	}
 
-	off<K extends EventKey<T>>(key: K, handler: EventHandler<T[K]>): void {
-		this.listeners.get(key)?.delete(handler as EventHandler<unknown>);
+	once<K extends EventKey<T>>(key: K, handler: EventHandler<T[K]>): () => void {
+		return this.core.once(key, handler);
 	}
 
-	emit<K extends EventKey<T>>(key: K, payload: T[K]): void {
-		const handlers = this.listeners.get(key);
-		if (!handlers) return;
-		for (const handler of handlers) {
-			handler(payload);
-		}
+	off<K extends EventKey<T>>(key: K, handler?: EventHandler<T[K]>): boolean {
+		return this.core.off(key, handler);
+	}
+
+	emit<K extends EventKey<T>>(key: K, payload: T[K]): number {
+		return this.core.emit(key, payload);
+	}
+
+	clear<K extends EventKey<T>>(key?: K): boolean {
+		return this.core.clear(key);
+	}
+
+	hasListeners<K extends EventKey<T>>(key: K): boolean {
+		return this.core.hasListeners(key);
+	}
+
+	listenerCount<K extends EventKey<T>>(key?: K): number {
+		return this.core.listenerCount(key);
+	}
+
+	snapshot() {
+		return this.core.snapshot();
 	}
 }

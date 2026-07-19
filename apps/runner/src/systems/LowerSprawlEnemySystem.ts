@@ -285,6 +285,20 @@ export class LowerSprawlEnemySystem {
 	private applyPresentation(enemy: CombatEntity, runtime: EnemyRuntime): void {
 		enemy.aiState = runtime.state;
 		enemy.attackTelegraph = runtime.state === 'windup' ? 1 - Math.min(1, runtime.timer / 0.7) : 0;
+		const role = roleOf(enemy);
+		enemy.spriteSheetId = role === 'bruiser' ? 'enemy_rent_cop_piker' : 'enemy_turnstile_mite';
+		enemy.spriteAnimation =
+			runtime.state === 'windup'
+				? 'windup'
+				: runtime.state === 'attack'
+					? 'attack'
+					: runtime.state === 'stunned'
+						? 'stun_or_parried'
+						: runtime.state === 'recovery'
+							? 'hurt'
+							: runtime.state === 'patrol' || runtime.state === 'chase'
+								? 'patrol_or_move'
+								: 'idle';
 	}
 
 	private ensureRuntime(id: string, enemy: CombatEntity): EnemyRuntime {

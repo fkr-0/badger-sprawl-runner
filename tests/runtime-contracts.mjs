@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
 }
-
 async function text(path) {
 	return readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 }
@@ -43,6 +42,7 @@ const rendererSource = await text('apps/runner/src/renderer/Renderer.ts');
 const uiRendererSource = await text('apps/runner/src/renderer/UIRenderer.ts');
 const itemSystemSource = await text('apps/runner/src/systems/ItemSystem.ts');
 const stageRunSceneSource = await text('apps/runner/src/scenes/StageRunScene.ts');
+const lateStageObjectivesSource = await text('apps/runner/src/game/LateStageObjectives.ts');
 const stageRunOptionsSource = await text('apps/runner/src/game/StageRunOptions.ts');
 const stageLayoutRegistrySource = await text('apps/runner/src/world/stageLayoutRegistry.ts');
 const encounterGeneratorSource = await text('apps/runner/src/procgen/EncounterGenerator.ts');
@@ -72,6 +72,41 @@ const legacyMain = await text('src/main.js');
 const manifest = await json('data/game-manifest.json');
 const items = await json('data/items.json');
 const sprites = await json('data/sprites.json');
+
+assert(
+	!lateStageObjectivesSource.includes('solutionIndexes'),
+	'LateStageObjectives must not expose authored solution indexes through the production snapshot'
+);
+
+for (const required of [
+	"'fasttype'",
+	"'cargo-routing'",
+	"'broadcast-composition'",
+	'interface-started',
+	'interface-failed',
+	'interface-completed',
+	'handleInterfaceKey',
+	'incorrectColumnIds',
+	'assistActive',
+	'completeActiveInterface',
+]) {
+	assert(
+		lateStageObjectivesSource.includes(required),
+		`LateStageObjectives missing dedicated late-campaign interface contract: ${required}`
+	);
+}
+for (const required of [
+	'renderLateStageInterface',
+	'renderFastTypeInterface',
+	'renderSelectionInterface',
+	'lateStageObjectives?.step(dt)',
+	'lateStageObjectives?.handleInterfaceKey(event)',
+]) {
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing dedicated late-campaign interface wiring: ${required}`
+	);
+}
 
 assert(
 	rootPackage.version === runnerPackage.version,
@@ -461,8 +496,13 @@ for (const required of [
 	'procgenSeed',
 	'generatedEnemyPacks',
 	'generatedSideRooms',
-	'bossPhases: stage?.boss?.phases?.map',
-	'bossPlaceholder: stage?.boss',
+	'const boss = stage?.boss',
+	'const bossPhases =',
+	'boss?.phases?.map',
+	'boss?.behavior?.phases.map',
+	'boss?.hackDuel?.mechanics.map',
+	'bossPhases,',
+	'bossPlaceholder: boss',
 	'tutorialBeats: stage?.tutorialBeats?.map',
 	'runtimeConfig,',
 ]) {

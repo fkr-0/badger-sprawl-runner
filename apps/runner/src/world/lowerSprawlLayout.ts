@@ -151,6 +151,8 @@ export const lowerSprawlLayout: StageLayout = {
 			invuln: 0,
 			procgenFamily: 'toll-scooter',
 			procgenRole: 'patrol',
+			spriteSheetId: 'enemy_turnstile_mite',
+			spriteAnimation: 'patrol_or_move',
 		},
 		{
 			id: 'meter-enforcer-market',
@@ -170,6 +172,8 @@ export const lowerSprawlLayout: StageLayout = {
 			invuln: 0,
 			procgenFamily: 'meter-enforcer',
 			procgenRole: 'turret',
+			spriteSheetId: 'enemy_turnstile_mite',
+			spriteAnimation: 'idle',
 		},
 		{
 			id: 'receipt-crawler-east',
@@ -190,6 +194,8 @@ export const lowerSprawlLayout: StageLayout = {
 			armor: 0.25,
 			procgenFamily: 'receipt-crawler',
 			procgenRole: 'bruiser',
+			spriteSheetId: 'enemy_rent_cop_piker',
+			spriteAnimation: 'patrol_or_move',
 		},
 	],
 };

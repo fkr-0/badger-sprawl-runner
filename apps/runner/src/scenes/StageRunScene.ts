@@ -4,6 +4,7 @@
  */
 
 import { resolveSkillEffects } from '@badger/progression';
+import { createSystemPipeline } from '../../../../vendor/arcade-runtime.mjs';
 import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
 import {
 	type TrainingDummy,
@@ -31,6 +32,16 @@ import {
 } from '../game/DubColonyObjectives';
 import type { StageRuntimeResult } from '../game/GameFlow';
 import {
+	getStoryBossSpriteSheet,
+	isLateStoryStage,
+} from '../game/LateStageSpriteBindings';
+import {
+	type LateStageObjectiveEvent,
+	type LateStageObjectiveSnapshot,
+	type LateStageInterfaceSnapshot,
+	LateStageObjectives,
+} from '../game/LateStageObjectives';
+import {
 	type LowerSprawlObjectiveEvent,
 	type LowerSprawlObjectiveSnapshot,
 	LowerSprawlObjectives,
@@ -57,6 +68,7 @@ import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/Encounte
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
 import {
 	type AnimationState,
+	advanceAnimation,
 	createAnimationState,
 	playAnimation,
 } from '../renderer/AnimationState';
@@ -65,11 +77,15 @@ import {
 	buildGameplayHudLayout,
 } from '../renderer/GameplayHudLayout';
 import {
+	ANTENNA_BARRENS_PARALLAX_SHEET_ID,
+	ASTEROID_REDOUBT_PARALLAX_SHEET_ID,
 	CHROME_ARCOLOGY_PARALLAX_SHEET_ID,
 	DRAINMARKET_PARALLAX_SHEET_ID,
 	DUB_COLONY_PARALLAX_SHEET_ID,
 	LOWER_SPRAWL_BACKDROP_SHEET_ID,
+	LOWER_SPRAWL_PARALLAX_SHEET_ID,
 	MIRROR_PALACE_PARALLAX_SHEET_ID,
+	ORBITAL_LIFT_PARALLAX_SHEET_ID,
 	PLAYER_SPRITE_SHEET_ID,
 	type Renderer,
 } from '../renderer/Renderer';
@@ -242,6 +258,17 @@ export interface StageRunSceneOptions {
 	training?: TrainingRunOptions;
 }
 
+type StageRunAction = ReturnType<InputSystem['snapshot']>;
+
+interface StageRunUpdateContext {
+	dt: number;
+	simDt: number;
+	action: StageRunAction;
+	input: InputSystem;
+	combatEvents: CombatEvents | null;
+	bossPhaseState: BossPhaseRuntimeState | null;
+}
+
 export class StageRunScene implements Scene {
 	readonly name = 'StageRunScene';
 
@@ -297,6 +324,7 @@ export class StageRunScene implements Scene {
 	private readonly chromeArcologyObjectives: ChromeArcologyObjectives | null;
 	private readonly mirrorPalaceObjectives: MirrorPalaceObjectives | null;
 	private readonly dubColonyObjectives: DubColonyObjectives | null;
+	private readonly lateStageObjectives: LateStageObjectives | null;
 	private nayaAssistTimer = 0;
 	private stageCompletionDispatched = false;
 	private debugOverlayVisible = false;
@@ -306,6 +334,9 @@ export class StageRunScene implements Scene {
 	private trainingDamageNumberTimer = 0;
 	private trainingArena = { left: 0, right: 960, floorY: 494 };
 	private animationTransitions: Array<{ name: string; frame: number }> = [];
+	private readonly updatePipeline = createSystemPipeline<StageRunUpdateContext>({
+		phases: ['frame', 'objectives', 'physics', 'combat', 'actors', 'presentation'],
+	});
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.training = options.training ? createTrainingMode() : null;
@@ -381,6 +412,10 @@ export class StageRunScene implements Scene {
 			!options.training && options.stageId === 'dub-colony'
 				? new DubColonyObjectives(options.storyResultFlags ?? [])
 				: null;
+		this.lateStageObjectives =
+			!options.training && options.stageId && isLateStoryStage(options.stageId)
+				? new LateStageObjectives(options.stageId)
+				: null;
 		if (this.training && options.training) {
 			if (options.training.lessonId) this.training.selectLesson(options.training.lessonId);
 			if (options.training.dummyPresetId) {
@@ -404,17 +439,35 @@ export class StageRunScene implements Scene {
 							? 'Airborne E boost // break the false route'
 							: options.stageId === 'dub-colony'
 								? 'Watch the woofer ring // act on the bass pulse'
-								: undefined;
+								: options.stageId === 'antenna-barrens'
+									? 'M repair code gates // expose the ledger'
+									: options.stageId === 'orbital-lift'
+										? 'M reverse cargo claims // tag witnesses'
+										: options.stageId === 'asteroid-redoubt'
+											? 'M tune transmitter roots // publish the method'
+											: undefined;
 		this.player.hudToastTimer = options.training
 			? 3.2
-			: ['lower-sprawl', 'drainmarket', 'chrome-arcology', 'mirror-palace', 'dub-colony'].includes(
-						options.stageId ?? ''
-					)
+			: [
+					'lower-sprawl',
+					'drainmarket',
+					'chrome-arcology',
+					'mirror-palace',
+					'dub-colony',
+					'antenna-barrens',
+					'orbital-lift',
+					'asteroid-redoubt',
+				].includes(options.stageId ?? '')
 				? 2.6
 				: 0;
+		this.configureUpdatePipeline();
 		this.initWorld();
 		if (this.training) this.updateTrainingHints();
 		else this.updateGameplayHints();
+	}
+
+	getUpdatePipelineSnapshot(): ReturnType<typeof this.updatePipeline.snapshot> {
+		return this.updatePipeline.snapshot();
 	}
 
 	getAnimationTransitionSnapshot(): Array<{ name: string; frame: number }> {
@@ -563,6 +616,75 @@ export class StageRunScene implements Scene {
 			)
 		) {
 			this.player.contextHint = 'K pierce lane // J close strike // Shift dodge';
+		}
+	}
+
+	private handleLateStageEvents(events: LateStageObjectiveEvent[]): void {
+		const objectives = this.lateStageObjectives;
+		if (!objectives || events.length === 0) return;
+		for (const event of events) {
+			const snapshot = objectives.getSnapshot();
+			if (
+				event.kind === 'primary-node-completed' ||
+				event.kind === 'support-node-completed'
+			) {
+				this.player.interactionAnimationTimer = Math.max(
+					this.player.interactionAnimationTimer ?? 0,
+					0.48
+				);
+				this.renderer?.emitVFX(this.player.x + 17, this.player.y + 20, 'emp', 8, 54);
+			}
+			if (event.kind === 'interface-started') {
+				const label =
+					event.interfaceKind === 'fasttype'
+						? 'FastType carrier locked // type the repair exactly'
+						: event.interfaceKind === 'cargo-routing'
+							? 'Cargo routing board online // reverse the ownership claim'
+							: 'Broadcast composer online // publish a method, not a hero';
+				this.showToast(label, 2);
+			} else if (event.kind === 'interface-completed') {
+				const gradeLabel =
+					event.grade === 'clean'
+						? 'CLEAN SIGNAL'
+						: event.grade === 'recovered'
+							? 'RECOVERED SIGNAL'
+							: 'ASSISTED SIGNAL';
+				this.showToast(
+					`${gradeLabel} // ${event.mistakes} correction${event.mistakes === 1 ? '' : 's'} // ${(event.timeMs / 1000).toFixed(1)}s`,
+					1.9
+				);
+				this.renderer?.emitVFX(this.player.x + 17, this.player.y + 20, 'pickup', 10, 68);
+			} else if (event.kind === 'interface-failed') {
+				this.showToast(
+					event.attemptsLeft === 0
+						? 'Public assist engaged // timer paused // verified clues online'
+						: `${event.reason === 'timeout' ? 'Carrier expired' : 'Validation rejected'} // ${event.attemptsLeft} attempt${event.attemptsLeft === 1 ? '' : 's'} left`,
+					1.7
+				);
+				this.renderer?.emitVFX(this.player.x + 17, this.player.y + 20, 'muzzle', 7, 48);
+			} else if (event.kind === 'interface-cancelled') {
+				this.showToast('Console closed // field controls restored', 1.25);
+			} else if (event.kind === 'primary-node-completed') {
+				const completed = snapshot.primaryNodes.filter((node) => node.completed).length;
+				this.showToast(`${snapshot.primaryLabel} // ${completed}/${snapshot.primaryNodes.length}`, 1.45);
+			} else if (event.kind === 'support-node-completed') {
+				const completed = snapshot.supportNodes.filter((node) => node.completed).length;
+				this.showToast(`${snapshot.supportLabel} // ${completed}/${snapshot.supportNodes.length}`, 1.45);
+			} else if (event.kind === 'tutorial-complete') {
+				this.showToast(`Lesson recorded // ${event.id.replaceAll('-', ' ')}`, 1.55);
+			} else if (event.kind === 'minigame-complete') {
+				this.showToast(`${snapshot.primaryLabel} // route unlocked`, 1.9);
+				this.renderer?.emitVFX(this.player.x + 17, this.player.y + 20, 'pickup', 12, 76);
+			} else if (event.kind === 'quest-complete') {
+				this.showToast(`${snapshot.supportLabel} // public record complete`, 1.8);
+			} else if (event.kind === 'stage-ready') {
+				this.showToast(snapshot.completionLabel, 2.2);
+			}
+			window.dispatchEvent(
+				new CustomEvent('badger:late-stage-progress', {
+					detail: { event, snapshot },
+				})
+			);
 		}
 	}
 
@@ -1075,7 +1197,13 @@ export class StageRunScene implements Scene {
 								? 'Mirror Pass secured'
 								: pickup.itemId === 'bass_reactor_core'
 									? 'Bass Reactor Core secured'
-									: 'Wafer key secured';
+									: pickup.itemId === 'debt_ledger_shard'
+										? 'Debt Ledger Shard secured'
+										: pickup.itemId === 'cargo_reversal_key'
+											? 'Cargo Reversal Key secured'
+											: pickup.itemId === 'asteroid_transmitter_root'
+												? 'Asteroid Transmitter Root secured'
+												: 'Wafer key secured';
 				this.showToast(payloadMessage, 2.4);
 			}
 			return;
@@ -1228,7 +1356,67 @@ export class StageRunScene implements Scene {
 			return;
 		}
 		const dubColony = this.dubColonyObjectives?.getSnapshot(this.player);
-		if (dubColony) this.updateDubColonyHints(dubColony);
+		if (dubColony) {
+			this.updateDubColonyHints(dubColony);
+			return;
+		}
+		const lateStage = this.lateStageObjectives?.getSnapshot();
+		if (lateStage) this.updateLateStageHints(lateStage);
+	}
+
+	private updateLateStageHints(snapshot: LateStageObjectiveSnapshot): void {
+		const primary = snapshot.primaryNodes.filter((node) => node.completed).length;
+		const support = snapshot.supportNodes.filter((node) => node.completed).length;
+		if (snapshot.interface.status === 'active') {
+			this.player.objectiveHint = snapshot.interface.title;
+			this.player.loadoutHint = `${snapshot.interface.timeRemaining.toFixed(1)}s // ${snapshot.interface.attemptsLeft} attempts`;
+			this.player.contextHint =
+				snapshot.interface.kind === 'fasttype'
+					? 'TYPE EXACTLY // ENTER submit // ESC cancel'
+					: 'ARROWS edit // 1–3 choose // ENTER submit // ESC cancel';
+			return;
+		}
+		if (!snapshot.primaryComplete) {
+			this.player.objectiveHint = `${snapshot.primaryLabel} // ${primary}/${snapshot.primaryNodes.length}`;
+		} else if (!snapshot.bossDefeated) {
+			this.player.objectiveHint = `Defeat ${snapshot.bossLabel}`;
+		} else if (!snapshot.payloadCollected) {
+			this.player.objectiveHint = `Secure ${snapshot.payloadLabel}`;
+		} else {
+			this.player.objectiveHint = snapshot.completionLabel;
+		}
+		this.player.loadoutHint = `${snapshot.primaryLabel} ${primary}/${snapshot.primaryNodes.length} // ${snapshot.supportLabel} ${support}/${snapshot.supportNodes.length}`;
+		this.player.contextHint = undefined;
+
+		const centerX = this.player.x + this.player.w / 2;
+		const centerY = this.player.y + this.player.h / 2;
+		const distance = (x: number, y: number): number => Math.hypot(centerX - x, centerY - y);
+		const primaryNode = snapshot.primaryNodes.find(
+			(node) => !node.completed && distance(node.x, node.y) < 90
+		);
+		if (primaryNode) {
+			this.player.contextHint = `M // ${primaryNode.label}`;
+			return;
+		}
+		const supportNode = snapshot.supportNodes.find(
+			(node) => !node.completed && distance(node.x, node.y) < 90
+		);
+		if (supportNode) {
+			this.player.contextHint = `M // ${supportNode.label}`;
+			return;
+		}
+		const nearbyPickup = this.pickups.find(
+			(pickup) => !pickup.taken && distance(pickup.x + 14, pickup.y + 14) < 78
+		);
+		if (nearbyPickup) {
+			this.player.contextHint =
+				nearbyPickup.persistence === 'story_payload' ? `Secure ${snapshot.payloadLabel}` : 'Gear cache';
+			return;
+		}
+		const boss = this.enemies.find((enemy) => enemy.bossId === snapshot.bossId && enemy.hp > 0);
+		if (boss && Math.abs(centerX - (boss.x + boss.w / 2)) < 420) {
+			this.player.contextHint = 'J strike // L parry // Shift dodge';
+		}
 	}
 
 	private updateLowerSprawlHints(snapshot: LowerSprawlObjectiveSnapshot): void {
@@ -1537,6 +1725,23 @@ export class StageRunScene implements Scene {
 		this.options.onStageComplete?.(result);
 	}
 
+	private updateLateStageCompletion(): void {
+		const objectives = this.lateStageObjectives;
+		if (!objectives || this.stageCompletionDispatched) return;
+		const snapshot = objectives.getSnapshot();
+		const payloadCollected = getCollectedStoryPayloadIds(this.pickups).includes(snapshot.payloadId);
+		const boss = this.enemies.find((enemy) => enemy.bossId === snapshot.bossId);
+		this.handleLateStageEvents(
+			objectives.observeWorld(payloadCollected, Boolean(boss && boss.hp <= 0))
+		);
+		const result = objectives.claimCompletion();
+		if (!result) return;
+		this.player.victoryAnimationTimer = 0.8;
+		this.stageCompletionDispatched = true;
+		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
+		this.options.onStageComplete?.(result);
+	}
+
 	private updateDubColonyCompletion(): void {
 		const objectives = this.dubColonyObjectives;
 		if (!objectives || this.stageCompletionDispatched) return;
@@ -1667,6 +1872,292 @@ export class StageRunScene implements Scene {
 					hazard.y - 6
 				);
 			}
+		}
+		ctx.restore();
+	}
+
+	private renderLateStageInterface(ctx: CanvasRenderingContext2D): void {
+		const interfaceState = this.lateStageObjectives?.getSnapshot().interface;
+		if (!interfaceState || interfaceState.status !== 'active') return;
+
+		const panel = { x: 96, y: 62, w: ctx.canvas.width - 192, h: ctx.canvas.height - 124 };
+		const accent =
+			interfaceState.kind === 'fasttype'
+				? '#67f3c4'
+				: interfaceState.kind === 'cargo-routing'
+					? '#ffb35e'
+					: '#8aa8ff';
+		ctx.save();
+		ctx.fillStyle = 'rgba(2, 5, 12, 0.82)';
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.fillStyle = 'rgba(7, 12, 24, 0.98)';
+		ctx.fillRect(panel.x, panel.y, panel.w, panel.h);
+		ctx.strokeStyle = accent;
+		ctx.lineWidth = 3;
+		ctx.strokeRect(panel.x, panel.y, panel.w, panel.h);
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'alphabetic';
+		ctx.font = '900 18px ui-monospace, monospace';
+		ctx.fillStyle = accent;
+		ctx.fillText(interfaceState.title, panel.x + 24, panel.y + 32);
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(
+			`NODE ${interfaceState.nodeIndex}/${interfaceState.nodeCount} // ${interfaceState.mistakes} CORRECTIONS`,
+			panel.x + 24,
+			panel.y + 51
+		);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#b9c8dc';
+		ctx.fillText(interfaceState.instructions, panel.x + 24, panel.y + 70);
+
+		const timerWidth = 176;
+		const timerX = panel.x + panel.w - timerWidth - 24;
+		const maxTime =
+			interfaceState.kind === 'fasttype'
+				? 14
+				: interfaceState.kind === 'cargo-routing'
+					? 24
+					: 28;
+		ctx.fillStyle = '#17243a';
+		ctx.fillRect(timerX, panel.y + 22, timerWidth, 10);
+		ctx.fillStyle = interfaceState.assistActive
+			? '#8aa8ff'
+			: interfaceState.timeRemaining < 5
+				? '#ff5e7a'
+				: accent;
+		ctx.fillRect(
+			timerX,
+			panel.y + 22,
+			interfaceState.assistActive
+				? timerWidth
+				: timerWidth * Math.max(0, Math.min(1, interfaceState.timeRemaining / maxTime)),
+			10
+		);
+		ctx.textAlign = 'right';
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(
+			interfaceState.assistActive
+				? 'PUBLIC ASSIST // TIMER PAUSED'
+				: `${interfaceState.timeRemaining.toFixed(1)}s // ${interfaceState.attemptsLeft} ATTEMPTS`,
+			panel.x + panel.w - 24,
+			panel.y + 52
+		);
+
+		if (interfaceState.feedback) {
+			const feedbackColor =
+				interfaceState.feedbackKind === 'assist' ? '#8aa8ff' : '#ff5e7a';
+			ctx.textAlign = 'left';
+			ctx.fillStyle = 'rgba(2, 5, 12, 0.94)';
+			ctx.fillRect(panel.x + 24, panel.y + 81, panel.w - 48, 26);
+			ctx.strokeStyle = feedbackColor;
+			ctx.lineWidth = 1;
+			ctx.strokeRect(panel.x + 24, panel.y + 81, panel.w - 48, 26);
+			ctx.font = '800 10px ui-monospace, monospace';
+			ctx.fillStyle = feedbackColor;
+			ctx.fillText(
+				`${interfaceState.feedbackKind === 'assist' ? 'ASSIST' : 'REVISE'} // ${interfaceState.feedback}`,
+				panel.x + 34,
+				panel.y + 98
+			);
+		}
+
+		if (interfaceState.kind === 'fasttype') {
+			this.renderFastTypeInterface(ctx, interfaceState, panel, accent);
+		} else {
+			this.renderSelectionInterface(ctx, interfaceState, panel, accent);
+		}
+		ctx.restore();
+	}
+
+	private renderFastTypeInterface(
+		ctx: CanvasRenderingContext2D,
+		interfaceState: Extract<LateStageInterfaceSnapshot, { kind: 'fasttype' }>,
+		panel: { x: number; y: number; w: number; h: number },
+		accent: string
+	): void {
+		const contentX = panel.x + 34;
+		const targetY = panel.y + 128;
+		ctx.textAlign = 'left';
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText('RECONSTRUCTED REPAIR LINE', contentX, targetY);
+		ctx.fillStyle = '#0b1322';
+		ctx.fillRect(contentX, targetY + 14, panel.w - 68, 58);
+		ctx.strokeStyle = '#31445f';
+		ctx.strokeRect(contentX, targetY + 14, panel.w - 68, 58);
+		ctx.font = '900 22px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(interfaceState.target, contentX + 18, targetY + 51);
+
+		const inputY = targetY + 105;
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText('LIVE CARRIER INPUT', contentX, inputY);
+		ctx.fillStyle = '#050a13';
+		ctx.fillRect(contentX, inputY + 14, panel.w - 68, 66);
+		ctx.strokeStyle = interfaceState.correctPrefixLength === interfaceState.input.length ? accent : '#ff5e7a';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(contentX, inputY + 14, panel.w - 68, 66);
+		ctx.font = '900 22px ui-monospace, monospace';
+		const prefix = interfaceState.input.slice(0, interfaceState.correctPrefixLength);
+		const suffix = interfaceState.input.slice(interfaceState.correctPrefixLength);
+		ctx.fillStyle = accent;
+		ctx.fillText(prefix, contentX + 18, inputY + 56);
+		const prefixWidth = ctx.measureText(prefix).width;
+		ctx.fillStyle = '#ff5e7a';
+		ctx.fillText(suffix, contentX + 18 + prefixWidth, inputY + 56);
+		const cursorX = contentX + 18 + ctx.measureText(interfaceState.input).width;
+		ctx.fillStyle = Math.floor(interfaceState.timeRemaining * 4) % 2 === 0 ? accent : '#eaf2ff';
+		ctx.fillRect(cursorX + 2, inputY + 31, 3, 28);
+		if (interfaceState.assistActive && interfaceState.expectedChar !== null) {
+			ctx.font = '800 11px ui-monospace, monospace';
+			ctx.fillStyle = '#8aa8ff';
+			ctx.fillText(
+				`NEXT VERIFIED BYTE // ${interfaceState.expectedChar === ' ' ? '[SPACE]' : interfaceState.expectedChar}`,
+				contentX,
+				inputY + 101
+			);
+		}
+
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#b9c8dc';
+		ctx.fillText('Backspace edits // Enter validates exact bytes // Escape closes console', contentX, panel.y + panel.h - 28);
+	}
+
+	private renderSelectionInterface(
+		ctx: CanvasRenderingContext2D,
+		interfaceState: Extract<
+			LateStageInterfaceSnapshot,
+			{ kind: 'cargo-routing' | 'broadcast-composition' }
+		>,
+		panel: { x: number; y: number; w: number; h: number },
+		accent: string
+	): void {
+		const contentX = panel.x + 28;
+		const contentY = panel.y + 112;
+		const gap = 16;
+		const columnWidth = (panel.w - 56 - gap * 2) / 3;
+		for (const [columnIndex, column] of interfaceState.columns.entries()) {
+			const x = contentX + columnIndex * (columnWidth + gap);
+			const focused = interfaceState.focusIndex === columnIndex;
+			const incorrect = interfaceState.incorrectColumnIds.includes(column.id);
+			ctx.fillStyle = focused ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.22)';
+			ctx.fillRect(x, contentY, columnWidth, 194);
+			ctx.strokeStyle = incorrect ? '#ff5e7a' : focused ? accent : '#31445f';
+			ctx.lineWidth = incorrect || focused ? 3 : 1;
+			ctx.strokeRect(x, contentY, columnWidth, 194);
+			ctx.textAlign = 'center';
+			ctx.font = '900 11px ui-monospace, monospace';
+			ctx.fillStyle = incorrect ? '#ff5e7a' : focused ? accent : '#92a4be';
+			ctx.fillText(
+				`${focused ? '▶ ' : ''}${column.label}${incorrect ? ' // REVISE' : ''}`,
+				x + columnWidth / 2,
+				contentY + 24
+			);
+			for (const [optionIndex, option] of column.options.entries()) {
+				const optionY = contentY + 46 + optionIndex * 42;
+				const selected = column.selectedIndex === optionIndex;
+				ctx.fillStyle = selected ? accent : '#121d2f';
+				ctx.fillRect(x + 12, optionY, columnWidth - 24, 30);
+				ctx.strokeStyle = selected ? '#eaf2ff' : '#31445f';
+				ctx.strokeRect(x + 12, optionY, columnWidth - 24, 30);
+				ctx.font = `${selected ? '900' : '700'} 11px ui-monospace, monospace`;
+				ctx.fillStyle = selected ? '#07101e' : '#b9c8dc';
+				ctx.fillText(
+					`${selected ? '▶' : ' '} ${optionIndex + 1}  ${option}`,
+					x + columnWidth / 2,
+					optionY + 20
+				);
+			}
+			if (column.hint) {
+				ctx.font = '700 8px ui-monospace, monospace';
+				ctx.fillStyle = incorrect || interfaceState.assistActive ? '#eaf2ff' : '#92a4be';
+				ctx.fillText(column.hint.slice(0, 34), x + columnWidth / 2, contentY + 181);
+			}
+		}
+
+		const previewY = contentY + 207;
+		ctx.fillStyle = '#050a13';
+		ctx.fillRect(contentX, previewY, panel.w - 56, 58);
+		ctx.strokeStyle = accent;
+		ctx.lineWidth = 2;
+		ctx.strokeRect(contentX, previewY, panel.w - 56, 58);
+		ctx.textAlign = 'left';
+		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.fillStyle = '#92a4be';
+		ctx.fillText(
+			interfaceState.kind === 'cargo-routing' ? 'ROUTE PREVIEW' : 'ON-AIR SENTENCE PREVIEW',
+			contentX + 14,
+			previewY + 18
+		);
+		ctx.font = '900 14px ui-monospace, monospace';
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(interfaceState.preview, contentX + 14, previewY + 43);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = '#b9c8dc';
+		ctx.fillText('←/→ focus // ↑/↓ rewrite // 1–3 direct select // Enter validate // Escape cancel', contentX, panel.y + panel.h - 22);
+	}
+
+	private renderLateStageObjectivePanel(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.lateStageObjectives?.getSnapshot();
+		if (!snapshot) return;
+		const primary = snapshot.primaryNodes.filter((node) => node.completed).length;
+		const support = snapshot.supportNodes.filter((node) => node.completed).length;
+		const x = 24;
+		const y = ctx.canvas.height - 122;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
+		ctx.fillRect(x, y, 520, 98);
+		ctx.strokeStyle = snapshot.readyToComplete ? '#67f3c4' : '#8aa8ff';
+		ctx.strokeRect(x, y, 520, 98);
+		ctx.textAlign = 'left';
+		ctx.font = '700 12px ui-monospace, monospace';
+		ctx.fillStyle = '#8aa8ff';
+		ctx.fillText(`${snapshot.stageId.toUpperCase()} // RELEASE ROUTE`, x + 12, y + 20);
+		ctx.font = '11px ui-monospace, monospace';
+		ctx.fillStyle = snapshot.primaryComplete ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`${snapshot.primaryLabel}: ${primary}/${snapshot.primaryNodes.length}`, x + 12, y + 41);
+		ctx.fillStyle = snapshot.supportComplete ? '#67f3c4' : '#ffb35e';
+		ctx.fillText(`${snapshot.supportLabel}: ${support}/${snapshot.supportNodes.length}`, x + 12, y + 60);
+		ctx.fillStyle = snapshot.payloadCollected ? '#67f3c4' : '#eaf2ff';
+		ctx.fillText(`${snapshot.payloadLabel}: ${snapshot.payloadCollected ? 'secured' : 'missing'}`, x + 12, y + 80);
+		ctx.fillStyle = snapshot.bossDefeated ? '#67f3c4' : '#ff5e7a';
+		ctx.fillText(`${snapshot.bossLabel}: ${snapshot.bossDefeated ? 'defeated' : 'active'}`, x + 300, y + 80);
+		ctx.restore();
+	}
+
+	private renderLateStageWorld(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const snapshot = this.lateStageObjectives?.getSnapshot();
+		if (!snapshot) return;
+		ctx.save();
+		ctx.textAlign = 'center';
+		ctx.font = '700 9px ui-monospace, monospace';
+		for (const node of snapshot.primaryNodes) {
+			const x = node.x - cameraX;
+			ctx.fillStyle = node.completed ? '#67f3c4' : '#ffb35e';
+			ctx.fillRect(x - 18, node.y - 62, 36, 58);
+			ctx.strokeStyle = node.completed ? '#67f3c4' : '#eaf2ff';
+			ctx.lineWidth = node.completed ? 3 : 2;
+			ctx.strokeRect(x - 18, node.y - 62, 36, 58);
+			ctx.fillStyle = '#08111f';
+			ctx.fillRect(x - 10, node.y - 52, 20, 14);
+			ctx.fillStyle = node.completed ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(
+				node.completed ? (node.grade ?? 'ROUTED').toUpperCase() : 'M: ROUTE',
+				x,
+				node.y - 72
+			);
+		}
+		for (const node of snapshot.supportNodes) {
+			const x = node.x - cameraX;
+			ctx.fillStyle = node.completed ? '#67f3c4' : '#8aa8ff';
+			ctx.fillRect(x - 14, node.y - 34, 28, 26);
+			ctx.strokeStyle = '#eaf2ff';
+			ctx.strokeRect(x - 14, node.y - 34, 28, 26);
+			ctx.fillStyle = node.completed ? '#67f3c4' : '#eaf2ff';
+			ctx.fillText(node.completed ? 'PUBLIC' : 'M: RECOVER', x, node.y - 43);
 		}
 		ctx.restore();
 	}
@@ -2368,6 +2859,10 @@ export class StageRunScene implements Scene {
 		return this.dubColonyObjectives?.getSnapshot(this.player) ?? null;
 	}
 
+	getLateStageObjectiveSnapshot(): LateStageObjectiveSnapshot | null {
+		return this.lateStageObjectives?.getSnapshot() ?? null;
+	}
+
 	getBossPhaseSnapshot(): BossPhaseRuntimeState | null {
 		return this.bossPhases.getState();
 	}
@@ -2560,6 +3055,7 @@ export class StageRunScene implements Scene {
 		hp: number;
 		maxHp: number;
 		bossId?: string;
+		bossSpriteSheetId?: string;
 		role?: string;
 		aiState?: string;
 		attackTelegraph?: number;
@@ -2575,6 +3071,7 @@ export class StageRunScene implements Scene {
 			hp: e.hp,
 			maxHp: e.maxHp,
 			bossId: 'bossId' in e && typeof e.bossId === 'string' ? e.bossId : undefined,
+			bossSpriteSheetId: e.bossSpriteSheetId,
 			role: e.procgenRole,
 			aiState: e.aiState,
 			attackTelegraph: e.attackTelegraph,
@@ -2632,6 +3129,13 @@ export class StageRunScene implements Scene {
 		this.renderer = ctx.renderer;
 		const toolsEnabled = runtimeToolsEnabled();
 		const handleKeyDown = (event: KeyboardEvent): void => {
+			const interfaceResult = this.lateStageObjectives?.handleInterfaceKey(event);
+			if (interfaceResult?.consumed) {
+				this.handleLateStageEvents(interfaceResult.events);
+				this.updateGameplayHints();
+				event.preventDefault();
+				return;
+			}
 			if (event.code === 'Escape') {
 				this.options.onReturnToTitle?.();
 				event.preventDefault();
@@ -2827,16 +3331,43 @@ export class StageRunScene implements Scene {
 		input.clearPressed();
 	}
 
-	update(dt: number): void {
-		const input = this.input;
-		if (!input) return;
-		const action = input.snapshot();
-		if (this.training) {
-			this.updateTraining(dt, action);
-			return;
-		}
-		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
-		this.updateFeedbackTimers(dt);
+	private configureUpdatePipeline(): void {
+		this.updatePipeline.add(
+			'feedback-timers',
+			({ dt }) => this.updateFeedbackTimers(dt),
+			{ phase: 'frame' }
+		);
+		this.updatePipeline.add('stage-objectives', (context) => this.stepStageObjectives(context), {
+			phase: 'objectives',
+		});
+		this.updatePipeline.add('hitstop', (context) => this.stepHitstop(context), {
+			phase: 'objectives',
+			after: 'stage-objectives',
+		});
+		this.updatePipeline.add('screen-shake-decay', ({ dt }) => this.stepScreenShake(dt), {
+			phase: 'objectives',
+			after: 'hitstop',
+		});
+		this.updatePipeline.add('player-physics', (context) => this.stepPlayerPhysics(context), {
+			phase: 'physics',
+		});
+		this.updatePipeline.add('combat-and-world', (context) => this.stepCombatAndWorld(context), {
+			phase: 'combat',
+		});
+		this.updatePipeline.add('companions-and-bosses', (context) => this.stepActors(context), {
+			phase: 'actors',
+		});
+		this.updatePipeline.add('camera-and-presentation', (context) => this.stepPresentation(context), {
+			phase: 'presentation',
+		});
+	}
+
+	private stepStageObjectives({
+		dt,
+		simDt,
+		action,
+		input,
+	}: StageRunUpdateContext): { halt: true } | undefined {
 		this.handleLowerSprawlEvents(this.lowerSprawlObjectives?.step(simDt, this.player) ?? []);
 		this.handleLowerSprawlEvents(
 			this.lowerSprawlObjectives?.observeAction(this.player, action) ?? []
@@ -2855,25 +3386,34 @@ export class StageRunScene implements Scene {
 		);
 		this.handleDubColonyEvents(this.dubColonyObjectives?.step(simDt) ?? []);
 		this.handleDubColonyEvents(this.dubColonyObjectives?.observeAction(this.player, action) ?? []);
-
-		// Handle hitstop - freeze game briefly for impact
-		if (this.hitstopRemaining > 0) {
-			this.hitstopRemaining -= dt;
-			if (this.hitstopRemaining > 0) {
-				return; // Skip update during hitstop
-			}
+		this.handleLateStageEvents(this.lateStageObjectives?.step(dt) ?? []);
+		this.handleLateStageEvents(this.lateStageObjectives?.observeAction(this.player, action) ?? []);
+		if (this.lateStageObjectives?.isInterfaceActive()) {
+			this.player.vx = 0;
+			this.player.vy = 0;
+			this.updateGameplayHints();
+			input.clearPressed();
+			return { halt: true };
 		}
+		return undefined;
+	}
 
-		// Decay screen shake
+	private stepHitstop({ dt }: StageRunUpdateContext): { halt: true } | undefined {
+		if (this.hitstopRemaining <= 0) return;
+		this.hitstopRemaining -= dt;
+		return this.hitstopRemaining > 0 ? { halt: true } : undefined;
+	}
+
+	private stepScreenShake(dt: number): void {
 		if (this.screenShakeIntensity > 0) {
 			this.screenShakeIntensity = Math.max(0, this.screenShakeIntensity - dt * 30);
 		}
+	}
 
-		// System tick order per spec:
-		// 1. Input snapshot - done above
-		// 2. Replay recording (not implemented)
-		// 3. Physics
+	private stepPlayerPhysics(context: StageRunUpdateContext): void {
+		const { action, simDt } = context;
 		const combatEvents = this.getCombatEvents();
+		context.combatEvents = combatEvents;
 		this.physics.step(this.player, this.platforms, action, simDt, {
 			onJump: () => this.emitJumpParticles(),
 			onLand: (fallDistance) => {
@@ -2882,9 +3422,11 @@ export class StageRunScene implements Scene {
 			},
 			onCoyoteJump: () => this.emitCoyoteParticles(),
 		});
-		// 4. Combat with event handlers
+	}
+
+	private stepCombatAndWorld({ action, simDt, combatEvents }: StageRunUpdateContext): void {
+		if (!combatEvents) throw new Error('stage update pipeline requires combat events after physics');
 		this.combat.step(this.player, this.enemies, action, simDt, combatEvents);
-		// 5. Items and hazards
 		this.items.step(this.player, action, this.pickups, simDt);
 		this.handleHazardEvents(
 			this.lowerSprawlHazards?.step(this.player, simDt, this.combat, combatEvents) ?? []
@@ -2920,7 +3462,11 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		// 6-8. Hack, Enemy, Companion
+	}
+
+	private stepActors(context: StageRunUpdateContext): void {
+		const { simDt, combatEvents } = context;
+		if (!combatEvents) throw new Error('stage update pipeline requires combat events before actors');
 		this.companions.step(this.player, this.enemies, simDt, {
 			onHint: (message) => {
 				this.player.companionHint = message;
@@ -2934,6 +3480,7 @@ export class StageRunScene implements Scene {
 			enemy.rookMarked = companionState.rookOverlayUntil > 0 && enemy.hp > 0;
 		}
 		const bossPhaseState = this.bossPhases.step(this.player, this.enemies, simDt);
+		context.bossPhaseState = bossPhaseState;
 		this.player.bossPhaseHint = bossPhaseState
 			? `Boss ${bossPhaseState.phaseIndex + 1}/${bossPhaseState.phaseCount}: ${bossPhaseState.activePhaseLabel}`
 			: undefined;
@@ -2992,25 +3539,42 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		// 9-11. Beat, WaveDirector, Camera
+	}
+
+	private stepPresentation({ action, simDt, input, combatEvents }: StageRunUpdateContext): void {
+		if (!combatEvents) throw new Error('stage update pipeline requires combat events before presentation');
 		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 1950);
 		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), simDt, this.player.vx);
-
-		// Player input processing
 		processMossInput(this.player, action, simDt, this.combat, this.enemies, combatEvents);
-
-		// Update animation and stage experience state
 		this.updateAnimation(simDt);
 		this.updateLowerSprawlCompletion();
 		this.updateDrainmarketCompletion();
 		this.updateChromeArcologyCompletion();
 		this.updateMirrorPalaceCompletion();
 		this.updateDubColonyCompletion();
+		this.updateLateStageCompletion();
 		this.recoverPlayerIfNeeded();
 		this.updateGameplayHints();
-
-		// Clear edge detection
 		input.clearPressed();
+	}
+
+	update(dt: number): void {
+		const input = this.input;
+		if (!input) return;
+		const action = input.snapshot();
+		if (this.training) {
+			this.updateTraining(dt, action);
+			return;
+		}
+		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
+		this.updatePipeline.run({
+			dt,
+			simDt,
+			action,
+			input,
+			combatEvents: null,
+			bossPhaseState: null,
+		});
 	}
 
 	render(rend: Renderer, alpha: number): void {
@@ -3031,7 +3595,8 @@ export class StageRunScene implements Scene {
 		rend.clear();
 		const hasStageArt =
 			this.options.stageId === 'lower-sprawl'
-				? rend.renderStageBackdrop(LOWER_SPRAWL_BACKDROP_SHEET_ID)
+				? rend.renderStageParallax(LOWER_SPRAWL_PARALLAX_SHEET_ID, cam.x) ||
+					rend.renderStageBackdrop(LOWER_SPRAWL_BACKDROP_SHEET_ID)
 				: this.options.stageId === 'drainmarket'
 					? rend.renderStageParallax(DRAINMARKET_PARALLAX_SHEET_ID, cam.x)
 					: this.options.stageId === 'chrome-arcology'
@@ -3040,7 +3605,13 @@ export class StageRunScene implements Scene {
 							? rend.renderStageParallax(MIRROR_PALACE_PARALLAX_SHEET_ID, cam.x)
 							: this.options.stageId === 'dub-colony'
 								? rend.renderStageParallax(DUB_COLONY_PARALLAX_SHEET_ID, cam.x)
-								: false;
+								: this.options.stageId === 'antenna-barrens'
+									? rend.renderStageParallax(ANTENNA_BARRENS_PARALLAX_SHEET_ID, cam.x)
+									: this.options.stageId === 'orbital-lift'
+										? rend.renderStageParallax(ORBITAL_LIFT_PARALLAX_SHEET_ID, cam.x)
+										: this.options.stageId === 'asteroid-redoubt'
+											? rend.renderStageParallax(ASTEROID_REDOUBT_PARALLAX_SHEET_ID, cam.x)
+											: false;
 		if (!hasStageArt) {
 			rend.drawBackground();
 			rend.renderParallax(cam.x);
@@ -3051,6 +3622,7 @@ export class StageRunScene implements Scene {
 		this.renderChromeArcologyWorld(ctx, cam.x);
 		this.renderMirrorPalaceWorld(ctx, cam.x);
 		this.renderDubColonyWorld(ctx, cam.x);
+		this.renderLateStageWorld(ctx, cam.x);
 		rend.renderPickups(this.pickups, cam.x);
 		rend.renderPlayer(this.player, cam.x);
 		this.renderRailgunBeam(ctx, cam.x);
@@ -3067,8 +3639,10 @@ export class StageRunScene implements Scene {
 			this.renderChromeArcologyObjectivePanel(ctx);
 			this.renderMirrorPalaceObjectivePanel(ctx);
 			this.renderDubColonyObjectivePanel(ctx);
+			this.renderLateStageObjectivePanel(ctx);
 			this.renderLoadoutPanel(ctx);
 		}
+		this.renderLateStageInterface(ctx);
 
 		ctx.restore();
 	}
@@ -3251,24 +3825,13 @@ export class StageRunScene implements Scene {
 
 	private advanceAnimationFrames(animState: AnimationState, dt: number): void {
 		const sheet = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID);
-		const animation = sheet?.sheet.animations[animState.currentAnim];
-		if (!animation) return;
+		if (!sheet) return;
 
-		animState.timer += dt;
-		const frameTime = 1 / animation.fps;
-		while (animState.timer >= frameTime) {
-			animState.timer -= frameTime;
-			this.lastAnimationFrame = animState.frame;
-			animState.frame++;
-			if (animState.frame >= animation.frames) {
-				if (animState.loop) {
-					animState.frame = 0;
-				} else {
-					animState.frame = animation.frames - 1;
-				}
-			}
-			this.emitAnimationEvents(animState.currentAnim, animState.frame);
-			if (!animState.loop && animState.frame === animation.frames - 1) break;
+		let previousFrame = animState.frame;
+		for (const frame of advanceAnimation(animState, sheet, dt)) {
+			this.lastAnimationFrame = previousFrame;
+			this.emitAnimationEvents(animState.currentAnim, frame);
+			previousFrame = frame;
 		}
 	}
 
@@ -3503,6 +4066,7 @@ export class StageRunScene implements Scene {
 		const isMadameVitrine = boss.id === 'madame-vitrine';
 		const isReflectionJudge = boss.id === 'reflection-judge';
 		const isKingFeedback = boss.id === 'king-feedback';
+		const bossSpriteSheetId = getStoryBossSpriteSheet(boss.id);
 		const hp = isKingFeedback
 			? 15
 			: isReflectionJudge
@@ -3561,6 +4125,8 @@ export class StageRunScene implements Scene {
 			stun: 0,
 			bossId: boss.id,
 			bossName: boss.name,
+			bossSpriteSheetId,
+			bossAnimation: bossSpriteSheetId ? 'idle' : undefined,
 			bossArgument: boss.argument,
 			faction: 'enemy',
 			isBossPlaceholder: true,

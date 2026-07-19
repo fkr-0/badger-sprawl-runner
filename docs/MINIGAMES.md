@@ -18,6 +18,26 @@ interface MiniGameSpec {
 }
 ```
 
+## First campaign integrations
+
+The late campaign now uses three dedicated Canvas2D interfaces while preserving the shared stage-result contract:
+
+- **Antenna Barrens / FastType:** `M` opens an exact-byte repair terminal. Printable keyboard input, Backspace, Enter validation, attempts, timeout reset, and Escape cancellation are handled while field simulation is paused.
+- **Orbital Lift / cargo routing:** three manifest columns expose subject, standing/evidence, and destination. Arrow keys move and rewrite the route; number keys directly select options; Enter validates the complete ownership reversal.
+- **Asteroid Redoubt / broadcast composition:** three editable clauses produce a live on-air sentence preview. The same navigation grammar is used, but the authored solutions enforce listening, transferable methods, and forkable public tools.
+
+All three still emit the existing `primary-node-completed`, `tutorial-complete`, and `minigame-complete` events. Optional support nodes remain non-blocking, and the payload plus boss gates remain unchanged.
+
+### Late-stage quality and recovery contract
+
+- A first-pass solution receives a **clean** grade.
+- A corrected solution receives a **recovered** grade.
+- After three failed validations, **public assist** activates instead of blocking campaign progress: the timer pauses, FastType preserves the verified prefix and reveals the next byte, and routing/composition marks only conflicting columns with textual hints.
+- Wrong submissions preserve correct work. Cargo and broadcast selections are not reset; FastType retains the longest verified prefix.
+- Selection answers are never exposed through the production snapshot before validation. E2E fixtures carry their own authored solutions.
+- Console time uses real frame time rather than focus/slow-motion simulation time. World physics, combat, enemies, and camera simulation remain frozen while the modal owns input.
+- Selection state never relies on color alone: focus uses `▶`, selected options use an explicit marker, and invalid columns are labelled `REVISE`.
+
 ## Minigame types
 
 | Type | Enforced skill | Example |

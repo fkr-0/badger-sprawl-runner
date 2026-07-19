@@ -66,6 +66,28 @@ describe('buildStageRunSceneOptions', () => {
 		expect(colonyOptions.generatedSideRooms?.[0]?.stageId).toBe('orbital-lift');
 	});
 
+	it('turns late-stage hack duels and behavior protocols into runtime boss phases', () => {
+		const antennaFlow = createGameFlow(undefined, { currentStageId: 'antenna-barrens' });
+		antennaFlow.selectMenu('story');
+		enterCurrentStage(antennaFlow);
+		const antennaOptions = buildStageRunSceneOptions(antennaFlow);
+		expect(antennaOptions.bossPhases).toHaveLength(3);
+		expect(antennaOptions.bossPhases?.[0]).toMatchObject({
+			id: 'hack-duel-1',
+			mechanic: 'fasttype bursts',
+		});
+
+		const liftFlow = createGameFlow(undefined, { currentStageId: 'orbital-lift' });
+		liftFlow.selectMenu('story');
+		enterCurrentStage(liftFlow);
+		const liftOptions = buildStageRunSceneOptions(liftFlow);
+		expect(liftOptions.bossPhases).toHaveLength(3);
+		expect(liftOptions.bossPhases?.[2]).toMatchObject({
+			id: 'mercy-exception',
+			label: 'Mercy Exception',
+		});
+	});
+
 	it('returns safe defaults outside a stage state', () => {
 		const options = buildStageRunSceneOptions(createGameFlow());
 		expect(options.acquiredPayloadIds).toEqual([]);

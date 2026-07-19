@@ -81,9 +81,9 @@ async function enterMirrorPalace(page: Page): Promise<void> {
 	await page.waitForFunction(
 		() =>
 			(window as MirrorWindow).__badger?.hasSheet('moss_badger_production') &&
-			(window as MirrorWindow).__badger?.hasSheet('mirror_palace_parallax') &&
+			(window as MirrorWindow).__badger?.hasSheet('straylight_mirage_parallax') &&
 			(window as MirrorWindow).__badger?.hasSheet('character_lio') &&
-			(window as MirrorWindow).__badger?.hasSheet('enemy_chrome_bellhop') &&
+			(window as MirrorWindow).__badger?.hasSheet('enemy_masque_duelist') &&
 			(window as MirrorWindow).__badger?.hasSheet('enemy_mirror_sentinel') &&
 			(window as MirrorWindow).__badger?.hasSheet('boss_boss_reflection_judge_court'),
 		null,
@@ -184,7 +184,7 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 		const spriteIds = await page.evaluate(() =>
 			(window as MirrorWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
 		);
-		expect(spriteIds).toContain('enemy_chrome_bellhop');
+		expect(spriteIds).toContain('enemy_masque_duelist');
 		expect(spriteIds).toContain('enemy_mirror_sentinel');
 	});
 

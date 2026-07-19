@@ -16,10 +16,14 @@ import { VFXPool } from './VFXPool';
 
 export const PLAYER_SPRITE_SHEET_ID = 'moss_badger_production';
 export const LOWER_SPRAWL_BACKDROP_SHEET_ID = 'lower_sprawl_backdrop';
+export const LOWER_SPRAWL_PARALLAX_SHEET_ID = 'lower_sprawl_parallax';
 export const DRAINMARKET_PARALLAX_SHEET_ID = 'drainmarket_parallax';
 export const CHROME_ARCOLOGY_PARALLAX_SHEET_ID = 'chrome_arcology_parallax';
-export const MIRROR_PALACE_PARALLAX_SHEET_ID = 'mirror_palace_parallax';
+export const MIRROR_PALACE_PARALLAX_SHEET_ID = 'straylight_mirage_parallax';
 export const DUB_COLONY_PARALLAX_SHEET_ID = 'dub_colony_parallax';
+export const ANTENNA_BARRENS_PARALLAX_SHEET_ID = 'antenna_barrens_parallax';
+export const ORBITAL_LIFT_PARALLAX_SHEET_ID = 'orbital_lift_parallax';
+export const ASTEROID_REDOUBT_PARALLAX_SHEET_ID = 'asteroid_redoubt_parallax';
 const BOSS_RENDER_HEIGHT = 78;
 
 export type BadgerBridgePassName = 'stage-backdrop' | 'parallax' | 'terrain';
@@ -431,7 +435,7 @@ export class Renderer {
 	}
 
 	renderVFX(cameraX: number): void {
-		this.vfxPool.render(this.ctx, cameraX);
+		this.vfxPool.render(this.ctx, cameraX, this.spriteRenderer);
 	}
 
 	renderUI(player: Player, camera: Camera): void {

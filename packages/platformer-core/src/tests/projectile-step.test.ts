@@ -56,6 +56,21 @@ describe('stepProjectiles', () => {
 		expect(result.projectiles).toEqual([]);
 	});
 
+	it('preserves caller target order while using shared hitbox contacts', () => {
+		const result = stepProjectiles({
+			projectiles: [projectile({ kind: 'rail', pierce: 1, vx: 400, y: 10 })],
+			targets: [
+				{ id: 'zulu', x: 35, y: 0, w: 20, h: 40 },
+				{ id: 'alpha', x: 38, y: 0, w: 20, h: 40 },
+			],
+			bounds: { x: -100, y: -100, w: 400, h: 400 },
+			params: defaultParams,
+			dt: 0.1,
+		});
+
+		expect(result.hits.map((hit) => hit.targetId)).toEqual(['zulu', 'alpha']);
+	});
+
 	it('bounces from platforms until max bounce budget is spent', () => {
 		const result = stepProjectiles({
 			projectiles: [projectile({ x: 10, y: 9, vx: 0, vy: 20, maxBounces: 1 })],

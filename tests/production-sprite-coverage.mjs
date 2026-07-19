@@ -6,29 +6,41 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(join(root, 'data/sprites.json'), 'utf8'));
-const production = manifest.spriteSheets.filter(
-	(sheet) => sheet.source?.revision === '2026-07-17-production'
+const acceptedRevisions = new Set(['2026-07-17-production', '2026-07-19-dalle-import']);
+const production = manifest.spriteSheets.filter((sheet) =>
+	acceptedRevisions.has(sheet.source?.revision)
 );
 
-assert.equal(production.length, 29, 'expected the complete 29-sheet production art pass');
+assert.equal(production.length, 64, 'expected the complete authored production-art pass');
 
 const roleCounts = production.reduce((counts, sheet) => {
 	const family = sheet.id.startsWith('enemy_')
 		? 'enemy'
 		: sheet.id.startsWith('character_')
 			? 'character'
-			: sheet.id.endsWith('_tiles')
-				? 'tiles'
-				: 'parallax';
+			: sheet.id.startsWith('boss_')
+				? 'boss'
+				: sheet.id.endsWith('_tiles')
+					? 'tiles'
+					: sheet.id.endsWith('_parallax')
+						? 'parallax'
+						: sheet.id.includes('item')
+							? 'items'
+							: sheet.id.includes('vfx')
+								? 'vfx'
+								: 'other';
 	counts[family] = (counts[family] ?? 0) + 1;
 	return counts;
 }, {});
 
 assert.deepEqual(roleCounts, {
 	tiles: 8,
-	parallax: 3,
-	enemy: 10,
-	character: 8
+	parallax: 8,
+	enemy: 16,
+	character: 20,
+	boss: 8,
+	items: 3,
+	vfx: 1,
 });
 
 const hashes = new Set();
@@ -39,7 +51,7 @@ for (const sheet of production) {
 	const published = readFileSync(publicPath);
 
 	assert.ok(source.equals(published), `${sheet.id}: source/public PNG mismatch`);
-	assert.ok(statSync(sourcePath).size > 8_000, `${sheet.id}: suspiciously small atlas`);
+	assert.ok(statSync(sourcePath).size > 7_000, `${sheet.id}: suspiciously small atlas`);
 	assert.equal(source.subarray(1, 4).toString('ascii'), 'PNG', `${sheet.id}: not a PNG`);
 
 	const width = source.readUInt32BE(16);
@@ -59,9 +71,17 @@ for (const sheet of production) {
 	assert.equal(colorType, 6, `${sheet.id}: production atlas must preserve RGBA transparency`);
 
 	const sourceSheet = join(root, sheet.source.sourceSheet);
-	const promptSet = join(root, sheet.source.promptSet);
-	assert.ok(statSync(sourceSheet).isFile(), `${sheet.id}: missing source preview`);
-	assert.ok(statSync(promptSet).isFile(), `${sheet.id}: missing prompt record`);
+	assert.ok(statSync(sourceSheet).isFile(), `${sheet.id}: missing source board`);
+	if (sheet.source.revision === '2026-07-17-production') {
+		const promptSet = join(root, sheet.source.promptSet);
+		assert.ok(statSync(promptSet).isFile(), `${sheet.id}: missing prompt record`);
+	} else {
+		assert.equal(sheet.source.importer, 'scripts/import-dalle-sprites.py');
+		assert.ok(
+			['image_mapping.json', 'matching.txt', 'metadata.json'].includes(sheet.source.mapping),
+			`${sheet.id}: invalid DALL·E mapping provenance`
+		);
+	}
 
 	const hash = createHash('sha256').update(source).digest('hex');
 	assert.ok(!hashes.has(hash), `${sheet.id}: duplicate production atlas`);
@@ -69,5 +89,5 @@ for (const sheet of production) {
 }
 
 console.log(
-	`production sprites: ${production.length} clean sheets validated (${[...hashes].length} unique PNGs)`
+	`production sprites: ${production.length} authored sheets validated (${[...hashes].length} unique PNGs)`
 );

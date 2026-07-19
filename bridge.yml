@@ -32,6 +32,11 @@ commands:
     description: Run the Chapter 5 colony vote, Naya companion, beat-reactor, and King Feedback flow in Chromium and Firefox.
     timeoutMs: 180000
     track: test
+  e2e-late-campaign:
+    run: pnpm run test:e2e:late-campaign
+    description: Run Chapters 6–8 from Antenna Barrens through the final Publish the Tools ending card in Chromium and Firefox.
+    timeoutMs: 240000
+    track: test
   e2e-mirror-palace:
     run: pnpm run test:e2e:mirror-palace
     description: Run the Chapter 4 Mirror Palace rocket, story-choice, animation, and Reflection Judge flow in Chromium and Firefox.
@@ -103,6 +108,9 @@ agent:
     - Continue replacing remaining generated fallback sheets with authored production animation sheets.
     - Split minigame engine into its own package when API stabilizes.
   changelog:
+    - "2026-07-19: Hardened late-stage minigames with clean/recovered/assisted grades, real-time clocks, preserved valid work, explicit non-color correction feedback, answer-safe snapshots, and timer-free public assist after repeated failures."
+    - "2026-07-19: Replaced one-key late-stage terminals with dedicated FastType, cargo-routing, and broadcast-composition canvas interfaces while preserving quest, minigame, payload, debrief, and campaign completion contracts."
+    - "2026-07-19: Completed Chapters 6–8 with interactable late-stage objectives, optional public-support routes, full boss-phase adapters, payload/debrief progression, campaign completion, and continuous Chromium/Firefox E2E through the Publish the Tools ending card."
     - "2026-07-19: Replaced the placeholder training counter with a randomized campaign-stage dummy dojo, infinite practice resources, live overlays/metrics, and state-driven cross-browser release E2E."
     - "2026-07-19: Rebalanced gameplay actor scale and replaced overlapping fixed HUD coordinates with a compact tested 960x540 layout."
     - "2026-07-19: Retuned Dub Colony from 140 BPM to an 86 BPM classic hip-hop pocket with proportionally rebalanced branch timing windows."

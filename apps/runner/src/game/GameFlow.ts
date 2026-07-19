@@ -98,6 +98,21 @@ export interface BossLesson {
 	response: string;
 }
 
+export interface BossBehaviorContract {
+	id: string;
+	label: string;
+	placeholder: boolean;
+	phases: Array<{ id: string; mechanic: string }>;
+}
+
+export interface BossHackDuelContract {
+	id: string;
+	label: string;
+	placeholder: boolean;
+	rounds: number;
+	mechanics: string[];
+}
+
 export interface BossContract {
 	id: string;
 	name: string;
@@ -105,6 +120,8 @@ export interface BossContract {
 	argument: string;
 	phases?: BossPhase[];
 	lessons?: BossLesson[];
+	behavior?: BossBehaviorContract;
+	hackDuel?: BossHackDuelContract;
 }
 
 export interface MetaState {

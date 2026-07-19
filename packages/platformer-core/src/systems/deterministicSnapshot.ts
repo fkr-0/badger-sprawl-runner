@@ -1,51 +1,11 @@
-export type SnapshotValue = null | boolean | number | string | SnapshotValue[] | { [key: string]: SnapshotValue | undefined };
+export {
+	deterministicHash,
+	fnv1a32,
+	stableSnapshot,
+	stableSnapshotString,
+} from '../../../../vendor/arcade-runtime.mjs';
 
-export interface SnapshotHashOptions {
-	precision?: number;
-	ignoreKeys?: readonly string[];
-}
-
-const DEFAULT_PRECISION = 6;
-
-function normalizeNumber(value: number, precision: number): number {
-	if (!Number.isFinite(value)) return 0;
-	const scale = 10 ** precision;
-	const rounded = Math.round(value * scale) / scale;
-	return Object.is(rounded, -0) ? 0 : rounded;
-}
-
-export function stableSnapshot(value: SnapshotValue, options: SnapshotHashOptions = {}): SnapshotValue {
-	const precision = options.precision ?? DEFAULT_PRECISION;
-	const ignore = new Set(options.ignoreKeys ?? []);
-
-	if (value === null) return null;
-	if (typeof value === 'number') return normalizeNumber(value, precision);
-	if (typeof value === 'boolean' || typeof value === 'string') return value;
-	if (Array.isArray(value)) return value.map((entry) => stableSnapshot(entry, options));
-
-	const sorted: { [key: string]: SnapshotValue } = {};
-	for (const key of Object.keys(value).sort()) {
-		if (ignore.has(key)) continue;
-		const entry = value[key];
-		if (entry === undefined) continue;
-		sorted[key] = stableSnapshot(entry, options);
-	}
-	return sorted;
-}
-
-export function stableSnapshotString(value: SnapshotValue, options: SnapshotHashOptions = {}): string {
-	return JSON.stringify(stableSnapshot(value, options));
-}
-
-export function fnv1a32(input: string): string {
-	let hash = 2166136261;
-	for (let index = 0; index < input.length; index += 1) {
-		hash ^= input.charCodeAt(index);
-		hash = Math.imul(hash, 16777619);
-	}
-	return (hash >>> 0).toString(16).padStart(8, '0');
-}
-
-export function deterministicHash(value: SnapshotValue, options: SnapshotHashOptions = {}): string {
-	return fnv1a32(stableSnapshotString(value, options));
-}
+export type {
+	SnapshotHashOptions,
+	SnapshotValue,
+} from '../../../../vendor/arcade-runtime.mjs';

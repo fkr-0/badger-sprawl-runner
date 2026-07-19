@@ -18,4 +18,13 @@ describe('CameraSystem scene integration', () => {
 
 		expect(moving.getState().x).toBeGreaterThan(neutral.getState().x);
 	});
+
+	it('recovers lookahead quickly when travel direction reverses', () => {
+		const camera = new CameraSystem();
+		camera.step(600, 0, 1600, 0.1, 300);
+		const forward = camera.getState().x;
+		camera.step(600, 0, 1600, 0.1, -300);
+
+		expect(camera.getState().x).toBeLessThan(forward);
+	});
 });

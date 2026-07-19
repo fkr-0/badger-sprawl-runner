@@ -8,6 +8,12 @@ export interface DialoguePortrait {
 }
 
 const SPEAKER_PORTRAITS: Record<string, DialoguePortrait> = {
+	Auntie: {
+		speaker: 'Auntie',
+		sheetId: 'character_auntie_subharmonic',
+		animation: 'talk',
+		fallbackLabel: 'AUN',
+	},
 	'Auntie Subharmonic': {
 		speaker: 'Auntie Subharmonic',
 		sheetId: 'character_auntie_subharmonic',
@@ -19,6 +25,84 @@ const SPEAKER_PORTRAITS: Record<string, DialoguePortrait> = {
 		sheetId: 'character_lio',
 		animation: 'talk',
 		fallbackLabel: 'LIO',
+	},
+	Juno: {
+		speaker: 'Juno',
+		sheetId: 'character_juno_jar',
+		animation: 'talk',
+		fallbackLabel: 'JUN',
+	},
+	Mina: {
+		speaker: 'Mina',
+		sheetId: 'character_dr_mina_suture',
+		animation: 'talk',
+		fallbackLabel: 'MIN',
+	},
+	Pell: {
+		speaker: 'Pell',
+		sheetId: 'character_foreman_pell',
+		animation: 'talk',
+		fallbackLabel: 'PEL',
+	},
+	Vitrine: {
+		speaker: 'Vitrine',
+		sheetId: 'character_madame_vitrine',
+		animation: 'talk',
+		fallbackLabel: 'VIT',
+	},
+	'Reflection Judge': {
+		speaker: 'Reflection Judge',
+		sheetId: 'character_reflection_judge',
+		animation: 'talk',
+		fallbackLabel: 'JDG',
+	},
+	Cobalt: {
+		speaker: 'Cobalt',
+		sheetId: 'character_cobalt_carmine',
+		animation: 'talk',
+		fallbackLabel: 'COB',
+	},
+	'DJ Calculus': {
+		speaker: 'DJ Calculus',
+		sheetId: 'character_dj_calculus',
+		animation: 'talk',
+		fallbackLabel: 'DJC',
+	},
+	'Little Ix': {
+		speaker: 'Little Ix',
+		sheetId: 'character_little_ix',
+		animation: 'talk',
+		fallbackLabel: 'LIX',
+	},
+	'King Feedback': {
+		speaker: 'King Feedback',
+		sheetId: 'character_king_feedback',
+		animation: 'talk',
+		fallbackLabel: 'KNG',
+	},
+	Mara: {
+		speaker: 'Mara',
+		sheetId: 'character_mara_modulo',
+		animation: 'talk',
+		fallbackLabel: 'MAR',
+	},
+	Fox: {
+		speaker: 'Fox',
+		sheetId: 'character_black_ice_fox',
+		animation: 'talk',
+		fallbackLabel: 'FOX',
+	},
+	'Elevator Angel': {
+		speaker: 'Elevator Angel',
+		sheetId: 'character_elevator_angel',
+		animation: 'talk',
+		fallbackLabel: 'ANG',
+	},
+	Vane: {
+		speaker: 'Vane',
+		sheetId: 'character_director_vane',
+		animation: 'talk',
+		fallbackLabel: 'VAN',
 	},
 	Moss: {
 		speaker: 'Moss',
@@ -43,6 +127,12 @@ const SPEAKER_PORTRAITS: Record<string, DialoguePortrait> = {
 		sheetId: 'character_auntie_subharmonic',
 		animation: 'assist',
 		fallbackLabel: 'CHO',
+	},
+	Rook: {
+		speaker: 'Rook',
+		sheetId: 'character_rook_null',
+		animation: 'talk',
+		fallbackLabel: 'ROO',
 	},
 	'Rook Null': {
 		speaker: 'Rook Null',
@@ -96,7 +186,13 @@ export class DialoguePortraitRenderer {
 			ctx.save();
 			ctx.translate(x + 12, y + 12);
 			ctx.scale(1, 1);
-			spriteRenderer.drawFrame(portrait.sheetId, portrait.animation, Math.floor(Date.now() / 180) % 6, 0, 0);
+			spriteRenderer.drawFrame(
+				portrait.sheetId,
+				portrait.animation,
+				Math.floor(Date.now() / 180) % 6,
+				0,
+				0
+			);
 			ctx.restore();
 		} else {
 			ctx.fillStyle = '#1a1d26';
