@@ -9,6 +9,7 @@ import {
 	loadSpriteSheet,
 	normalizeSpriteManifest,
 } from '@badger/sprite-contracts';
+import { collectArcadeSpriteAnimationEvents } from '../../../../vendor/arcade-runtime.mjs';
 
 interface FallbackEntity {
 	x: number;
@@ -109,8 +110,7 @@ export class SpriteRenderer {
 		const animation = sheet?.sheet.animations[animName];
 		if (!animation) return [];
 		const frame = Math.max(0, frameIndex) % animation.frames;
-		if (!animation.events) return [];
-		return animation.events.filter((event) => event.frame === frame);
+		return [...collectArcadeSpriteAnimationEvents(animation, [frame])];
 	}
 
 	getContext(): CanvasRenderingContext2D {

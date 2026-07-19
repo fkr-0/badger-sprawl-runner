@@ -210,6 +210,7 @@ pnpm run test:e2e:dub-colony # Chapter 5 vote, beat, companion, and boss accepta
 pnpm run test:e2e:late-campaign # Chapters 6–8 dedicated minigames through the final ending card
 pnpm run test:e2e:progression # expanded item and four-track skill acceptance
 pnpm run test:e2e:training # random-stage dummy dojo and gameplay UI contracts in Chromium and Firefox
+pnpm run test:e2e:sprite-review # BSR-owned sprite review PNGs and Moss golden image via shared arcade tooling
 pnpm run sprites:progression # regenerate extended item, pickup, and skill atlases
 pnpm run sprites:moss-motion # promote the complete authored Moss motion atlas
 pnpm run sprites:mirror-palace # regenerate the reflected banquet parallax atlas

@@ -52,4 +52,31 @@ describe('WaveDirector enemy integration', () => {
 
 		expect(enemySystem.getEnemies()).toHaveLength(2);
 	});
+
+	it('owns queued and active wave entities through deferred lifecycle snapshots', () => {
+		vi.spyOn(Math, 'random').mockReturnValue(0);
+		const enemySystem = new EnemySystem();
+		const director = new WaveDirector(enemySystem);
+
+		director.startWave(1);
+		const queued = director.getLifecycleSnapshot();
+		expect(queued.spawnQueue.revision).toBe(1);
+		expect(queued.spawnQueue.entities.map((entry) => entry.id)).toEqual([
+			'wave-1-spawn-0',
+			'wave-1-spawn-1',
+		]);
+
+		director.step(1, 100);
+		const active = director.getLifecycleSnapshot();
+		expect(active.spawnQueue.entities).toHaveLength(0);
+		expect(active.enemies.entities.map((entry) => entry.id)).toEqual([
+			'wave-1-spawn-0:enemy',
+			'wave-1-spawn-1:enemy',
+		]);
+
+		for (const enemy of enemySystem.getEnemies()) enemy.hp = 0;
+		director.step(0, 100);
+		expect(director.getLifecycleSnapshot().enemies.entities).toHaveLength(0);
+		expect(director.isWaveActive()).toBe(false);
+	});
 });

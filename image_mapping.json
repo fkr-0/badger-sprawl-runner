@@ -1,0 +1,250 @@
+{
+  "generated": "2026-06-08",
+  "source": "images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet",
+  "note": "High-confidence matches based on metadata alt text. Ambiguous images flagged for manual review.",
+  "matches": {
+    "006_unknown.png": {
+      "prompt_file": "5_enemy_rent_cop_piker_4x4_48.txt",
+      "target": "assets/sprites/enemies/rent_cop_piker.png",
+      "confidence": "high",
+      "reason": "alt: 'Cyberpunk weasel sprite sheet' → weasel-faced rent cop"
+    },
+    "007_unknown.png": {
+      "prompt_file": "6_enemy_turnstile_mite_4x4_48.txt",
+      "target": "assets/sprites/enemies/turnstile_mite.png",
+      "confidence": "high",
+      "reason": "alt: 'Robot crab boss animation spritesheet' → crab robot from gate arms"
+    },
+    "008_unknown.png": {
+      "prompt_file": "7_enemy_knife_drone_4x4_48.txt",
+      "target": "assets/sprites/enemies/knife_drone.png",
+      "confidence": "high",
+      "reason": "alt: 'Cybernetic drone sprite sheet' → insect drone with scalpel wings"
+    },
+    "013_unknown.png": {
+      "prompt_file": "9_enemy_chrome_bellhop_4x4_48.txt",
+      "target": "assets/sprites/enemies/chrome_bellhop.png",
+      "confidence": "high",
+      "reason": "alt: 'Bellhop robot sprite sheet animation' → chrome bellhop"
+    },
+    "018_unknown.webp": {
+      "prompt_file": "11_enemy_masque_duelist_4x4_48.txt",
+      "target": "assets/sprites/enemies/masque_duelist.png",
+      "confidence": "high",
+      "reason": "alt contains full prompt text for masque duelist"
+    },
+    "020_unknown.png": {
+      "prompt_file": "12_enemy_contract_servitor_4x4_48.txt",
+      "target": "assets/sprites/enemies/contract_servitor.png",
+      "confidence": "high",
+      "reason": "alt: 'Mechanical scroll drone sprite sheet' → scroll drone for contracts"
+    },
+    "021_unknown.png": {
+      "prompt_file": "13_enemy_signal_jammer_bat_4x4_48.txt",
+      "target": "assets/sprites/enemies/signal_jammer_bat.png",
+      "confidence": "high",
+      "reason": "alt: 'Cybernetic bat sprite animation sheet' → bat creature"
+    },
+    "023_unknown.png": {
+      "prompt_file": "15_enemy_error_mite_4x4_48.txt",
+      "target": "assets/sprites/enemies/error_mite.png",
+      "confidence": "high",
+      "reason": "alt: 'Glitchy cyber-bug sprite sheet' → bug-like creature with glitch artifacts"
+    },
+    "024_unknown.png": {
+      "prompt_file": "16_enemy_debt_wraith_4x4_48.txt",
+      "target": "assets/sprites/enemies/debt_wraith.png",
+      "confidence": "high",
+      "reason": "alt: 'Ghostly paper spirit animation sheet' → paper-and-code ghost"
+    },
+    "026_unknown.png": {
+      "prompt_file": "18_enemy_manifest_monk_4x4_48.txt",
+      "target": "assets/sprites/enemies/manifest_monk.png",
+      "confidence": "high",
+      "reason": "alt: 'Floating monk robot sprite sheet' → monk figure"
+    },
+    "033_unknown.png": {
+      "prompt_file": "25_boss_king_feedback_4x4_96.txt",
+      "target": "assets/sprites/bosses/boss_king_feedback_ampthrone.png",
+      "confidence": "high",
+      "reason": "alt: 'Cyberpunk mech king spritesheet' → king in speaker armor"
+    },
+    "034_unknown.png": {
+      "prompt_file": "26_boss_black_ice_fox_4x4_96.txt",
+      "target": "assets/sprites/bosses/boss_black_ice_fox_node.png",
+      "confidence": "high",
+      "reason": "alt: 'Pixelated kitsune in dynamic poses' → fox/kitsune"
+    },
+    "035_unknown.png": {
+      "prompt_file": "27_boss_elevator_angel_4x4_96.txt",
+      "target": "assets/sprites/bosses/boss_elevator_angel_counterweight.png",
+      "confidence": "high",
+      "reason": "alt: 'Robotic angel boss sprite sheet' → angel"
+    },
+    "037_unknown.png": {
+      "prompt_file": "29_char_auntie_subharmonic_6x5_48.txt",
+      "target": "assets/sprites/characters/auntie_subharmonic.png",
+      "confidence": "high",
+      "reason": "alt: 'Wise opossum sprite sheet animation' → elder possum"
+    },
+    "038_unknown.png": {
+      "prompt_file": "30_char_rook_null_6x5_48.txt",
+      "target": "assets/sprites/characters/rook_null.png",
+      "confidence": "high",
+      "reason": "alt: 'Holographic raven sprite sheet animation' → raven radio hologram"
+    },
+    "039_unknown.png": {
+      "prompt_file": "31_char_sister_version_6x5_48.txt",
+      "target": "assets/sprites/characters/sister_version.png",
+      "confidence": "high",
+      "reason": "alt: 'Steampunk otter sprite sheet' → otter dub colony engineer"
+    },
+    "040_unknown.png": {
+      "prompt_file": "32_char_naya_root_6x5_48.txt",
+      "target": "assets/sprites/characters/naya_root.png",
+      "confidence": "high",
+      "reason": "alt: 'Pixel art raccoon character sprite sheet' → raccoon shield fighter"
+    },
+    "044_unknown.png": {
+      "prompt_file": "34_char_dj_calculus_6x5_48.txt",
+      "target": "assets/sprites/characters/dj_calculus.png",
+      "confidence": "high",
+      "reason": "alt: 'Purple hedgehog DJ sprite sheet' → hedgehog beatmaker"
+    },
+    "045_unknown.png": {
+      "prompt_file": "35_char_foreman_pell_6x5_48.txt",
+      "target": "assets/sprites/characters/foreman_pell.png",
+      "confidence": "high",
+      "reason": "alt: 'Beaver construction worker sprite sheet' → beaver foreman"
+    },
+    "046_unknown.png": {
+      "prompt_file": "36_char_murr_murrby_6x5_48.txt",
+      "target": "assets/sprites/characters/murr_murrby.png",
+      "confidence": "high",
+      "reason": "alt: 'Cosmic cat merchant sprite sheet' → black void-cat merchant"
+    },
+    "048_unknown.png": {
+      "prompt_file": "39_char_cobalt_carmine_6x5_48.txt",
+      "target": "assets/sprites/characters/cobalt_carmine.png",
+      "confidence": "high",
+      "reason": "alt: 'Pixel art blue jay performer sprites' → blue jay jazz singer"
+    },
+    "055_unknown.png": {
+      "prompt_file": "49_tiles_lower_sprawl_4x4_32.txt",
+      "target": "assets/sprites/lower_sprawl_tiles.png",
+      "confidence": "high",
+      "reason": "alt: 'Cyberpunk urban environment sprite sheet' → urban rain-soaked streets"
+    },
+    "063_unknown.png": {
+      "prompt_file": "60_parallax_antenna_barrens_3x1_320.txt",
+      "target": "assets/sprites/worlds/antenna_barrens_parallax.png",
+      "confidence": "high",
+      "reason": "alt: 'Cyberpunk radio wasteland under stormy skies' → antenna barrens"
+    },
+    "064_unknown.png": {
+      "prompt_file": "62_parallax_asteroid_redoubt_3x1_320.txt",
+      "target": "assets/sprites/worlds/asteroid_redoubt_parallax.png",
+      "confidence": "high",
+      "reason": "alt: 'Rebel outpost on an asteroid' → rebel asteroid outpost"
+    },
+    "072_unknown.png": {
+      "prompt_file": "65_vfx_combat_4x4_32.txt",
+      "target": "assets/sprites/vfx_combat.png",
+      "confidence": "high",
+      "reason": "alt: 'Neon pixel VFX animation atlas' → combat VFX"
+    },
+    "073_unknown.png": {
+      "prompt_file": "66_ui_hud_elements.txt",
+      "target": "assets/sprites/vfx_combat.png",
+      "confidence": "high",
+      "reason": "alt: 'Cyberpunk HUD asset pack grid' → HUD elements"
+    }
+  },
+  "unmatched_images": [
+    "001_unknown.png (alt: 'Badger character sprite sheet animation' - PLAYER)",
+    "002_unknown.png (alt: 'Game sprite sheet of action poses' - PLAYER)",
+    "003_unknown.png (alt: 'Badger character sprite sheet with actions' - PLAYER)",
+    "004_unknown.png (alt: 'Badger character sprite sheet with actions' - PLAYER)",
+    "005_unknown.png (alt: 'Badger character sprite sheet portraits' - PLAYER)",
+    "009_unknown.png (alt: 'Badger sprite sheet in cyberpunk style' - PLAYER)",
+    "010_unknown.png (alt: 'Badger pixel sprite animation sheet' - PLAYER)",
+    "011_unknown.png (alt: 'Badger character sprite sheet expressions' - PLAYER)",
+    "012_unknown.png (alt: 'Cyberpunk ferret enforcer sprite sheet' - AMBIGUOUS)",
+    "014_unknown.png (alt: 'Cybernetic insect drone sprite sheet' - AMBIGUOUS)",
+    "015_unknown.png (alt: 'Dramatic duelist in action poses' - AMBIGUOUS)",
+    "016_unknown.png (alt: 'Futuristic knight sprite sheet' - AMBIGUOUS)",
+    "017_unknown.png (alt: 'Cyberpunk duelist sprite sheet' - AMBIGUOUS)",
+    "019_unknown.png (alt: 'Masked duelist sprite animation sheet' - AMBIGUOUS)",
+    "022_unknown.png (alt: 'Robot battle sprite sheet in pixel art' - AMBIGUOUS)",
+    "025_unknown.png (alt: 'Futuristic soldier sprite sheet animation' - AMBIGUOUS)",
+    "027_unknown.png (alt: 'Cyberpunk Anubis character sprite sheet' - AMBIGUOUS)",
+    "028_unknown.png (alt: 'Pixel art soldier animation sprite sheet' - AMBIGUOUS)",
+    "029_unknown.png (alt: 'Mech enforcer sprite animation sheet' - AMBIGUOUS)",
+    "030_unknown.png (alt: 'Biomechanical enemy sprite sheet animation' - AMBIGUOUS)",
+    "031_unknown.png (alt: 'Futuristic pixel art character sheet' - AMBIGUOUS)",
+    "032_unknown.png (alt: 'Shattered knight sprite sheet' - AMBIGUOUS)",
+    "036_unknown.png (alt: 'Futuristic villain sprite sheet sequence' - AMBIGUOUS)",
+    "041_unknown.png (alt: 'Pixel art raccoon warrior sprite sheet' - AMBIGUOUS)",
+    "042_unknown.png (alt: 'Pixel raccoon warrior animation sheet' - AMBIGUOUS)",
+    "043_unknown.png (alt: 'Raccoon warrior sprite sheet design' - AMBIGUOUS)",
+    "047_unknown.png (alt: 'Futuristic fox courier sprite sheet' - AMBIGUOUS)",
+    "049_unknown.png (alt: 'Steampunk squirrel and robot sprite sheet' - AMBIGUOUS)",
+    "050_unknown.png (alt: 'Cyber fox hologram sprite sequence' - AMBIGUOUS)",
+    "051_unknown.png (alt: 'Cyberpunk wolf character sprite sheet' - AMBIGUOUS)",
+    "052_unknown.png (alt: 'Regal mustelid in pixel sprite sheet' - AMBIGUOUS)",
+    "053_unknown.png (alt: 'Futuristic wolf humanoid sprite sheet' - AMBIGUOUS)",
+    "054_unknown.png (alt: 'Cyberpunk tactical squad sprite sheet' - AMBIGUOUS)",
+    "056_unknown.png (alt: 'Sci-fi cyberpunk environment tileset' - AMBIGUOUS)",
+    "057_unknown.png (alt: 'Cyber-organic pixel art elements' - AMBIGUOUS)",
+    "058_unknown.png (alt: 'Pixel art sci-fi industrial props' - AMBIGUOUS)",
+    "059_unknown.png (alt: 'Industrial sci-fi sprite tileset' - AMBIGUOUS)",
+    "060_unknown.png (alt: 'Futuristic city triptych in pixel art' - AMBIGUOUS)",
+    "061_unknown.png (alt: 'Cyber crystal palace in pixel art' - AMBIGUOUS)",
+    "062_unknown.png (alt: 'Futuristic jungle of sound and vines' - AMBIGUOUS)",
+    "065_unknown.png (no alt text - AMBIGUOUS)",
+    "066_unknown.png (no alt text - AMBIGUOUS)",
+    "067_unknown.png (no alt text - AMBIGUOUS)",
+    "068_unknown.png (no alt text - AMBIGUOUS)",
+    "069_unknown.png (no alt text - AMBIGUOUS)",
+    "070_unknown.png (no alt text - AMBIGUOUS)",
+    "071_unknown.png (alt: 'Cyberpunk UI pixel art set' - AMBIGUOUS)"
+  ],
+  "unmatched_prompts": [
+    "8_enemy_clinic_repo_4x4_48.txt",
+    "10_enemy_mirror_sentinel_4x4_48.txt",
+    "14_enemy_feedback_guard_4x4_48.txt",
+    "17_enemy_customs_lancer_4x4_48.txt",
+    "19_enemy_vane_air_bailiff_4x4_48.txt",
+    "20_enemy_command_lock_partisan_4x4_48.txt",
+    "21_boss_captain_grin_4x4_96.txt",
+    "22_boss_knife_drone_nest_4x4_96.txt",
+    "23_boss_madame_vitrine_4x4_96.txt",
+    "24_boss_reflection_judge_4x4_96.txt",
+    "28_boss_director_vane_4x4_96.txt",
+    "33_char_dr_mina_suture_6x5_48.txt",
+    "37_char_juno_jar_6x5_48.txt",
+    "38_char_lio_6x5_48.txt",
+    "40_char_little_ix_6x5_48.txt",
+    "41_char_mara_modulo_6x5_48.txt",
+    "42_char_black_ice_fox_6x5_48.txt",
+    "43_char_king_feedback_6x5_48.txt",
+    "44_char_madame_vitrine_6x5_48.txt",
+    "45_char_reflection_judge_6x5_48.txt",
+    "46_char_elevator_angel_6x5_48.txt",
+    "47_char_director_vane_6x5_48.txt",
+    "48_char_command_lock_faction_6x5_48.txt",
+    "50_tiles_chrome_arcology_4x4_32.txt",
+    "51_tiles_straylight_mirage_4x4_32.txt",
+    "52_tiles_dub_colony_4x4_32.txt",
+    "53_tiles_antenna_barrens_4x4_32.txt",
+    "54_tiles_orbital_lift_4x4_32.txt",
+    "55_tiles_asteroid_redoubt_4x4_32.txt",
+    "56_parallax_lower_sprawl_3x1_320.txt",
+    "57_parallax_chrome_arcology_3x1_320.txt",
+    "58_parallax_straylight_mirage_3x1_320.txt",
+    "59_parallax_dub_colony_3x1_320.txt",
+    "61_parallax_orbital_lift_3x1_320.txt",
+    "63_items_pickups_4x4_32.txt",
+    "64_items_icons_4x4_32.txt"
+  ]
+}

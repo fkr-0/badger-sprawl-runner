@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isBadgerPixiBridgeRequested } from './BadgerPixiBridge';
+import { isBadgerPixiBridgeRequested } from './PixiBridgeRequest';
 
 describe('Badger Pixi bridge opt-in', () => {
 	it('is off by default and supports renderer and legacy query flags', () => {

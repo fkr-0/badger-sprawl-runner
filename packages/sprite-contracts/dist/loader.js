@@ -1,4 +1,4 @@
-import { resolveArcadeSpriteFrame } from '../../../vendor/arcade-runtime.mjs';
+import { drawArcadeSpriteCanvasFrame, resolveArcadeSpriteFrame, } from '../../../vendor/arcade-runtime.mjs';
 function getOrderedFrame(sheet, animName, frameIndex) {
     return resolveArcadeSpriteFrame(sheet, animName, frameIndex)?.absoluteFrame ?? null;
 }
@@ -22,17 +22,13 @@ export function loadSpriteSheet(sheet, ctx) {
                     const frame = resolveArcadeSpriteFrame(sheet, animName, frameIndex);
                     if (!frame)
                         return;
-                    const { sourceX, sourceY, frameWidth, frameHeight } = frame;
-                    ctx.save();
-                    if (flipX) {
-                        ctx.translate(x + frameWidth, y);
-                        ctx.scale(-1, 1);
-                        ctx.drawImage(img, sourceX, sourceY, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
-                    }
-                    else {
-                        ctx.drawImage(img, sourceX, sourceY, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
-                    }
-                    ctx.restore();
+                    drawArcadeSpriteCanvasFrame(ctx, img, frame, {
+                        x,
+                        y,
+                        placement: 'top-left',
+                        flipX,
+                        imageSmoothingEnabled: false,
+                    });
                 },
             });
         };

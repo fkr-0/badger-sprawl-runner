@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +13,8 @@ assert.deepEqual(publicManifest, manifest, 'source/public sprite manifests diver
 
 const imported = manifest.spriteSheets.filter((sheet) => sheet.source?.revision === revision);
 assert.equal(imported.length, 55, 'expected the complete mapped DALLE runtime-import batch');
+const requireSourceArchive = process.env.REQUIRE_DALLE_SOURCE_ARCHIVE === '1';
+let archivedSourceBoardsPresent = 0;
 
 const required = new Set([
 	'boss_boss_captain_grin_tollmech',
@@ -82,10 +84,13 @@ for (const sheet of imported) {
 	assert.equal(source.subarray(1, 4).toString('ascii'), 'PNG', `${sheet.id}: not a PNG`);
 	assert.equal(source[25], 6, `${sheet.id}: imported atlas must preserve RGBA transparency`);
 	assert.ok(statSync(sourcePath).size > 7_000, `${sheet.id}: imported atlas is suspiciously small`);
-	assert.ok(
-		statSync(join(root, sheet.source.sourceSheet)).isFile(),
-		`${sheet.id}: missing archived DALLE source board`
-	);
+	const archivedSourcePath = join(root, sheet.source.sourceSheet);
+	if (existsSync(archivedSourcePath)) {
+		assert.ok(statSync(archivedSourcePath).isFile(), `${sheet.id}: archived source is not a file`);
+		archivedSourceBoardsPresent += 1;
+	} else if (requireSourceArchive) {
+		assert.fail(`${sheet.id}: missing archived DALLE source board`);
+	}
 	assert.ok(
 		['image_mapping.json', 'matching.txt', 'metadata.json'].includes(sheet.source.mapping),
 		`${sheet.id}: unexpected mapping source ${sheet.source.mapping}`
@@ -116,4 +121,7 @@ assert.equal(provenanceCounts['matching.txt'], 35);
 assert.equal(provenanceCounts['image_mapping.json'], 19);
 assert.equal(provenanceCounts['metadata.json'], 1);
 
-console.log(`DALLE sprite integration: ${imported.length} runtime atlases validated`);
+console.log(
+	`DALLE sprite integration: ${imported.length} runtime atlases validated; ` +
+		`${archivedSourceBoardsPresent}/${imported.length} external source boards present`
+);

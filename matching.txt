@@ -1,0 +1,63 @@
+Unmatched Boss Prompts
+
+29:  21_boss_captain_grin — smiling official, toll booth exosuit, barrier arms, gold badge
+30:  22_boss_knife_drone_nest — giant nest of scalpels, syringes, fan blades
+31:  23_boss_madame_vitrine — glass-armored executive, mirror fan blades, contract scroll ribbons
+32:  24_boss_reflection_judge — black glass judge, orbiting witness masks, gavel sword
+36:  28_boss_director_vane — wolf executive, air-lock halo, gold ledger spine, 5-phase boss
+
+Unmatched Char Prompts
+
+76:    33_char_dr_mina_suture — mole back-alley medic, headlamp goggles, patched white coat
+77:    37_char_juno_jar — rat pipe kid map-runner, oversized rain poncho, chalk tube
+47:    38_char_lio — fox courier (traitor?), banquet mask, scarf hiding debt collar
+49:    40_char_little_ix — squirrel child tinkerer, goggles, soldering toy robot
+78:    41_char_mara_modulo — lizard squat hacker, sun-faded hoodie, chalkboard backpack
+50:    42_char_black_ice_fox — silver fox elite hacker, hooded coat, crystalline tails
+51:    43_char_king_feedback — rebel amp commander, speaker armor, cable crown
+52:    44_char_madame_vitrine — mink executive, mirror-glass gown armor
+32:  45_char_reflection_judge — black glass judge, orbiting witness masks
+35:    46_char_elevator_angel — white gold lift machine, cable wings, scanner halo
+53:    47_char_director_vane — wolf executive, black-white orbital suit, gold ledger spine
+54:    48_char_command_lock_faction — rebel faction group, emergency armor, red cable armbands
+
+
+
+Unmatched Enemy Prompts
+
+ 12:  8_enemy_clinic_repo — rat bruiser, clipboard shield, medical-debt armor - 12
+ 16:  10_enemy_mirror_sentinel — faceless reflective torso, prism spear, gold trim
+ 22:   14_enemy_feedback_guard — colony guard, speaker cone shield, emergency responder badge
+ 25: 17_enemy_customs_lancer — pristine white armor, blue scanner visor, scan-lance
+ 27: 19_enemy_vane_air_bailiff — jackal-headed officer, golden ledger faceplate, oxygen meter staff
+ 28: 20_enemy_command_lock_partisan — rebel fighter, scrappy armor, red cable arm weapon
+
+
+
+Unmatched Parallax Prompts
+
+75:  56_parallax_lower_sprawl — dusk urban skyline, deep indigo, neon light pollution, water towers
+60:    57_parallax_chrome_arcology — sterile luxury interior, glass ceiling, elevator shafts, chrome pillars
+61:  58_parallax_straylight_mirage — ethereal mirror palace, deep purple cosmos, floating chandeliers
+62:    59_parallax_dub_colony — warm maker colony, sunset sky, solar sail silhouettes, greenhouse cars
+ 74: 61_parallax_orbital_lift — space elevator, deep black space, Earth horizon arc, cargo containers
+
+Unmatched Tile Prompts
+
+55:  55_tiles_lower_sprawl — cyberpunk urban brick, wet asphalt, cables, awnings, neon street props
+56:  56_tiles_chrome_arcology — polished chrome floors, glass lattice, elevator rails, luxury ad panels
+57:  57_tiles_dub_colony — cyber-organic speakerstone, cable vines, solar cloth, studio machinery
+58:  58_tiles_orbital_lift — industrial lift grating, cargo straps, vacuum doors, warning machinery
+59:  59_tiles_drainmarket — sump brick, clinic floor, rusted grates, medical tubing, leaking valves
+
+Reviewed Item Prompts
+
+65:    63_items_pickups — approved 16+ glowing pickup-item board
+71:    64_items_icons — 15 clean HUD icons on grid
+
+Archived Item-board Alternatives
+
+- 68_unknown.png — preserved alternate pickup board; no distinct runtime row contract yet
+- 69_unknown.png — preserved alternate pickup board; no distinct runtime row contract yet
+- 70_unknown.png — preserved alternate pickup board; no distinct runtime row contract yet
+

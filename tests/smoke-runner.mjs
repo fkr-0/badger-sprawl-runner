@@ -1,4 +1,4 @@
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,9 +44,31 @@ for (const ref of assetRefs) {
 	assert(await exists(assetPath), `dist index references missing asset: ${ref}`);
 }
 
-const jsRefs = assetRefs.filter((ref) => ref.endsWith('.js'));
-assert(jsRefs.length === 1, 'dist index should reference exactly one runner js bundle');
-const jsBundle = await readFile(join(distRoot, jsRefs[0]), 'utf8');
+const entryScriptRefs = [...html.matchAll(/<script[^>]+src="\.\/([^"]+\.js)"/g)].map(
+	(match) => match[1]
+);
+assert(entryScriptRefs.length === 1, 'dist index should reference exactly one runner entry script');
+const entryScript = entryScriptRefs[0];
+assert(entryScript, 'dist index runner entry script could not be resolved');
+const jsBundle = await readFile(join(distRoot, entryScript), 'utf8');
+const entryStats = await stat(join(distRoot, entryScript));
+assert(
+	entryStats.size < 500_000,
+	`runner entry bundle should stay below 500 kB after code splitting; got ${entryStats.size}`
+);
+const emittedAssets = await readdir(join(distRoot, 'assets'));
+assert(
+	emittedAssets.some((name) => /^pixi-runtime-.*\.js$/.test(name)),
+	'runner build is missing the lazy Pixi runtime chunk'
+);
+assert(
+	emittedAssets.some((name) => /^arcade-runtime-.*\.js$/.test(name)),
+	'runner build is missing the shared arcade runtime chunk'
+);
+assert(
+	!html.includes('pixi-runtime-'),
+	'Pixi runtime must remain lazy and must not be preloaded by the default canvas build'
+);
 assert(
 	!jsBundle.includes('SceneManager shell'),
 	'runner bundle still contains the legacy debug shell'

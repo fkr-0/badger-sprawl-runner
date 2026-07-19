@@ -9,11 +9,13 @@ All notable changes to Badger Sprawl Runner are documented here.
 - Reviewed `matching.txt` against the archived DALL-E board directory and imported five world-material boards into the Lower Sprawl, Drainmarket, Chrome Arcology, Dub Colony, and Orbital Lift tile atlases.
 - Added a stage-art registry and sprite-tiled terrain rendering with deterministic animated set dressing across all eight runtime worlds.
 - Added a failing runtime sprite-usage contract plus browser and production-artifact checks proving mapped terrain PNGs are actually drawn.
+- Added BSR-owned sprite review PNG generation and a strict production-Moss golden screenshot backed by the shared arcade contact-sheet renderer.
 
 ### Changed
 
 - Orbital Lift now uses the previously unreachable Contract Servitor sheet instead of repeating the Manifest Monk.
 - Only the raw Comfy run grid and the superseded generated Mirror Palace parallax remain explicitly archival; all 69 runtime sheets are production-referenced.
+- Split the default production entry from the optional Pixi renderer: the Canvas route now ships a roughly 361 kB entry while the Pixi bridge is loaded only for `?renderer=bridge`.
 
 ## [1.1.0] - 2026-07-19
 

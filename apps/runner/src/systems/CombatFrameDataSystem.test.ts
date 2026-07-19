@@ -81,4 +81,28 @@ describe('CombatFrameDataSystem', () => {
 		const state = markFrameActionHitResolved({ ...startFrameAction(frameData), elapsed: 0.19, phase: 'recovery' }, 'block');
 		expect(getCancelRoutes(frameData, state)).toEqual({ allowed: true, routes: ['guard_cancel'] });
 	});
+
+	it('reports every phase crossed by a large step and gates cancel rules individually', () => {
+		const frameData: AttackFrameData = {
+			...claw,
+			cancelInto: [],
+			cancelRules: [
+				{ into: 'safe-dash', fromPhase: 'recovery' },
+				{ into: 'confirmed-special', fromPhase: 'recovery', requiresHitConfirm: true },
+			],
+		};
+		const completed = stepFrameAction(frameData, startFrameAction(frameData), 1);
+		expect(completed.enteredPhases).toEqual(['active', 'recovery', 'done']);
+		expect(completed.events.map((event) => event.kind)).toEqual([
+			'phase-enter',
+			'phase-enter',
+			'completed',
+		]);
+
+		const recovery = stepFrameAction(frameData, startFrameAction(frameData), 0.18).state;
+		expect(getCancelRoutes(frameData, recovery)).toEqual({
+			allowed: true,
+			routes: ['safe-dash'],
+		});
+	});
 });

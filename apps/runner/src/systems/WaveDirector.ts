@@ -2,6 +2,7 @@
  * WaveDirector - manages horde mode wave spawning and progression
  */
 
+import { type EntityRegistry, createEntityRegistry } from '../../../../vendor/arcade-runtime.mjs';
 import {
 	createEnemy,
 	getEnemyCost,
@@ -18,7 +19,13 @@ export interface WaveConfig {
 	spawnDelay: number;
 }
 
+interface TrackedEnemy {
+	id: string;
+	enemy: EnemyEntity;
+}
+
 interface QueuedSpawn {
+	id: string;
 	enemyId: string;
 	delay: number;
 	x: number;
@@ -27,9 +34,10 @@ interface QueuedSpawn {
 
 export class WaveDirector {
 	private waveNumber = 0;
-	private enemiesRemaining: EnemyEntity[] = [];
 	private waveActive = false;
-	private spawnQueue: QueuedSpawn[] = [];
+	private readonly spawnRegistry: EntityRegistry<QueuedSpawn> = createEntityRegistry();
+	private readonly enemyRegistry: EntityRegistry<TrackedEnemy> = createEntityRegistry();
+	private spawnSequence = 0;
 	private spawnTimer = 0;
 	private waveTimer = 0;
 	private arenaWidth = 1600;
@@ -42,8 +50,9 @@ export class WaveDirector {
 	startWave(waveNumber: number): void {
 		this.waveNumber = waveNumber;
 		this.waveActive = true;
-		this.enemiesRemaining = [];
-		this.spawnQueue = [];
+		this.spawnRegistry.reset();
+		this.enemyRegistry.reset();
+		this.spawnSequence = 0;
 		this.spawnTimer = 0;
 		this.waveTimer = 0;
 
@@ -61,7 +70,8 @@ export class WaveDirector {
 					x: Math.floor(this.arenaWidth / 2),
 					y: 400,
 				};
-				this.spawnQueue.push({
+				this.spawnRegistry.queueSpawn({
+					id: `wave-${waveNumber}-spawn-${this.spawnSequence++}`,
 					enemyId,
 					delay: Math.random() * 2, // Stagger spawns
 					x: spawnPoint.x,
@@ -73,8 +83,9 @@ export class WaveDirector {
 				break;
 			}
 		}
+		this.spawnRegistry.flush();
 
-		console.log(`Wave ${waveNumber} started with ${this.spawnQueue.length} enemies`);
+		console.log(`Wave ${waveNumber} started with ${this.spawnRegistry.values().length} enemies`);
 	}
 
 	getCurrentWave(): number {
@@ -86,7 +97,14 @@ export class WaveDirector {
 	}
 
 	getEnemiesRemaining(): number {
-		return this.enemiesRemaining.length + this.spawnQueue.length;
+		return this.enemyRegistry.values().length + this.spawnRegistry.values().length;
+	}
+
+	getLifecycleSnapshot() {
+		return {
+			spawnQueue: this.spawnRegistry.snapshot(),
+			enemies: this.enemyRegistry.snapshot(),
+		};
 	}
 
 	getWaveProgress(): { current: number; total: number } {
@@ -100,22 +118,30 @@ export class WaveDirector {
 		this.waveTimer += dt;
 
 		// Spawn enemies from queue
-		while (this.spawnQueue.length > 0 && this.spawnTimer >= this.spawnQueue[0].delay) {
-			const spawn = this.spawnQueue.shift();
-			if (!spawn) break;
+		for (const spawn of this.spawnRegistry.values()) {
+			if (this.spawnTimer < spawn.delay) break;
 			this.spawnTimer -= spawn.delay;
+			this.spawnRegistry.queueDespawn(spawn.id, { onMissing: 'error' });
 			const enemy = createEnemy(this.enemySystem, spawn.enemyId, spawn.x, spawn.y);
 			if (enemy) {
-				this.enemiesRemaining.push(enemy);
+				this.enemyRegistry.queueSpawn({ id: `${spawn.id}:enemy`, enemy });
 			}
 		}
+		this.spawnRegistry.flush();
+		this.enemyRegistry.flush();
 
 		// Check for dead enemies
 		const aliveEnemies = this.enemySystem.getEnemies();
-		this.enemiesRemaining = aliveEnemies;
+		const aliveSet = new Set(aliveEnemies);
+		for (const tracked of this.enemyRegistry.values()) {
+			if (!aliveSet.has(tracked.enemy)) {
+				this.enemyRegistry.queueDespawn(tracked.id, { onMissing: 'error' });
+			}
+		}
+		this.enemyRegistry.flush();
 
 		// Check wave completion
-		if (this.spawnQueue.length === 0 && this.enemiesRemaining.length === 0) {
+		if (this.spawnRegistry.values().length === 0 && this.enemyRegistry.values().length === 0) {
 			this.waveActive = false;
 			console.log(`Wave ${this.waveNumber} complete!`);
 		}
@@ -124,8 +150,9 @@ export class WaveDirector {
 	reset(): void {
 		this.waveNumber = 0;
 		this.waveActive = false;
-		this.enemiesRemaining = [];
-		this.spawnQueue = [];
+		this.spawnRegistry.reset();
+		this.enemyRegistry.reset();
+		this.spawnSequence = 0;
 		this.spawnTimer = 0;
 		this.waveTimer = 0;
 		this.enemySystem.clearEnemies();

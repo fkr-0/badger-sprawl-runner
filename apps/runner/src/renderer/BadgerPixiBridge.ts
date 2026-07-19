@@ -1,4 +1,4 @@
-import * as PIXI from 'pixi.js';
+import { Application, Assets, Container, Sprite, Texture, TextureStyle } from 'pixi.js';
 import { createArcadePixiRuntime } from '../../../../vendor/arcade-runtime.mjs';
 import type {
 	ArcadePerformanceSummary,
@@ -8,10 +8,14 @@ import { installBadgerCanvasBridgePasses } from './ArcadeRuntimeAdapter';
 import { BADGER_PIXI_LAYERS } from './ArcadeRuntimeContract';
 import type { BadgerBridgePassName, BadgerRendererBridgeSink } from './Renderer';
 
-export function isBadgerPixiBridgeRequested(search = globalThis.location?.search ?? ''): boolean {
-	const params = new URLSearchParams(search);
-	return params.get('renderer') === 'bridge' || params.get('pixiBridge') === '1';
-}
+const PIXI = {
+	Application,
+	Assets,
+	Container,
+	Sprite,
+	Texture,
+	TextureStyle,
+};
 
 export interface BadgerPixiBridgeController extends BadgerRendererBridgeSink {
 	readonly runtime: ArcadePixiRuntime;

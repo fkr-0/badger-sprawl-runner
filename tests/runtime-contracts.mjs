@@ -990,7 +990,11 @@ for (const required of [
 	);
 }
 
-for (const required of ['getAnimationEvents', 'SpriteAnimationEvent', 'animation.events.filter']) {
+for (const required of [
+	'getAnimationEvents',
+	'SpriteAnimationEvent',
+	'collectArcadeSpriteAnimationEvents',
+]) {
 	assert(
 		spriteRendererSource.includes(required),
 		`SpriteRenderer missing animation event API: ${required}`

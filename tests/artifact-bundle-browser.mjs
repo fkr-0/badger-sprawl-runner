@@ -130,6 +130,7 @@ try {
 			hasProductionHarness: '__badger' in window,
 			canvas: rect ? { width: rect.width, height: rect.height } : null,
 			manifestUrls: resources.filter((url) => url.includes('sprites.json')),
+			pixiUrls: resources.filter((url) => url.includes('pixi-runtime-')),
 		};
 	});
 
@@ -146,6 +147,10 @@ try {
 	assert(
 		state.manifestUrls.every((url) => url.includes('/dist/data/sprites.json')),
 		`manifest escaped the artifact mount: ${state.manifestUrls.join(', ')}`
+	);
+	assert(
+		state.pixiUrls.length === 0,
+		`default Canvas route eagerly loaded Pixi: ${state.pixiUrls.join(', ')}`
 	);
 
 	await page.locator('#game').click();
@@ -193,6 +198,42 @@ try {
 		failedResponses.length === 0,
 		`production artifact requested missing resources:\n${failedResponses.join('\n')}`
 	);
+
+	const bridgeErrors = [];
+	const bridgeFailures = [];
+	const bridgePage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+	bridgePage.on('pageerror', (error) => bridgeErrors.push(error.message));
+	bridgePage.on('console', (message) => {
+		if (message.type() === 'error') bridgeErrors.push(message.text());
+	});
+	bridgePage.on('response', (response) => {
+		if (response.status() >= 400) bridgeFailures.push(`${response.status()} ${response.url()}`);
+	});
+	await bridgePage.goto(`http://127.0.0.1:${address.port}/dist/index.html?renderer=bridge`, {
+		waitUntil: 'networkidle',
+	});
+	await bridgePage.waitForSelector('#badger-pixi-bridge');
+	await bridgePage.waitForFunction(() =>
+		performance.getEntriesByType('resource').some((entry) => entry.name.includes('pixi-runtime-'))
+	);
+	const bridgeState = await bridgePage.evaluate(() => ({
+		mode: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-renderer-mode'),
+		pixiUrls: performance
+			.getEntriesByType('resource')
+			.map((entry) => entry.name)
+			.filter((url) => url.includes('pixi-runtime-')),
+	}));
+	assert(bridgeState.mode === 'bridge', 'Pixi bridge canvas did not initialize in bridge mode');
+	assert(bridgeState.pixiUrls.length > 0, 'bridge route did not load the lazy Pixi chunk');
+	assert(
+		bridgeErrors.length === 0,
+		`Pixi bridge emitted browser errors:\n${bridgeErrors.join('\n')}`
+	);
+	assert(
+		bridgeFailures.length === 0,
+		`Pixi bridge requested missing resources:\n${bridgeFailures.join('\n')}`
+	);
+	await bridgePage.close();
 	console.log('badger-sprawl-runner artifact browser smoke ok');
 } finally {
 	await browser.close();

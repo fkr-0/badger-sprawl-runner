@@ -1,7 +1,7 @@
 import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
-import { createBadgerPixiBridge, isBadgerPixiBridgeRequested } from './renderer/BadgerPixiBridge';
+import { isBadgerPixiBridgeRequested } from './renderer/PixiBridgeRequest';
 import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
 import type { StageRunScene } from './scenes/StageRunScene';
@@ -274,12 +274,14 @@ export function bootstrapRunnerApp(doc: Document = document): RunnerBootstrapRes
 	if (isBadgerPixiBridgeRequested()) {
 		const mount = canvas.parentElement;
 		if (mount) {
-			void createBadgerPixiBridge({
-				mount,
-				sourceCanvas: canvas,
-				width: canvas.width,
-				height: canvas.height,
-			}).then((controller) => app.setPixiBridge(controller));
+			void import('./renderer/BadgerPixiBridge').then(({ createBadgerPixiBridge }) =>
+				createBadgerPixiBridge({
+					mount,
+					sourceCanvas: canvas,
+					width: canvas.width,
+					height: canvas.height,
+				}).then((controller) => app.setPixiBridge(controller))
+			);
 		}
 	}
 	if (runtimeToolsEnabled()) installTestHarness(app);

@@ -327,6 +327,12 @@ export type ArcadeSpritePixelSource = Readonly<{
   getImageData?(x: number, y: number, width: number, height: number): ArcadeSpritePixelData;
 }>;
 
+export type ArcadeSpriteFrameDiagnostic =
+  | 'transparent-frame'
+  | 'low-opaque-coverage'
+  | 'pivot-outside-frame'
+  | 'background-leak';
+
 export type ArcadeSpriteFrameInspection = Readonly<{
   frameIndex: number;
   width: number;
@@ -342,7 +348,7 @@ export type ArcadeSpriteFrameInspection = Readonly<{
   opaque: boolean;
   blank: boolean;
   backgroundLeak: boolean;
-  diagnostics: readonly string[];
+  diagnostics: readonly ArcadeSpriteFrameDiagnostic[];
 }>;
 
 export type ArcadeSpriteFrameCache<Value> = {
@@ -450,6 +456,132 @@ export declare function createArcadeSpriteFrameGeometry(
   frame: ArcadeSpriteInspectableFrame,
   transform?: ArcadeSpriteFrameTransform,
 ): ArcadeSpriteFrameGeometry;
+
+export type ArcadeSpriteCanvasPlacement = 'pivot' | 'top-left';
+
+export type ArcadeSpriteCanvasContext =
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D;
+
+export type ArcadeSpriteCanvasDrawOptions = Readonly<{
+  x?: number;
+  y?: number;
+  scale?: number;
+  scaleX?: number;
+  scaleY?: number;
+  flipX?: boolean;
+  opacity?: number;
+  placement?: ArcadeSpriteCanvasPlacement;
+  imageSmoothingEnabled?: boolean;
+  smoothing?: boolean;
+  snapToPixels?: boolean;
+  compositeOperation?: GlobalCompositeOperation;
+}>;
+
+export type ArcadeSpriteContactSheetOptions = ArcadeSpriteContactSheetDrawOptions;
+
+export declare function drawArcadeSpriteCanvasFrame(
+  context: ArcadeSpriteCanvasContext,
+  image: CanvasImageSource,
+  frame: ArcadeSpriteInspectableFrame,
+  options?: ArcadeSpriteCanvasDrawOptions,
+): ArcadeSpriteFrameGeometry;
+
+export declare const drawArcadeSpriteCanvas: typeof drawArcadeSpriteCanvasFrame;
+
+export type ArcadeSpriteContactSheetEntry = Readonly<{
+  image?: CanvasImageSource;
+  source?: CanvasImageSource;
+  id?: string;
+  frame: ArcadeSpriteInspectableFrame;
+  label?: string;
+  scale?: number;
+  flipX?: boolean;
+  opacity?: number;
+}>;
+
+export type ArcadeSpriteContactSheetLayoutOptions = Readonly<{
+  columns?: number;
+  cellWidth?: number;
+  cellHeight?: number;
+  gap?: number;
+  padding?: number;
+  labelHeight?: number;
+  contentPadding?: number;
+}>;
+
+export type ArcadeSpriteContactSheetCell = Readonly<{
+  index: number;
+  column: number;
+  row: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content: ArcadeSpritePixelRectangle;
+  label: string;
+  labelBounds: ArcadeSpritePixelRectangle;
+  scale: number;
+  drawX: number;
+  drawY: number;
+  flipX: boolean;
+  pivot: Readonly<{ x: number; y: number }>;
+}>;
+
+export type ArcadeSpriteContactSheetLayout = Readonly<{
+  width: number;
+  height: number;
+  columns: number;
+  rows: number;
+  cellWidth: number;
+  cellHeight: number;
+  gap: number;
+  padding: number;
+  labelHeight: number;
+  cells: readonly ArcadeSpriteContactSheetCell[];
+}>;
+
+export type ArcadeSpriteContactSheetDrawOptions = ArcadeSpriteContactSheetLayoutOptions & Readonly<{
+  resizeCanvas?: boolean;
+  maximumScale?: number;
+  imageSmoothingEnabled?: boolean;
+  smoothing?: boolean;
+  snapToPixels?: boolean;
+  showPivot?: boolean;
+  debugPivot?: boolean;
+  debugFrame?: boolean;
+  pivotRadius?: number;
+  background?: string | CanvasGradient | CanvasPattern | null;
+  cellBackground?: string | CanvasGradient | CanvasPattern;
+  cellBorder?: string | CanvasGradient | CanvasPattern;
+  pivotColor?: string | CanvasGradient | CanvasPattern;
+  labelColor?: string | CanvasGradient | CanvasPattern;
+  font?: string;
+}>;
+
+export type ArcadeSpriteContactSheetRenderEntry = Readonly<{
+  index: number;
+  geometry: ArcadeSpriteFrameGeometry;
+  scale: number;
+  drawX: number;
+  drawY: number;
+}>;
+
+export type ArcadeSpriteContactSheetRenderResult = ArcadeSpriteContactSheetLayout & Readonly<{
+  layout: ArcadeSpriteContactSheetLayout;
+  rendered: readonly ArcadeSpriteContactSheetRenderEntry[];
+}>;
+
+export declare function createArcadeSpriteContactSheetLayout(
+  entries: readonly unknown[],
+  options?: ArcadeSpriteContactSheetLayoutOptions,
+): ArcadeSpriteContactSheetLayout;
+
+export declare function drawArcadeSpriteContactSheetCanvas(
+  context: ArcadeSpriteCanvasContext,
+  entries: readonly ArcadeSpriteContactSheetEntry[],
+  options?: ArcadeSpriteContactSheetDrawOptions,
+): ArcadeSpriteContactSheetRenderResult;
 
 export type SnapshotValue =
   | null
@@ -651,6 +783,75 @@ export declare function createRecyclingPool<Value>(options: {
   reset?: (value: Value, context: RecyclingPoolResetContext) => void;
 }): RecyclingPool<Value>;
 
+export type BufferedInputEntry<Value> = Readonly<{ value: Value; at: number; sequence: number }>;
+export type BufferedInputQueue<Value> = Readonly<{
+  window: number;
+  capacity: number;
+  nextSequence: number;
+  entries: readonly BufferedInputEntry<Value>[];
+}>;
+export type BufferedInputSearchOptions<Value> = Readonly<{
+  predicate?: (value: Value, entry: BufferedInputEntry<Value>) => boolean;
+  order?: 'latest' | 'oldest';
+}>;
+export declare function createBufferedInputQueue<Value = unknown>(options?: { window?: number; capacity?: number }): BufferedInputQueue<Value>;
+export declare function pruneBufferedInputQueue<Value>(queue: BufferedInputQueue<Value>, now: number): BufferedInputQueue<Value>;
+export declare function pushBufferedInput<Value>(queue: BufferedInputQueue<Value>, value: Value, at: number): BufferedInputQueue<Value>;
+export declare function peekBufferedInput<Value>(queue: BufferedInputQueue<Value>, now: number, options?: BufferedInputSearchOptions<Value>): Readonly<{ entry: BufferedInputEntry<Value> | null; value: Value | null; queue: BufferedInputQueue<Value> }>;
+export declare function consumeBufferedInput<Value>(queue: BufferedInputQueue<Value>, now: number, options?: BufferedInputSearchOptions<Value>): Readonly<{ entry: BufferedInputEntry<Value> | null; value: Value | null; queue: BufferedInputQueue<Value> }>;
+
+export type ArcadeGridDirection = 'left' | 'right' | 'up' | 'down' | 'next' | 'previous';
+export type ArcadeGridFocusOptions = Readonly<{
+  columns?: number;
+  wrap?: boolean;
+  wrapX?: boolean;
+  wrapY?: boolean;
+  horizontalMode?: 'row' | 'sequence';
+  preferredColumn?: number;
+  isAvailable?: (index: number) => boolean;
+}>;
+export declare function resolveGridFocusIndex(index: number, direction: ArcadeGridDirection, itemCount: number, options?: ArcadeGridFocusOptions): number;
+
+export type ArcadeGridFocusItem = Readonly<{
+  id: string;
+  disabled?: boolean;
+  hidden?: boolean;
+  onActivate?(item: ArcadeGridFocusItem): void;
+}>;
+export declare function createGridFocusNavigator(options?: {
+  items?: readonly ArcadeGridFocusItem[];
+  columns?: number;
+  initialId?: string;
+  wrap?: boolean;
+  wrapX?: boolean;
+  wrapY?: boolean;
+  horizontalMode?: 'row' | 'sequence';
+  events?: ArcadeEventBus<any>;
+}): {
+  events: ArcadeEventBus<any>;
+  setItems(items: readonly ArcadeGridFocusItem[], columns?: number): ArcadeGridFocusItem | null;
+  current(): ArcadeGridFocusItem | null;
+  focus(id: string, reason?: string): boolean;
+  move(direction: ArcadeGridDirection): ArcadeGridFocusItem | null;
+  activate(): boolean;
+  snapshot(): Readonly<{ focusedId: string | null; focusedIndex: number; preferredColumn: number; columns: number; items: readonly unknown[] }>;
+};
+
+export type ArcadeUiNavigationDirection = 'up' | 'down' | 'left' | 'right' | string;
+export declare function createUiNavigationRepeater<Direction extends ArcadeUiNavigationDirection = 'up' | 'down' | 'left' | 'right'>(options?: {
+  directions?: readonly Direction[];
+  initialDelay?: number;
+  repeatInterval?: number;
+  maximumTriggersPerStep?: number;
+  mode?: 'all' | 'dominant';
+  events?: ArcadeEventBus<any>;
+}): {
+  events: ArcadeEventBus<any>;
+  step(input?: Partial<Record<Direction, boolean>>, delta?: number): readonly Direction[];
+  reset(direction?: Direction): Readonly<Record<string, unknown>>;
+  snapshot(): Readonly<{ directions: readonly Direction[]; initialDelay: number; repeatInterval: number; states: Readonly<Record<Direction, Readonly<{ held: boolean; untilRepeat: number }>>> }>;
+};
+
 export type TimelineQueueEntry<Value> = Readonly<{
   at: number;
   sequence: number;
@@ -724,6 +925,96 @@ export declare function hasTimedEffect<Effect extends TimedEffectState>(
   options?: { field?: 'id' | 'kind' },
 ): boolean;
 
+export type ActionPhase = 'startup' | 'active' | 'recovery' | 'done';
+export type ActionOutcome = 'none' | 'hit' | 'block' | 'whiff';
+export type ActionCancelRule = Readonly<{
+  into?: string;
+  fromPhase?: ActionPhase;
+  requiresHitConfirm?: boolean;
+  onHitCancelInto?: readonly string[];
+  onBlockCancelInto?: readonly string[];
+  onWhiffCancelInto?: readonly string[];
+}>;
+export type ActionPhaseDefinition = Readonly<{
+  id: string;
+  startup: number;
+  active: number;
+  recovery: number;
+  cancelInto?: readonly string[];
+  cancelRules?: readonly ActionCancelRule[];
+  requiresHitConfirm?: boolean;
+  onHitCancelInto?: readonly string[];
+  onBlockCancelInto?: readonly string[];
+  onWhiffCancelInto?: readonly string[];
+}>;
+export type ActionPhaseState = Readonly<{
+  actionId: string;
+  elapsed: number;
+  phase: ActionPhase;
+  hitConfirmed: boolean;
+  lastOutcome: ActionOutcome;
+}>;
+export type ActionCancelRouteResult = Readonly<{
+  allowed: boolean;
+  routes: readonly string[];
+  reason?: 'phase' | 'requires-hit-confirm' | 'not-routed';
+}>;
+export type ActionPhaseEvent = Readonly<{
+  kind: 'phase-enter' | 'completed';
+  phase: ActionPhase;
+  actionId: string;
+  elapsed: number;
+}>;
+export type ActionPhaseStepResult = Readonly<{
+  state: ActionPhaseState;
+  previousPhase: ActionPhase;
+  enteredPhases: readonly ActionPhase[];
+  events: readonly ActionPhaseEvent[];
+  becameActive: boolean;
+  canCancel: boolean;
+  finished: boolean;
+}>;
+export type ActionPhaseProgress = Readonly<{
+  phase: ActionPhase;
+  elapsed: number;
+  elapsedInPhase: number;
+  duration: number;
+  progress: number;
+  phaseStart: number;
+  phaseEnd: number;
+  totalDuration: number;
+}>;
+export declare const ARCADE_ACTION_PHASES: readonly ActionPhase[];
+export declare const ARCADE_ACTION_OUTCOMES: readonly ActionOutcome[];
+export declare function getActionPhase(definition: ActionPhaseDefinition, elapsed: number): ActionPhase;
+export declare function getActionPhaseProgress(
+  definition: ActionPhaseDefinition,
+  stateOrElapsed: ActionPhaseState | number,
+): ActionPhaseProgress;
+export declare function createActionPhaseState(
+  definition: ActionPhaseDefinition,
+  options?: { elapsed?: number; hitConfirmed?: boolean; lastOutcome?: ActionOutcome },
+): ActionPhaseState;
+export declare function markActionOutcome(
+  state: ActionPhaseState,
+  outcome?: Exclude<ActionOutcome, 'none'>,
+): ActionPhaseState;
+export declare function getActionCancelRoutes(
+  definition: ActionPhaseDefinition,
+  state: ActionPhaseState,
+): ActionCancelRouteResult;
+export declare function canCancelActionInto(
+  definition: ActionPhaseDefinition,
+  state: ActionPhaseState,
+  nextActionId: string,
+): boolean;
+export declare function isActionPhaseActive(state: ActionPhaseState | null | undefined): boolean;
+export declare function stepActionPhase(
+  definition: ActionPhaseDefinition,
+  state: ActionPhaseState,
+  delta: number,
+): ActionPhaseStepResult;
+
 export type SystemPipelineControl = Readonly<{
   halt?: boolean;
   skipPhase?: boolean | string;
@@ -784,6 +1075,103 @@ export type SystemPipeline<Context> = {
 export declare function createSystemPipeline<Context = unknown>(options?: {
   phases?: readonly string[];
 }): SystemPipeline<Context>;
+
+export type EntityWorldEntry<Entity> = Readonly<{
+  id: string;
+  sequence: number;
+  entity: Entity;
+}>;
+export type EntityWorldState<Entity> = Readonly<{
+  revision: number;
+  nextSequence: number;
+  entities: readonly EntityWorldEntry<Entity>[];
+}>;
+export type EntityCommand<Entity> = Readonly<
+  | { kind: 'spawn'; id: string; sequence: number; entity: Entity; onDuplicate: 'error' | 'replace' | 'ignore' }
+  | { kind: 'despawn'; id: string; sequence: number; onMissing: 'error' | 'ignore' }
+  | { kind: 'replace'; id: string; sequence: number; entity: Entity; onMissing: 'error' | 'ignore' | 'spawn' }
+  | { kind: 'patch'; id: string; sequence: number; patch: Partial<Entity>; onMissing: 'error' | 'ignore' }
+>;
+export type EntityCommandBuffer<Entity> = Readonly<{
+  nextSequence: number;
+  commands: readonly EntityCommand<Entity>[];
+}>;
+export type EntityCommandEvent<Entity> = Readonly<{
+  kind: 'spawned' | 'despawned' | 'replaced' | 'patched' | 'ignored';
+  id: string;
+  commandKind: EntityCommand<Entity>['kind'];
+  commandSequence: number;
+  reason?: 'duplicate' | 'missing';
+  previous?: Entity;
+  entity?: Entity;
+}>;
+export declare function createEntityWorld<Entity>(
+  entities?: readonly Entity[],
+  options?: { getId?: (entity: Entity) => string; revision?: number },
+): EntityWorldState<Entity>;
+export declare function createEntityCommandBuffer<Entity>(
+  commands?: readonly EntityCommand<Entity>[],
+  options?: { nextSequence?: number },
+): EntityCommandBuffer<Entity>;
+export declare function queueEntitySpawn<Entity>(
+  buffer: EntityCommandBuffer<Entity>,
+  entity: Entity,
+  options?: { id?: string; getId?: (entity: Entity) => string; onDuplicate?: 'error' | 'replace' | 'ignore' },
+): EntityCommandBuffer<Entity>;
+export declare function queueEntityDespawn<Entity>(
+  buffer: EntityCommandBuffer<Entity>,
+  id: string,
+  options?: { onMissing?: 'error' | 'ignore' },
+): EntityCommandBuffer<Entity>;
+export declare function queueEntityReplace<Entity>(
+  buffer: EntityCommandBuffer<Entity>,
+  id: string,
+  entity: Entity,
+  options?: { onMissing?: 'error' | 'ignore' | 'spawn' },
+): EntityCommandBuffer<Entity>;
+export declare function queueEntityPatch<Entity>(
+  buffer: EntityCommandBuffer<Entity>,
+  id: string,
+  patch: Partial<Entity>,
+  options?: { onMissing?: 'error' | 'ignore' },
+): EntityCommandBuffer<Entity>;
+export declare function flushEntityCommands<Entity>(
+  world: EntityWorldState<Entity>,
+  buffer: EntityCommandBuffer<Entity>,
+): Readonly<{
+  world: EntityWorldState<Entity>;
+  buffer: EntityCommandBuffer<Entity>;
+  events: readonly EntityCommandEvent<Entity>[];
+  changed: boolean;
+}>;
+export declare function getEntityWorldEntry<Entity>(world: EntityWorldState<Entity>, id: string): EntityWorldEntry<Entity> | undefined;
+export declare function getEntityWorldValue<Entity>(world: EntityWorldState<Entity>, id: string): Entity | undefined;
+export declare function hasEntityWorldValue<Entity>(world: EntityWorldState<Entity>, id: string): boolean;
+export declare function entityWorldIds<Entity>(world: EntityWorldState<Entity>): readonly string[];
+export declare function entityWorldValues<Entity>(world: EntityWorldState<Entity>): readonly Entity[];
+export declare function queryEntityWorld<Entity>(
+  world: EntityWorldState<Entity>,
+  options?: { ids?: readonly string[]; predicate?: (entity: Entity, entry: EntityWorldEntry<Entity>) => boolean },
+): readonly Entity[];
+export type EntityRegistry<Entity> = {
+  queueSpawn(entity: Entity, options?: { id?: string; onDuplicate?: 'error' | 'replace' | 'ignore' }): EntityRegistry<Entity>;
+  queueDespawn(id: string, options?: { onMissing?: 'error' | 'ignore' }): EntityRegistry<Entity>;
+  queueReplace(id: string, entity: Entity, options?: { onMissing?: 'error' | 'ignore' | 'spawn' }): EntityRegistry<Entity>;
+  queuePatch(id: string, patch: Partial<Entity>, options?: { onMissing?: 'error' | 'ignore' }): EntityRegistry<Entity>;
+  flush(): ReturnType<typeof flushEntityCommands<Entity>>;
+  reset(entities?: readonly Entity[]): EntityRegistry<Entity>;
+  get(id: string): Entity | undefined;
+  has(id: string): boolean;
+  ids(): readonly string[];
+  values(): readonly Entity[];
+  query(options?: { ids?: readonly string[]; predicate?: (entity: Entity, entry: EntityWorldEntry<Entity>) => boolean }): readonly Entity[];
+  snapshot(): EntityWorldState<Entity>;
+  pending(): EntityCommandBuffer<Entity>;
+};
+export declare function createEntityRegistry<Entity>(
+  entities?: readonly Entity[],
+  options?: { getId?: (entity: Entity) => string; revision?: number },
+): EntityRegistry<Entity>;
 
 export type HitContactRecord = Readonly<{ hits: number; lastHitTick: number }>;
 export type HitContactPolicy = Readonly<{ maxHitsPerTarget?: number; rehitDelayTicks?: number; rehitDelayFrames?: number }>;
