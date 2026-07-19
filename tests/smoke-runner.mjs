@@ -98,6 +98,7 @@ const spriteManifestPath = join(distRoot, 'data/sprites.json');
 assert(await exists(spriteManifestPath), 'runner build is missing data/sprites.json');
 const spriteManifest = JSON.parse(await readFile(spriteManifestPath, 'utf8'));
 for (const sheet of spriteManifest.spriteSheets) {
+	if (sheet.source?.classification === 'archival') continue;
 	assert(
 		await exists(join(distRoot, sheet.file)),
 		`runner build is missing sprite sheet: ${sheet.file}`
@@ -128,4 +129,10 @@ assert(
 	'Artifact Lab target is missing the Lower Sprawl backdrop'
 );
 
-console.log(`badger-sprawl-runner smoke ok (${spriteManifest.spriteSheets.length} sprite sheets)`);
+const runtimeSheetCount = spriteManifest.spriteSheets.filter(
+	(sheet) => sheet.source?.classification !== 'archival'
+).length;
+console.log(
+	`badger-sprawl-runner smoke ok (${runtimeSheetCount} runtime sheets; ` +
+		`${spriteManifest.spriteSheets.length - runtimeSheetCount} archival)`
+);

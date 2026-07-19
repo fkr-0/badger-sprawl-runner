@@ -11,7 +11,11 @@ const excluded = new Set([
 	'apps/runner/public/data/sprites.json',
 	'data/sprite-prompts.json',
 ]);
-const archivalSheets = new Set(['comfy_badger_run_grid', 'mirror_palace_parallax']);
+const archivalSheets = new Set(
+	manifest.spriteSheets
+		.filter((sheet) => sheet.source?.classification === 'archival')
+		.map((sheet) => sheet.id)
+);
 
 function collectFiles(path, output = []) {
 	for (const entry of readdirSync(path, { withFileTypes: true })) {

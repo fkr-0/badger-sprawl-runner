@@ -10,6 +10,7 @@ import {
 	normalizeSpriteManifest,
 } from '@badger/sprite-contracts';
 import { collectArcadeSpriteAnimationEvents } from '../../../../vendor/arcade-runtime.mjs';
+import { isRuntimeSpriteSheet } from './SpriteSheetLifecycle';
 
 interface FallbackEntity {
 	x: number;
@@ -32,7 +33,7 @@ export class SpriteRenderer {
 		const response = await fetch(manifestUrl);
 		this.manifest = normalizeSpriteManifest(await response.json());
 
-		const loadPromises = this.manifest.sheets.map((sheetDef) =>
+		const loadPromises = this.manifest.sheets.filter(isRuntimeSpriteSheet).map((sheetDef) =>
 			loadSpriteSheet(sheetDef, this.ctx).then((loaded) => {
 				this.sheets.set(sheetDef.id, loaded);
 			})

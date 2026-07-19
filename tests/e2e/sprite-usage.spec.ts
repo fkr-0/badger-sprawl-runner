@@ -90,9 +90,11 @@ test.describe('Sprite Manifest Integrity', () => {
 			id: string;
 			file: string;
 			frameSize: [number, number];
+			source?: { classification?: string };
 		}>;
 
 		for (const sheet of sheets) {
+			if (sheet.source?.classification === 'archival') continue;
 			const filePath = join(__dirname, '../../apps/runner/public', sheet.file);
 			let exists = false;
 			try {

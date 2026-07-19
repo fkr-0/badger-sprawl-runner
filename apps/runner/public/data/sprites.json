@@ -2256,7 +2256,8 @@
         "tool": "ComfyUI API",
         "workflow": "/home/user/prod/stable-diffusion-webui-docker/comfy-workflows/badger_running_grid_api.json",
         "rendered": "/home/user/prod/stable-diffusion-webui-docker/output/comfy_bridge/badger_running_grid_00001_.png",
-        "normalized": "/home/user/prod/stable-diffusion-webui-docker/output/comfy_bridge/clean_badger_running_grid/badger_running_grid_4x2_1024x512.png"
+        "normalized": "/home/user/prod/stable-diffusion-webui-docker/output/comfy_bridge/clean_badger_running_grid/badger_running_grid_4x2_1024x512.png",
+        "classification": "archival"
       }
     },
     {
@@ -2692,7 +2693,8 @@
       "source": {
         "tool": "deterministic Pillow pixel-art generator",
         "script": "scripts/generate-mirror-palace-parallax.py",
-        "note": "Three horizontally packed 320x180 reflected banquet hall depth plates."
+        "note": "Three horizontally packed 320x180 reflected banquet hall depth plates.",
+        "classification": "archival"
       }
     },
     {
