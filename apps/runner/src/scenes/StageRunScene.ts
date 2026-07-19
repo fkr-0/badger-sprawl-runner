@@ -305,6 +305,7 @@ export class StageRunScene implements Scene {
 	private trainingElapsed = 0;
 	private trainingDamageNumberTimer = 0;
 	private trainingArena = { left: 0, right: 960, floorY: 494 };
+	private animationTransitions: Array<{ name: string; frame: number }> = [];
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
 		this.training = options.training ? createTrainingMode() : null;
@@ -414,6 +415,10 @@ export class StageRunScene implements Scene {
 		this.initWorld();
 		if (this.training) this.updateTrainingHints();
 		else this.updateGameplayHints();
+	}
+
+	getAnimationTransitionSnapshot(): Array<{ name: string; frame: number }> {
+		return this.animationTransitions.map((transition) => ({ ...transition }));
 	}
 
 	getGameplayHudLayoutSnapshot(): ReturnType<typeof buildGameplayHudLayout> {
@@ -575,7 +580,7 @@ export class StageRunScene implements Scene {
 		this.player.onGround = true;
 		const state = this.training?.getState();
 		this.trainingDummy = createTrainingDummy(
-			Math.min(right - 80, this.player.x + 72),
+			Math.min(right - 80, this.player.x + 64),
 			floor.y - 50,
 			state?.dummyPresetId ?? 'idle'
 		);
@@ -607,7 +612,7 @@ export class StageRunScene implements Scene {
 		this.player.onGround = true;
 		this.player.comboCount = 0;
 		this.player.comboTimer = 0;
-		this.trainingDummy.spawnX = Math.min(this.trainingArena.right - 80, this.player.x + 72);
+		this.trainingDummy.spawnX = Math.min(this.trainingArena.right - 80, this.player.x + 64);
 		this.trainingDummy.spawnY = this.trainingArena.floorY - this.trainingDummy.h;
 		configureTrainingDummy(this.trainingDummy, this.training.getState().dummyPresetId);
 		this.trainingDamageNumberTimer = 0;
@@ -3228,6 +3233,17 @@ export class StageRunScene implements Scene {
 			playAnimation(animState, 'run');
 		} else {
 			playAnimation(animState, 'idle');
+		}
+
+		const lastTransition = this.animationTransitions.at(-1);
+		if (lastTransition?.name !== animState.currentAnim) {
+			this.animationTransitions.push({ name: animState.currentAnim, frame: animState.frame });
+			if (this.animationTransitions.length > 32) this.animationTransitions.shift();
+			window.dispatchEvent(
+				new CustomEvent('badger:animation-transition', {
+					detail: { name: animState.currentAnim, frame: animState.frame },
+				})
+			);
 		}
 
 		this.advanceAnimationFrames(animState, dt);

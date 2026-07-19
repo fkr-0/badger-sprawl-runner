@@ -10,7 +10,7 @@ export { coyoteStep } from './systems/coyoteStep';
 export { aabb } from './systems/aabb';
 export { combineFluidFields, createLayeredFluid, createUniformFluid, flyingObjectStep, } from './systems/flyingObjectStep';
 export { advanceFixedStep, createFixedStepState, } from './systems/fixedStep';
-export { createDeterministicRng, hashSeed, nextRng, rngInt, rngPick, rngRange, } from './systems/deterministicRng';
+export { createDeterministicRng, createSeededRandom, hashSeed, nextRng, rngInt, rngPick, rngRange, rngShuffle, rngWeightedPick, } from './systems/deterministicRng';
 export { stepProjectiles, } from './systems/projectileStep';
 export { stepPhysicsWorld, } from './systems/physicsWorldStep';
 export { DEFAULT_SURFACE_MATERIAL, applySurfaceMaterial, materialHasTag, sampleMaterialContact, } from './systems/materialPhysics';

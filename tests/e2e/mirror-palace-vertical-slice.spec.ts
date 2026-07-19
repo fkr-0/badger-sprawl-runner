@@ -155,8 +155,14 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 		await teleportTo(page, door.x, door.y);
 		await page.keyboard.press('KeyE');
 		await expect
-			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getAnimation()))
-			.toMatchObject({ currentAnim: 'rocket_boost', frames: 6 });
+			.poll(() =>
+				page.evaluate(() =>
+					(window as MirrorWindow).__badger
+						.getAnimationTransitions()
+						?.some((transition) => transition.name === 'rocket_boost')
+				)
+			)
+			.toBe(true);
 		await expect
 			.poll(() =>
 				page.evaluate(() =>

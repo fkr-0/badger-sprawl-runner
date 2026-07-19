@@ -116,6 +116,22 @@ Chapter 5 now uses the authored moving-colony art and turns an 86-BPM classic hi
 
 The full chapter is covered by `tests/e2e/dub-colony-vertical-slice.spec.ts` in Chromium and Firefox.
 
+### Random-stage dummy dojo and UI release contracts
+
+Dummy Training is now a complete gameplay mode rather than a text counter. Every entry selects one registered campaign stage from a generated seed, reuses its authored art and platform geometry, removes story enemies/objectives, and runs the production movement, physics, combat, animation, camera, sprite, and HUD stack against one invincible dummy.
+
+- real claws, katana, railgun, rocket, parry, dodge, and hack practice
+- infinite player integrity, fuel, stims, rail shots, and dummy integrity
+- idle, walking, jumping, attacking, armored, and flying dummy presets
+- live hitbox, hurtbox, frame-data, and damage-number overlays
+- last-hit damage, combo damage, hits per second, rail reload, parry window, melee active/recovery frames, and hack-cast measurements
+- `H` toggles all overlays; `F1`–`F4` toggle individual layers
+- `[`/`]` changes lesson, `,`/`.` changes dummy behavior, and `1`–`4` changes kit
+- `R` restores positions/resources and clears measurements; `N` rerolls to a different random stage
+- training never writes campaign progress or economy state
+
+`tests/e2e/training-mode.spec.ts` validates actual attacks, dummy immortality, resource restoration, presets, overlays, reset, reroll, and save isolation. `tests/e2e/gameplay-ui-release-contract.spec.ts` validates internal-canvas sizing, uniform browser display scale, panel bounds/non-overlap, and the player-to-boss readability ratio in Chromium and Firefox.
+
 Deferred after v1.0: final production art/audio, CI-hosted artifacts, and an npm publishing decision for workspace packages.
 
 ## Requirements
@@ -167,6 +183,10 @@ The initial Chromium benchmark deliberately keeps Canvas as the default: uploadi
 | Start selected story stage | R |
 | Dodge | Shift or R |
 | Toggle developer overlays | F3 with `?debug=1` or in Vite development mode |
+| Training overlays | H, or F1–F4 per layer |
+| Training lesson / dummy preset | [ / ], then , / . |
+| Training kit | 1–4 |
+| Training reset / random-stage reroll | R / N |
 | Return to title | Escape |
 
 ## Release commands
@@ -183,6 +203,7 @@ pnpm run test:e2e:chrome-arcology # Stage 3 acceptance in Chromium and Firefox
 pnpm run test:e2e:mirror-palace # Chapter 4 story and animation acceptance
 pnpm run test:e2e:dub-colony # Chapter 5 vote, beat, companion, and boss acceptance
 pnpm run test:e2e:progression # expanded item and four-track skill acceptance
+pnpm run test:e2e:training # random-stage dummy dojo and gameplay UI contracts in Chromium and Firefox
 pnpm run sprites:progression # regenerate extended item, pickup, and skill atlases
 pnpm run sprites:moss-motion # promote the complete authored Moss motion atlas
 pnpm run sprites:mirror-palace # regenerate the reflected banquet parallax atlas

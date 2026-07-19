@@ -48,13 +48,17 @@ export {
 } from './systems/fixedStep';
 export {
 	createDeterministicRng,
+	createSeededRandom,
 	hashSeed,
 	nextRng,
 	rngInt,
 	rngPick,
 	rngRange,
+	rngShuffle,
+	rngWeightedPick,
 	type DeterministicRngResult,
 	type DeterministicRngState,
+	type SeededRandomSource,
 } from './systems/deterministicRng';
 export {
 	stepProjectiles,

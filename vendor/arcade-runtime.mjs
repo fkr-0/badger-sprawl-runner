@@ -1,4 +1,4 @@
-export const ARCADE_RUNTIME_VERSION = '0.8.0';
+export const ARCADE_RUNTIME_VERSION = '0.10.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -172,6 +172,201 @@ export function advanceArcadeAnimationClock(state, deltaTime, timeline = {}) {
     completed,
     frameAdvances,
     advancedFrames,
+  };
+}
+
+const UINT32_MAX_PLUS_ONE = 0x100000000;
+
+export function hashSeed(seed) {
+  const text = String(seed ?? '');
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function createDeterministicRng(seed = 0) {
+  return {
+    seed: typeof seed === 'number' && Number.isFinite(seed) ? seed >>> 0 : hashSeed(seed),
+    calls: 0,
+  };
+}
+
+export function nextRng(state) {
+  let value = Number.isFinite(state?.seed) ? state.seed >>> 0 : 0;
+  value += 0x6d2b79f5;
+  value = Math.imul(value ^ (value >>> 15), value | 1);
+  value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+  const seed = value >>> 0;
+  const random = ((value ^ (value >>> 14)) >>> 0) / UINT32_MAX_PLUS_ONE;
+  return {
+    state: {
+      seed,
+      calls: Math.max(0, Math.floor(finiteNumber(state?.calls, 0))) + 1,
+    },
+    value: random,
+  };
+}
+
+export function rngRange(state, minimum, maximum) {
+  coreInvariant(Number.isFinite(minimum) && Number.isFinite(maximum), 'rng range bounds must be finite');
+  coreInvariant(maximum >= minimum, 'rng range maximum must be greater than or equal to minimum');
+  const next = nextRng(state);
+  return {
+    state: next.state,
+    value: minimum + (maximum - minimum) * next.value,
+  };
+}
+
+export function rngInt(state, minimumInclusive, maximumInclusive) {
+  coreInvariant(
+    Number.isFinite(minimumInclusive) && Number.isFinite(maximumInclusive),
+    'rng integer bounds must be finite',
+  );
+  const minimum = Math.ceil(minimumInclusive);
+  const maximum = Math.floor(maximumInclusive);
+  coreInvariant(maximum >= minimum, 'rng integer maximum must be greater than or equal to minimum');
+  const next = nextRng(state);
+  return {
+    state: next.state,
+    value: Math.floor(next.value * (maximum - minimum + 1)) + minimum,
+  };
+}
+
+export function rngPick(state, values) {
+  coreInvariant(Array.isArray(values) && values.length > 0, 'cannot pick from an empty deterministic list');
+  const picked = rngInt(state, 0, values.length - 1);
+  return {
+    state: picked.state,
+    value: values[picked.value],
+    index: picked.value,
+  };
+}
+
+export function rngWeightedPick(state, values, weightOf = (value) => value?.weight ?? 1) {
+  coreInvariant(Array.isArray(values) && values.length > 0, 'cannot pick from an empty weighted list');
+  coreInvariant(typeof weightOf === 'function', 'weighted rng requires a weight selector');
+  const weights = values.map((value, index) => {
+    const weight = Number(weightOf(value, index));
+    coreInvariant(Number.isFinite(weight) && weight >= 0, `weighted rng entry ${index} must have a non-negative finite weight`);
+    return weight;
+  });
+  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+  coreInvariant(totalWeight > 0, 'weighted rng requires at least one positive weight');
+  const rolled = rngRange(state, 0, totalWeight);
+  let cursor = rolled.value;
+  let index = values.length - 1;
+  for (let candidate = 0; candidate < values.length; candidate += 1) {
+    cursor -= weights[candidate];
+    if (cursor < 0) {
+      index = candidate;
+      break;
+    }
+  }
+  return {
+    state: rolled.state,
+    value: values[index],
+    index,
+    roll: rolled.value,
+    totalWeight,
+  };
+}
+
+export function rngShuffle(state, values) {
+  coreInvariant(Array.isArray(values), 'rng shuffle values must be an array');
+  const shuffled = [...values];
+  let nextState = state;
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const picked = rngInt(nextState, 0, index);
+    nextState = picked.state;
+    [shuffled[index], shuffled[picked.value]] = [shuffled[picked.value], shuffled[index]];
+  }
+  return { state: nextState, value: shuffled };
+}
+
+export function createSeededRandom(seed = 0) {
+  let state = createDeterministicRng(seed);
+  const random = () => {
+    const next = nextRng(state);
+    state = next.state;
+    return next.value;
+  };
+  random.snapshot = () => ({ ...state });
+  random.restore = (nextState) => {
+    state = {
+      seed: Number.isFinite(nextState?.seed) ? nextState.seed >>> 0 : 0,
+      calls: Math.max(0, Math.floor(finiteNumber(nextState?.calls, 0))),
+    };
+    return random;
+  };
+  return random;
+}
+
+export function createCooldownState(initial = {}) {
+  const cooldowns = {};
+  for (const [key, rawRemaining] of Object.entries(initial ?? {})) {
+    const remaining = Math.max(0, finiteNumber(rawRemaining, 0));
+    if (remaining > 0) cooldowns[key] = remaining;
+  }
+  return cooldowns;
+}
+
+export function startCooldown(state, key, duration) {
+  coreInvariant(typeof key === 'string' && key.length > 0, 'cooldown key is required');
+  const next = createCooldownState(state);
+  const remaining = Math.max(0, finiteNumber(duration, 0));
+  if (remaining > 0) next[key] = remaining;
+  else delete next[key];
+  return next;
+}
+
+export function clearCooldown(state, key) {
+  const next = createCooldownState(state);
+  if (key === undefined) return {};
+  delete next[key];
+  return next;
+}
+
+export function stepCooldownState(state, delta = 1) {
+  const elapsed = Math.max(0, finiteNumber(delta, 0));
+  if (elapsed === 0) return createCooldownState(state);
+  const next = {};
+  for (const [key, remaining] of Object.entries(createCooldownState(state))) {
+    const stepped = Math.max(0, remaining - elapsed);
+    if (stepped > 0) next[key] = stepped;
+  }
+  return next;
+}
+
+export function cooldownRemaining(state, key) {
+  return Math.max(0, finiteNumber(state?.[key], 0));
+}
+
+export function isCooldownReady(state, key) {
+  return cooldownRemaining(state, key) <= 0;
+}
+
+export function tryStartCooldown(state, key, duration) {
+  const current = createCooldownState(state);
+  const remaining = cooldownRemaining(current, key);
+  if (remaining > 0) return { started: false, state: current, remaining };
+  const next = startCooldown(current, key, duration);
+  return { started: true, state: next, remaining: cooldownRemaining(next, key) };
+}
+
+export function getElapsedCooldownStatus(now, lastTriggeredAt, duration) {
+  const resolvedNow = finiteNumber(now, 0);
+  const resolvedLast = finiteNumber(lastTriggeredAt, 0);
+  const resolvedDuration = Math.max(0, finiteNumber(duration, 0));
+  const elapsed = Math.max(0, resolvedNow - resolvedLast);
+  const remaining = Math.max(0, resolvedDuration - elapsed);
+  return {
+    ready: remaining <= 0,
+    elapsed,
+    remaining,
+    progress: resolvedDuration <= 0 ? 1 : clampNumber(elapsed / resolvedDuration, 0, 1),
   };
 }
 

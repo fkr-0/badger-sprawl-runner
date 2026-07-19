@@ -5,12 +5,7 @@
 	"type": "module",
 	"description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
 	"packageManager": "pnpm@9.0.0",
-	"keywords": [
-		"platformer",
-		"game",
-		"canvas",
-		"2d"
-	],
+	"keywords": ["platformer", "game", "canvas", "2d"],
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
 		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
@@ -38,6 +33,7 @@
 		"test:e2e:mirror-palace": "playwright test tests/e2e/mirror-palace-vertical-slice.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-mirror-palace-test-results",
 		"test:e2e:dub-colony": "playwright test tests/e2e/dub-colony-vertical-slice.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-dub-colony-test-results",
 		"test:e2e:progression": "playwright test tests/e2e/progression-skill-tree.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-progression-test-results",
+		"test:e2e:training": "playwright test tests/e2e/training-mode.spec.ts tests/e2e/gameplay-ui-release-contract.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-training-test-results",
 		"verify:release": "pnpm run test && pnpm run typecheck && pnpm run build && pnpm run smoke:runner && pnpm run smoke:artifact && pnpm run lint && pnpm exec playwright test --project=chromium",
 		"materialize:artifact-lab": "cd .. && node app-hub-v11/server/artifact-build.mjs --out .artifacts-deploy-stage --no-build",
 		"stage:artifact-lab": "pnpm run verify:release && pnpm run materialize:artifact-lab",

@@ -42,6 +42,11 @@ commands:
     description: Run the expanded sprite-backed item and four-track skill-tree acceptance flow in Chromium and Firefox.
     timeoutMs: 180000
     track: test
+  e2e-training:
+    run: pnpm run test:e2e:training
+    description: Run the randomized campaign-stage dummy dojo and gameplay UI release contracts in Chromium and Firefox.
+    timeoutMs: 180000
+    track: test
   e2e-chrome-arcology:
     run: pnpm run test:e2e:chrome-arcology
     description: Run the complete Chrome Arcology vertical slice in Chromium and Firefox.
@@ -92,11 +97,13 @@ agent:
     - Keep this original; avoid direct use of protected cyberpunk novel canon.
     - The user-facing artifact is the Vite production build published to dist/.
     - Data manifests are intended to survive extraction into a standalone library.
-    - Canvas2D remains production-authoritative; use the verified vendored arcade-runtime v0.8 merged core/Pixi render plan and bridge adapter for incremental migration.
+    - Canvas2D remains production-authoritative; use the verified vendored arcade-runtime v0.9 merged core/Pixi render plan and bridge adapter for incremental migration.
+    - Arcade-runtime version pins are derived from the vendored module so future synchronized minors do not require duplicate literals.
   tasks:
     - Continue replacing remaining generated fallback sheets with authored production animation sheets.
     - Split minigame engine into its own package when API stabilizes.
   changelog:
+    - "2026-07-19: Replaced the placeholder training counter with a randomized campaign-stage dummy dojo, infinite practice resources, live overlays/metrics, and state-driven cross-browser release E2E."
     - "2026-07-19: Rebalanced gameplay actor scale and replaced overlapping fixed HUD coordinates with a compact tested 960x540 layout."
     - "2026-07-19: Retuned Dub Colony from 140 BPM to an 86 BPM classic hip-hop pocket with proportionally rebalanced branch timing windows."
     - "2026-07-19: Added the verified shared-runtime v0.4 render plan and ready-pass Canvas bridge installer."

@@ -1,21 +1,25 @@
 import { expect, test } from '@playwright/test';
+import type { BadgerTestHarness } from '../../apps/runner/src/main';
+
+interface ReturnWindow extends Window {
+	__badger: BadgerTestHarness;
+}
 
 test.describe('Concrete scene return navigation', () => {
 	test('returns from TrainingScene to TitleScene with Escape', async ({ page }) => {
-		const consoleMessages: string[] = [];
-		page.on('console', (message) => consoleMessages.push(message.text()));
-
 		await page.goto('/');
-		await expect(page.locator('#game')).toBeVisible();
-		await page.locator('#game').click();
-
-		// Story is selected by default; Training is two slots below it.
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
-		await expect.poll(() => consoleMessages).toContain('TrainingScene entered');
+		await page.waitForFunction(() => Boolean((window as ReturnWindow).__badger));
+		await page.evaluate(() => (window as ReturnWindow).__badger.routeMode('training'));
+		await expect
+			.poll(() => page.evaluate(() => (window as ReturnWindow).__badger.getSceneName()))
+			.toBe('TrainingScene');
+		await expect
+			.poll(() => page.evaluate(() => (window as ReturnWindow).__badger.getTraining()))
+			.not.toBeNull();
 
 		await page.keyboard.press('Escape');
-		await expect.poll(() => consoleMessages.filter((message) => message === 'TitleScene entered').length).toBeGreaterThan(1);
+		await expect
+			.poll(() => page.evaluate(() => (window as ReturnWindow).__badger.getSceneName()))
+			.toBe('TitleScene');
 	});
 });

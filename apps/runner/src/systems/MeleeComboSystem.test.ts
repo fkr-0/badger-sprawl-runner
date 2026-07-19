@@ -70,10 +70,12 @@ describe('MeleeComboSystem', () => {
 	it('damages enemies and escalates style through a clean combo chain', () => {
 		const combo = new MeleeComboSystem(createMeleeComboState(['double_swipe', 'parry_tooth']));
 		const badger = player();
-		const drone = enemy();
-		const events: string[] = [];
+		const drone = enemy({ id: 'training-dummy' });
+		const events: Array<{ kind: string; targetId?: string; moveId?: string }> = [];
 
-		const jab = combo.attack(badger, [drone], 'light', { onEvent: (event) => events.push(event.kind) });
+		const jab = combo.attack(badger, [drone], 'light', {
+			onEvent: (event) => events.push(event),
+		});
 		const cross = combo.attack(badger, [drone], 'light');
 		const finisher = combo.attack(badger, [drone], 'finisher');
 
@@ -83,7 +85,9 @@ describe('MeleeComboSystem', () => {
 		expect(drone.hp).toBeLessThan(0);
 		expect(combo.getState().chainDepth).toBe(3);
 		expect(combo.getState().style).toBeGreaterThan(5);
-		expect(events).toContain('hit');
+		expect(events).toContainEqual(
+			expect.objectContaining({ kind: 'hit', targetId: 'training-dummy', moveId: 'claw_jab' })
+		);
 	});
 
 	it('gates finishers behind badger skill tree unlocks', () => {

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { GAMEPLAY_HUD_WORLD_OVERLAY_TOP } from '../../apps/runner/src/renderer/GameplayHudLayout';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
 
 interface UiWindow extends Window {
@@ -77,7 +78,9 @@ test.describe('Gameplay UI release contract', () => {
 		expect(overlaps(layout.combat, layout.companions)).toBe(false);
 		expect(overlaps(layout.combat, layout.objective)).toBe(false);
 		expect(overlaps(layout.gear, layout.context)).toBe(false);
-		expect(layout.combat.y + layout.combat.height).toBeLessThanOrEqual(126);
+		expect(layout.combat.y + layout.combat.height).toBeLessThanOrEqual(
+			GAMEPLAY_HUD_WORLD_OVERLAY_TOP
+		);
 	});
 
 	test('keeps the authored player and boss scale within the release readability band', async ({ page }) => {

@@ -19,6 +19,7 @@ export interface BadgerTestHarness {
 	getEnemies: () => ReturnType<StageRunScene['getEnemySnapshots']> | null;
 	getPickups: () => ReturnType<StageRunScene['getPickupSnapshots']> | null;
 	getAnimation: () => ReturnType<StageRunScene['getAnimationSnapshot']> | null;
+	getAnimationTransitions: () => ReturnType<StageRunScene['getAnimationTransitionSnapshot']> | null;
 	getLowerSprawlObjectives: () => ReturnType<
 		StageRunScene['getLowerSprawlObjectiveSnapshot']
 	> | null;
@@ -193,6 +194,7 @@ function installTestHarness(app: RunnerApp): void {
 		getAnimation: () => {
 			return getStageScene()?.getAnimationSnapshot() ?? null;
 		},
+		getAnimationTransitions: () => getStageScene()?.getAnimationTransitionSnapshot() ?? null,
 		getLowerSprawlObjectives: () => {
 			const s = app.getCurrentScene();
 			return s && 'getLowerSprawlObjectiveSnapshot' in s

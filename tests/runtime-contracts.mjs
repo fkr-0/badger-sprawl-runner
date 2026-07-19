@@ -50,7 +50,15 @@ const sideRoomGeneratorSource = await text('apps/runner/src/procgen/SideRoomGene
 const endlessSprawlRunSource = await text('apps/runner/src/procgen/EndlessSprawlRun.ts');
 const storyFlowSceneSource = await text('apps/runner/src/scenes/StoryFlowScene.ts');
 const modeSceneFactoriesSource = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
-const dialoguePortraitRendererSource = await text('apps/runner/src/renderer/DialoguePortraitRenderer.ts');
+const trainingSceneSource = await text('apps/runner/src/scenes/TrainingScene.ts');
+const trainingModeSource = await text('apps/runner/src/game/TrainingMode.ts');
+const trainingDummySource = await text('apps/runner/src/actors/TrainingDummy.ts');
+const trainingStageSelectionSource = await text('apps/runner/src/game/TrainingStageSelection.ts');
+const gameplayHudLayoutSource = await text('apps/runner/src/renderer/GameplayHudLayout.ts');
+const meleeComboSource = await text('apps/runner/src/systems/MeleeComboSystem.ts');
+const dialoguePortraitRendererSource = await text(
+	'apps/runner/src/renderer/DialoguePortraitRenderer.ts'
+);
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
 const companionSystemSource = await text('apps/runner/src/systems/CompanionSystem.ts');
@@ -65,8 +73,14 @@ const manifest = await json('data/game-manifest.json');
 const items = await json('data/items.json');
 const sprites = await json('data/sprites.json');
 
-assert(rootPackage.version === '1.0.0', 'root package version must be 1.0.0 for v1 release');
-assert(runnerPackage.version === '1.0.0', 'runner package version must be 1.0.0 for v1 release');
+assert(
+	rootPackage.version === runnerPackage.version,
+	'root and runner package versions must stay aligned'
+);
+assert(
+	/^1\.\d+\.\d+$/.test(rootPackage.version),
+	'release package version must remain valid v1 semver'
+);
 
 for (const command of [
 	'pnpm run test',
@@ -92,7 +106,6 @@ for (const required of [
 	assert(storyContentSystemDoc.includes(required), `story content system doc missing: ${required}`);
 }
 
-
 for (const required of [
 	'Dialogue System',
 	'DialogueSpec',
@@ -108,7 +121,6 @@ for (const required of [
 	assert(dialogueSystemDoc.includes(required), `dialogue system doc missing: ${required}`);
 }
 
-
 for (const required of [
 	'Story Flavour Integration',
 	'docs/story-flavour.yml',
@@ -121,9 +133,11 @@ for (const required of [
 	'tests/story-content-loader.mjs',
 	'tests/e2e/story-content.spec.ts',
 ]) {
-	assert(storyFlavourIntegrationDoc.includes(required), `story flavour integration doc missing: ${required}`);
+	assert(
+		storyFlavourIntegrationDoc.includes(required),
+		`story flavour integration doc missing: ${required}`
+	);
 }
-
 
 for (const required of [
 	'Companion System',
@@ -172,7 +186,10 @@ for (const required of ['createRunnerApp', 'app.start()', 'runtimeToolsEnabled']
 		`runner entrypoint missing clean production bootstrap surface: ${required}`
 	);
 }
-assert(!runnerMain.includes('SceneManager shell'), 'runner entrypoint must not expose legacy debug copy');
+assert(
+	!runnerMain.includes('SceneManager shell'),
+	'runner entrypoint must not expose legacy debug copy'
+);
 assert(!runnerIndex.includes('hud-panel'), 'runner index must not expose the legacy header shell');
 assert(!runnerIndex.includes('status-grid'), 'runner index must not expose legacy status panels');
 assert(
@@ -180,7 +197,10 @@ assert(
 	'root artifact entry must redirect to the built runner'
 );
 for (const required of ['resolveRuntimeAssetUrl', 'data/sprites.json', 'badger:sprites-ready']) {
-	assert(runnerApp.includes(required), `RunnerApp missing production sprite bootstrap: ${required}`);
+	assert(
+		runnerApp.includes(required),
+		`RunnerApp missing production sprite bootstrap: ${required}`
+	);
 }
 for (const required of ["assetPath.replace(/^\\/+/, '')", "searchParams.get('debug') === '1'"]) {
 	assert(
@@ -220,15 +240,78 @@ for (const mode of ['story', 'versus', 'training', 'skills']) {
 	assert(runnerGameFlow.includes(mode), `runner flow missing menu mode: ${mode}`);
 }
 
-
-
-
-
-
-
-
-
-
+for (const required of [
+	'createTrainingStageSeed',
+	'selectTrainingStage',
+	'new StageRunScene',
+	'getTrainingState',
+	'getGameplayHudLayoutSnapshot',
+	'onRerollStage',
+]) {
+	assert(
+		trainingSceneSource.includes(required),
+		`TrainingScene missing composed runtime contract: ${required}`
+	);
+}
+for (const required of [
+	'showHitboxes',
+	'showHurtboxes',
+	'showFrameData',
+	'showDamageNumbers',
+	'lastHitDamage',
+	'comboDamage',
+	'hitsPerSecond',
+	'railReloadDeltaMs',
+	'parryWindowDeltaMs',
+	'meleeActiveFrames',
+	'recoveryFrames',
+	'hackCastTimeMs',
+]) {
+	assert(
+		trainingModeSource.includes(required),
+		`TrainingMode missing live measurement contract: ${required}`
+	);
+}
+for (const required of [
+	'Number.POSITIVE_INFINITY',
+	'configureTrainingDummy',
+	"case 'walking'",
+	"case 'jumping'",
+	"case 'attacking'",
+	"case 'flying'",
+	'usesPatternController: true',
+]) {
+	assert(
+		trainingDummySource.includes(required),
+		`TrainingDummy missing behavior contract: ${required}`
+	);
+}
+for (const required of ['RUNTIME_STAGE_IDS', 'hashSeed', 'previousStageId']) {
+	assert(
+		trainingStageSelectionSource.includes(required),
+		`training stage selection missing deterministic random-stage contract: ${required}`
+	);
+}
+for (const required of [
+	'buildGameplayHudLayout',
+	'vitals',
+	'companions',
+	'objective',
+	'combat',
+	'gear',
+	'context',
+]) {
+	assert(
+		gameplayHudLayoutSource.includes(required),
+		`gameplay HUD layout missing release contract: ${required}`
+	);
+}
+for (const required of ['targetId: enemy.id', 'moveId: move.id']) {
+	assert(
+		meleeComboSource.includes(required),
+		`melee telemetry missing observable hit contract: ${required}`
+	);
+}
 
 for (const required of [
 	'renderCompanionStatus',
@@ -238,12 +321,11 @@ for (const required of [
 	'Naya shield',
 	'Rook overlay active',
 ]) {
-	assert(uiRendererSource.includes(required), `UIRenderer missing companion HUD status: ${required}`);
+	assert(
+		uiRendererSource.includes(required),
+		`UIRenderer missing companion HUD status: ${required}`
+	);
 }
-
-
-
-
 
 for (const required of [
 	'StoryFlowSceneOptions',
@@ -265,7 +347,10 @@ for (const required of [
 	"event.key.toLowerCase() === 'r'",
 	'D: debug',
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing StageRunScene launch/debug seam: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing StageRunScene launch/debug seam: ${required}`
+	);
 }
 for (const required of [
 	'stageModifiers?: StageModifier[]',
@@ -273,7 +358,10 @@ for (const required of [
 	'type StageModifier',
 	'type StageTemplate',
 ]) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing debug stage modifier projection: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing debug stage modifier projection: ${required}`
+	);
 }
 for (const required of [
 	'StageRunScene',
@@ -282,7 +370,10 @@ for (const required of [
 	'onStageComplete: options.onCompleteStoryStage',
 	'options.onStartStoryStage?.(scene)',
 ]) {
-	assert(modeSceneFactoriesSource.includes(required), `ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`);
+	assert(
+		modeSceneFactoriesSource.includes(required),
+		`ModeSceneFactories missing StoryFlow-to-StageRunScene wiring: ${required}`
+	);
 }
 
 for (const required of [
@@ -294,7 +385,10 @@ for (const required of [
 	'cargo_full_release',
 	'broadcast_publish_tools',
 ]) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing branch-specific debrief contract: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing branch-specific debrief contract: ${required}`
+	);
 }
 
 for (const required of [
@@ -305,7 +399,10 @@ for (const required of [
 	'loadGameFlow(saveDriver)',
 	'storyProgress: flow.getStoryProgress()',
 ]) {
-	assert(runnerApp.includes(required), `RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`);
+	assert(
+		runnerApp.includes(required),
+		`RunnerApp missing StoryFlow-to-StageRunScene scene replacement: ${required}`
+	);
 }
 for (const [source, required] of [
 	[modeSceneFactoriesSource, 'onReturnToTitle?: () => void'],
@@ -320,7 +417,6 @@ for (const [source, required] of [
 	assert(source.includes(required), `scene return-to-title contract missing: ${required}`);
 }
 
-
 for (const required of [
 	'buildStageRuntimeConfig',
 	'cameraPressure',
@@ -330,13 +426,16 @@ for (const required of [
 	'beat-timing',
 	'code-gate-pressure',
 ]) {
-	assert(stageRuntimeConfigSource.includes(required), `StageRuntimeConfig missing runtime mapping contract: ${required}`);
+	assert(
+		stageRuntimeConfigSource.includes(required),
+		`StageRuntimeConfig missing runtime mapping contract: ${required}`
+	);
 }
-for (const required of [
-	'const runtimeConfig = buildStageRuntimeConfig(stage)',
-	'runtimeConfig,',
-]) {
-	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing runtime config projection: ${required}`);
+for (const required of ['const runtimeConfig = buildStageRuntimeConfig(stage)', 'runtimeConfig,']) {
+	assert(
+		stageRunOptionsSource.includes(required),
+		`StageRunOptions missing runtime config projection: ${required}`
+	);
 }
 for (const required of [
 	'runtimeConfig?: StageRuntimeConfig',
@@ -345,7 +444,10 @@ for (const required of [
 	'renderRuntimeConfigOverlay',
 	'Stage runtime config',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime config surface: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing runtime config surface: ${required}`
+	);
 }
 
 for (const required of [
@@ -364,7 +466,10 @@ for (const required of [
 	'tutorialBeats: stage?.tutorialBeats?.map',
 	'runtimeConfig,',
 ]) {
-	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`);
+	assert(
+		stageRunOptionsSource.includes(required),
+		`StageRunOptions missing GameFlow-to-StageRunScene adapter: ${required}`
+	);
 }
 for (const required of [
 	'RUNTIME_STAGE_IDS',
@@ -373,7 +478,10 @@ for (const required of [
 	'cargo_reversal_key_pickup',
 	'asteroid_transmitter_root_pickup',
 ]) {
-	assert(stageLayoutRegistrySource.includes(required), `stageLayoutRegistry missing runtime stage layout contract: ${required}`);
+	assert(
+		stageLayoutRegistrySource.includes(required),
+		`stageLayoutRegistry missing runtime stage layout contract: ${required}`
+	);
 }
 for (const required of [
 	'RuntimeTutorialBeat',
@@ -394,7 +502,10 @@ for (const required of [
 	'this.encounterGenerator.generatePacks',
 	'sideRooms.flatMap((room) => room.platforms)',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing runtime stage layout/procgen selection: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing runtime stage layout/procgen selection: ${required}`
+	);
 }
 for (const required of [
 	'EncounterGenerator',
@@ -406,7 +517,10 @@ for (const required of [
 	'forbiddenWith',
 	'procgenAffixes',
 ]) {
-	assert(encounterGeneratorSource.includes(required), `EncounterGenerator missing procedural enemy contract: ${required}`);
+	assert(
+		encounterGeneratorSource.includes(required),
+		`EncounterGenerator missing procedural enemy contract: ${required}`
+	);
 }
 for (const required of [
 	'buildEndlessSprawlRun',
@@ -415,7 +529,10 @@ for (const required of [
 	'sideRoomCount',
 	'ambush_warning_overlay',
 ]) {
-	assert(endlessSprawlRunSource.includes(required), `EndlessSprawlRun missing endless mode contract: ${required}`);
+	assert(
+		endlessSprawlRunSource.includes(required),
+		`EndlessSprawlRun missing endless mode contract: ${required}`
+	);
 }
 
 for (const required of [
@@ -425,7 +542,10 @@ for (const required of [
 	"export { CAMPAIGN_MINIGAMES } from './campaign/minigames'",
 	"export { BRANCH_CONSEQUENCES } from './campaign/branchConsequences'",
 ]) {
-	assert(campaignBarrelSource.includes(required), `Campaign barrel missing split export: ${required}`);
+	assert(
+		campaignBarrelSource.includes(required),
+		`Campaign barrel missing split export: ${required}`
+	);
 }
 for (const [source, required] of [
 	[campaignSchemaSource, 'export interface CampaignStage'],
@@ -437,7 +557,6 @@ for (const [source, required] of [
 	assert(source.includes(required), `campaign content split missing marker: ${required}`);
 }
 
-
 for (const required of [
 	'buildStoryBalanceRules',
 	'merchantPriceModifier',
@@ -446,13 +565,19 @@ for (const required of [
 	'endingTone',
 	'getPriceModifier',
 ]) {
-	assert(storyBalanceRulesSource.includes(required), `StoryBalanceRules missing heat/favor balance contract: ${required}`);
+	assert(
+		storyBalanceRulesSource.includes(required),
+		`StoryBalanceRules missing heat/favor balance contract: ${required}`
+	);
 }
 for (const required of [
 	'balanceRules = buildStoryBalanceRules(meta, storyProgress)',
 	'balanceRules,',
 ]) {
-	assert(stageRunOptionsSource.includes(required), `StageRunOptions missing story balance projection: ${required}`);
+	assert(
+		stageRunOptionsSource.includes(required),
+		`StageRunOptions missing story balance projection: ${required}`
+	);
 }
 for (const required of [
 	'balanceRules?: StoryBalanceRules',
@@ -461,9 +586,11 @@ for (const required of [
 	'renderBalanceOverlay',
 	'Story balance',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing story balance runtime surface: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing story balance runtime surface: ${required}`
+	);
 }
-
 
 for (const required of [
 	'autosaveGameFlow',
@@ -474,7 +601,10 @@ for (const required of [
 	'Autosaved campaign completion',
 	'badger:autosave-feedback',
 ]) {
-	assert(autosaveFeedbackSource.includes(required), `AutosaveFeedback missing visible autosave contract: ${required}`);
+	assert(
+		autosaveFeedbackSource.includes(required),
+		`AutosaveFeedback missing visible autosave contract: ${required}`
+	);
 }
 for (const required of [
 	'onAutosave?: (reason: AutosaveReason)',
@@ -482,7 +612,10 @@ for (const required of [
 	'renderAutosaveFeedback',
 	"this.options.onAutosave?.('branch-choice')",
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing autosave feedback surface: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing autosave feedback surface: ${required}`
+	);
 }
 for (const required of [
 	'autosaveGameFlow(saveDriver, flow, reason)',
@@ -490,7 +623,6 @@ for (const required of [
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing autosave feedback wiring: ${required}`);
 }
-
 
 for (const required of [
 	'buildEndingCard',
@@ -502,7 +634,10 @@ for (const required of [
 	'broadcast_chorus_control',
 	'broadcast_publish_tools',
 ]) {
-	assert(endingCardsSource.includes(required), `EndingCards missing final doctrine contract: ${required}`);
+	assert(
+		endingCardsSource.includes(required),
+		`EndingCards missing final doctrine contract: ${required}`
+	);
 }
 for (const required of [
 	'getEndingCard',
@@ -510,7 +645,10 @@ for (const required of [
 	'badger:ending-card',
 	'buildEndingCard(this.options.storyProgress)',
 ]) {
-	assert(titleSceneSource.includes(required), `TitleScene missing ending card surface: ${required}`);
+	assert(
+		titleSceneSource.includes(required),
+		`TitleScene missing ending card surface: ${required}`
+	);
 }
 
 for (const required of [
@@ -522,7 +660,10 @@ for (const required of [
 	'colony-alignment-inferred',
 	'final-broadcast-doctrine-inferred',
 ]) {
-	assert(storyProgressMigrationSource.includes(required), `StoryProgressMigration missing save migration contract: ${required}`);
+	assert(
+		storyProgressMigrationSource.includes(required),
+		`StoryProgressMigration missing save migration contract: ${required}`
+	);
 }
 for (const required of [
 	'loadGameFlow(saveDriver)',
@@ -538,12 +679,18 @@ for (const required of [
 	'getStoryProgressSummary',
 	'Final doctrine:',
 ]) {
-	assert(titleSceneSource.includes(required) || storyProgressSummarySource.includes(required), `title progress summary missing: ${required}`);
+	assert(
+		titleSceneSource.includes(required) || storyProgressSummarySource.includes(required),
+		`title progress summary missing: ${required}`
+	);
 }
 
 for (const required of ['endless', 'Endless Sprawl']) {
 	assert(
-		modeSceneFactoriesSource.includes(required) || runnerGameFlow.includes(required) || runnerApp.includes(required) || modeMenuSource.includes(required),
+		modeSceneFactoriesSource.includes(required) ||
+			runnerGameFlow.includes(required) ||
+			runnerApp.includes(required) ||
+			modeMenuSource.includes(required),
 		`endless mode route missing: ${required}`
 	);
 }
@@ -557,7 +704,10 @@ for (const required of [
 	'pickups: this.buildPickups',
 	'enemyPacks',
 ]) {
-	assert(sideRoomGeneratorSource.includes(required), `SideRoomGenerator missing optional side-room contract: ${required}`);
+	assert(
+		sideRoomGeneratorSource.includes(required),
+		`SideRoomGenerator missing optional side-room contract: ${required}`
+	);
 }
 
 for (const required of [
@@ -568,7 +718,10 @@ for (const required of [
 	'bossPhaseLabel',
 	'bossPhaseMechanic',
 ]) {
-	assert(bossPhaseSystemSource.includes(required), `BossPhaseSystem missing runtime boss phase contract: ${required}`);
+	assert(
+		bossPhaseSystemSource.includes(required),
+		`BossPhaseSystem missing runtime boss phase contract: ${required}`
+	);
 }
 for (const required of [
 	'bossPhases?: readonly RuntimeBossPhase[]',
@@ -576,10 +729,16 @@ for (const required of [
 	'this.bossPhases.step',
 	'bossPhaseHint',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing boss phase runtime wiring: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing boss phase runtime wiring: ${required}`
+	);
 }
 assert(rendererSource.includes('enemy.bossPhaseLabel'), 'Renderer must draw boss phase overlays');
-assert(uiRendererSource.includes('bossPhaseHint'), 'UIRenderer must surface active boss phase hints');
+assert(
+	uiRendererSource.includes('bossPhaseHint'),
+	'UIRenderer must surface active boss phase hints'
+);
 
 for (const required of [
 	'CompanionGameplayModifiers',
@@ -589,13 +748,19 @@ for (const required of [
 	'companion_assist_ready',
 	'companion_assist_delay',
 ]) {
-	assert(companionSystemSource.includes(required), `CompanionSystem missing branch gameplay modifier contract: ${required}`);
+	assert(
+		companionSystemSource.includes(required),
+		`CompanionSystem missing branch gameplay modifier contract: ${required}`
+	);
 }
 for (const required of [
 	'branchGameplayHooks?: readonly string[]',
 	'resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing branch gameplay hook option: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing branch gameplay hook option: ${required}`
+	);
 }
 
 for (const required of [
@@ -607,7 +772,10 @@ for (const required of [
 	'rookOverlayUntil',
 	'auntieHint',
 ]) {
-	assert(companionSystemSource.includes(required), `CompanionSystem missing runtime companion contract: ${required}`);
+	assert(
+		companionSystemSource.includes(required),
+		`CompanionSystem missing runtime companion contract: ${required}`
+	);
 }
 for (const required of [
 	'private companions: CompanionSystem',
@@ -617,9 +785,15 @@ for (const required of [
 	'rookMarked',
 	'companionHint',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing companion gameplay wiring: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing companion gameplay wiring: ${required}`
+	);
 }
-assert(rendererSource.includes('enemy.rookMarked'), 'Renderer must draw Rook-marked enemy overlays');
+assert(
+	rendererSource.includes('enemy.rookMarked'),
+	'Renderer must draw Rook-marked enemy overlays'
+);
 
 for (const required of [
 	'chapterId: string',
@@ -628,11 +802,11 @@ for (const required of [
 	'getCurrentChapterId',
 	'getCompletedChapterIds',
 ]) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing chapter progression bridge: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing chapter progression bridge: ${required}`
+	);
 }
-
-
-
 
 for (const [source, required] of [
 	[campaignSchemaSource, 'BranchConsequence'],
@@ -640,7 +814,10 @@ for (const [source, required] of [
 	[campaignConsequenceSource, 'companion_assist_ready'],
 	[campaignConsequenceSource, 'final_broadcast_toolkit'],
 ]) {
-	assert(source.includes(required), `Campaign split missing branch consequence contract: ${required}`);
+	assert(
+		source.includes(required),
+		`Campaign split missing branch consequence contract: ${required}`
+	);
 }
 for (const required of [
 	'type BranchConsequence',
@@ -648,21 +825,34 @@ for (const required of [
 	'BRANCH_CONSEQUENCES.filter',
 	'resultFlags.has(consequence.resultFlag)',
 ]) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing active branch consequence API: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing active branch consequence API: ${required}`
+	);
 }
 for (const required of [
 	'getActiveBranchConsequences(stage.id)',
 	'Branch effect:',
 	'branchConsequence.uiHint',
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing branch consequence panel rendering: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing branch consequence panel rendering: ${required}`
+	);
 }
 
-for (const required of ['type BossPhase', 'phases?: BossPhase[]', 'phases: stage.boss.phases?.map((phase) => ({ ...phase }))']) {
+for (const required of [
+	'type BossPhase',
+	'phases?: BossPhase[]',
+	'phases: stage.boss.phases?.map((phase) => ({ ...phase }))',
+]) {
 	assert(runnerGameFlow.includes(required), `GameFlow missing boss phase projection: ${required}`);
 }
 for (const required of ['stage.boss?.phases?.[0]', 'Boss phase:', 'bossPhase.mechanic']) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing boss phase panel rendering: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing boss phase panel rendering: ${required}`
+	);
 }
 
 for (const [source, required] of [
@@ -674,10 +864,16 @@ for (const [source, required] of [
 	assert(source.includes(required), `Campaign split missing minigame integration: ${required}`);
 }
 for (const required of ['minigames?: StageMinigame[]', 'minigames: stage.minigames?.map']) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing minigame stage projection: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing minigame stage projection: ${required}`
+	);
 }
 for (const required of ['stage.minigames?.[0]', 'Minigame:', 'minigame.kind']) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing minigame panel rendering: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing minigame panel rendering: ${required}`
+	);
 }
 
 for (const [source, required] of [
@@ -689,10 +885,16 @@ for (const [source, required] of [
 	assert(source.includes(required), `Campaign split missing side quest integration: ${required}`);
 }
 for (const required of ['sideQuests?: SideQuest[]', 'sideQuests: stage.sideQuests?.map']) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing side quest stage projection: ${required}`);
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing side quest stage projection: ${required}`
+	);
 }
 for (const required of ['stage.sideQuests?.[0]', 'Side job:', 'sideQuest.objective']) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing side quest panel rendering: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing side quest panel rendering: ${required}`
+	);
 }
 
 for (const required of [
@@ -702,7 +904,10 @@ for (const required of [
 	'guileDiscount',
 	'priceModifier',
 ]) {
-	assert(shopEngineSource.includes(required), `ShopEngine missing heat/favor economy pricing: ${required}`);
+	assert(
+		shopEngineSource.includes(required),
+		`ShopEngine missing heat/favor economy pricing: ${required}`
+	);
 }
 for (const required of [
 	'currentOffer',
@@ -713,14 +918,17 @@ for (const required of [
 	'getGuileFromSkills',
 	'modifier.toFixed(2)',
 ]) {
-	assert(shopSceneSource.includes(required), `ShopScene missing trust/heat shop wiring: ${required}`);
+	assert(
+		shopSceneSource.includes(required),
+		`ShopScene missing trust/heat shop wiring: ${required}`
+	);
 }
 
-for (const required of [
-	'getCurrentStage()',
-	'choiceOutcomes: stage.choiceOutcomes?.map',
-]) {
-	assert(runnerGameFlow.includes(required), `GameFlow missing current-stage choice API: ${required}`);
+for (const required of ['getCurrentStage()', 'choiceOutcomes: stage.choiceOutcomes?.map']) {
+	assert(
+		runnerGameFlow.includes(required),
+		`GameFlow missing current-stage choice API: ${required}`
+	);
 }
 for (const required of [
 	'renderStageChoicePanel',
@@ -728,7 +936,7 @@ for (const required of [
 	'chooseStageChoice',
 	'ArrowUp',
 	'ArrowDown',
-	"/^[1-9]$/",
+	'/^[1-9]$/',
 	'lastChoiceResult',
 	'getCurrentStage()',
 	'syncStageSelection',
@@ -736,15 +944,17 @@ for (const required of [
 	'selectionCommitted',
 	'fitText',
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing stage choice UI wiring: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing stage choice UI wiring: ${required}`
+	);
 }
 
-for (const required of [
-	'getAnimationEvents',
-	'SpriteAnimationEvent',
-	'animation.events.filter',
-]) {
-	assert(spriteRendererSource.includes(required), `SpriteRenderer missing animation event API: ${required}`);
+for (const required of ['getAnimationEvents', 'SpriteAnimationEvent', 'animation.events.filter']) {
+	assert(
+		spriteRendererSource.includes(required),
+		`SpriteRenderer missing animation event API: ${required}`
+	);
 }
 for (const required of [
 	'advanceAnimationFrames',
@@ -753,7 +963,10 @@ for (const required of [
 	"case 'footstep'",
 	"case 'vfx'",
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing animation event dispatch: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing animation event dispatch: ${required}`
+	);
 }
 
 for (const required of [
@@ -769,7 +982,7 @@ for (const required of [
 ]) {
 	assert(
 		dialoguePortraitRendererSource.includes(required),
-		`DialoguePortraitRenderer missing portrait contract: ${required}`,
+		`DialoguePortraitRenderer missing portrait contract: ${required}`
 	);
 }
 for (const required of [
@@ -780,11 +993,15 @@ for (const required of [
 	"state.mode === 'dialogue'",
 	"state.mode === 'debrief'",
 ]) {
-	assert(storyFlowSceneSource.includes(required), `StoryFlowScene missing dialogue portrait wiring: ${required}`);
+	assert(
+		storyFlowSceneSource.includes(required),
+		`StoryFlowScene missing dialogue portrait wiring: ${required}`
+	);
 }
 assert(
-	rendererSource.includes('DialoguePortraitRenderer') && rendererSource.includes('renderDialoguePortrait'),
-	'Renderer must expose DialoguePortraitRenderer through renderDialoguePortrait',
+	rendererSource.includes('DialoguePortraitRenderer') &&
+		rendererSource.includes('renderDialoguePortrait'),
+	'Renderer must expose DialoguePortraitRenderer through renderDialoguePortrait'
 );
 
 for (const required of [
@@ -793,7 +1010,10 @@ for (const required of [
 	'getCollectedStoryPayloadIds',
 	"pickup.persistence === 'story_payload'",
 ]) {
-	assert(itemSystemSource.includes(required), `ItemSystem missing story payload persistence contract: ${required}`);
+	assert(
+		itemSystemSource.includes(required),
+		`ItemSystem missing story payload persistence contract: ${required}`
+	);
 }
 for (const required of [
 	'StageRunSceneOptions',
@@ -801,7 +1021,10 @@ for (const required of [
 	'onStoryPayloadCollected',
 	'applyPersistedPayloadPickups(this.pickups',
 ]) {
-	assert(stageRunSceneSource.includes(required), `StageRunScene missing story payload persistence wiring: ${required}`);
+	assert(
+		stageRunSceneSource.includes(required),
+		`StageRunScene missing story payload persistence wiring: ${required}`
+	);
 }
 
 for (const required of [
@@ -813,15 +1036,18 @@ for (const required of [
 	'stim_pack_icon',
 	'getHudIconSlots',
 ]) {
-	assert(uiRendererSource.includes(required), `UIRenderer missing item icon HUD contract: ${required}`);
+	assert(
+		uiRendererSource.includes(required),
+		`UIRenderer missing item icon HUD contract: ${required}`
+	);
 }
 assert(
 	/spriteRenderer\.drawFrame\(\s*HUD_ICON_SHEET/.test(uiRendererSource),
-	'UIRenderer must draw HUD item icons from HUD_ICON_SHEET',
+	'UIRenderer must draw HUD item icons from HUD_ICON_SHEET'
 );
 assert(
 	rendererSource.includes('this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer)'),
-	'Renderer must pass SpriteRenderer into UIRenderer so item_icons can render',
+	'Renderer must pass SpriteRenderer into UIRenderer so item_icons can render'
 );
 
 for (const scene of ['TitleScene', 'StageRunScene', 'TrainingScene', 'HordeScene']) {

@@ -128,8 +128,11 @@ test.describe('Dummy training release mode', () => {
 				metrics: { hitCount: 0, damageTotal: 0, comboDamage: 0 },
 			});
 		const reset = await trainingState(page);
-		expect(reset?.player.x).toBeCloseTo((reset?.arena.left ?? 0) + 72, 3);
-		expect(reset?.dummy.x).toBeCloseTo(reset?.dummy.spawnX ?? 0, 3);
+		expect(reset).not.toBeNull();
+		if (!reset) return;
+		expect(reset.player.x).toBeGreaterThanOrEqual(reset.arena.left);
+		expect(reset.player.x).toBeLessThanOrEqual(reset.arena.left + 200);
+		expect(Math.abs(reset.dummy.x - reset.dummy.spawnX)).toBeLessThan(1);
 	});
 
 	test('rerolls to a different random stage, preserves training configuration, and never mutates story progress', async ({

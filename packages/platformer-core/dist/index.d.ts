@@ -11,7 +11,7 @@ export { coyoteStep, type CoyoteStepInput, type CoyoteStepOutput } from './syste
 export { aabb } from './systems/aabb';
 export { combineFluidFields, createLayeredFluid, createUniformFluid, flyingObjectStep, type FluidField, type FluidLayer, type FluidSample, type FlyingObjectState, type FlyingObjectStepInput, } from './systems/flyingObjectStep';
 export { advanceFixedStep, createFixedStepState, type FixedStepConfig, type FixedStepResult, type FixedStepState, } from './systems/fixedStep';
-export { createDeterministicRng, hashSeed, nextRng, rngInt, rngPick, rngRange, type DeterministicRngResult, type DeterministicRngState, } from './systems/deterministicRng';
+export { createDeterministicRng, createSeededRandom, hashSeed, nextRng, rngInt, rngPick, rngRange, rngShuffle, rngWeightedPick, type DeterministicRngResult, type DeterministicRngState, type SeededRandomSource, } from './systems/deterministicRng';
 export { stepProjectiles, type ProjectileHit, type ProjectileKind, type ProjectileState, type ProjectileStepInput, type ProjectileStepOutput, } from './systems/projectileStep';
 export { stepPhysicsWorld, type PhysicsActorState, type PhysicsMaterialEvent, type PhysicsWorldState, type PhysicsWorldStepInput, type PhysicsWorldStepOutput, } from './systems/physicsWorldStep';
 export { DEFAULT_SURFACE_MATERIAL, applySurfaceMaterial, materialHasTag, sampleMaterialContact, type MaterialBody, type MaterialContact, type MaterialStepResult, type MaterialZone, type SurfaceMaterial, } from './systems/materialPhysics';

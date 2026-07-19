@@ -1,4 +1,4 @@
-/** Shared arcade-core fixed-timestep adapter. */
+/** Shared arcade-runtime fixed-timestep adapter. */
 
 import { createFixedStepLoop } from '../../../../vendor/arcade-runtime.mjs';
 
@@ -8,11 +8,7 @@ export type RenderFn = (alpha: number) => void;
 export class GameLoop {
 	private readonly core;
 
-	constructor(
-		_canvas: HTMLCanvasElement,
-		update: UpdateFn,
-		render: RenderFn
-	) {
+	constructor(_canvas: HTMLCanvasElement, update: UpdateFn, render: RenderFn) {
 		this.core = createFixedStepLoop({
 			update,
 			render,

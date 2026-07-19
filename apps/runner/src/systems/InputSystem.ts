@@ -1,9 +1,9 @@
-/** Shared arcade-core semantic keyboard/gamepad input adapter. */
+/** Shared arcade-runtime semantic keyboard/gamepad input adapter. */
 
 import {
-	createActionInput,
 	type ActionBinding,
 	type ActionState,
+	createActionInput,
 } from '../../../../vendor/arcade-runtime.mjs';
 
 export interface ActionMap {
@@ -65,10 +65,25 @@ const ACTIONS: readonly RunnerAction[] = [
 ];
 
 const BINDINGS: Record<RunnerAction, ActionBinding[]> = {
-	moveLeft: ['KeyA', 'ArrowLeft', { type: 'axis', index: 0, direction: -1 }, { type: 'button', index: 14 }],
-	moveRight: ['KeyD', 'ArrowRight', { type: 'axis', index: 0, direction: 1 }, { type: 'button', index: 15 }],
+	moveLeft: [
+		'KeyA',
+		'ArrowLeft',
+		{ type: 'axis', index: 0, direction: -1 },
+		{ type: 'button', index: 14 },
+	],
+	moveRight: [
+		'KeyD',
+		'ArrowRight',
+		{ type: 'axis', index: 0, direction: 1 },
+		{ type: 'button', index: 15 },
+	],
 	jump: ['Space', 'KeyW', 'ArrowUp', { type: 'button', index: 0 }],
-	fastFall: ['KeyS', 'ArrowDown', { type: 'axis', index: 1, direction: 1 }, { type: 'button', index: 13 }],
+	fastFall: [
+		'KeyS',
+		'ArrowDown',
+		{ type: 'axis', index: 1, direction: 1 },
+		{ type: 'button', index: 13 },
+	],
 	melee: ['KeyJ', { type: 'button', index: 2 }],
 	shoot: ['KeyK', { type: 'button', index: 5 }],
 	item: ['KeyE', { type: 'button', index: 3 }],
@@ -79,11 +94,17 @@ const BINDINGS: Record<RunnerAction, ActionBinding[]> = {
 	debugToggle: ['KeyH'],
 };
 
-function held(snapshot: Readonly<Record<RunnerAction, ActionState>>, action: RunnerAction): boolean {
+function held(
+	snapshot: Readonly<Record<RunnerAction, ActionState>>,
+	action: RunnerAction
+): boolean {
 	return snapshot[action].held;
 }
 
-function pressed(snapshot: Readonly<Record<RunnerAction, ActionState>>, action: RunnerAction): boolean {
+function pressed(
+	snapshot: Readonly<Record<RunnerAction, ActionState>>,
+	action: RunnerAction
+): boolean {
 	return snapshot[action].pressed;
 }
 

@@ -9,7 +9,7 @@ import {
 	selectTrainingStage,
 } from '../game/TrainingStageSelection';
 import type { Renderer } from '../renderer/Renderer';
-import type { RuntimeStageId } from '../world/stageLayoutRegistry';
+import { RUNTIME_STAGE_IDS, type RuntimeStageId } from '../world/stageLayoutRegistry';
 import { StageRunScene, type TrainingRunSnapshot } from './StageRunScene';
 
 export interface TrainingSceneOptions {
@@ -32,7 +32,7 @@ export class TrainingScene implements Scene {
 			? {
 					seed,
 					stageId: options.stageId,
-					stageIndex: selected.stageIndex,
+					stageIndex: RUNTIME_STAGE_IDS.indexOf(options.stageId),
 				}
 			: selected;
 		this.stageScene = this.createStageScene();

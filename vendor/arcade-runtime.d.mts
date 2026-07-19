@@ -67,6 +67,94 @@ export declare function advanceArcadeAnimationClock(
   timeline: ArcadeAnimationTimeline,
 ): ArcadeAnimationClock;
 
+export type DeterministicRngState = {
+  seed: number;
+  calls: number;
+};
+
+export type DeterministicRngResult = {
+  state: DeterministicRngState;
+  value: number;
+};
+
+export declare function hashSeed(seed: string): number;
+export declare function createDeterministicRng(seed?: number | string): DeterministicRngState;
+export declare function nextRng(state: DeterministicRngState): DeterministicRngResult;
+export declare function rngRange(
+  state: DeterministicRngState,
+  minimum: number,
+  maximum: number,
+): DeterministicRngResult;
+export declare function rngInt(
+  state: DeterministicRngState,
+  minimumInclusive: number,
+  maximumInclusive: number,
+): DeterministicRngResult;
+export declare function rngPick<T>(
+  state: DeterministicRngState,
+  values: readonly T[],
+): { state: DeterministicRngState; value: T; index: number };
+export declare function rngWeightedPick<T>(
+  state: DeterministicRngState,
+  values: readonly T[],
+  weightOf?: (value: T, index: number) => number,
+): {
+  state: DeterministicRngState;
+  value: T;
+  index: number;
+  roll: number;
+  totalWeight: number;
+};
+export declare function rngShuffle<T>(
+  state: DeterministicRngState,
+  values: readonly T[],
+): { state: DeterministicRngState; value: T[] };
+
+export type SeededRandomSource = (() => number) & {
+  snapshot(): DeterministicRngState;
+  restore(state: DeterministicRngState): SeededRandomSource;
+};
+
+export declare function createSeededRandom(seed?: number | string): SeededRandomSource;
+
+export type CooldownState = Readonly<Record<string, number>>;
+
+export declare function createCooldownState(initial?: CooldownState): Record<string, number>;
+export declare function startCooldown(
+  state: CooldownState,
+  key: string,
+  duration: number,
+): Record<string, number>;
+export declare function clearCooldown(
+  state: CooldownState,
+  key?: string,
+): Record<string, number>;
+export declare function stepCooldownState(
+  state: CooldownState,
+  delta?: number,
+): Record<string, number>;
+export declare function cooldownRemaining(state: CooldownState, key: string): number;
+export declare function isCooldownReady(state: CooldownState, key: string): boolean;
+export declare function tryStartCooldown(
+  state: CooldownState,
+  key: string,
+  duration: number,
+): {
+  started: boolean;
+  state: Record<string, number>;
+  remaining: number;
+};
+export declare function getElapsedCooldownStatus(
+  now: number,
+  lastTriggeredAt: number,
+  duration: number,
+): {
+  ready: boolean;
+  elapsed: number;
+  remaining: number;
+  progress: number;
+};
+
 export type ArcadeCameraState = {
   x: number;
   y: number;

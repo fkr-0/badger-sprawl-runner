@@ -7,7 +7,13 @@ export function gravityStep(
 	params: Pick<PhysicsParams, 'gravity' | 'maxFallSpeed'>,
 	dt: number
 ): number {
-	return integrateAcceleration(vy, params.gravity, dt, -Infinity, params.maxFallSpeed);
+	return integrateAcceleration(
+		vy,
+		params.gravity,
+		dt,
+		Number.NEGATIVE_INFINITY,
+		params.maxFallSpeed
+	);
 }
 
 export const gravityStepModule = { gravityStep };

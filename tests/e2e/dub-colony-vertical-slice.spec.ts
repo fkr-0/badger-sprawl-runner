@@ -35,6 +35,29 @@ async function waitForScene(page: Page, name: string): Promise<void> {
 	);
 }
 
+async function waitForHarness(page: Page): Promise<void> {
+	await page.waitForFunction(() => Boolean((window as Partial<ColonyWindow>).__badger), null, {
+		timeout: 10_000,
+	});
+}
+
+async function advanceStoryState(page: Page): Promise<void> {
+	await waitForHarness(page);
+	const before = await page.evaluate(() => {
+		const harness = (window as Partial<ColonyWindow>).__badger;
+		return harness ? JSON.stringify(harness.getStoryState()) : null;
+	});
+	await page.keyboard.press('Enter');
+	await expect
+		.poll(() =>
+			page.evaluate((previous) => {
+				const harness = (window as Partial<ColonyWindow>).__badger;
+				return harness ? JSON.stringify(harness.getStoryState()) !== previous : false;
+			}, before)
+		)
+		.toBe(true);
+}
+
 async function teleportTo(page: Page, x: number, y: number): Promise<void> {
 	await page.evaluate(
 		([targetX, targetY]) =>
@@ -63,10 +86,12 @@ async function enterDubColony(page: Page): Promise<void> {
 		});
 
 	for (let safety = 0; safety < 8; safety += 1) {
-		const mode = await page.evaluate(() => (window as ColonyWindow).__badger.getStoryState().mode);
+		await waitForHarness(page);
+		const mode = await page.evaluate(
+			() => (window as Partial<ColonyWindow>).__badger?.getStoryState().mode ?? null
+		);
 		if (mode === 'stage') break;
-		await page.keyboard.press('Enter');
-		await page.waitForTimeout(45);
+		await advanceStoryState(page);
 	}
 	await expect
 		.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getStoryState().mode))
@@ -204,6 +229,11 @@ test.describe('Dub Colony story, companion, and beat-timing vertical slice', () 
 		page,
 	}) => {
 		await enterDubColony(page);
+		const authoredSpriteIds = await page.evaluate(() =>
+			(window as ColonyWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
+		);
+		expect(authoredSpriteIds).toContain('enemy_signal_jammer_bat');
+		expect(authoredSpriteIds).toContain('enemy_feedback_guard');
 		await clearColonyEnemies(page);
 		await expect
 			.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getCheckpoint().activeId))
@@ -233,12 +263,6 @@ test.describe('Dub Colony story, companion, and beat-timing vertical slice', () 
 		await expect
 			.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getCompanions().nayaAssistTimer))
 			.toBeGreaterThan(0);
-
-		const spriteIds = await page.evaluate(() =>
-			(window as ColonyWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
-		);
-		expect(spriteIds).toContain('enemy_signal_jammer_bat');
-		expect(spriteIds).toContain('enemy_feedback_guard');
 	});
 
 	test('restores the colony vote, synchronizes the reactor, defeats King Feedback, and reaches the Barrens', async ({
@@ -323,12 +347,12 @@ test.describe('Dub Colony story, companion, and beat-timing vertical slice', () 
 			.toMatchObject({ stageId: 'dub-colony', speaker: 'Auntie Subharmonic' });
 
 		for (let safety = 0; safety < 6; safety += 1) {
+			await waitForHarness(page);
 			const stageId = await page.evaluate(
-				() => (window as ColonyWindow).__badger.getStoryProgress().currentStageId
+				() => (window as Partial<ColonyWindow>).__badger?.getStoryProgress().currentStageId ?? null
 			);
 			if (stageId === 'antenna-barrens') break;
-			await page.keyboard.press('Enter');
-			await page.waitForTimeout(45);
+			await advanceStoryState(page);
 		}
 		await expect
 			.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getStoryProgress()))

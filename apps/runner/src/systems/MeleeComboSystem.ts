@@ -225,7 +225,10 @@ export class MeleeComboSystem {
 			events?.onEvent?.({
 				kind: enemy.hp <= 0 ? 'kill' : 'hit',
 				source: 'player',
+				targetId: enemy.id,
 				damage: move.damage,
+				moveId: move.id,
+				combo: this.state.chainDepth + 1,
 			});
 		}
 

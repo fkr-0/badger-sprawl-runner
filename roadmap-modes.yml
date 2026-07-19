@@ -4,7 +4,7 @@
 
 schema_version: 1
 project: badger-sprawl-runner
-status: design-roadmap
+status: implementation-active
 
 mode_goals:
   - make the core movement/combat/hacking loop testable outside campaign
@@ -177,17 +177,19 @@ modes:
       - performance remains stable with 25 active enemies/projectiles combined
 
   training_dummy:
-    title: Invincible Stationary Enemy Training + Debug Mode
+    title: Invincible Random-Stage Dummy Training + Debug Mode
+    implementation_status: complete_first_release
     priority: highest
     summary: >
-      A safe arena with a non-moving invincible target for learning timing,
-      measuring damage, and debugging hitboxes.
+      A safe dojo composed from a randomly selected registered campaign stage,
+      with an invincible configurable target for learning timing, measuring
+      damage, and debugging the production movement/combat/rendering stack.
     purpose:
       - test melee reach, railgun recoil, reload timing, rocket cancel, and hack effects
       - debug hitboxes/hurtboxes and animation timing
       - give players a no-pressure training room
     dummy_behavior:
-      movement: none
+      movement: configurable_idle_walking_jumping_attacking_armored_flying
       damage_response: flinch_visual_only
       hp: infinite
       death: disabled
@@ -216,11 +218,11 @@ modes:
       recovery_frames: required
       hack_cast_time_ms: required
     arena:
-      name: debug_dojo_under_speakerstack
+      name: random_registered_campaign_stage
       platforms:
-        - flat_ground
-        - one_low_platform
-        - one_wall_for_recoil_tests
+        - reuse_selected_stage_geometry
+        - choose_widest_safe_floor_for_spawn
+        - reroll_to_different_stage_with_n_hotkey
       terminals:
         - fasttype_gate
         - syntax_parry_gate
@@ -230,6 +232,8 @@ modes:
       - player can toggle overlays live
       - every attack reports damage and frame/timing info
       - rocket, railgun, melee, katana, and hack powers can be tested without resource starvation
+      - each run exposes its seed and selected stage through the test harness
+      - reset and reroll preserve selected lesson, dummy preset, and player kit
 
   cpu_squad_test:
     title: Human with Computer-Controlled Allies vs Enemies
