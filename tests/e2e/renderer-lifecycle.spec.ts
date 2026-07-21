@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import {
+	beginCertifiedContextLoss,
+	captureCertificationEnvironment,
+	restoreCertifiedContext,
+	writeCertificationEvidence,
+} from './certification-evidence';
 
 interface HarnessWindow extends Window {
 	__badger: BadgerTestHarness;
@@ -36,6 +42,7 @@ test('certifies resize, suspend/resume, context restoration, sustained memory an
 		if (message.type() === 'error') errors.push(message.text());
 	});
 	await enterStage(page);
+	const environment = await captureCertificationEnvironment(page, '#badger-pixi-bridge');
 
 	await page.evaluate(() => (window as HarnessWindow).__badger.resizeBridge(800, 450));
 	await expect(page.locator('#badger-pixi-bridge')).toHaveAttribute(
@@ -55,9 +62,9 @@ test('certifies resize, suspend/resume, context restoration, sustained memory an
 		() => (window as HarnessWindow).__badger.getBridgeLifecycle()?.running === true
 	);
 
-	await page.evaluate(() => (window as HarnessWindow).__badger.simulateBridgeContextLoss());
+	const contextLossMode = await beginCertifiedContextLoss(page, '#badger-pixi-bridge');
 	await expect(page.locator('#badger-pixi-bridge')).toHaveAttribute('data-context-state', 'lost');
-	await page.evaluate(() => (window as HarnessWindow).__badger.simulateBridgeContextRestore());
+	await restoreCertifiedContext(page, '#badger-pixi-bridge', contextLossMode);
 	await expect(page.locator('#badger-pixi-bridge')).toHaveAttribute('data-context-state', 'ready');
 
 	const before = await page.evaluate(() => ({
@@ -92,5 +99,31 @@ test('certifies resize, suspend/resume, context restoration, sustained memory an
 	await page.evaluate(() => (window as HarnessWindow).__badger.destroyBridge());
 	await expect(page.locator('#badger-pixi-bridge')).toHaveCount(0);
 	expect(errors).toEqual([]);
-	console.info('Badger lifecycle certification', { browserName, sessionSeconds, before, after });
+	await writeCertificationEvidence('lifecycle', browserName, environment, {
+		checks: {
+			resize: true,
+			pauseResume: true,
+			contextLossRestore: true,
+			teardown: true,
+			errors,
+		},
+		session: {
+			durationSeconds: sessionSeconds,
+			framesBefore: before.frame,
+			framesAfter: after.frame,
+			heapBeforeBytes: before.heap,
+			heapAfterBytes: after.heap,
+			uploadP95Bytes: after.uploadP95,
+			contextLossMode,
+			contextLosses: Number(lifecycle?.contextLosses ?? 0),
+			contextRestores: Number(lifecycle?.contextRestores ?? 0),
+		},
+	});
+	console.info('Badger lifecycle certification', {
+		browserName,
+		sessionSeconds,
+		contextLossMode,
+		before,
+		after,
+	});
 });

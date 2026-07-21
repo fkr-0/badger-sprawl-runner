@@ -2506,3 +2506,76 @@ export declare function createPerformanceBudgetMonitor(options?: { budgets?: Rec
 export declare function runHeadlessScenario<State, Command>(options: { name?: string; ticks: number; initialState?: State; setup?: () => State | Promise<State>; command?: (tick: number, state: State) => Command; step(state: State, command: Command | null, context: Readonly<{ tick: number }>): State | Promise<State>; snapshot?: (state: State, tick: number) => SnapshotValue; assert?: (frame: unknown, state: State) => void; teardown?: (state: State, result: unknown) => void }): Promise<Readonly<{ name: string; ticks: number; state: State; frames: readonly unknown[]; finalHash: string }>>;
 
 // END ARCADE SERVICES 0.17-1.0 TYPES
+export type ArcadeCertificationEvidenceKind = 'lifecycle' | 'visual';
+export type ArcadeCertificationSource = 'local-browser' | 'physical-device' | 'driver-lab' | 'imported';
+export type ArcadeCertificationContextLossMode = 'synthetic-event' | 'webgl-lose-context' | 'driver-reset' | 'not-applicable';
+export interface ArcadeCertificationPolicy {
+  requiredConsumers: readonly string[];
+  requiredBrowsers: readonly string[];
+  requiredPhysicalTiers: readonly string[];
+  minimumLongSessionSeconds: number;
+  maximumUploadP95Bytes: number;
+  requireVisualEvidence: boolean;
+  requireDriverResetPerConsumer: boolean;
+}
+export interface ArcadeCertificationEvidence {
+  schemaVersion: number;
+  id: string;
+  kind: ArcadeCertificationEvidenceKind;
+  project: string;
+  projectVersion: string;
+  runtimeVersion: string;
+  recordedAt: string;
+  source: ArcadeCertificationSource;
+  browser: Readonly<{ name: string; version: string; userAgent: string }>;
+  device: Readonly<{
+    tier: string;
+    os: string;
+    cpu: string;
+    gpu: string;
+    memoryGiB: number | null;
+    logicalCores: number | null;
+    devicePixelRatio: number | null;
+    powerMode: string;
+    thermalState: string;
+  }>;
+  checks: Readonly<{
+    resize: boolean;
+    pauseResume: boolean;
+    contextLossRestore: boolean;
+    teardown: boolean;
+    visual: boolean | null;
+    errors: readonly unknown[];
+  }>;
+  session: Readonly<{
+    durationSeconds: number;
+    framesBefore: number;
+    framesAfter: number;
+    heapBeforeBytes: number | null;
+    heapAfterBytes: number | null;
+    uploadP95Bytes: number;
+    contextLossMode: ArcadeCertificationContextLossMode;
+    contextLosses: number;
+    contextRestores: number;
+  }> | null;
+  visual: Readonly<{
+    semanticPassed: boolean;
+    imageStatisticsPassed: boolean;
+    metrics: unknown;
+  }> | null;
+  budget: Readonly<Record<string, unknown>> | null;
+  artifacts: readonly unknown[];
+  notes: readonly unknown[];
+}
+export declare const ARCADE_CERTIFICATION_SCHEMA_VERSION: number;
+export declare const ARCADE_CERTIFICATION_EVIDENCE_KINDS: readonly ArcadeCertificationEvidenceKind[];
+export declare const ARCADE_CERTIFICATION_SOURCES: readonly ArcadeCertificationSource[];
+export declare const ARCADE_CERTIFICATION_CONTEXT_LOSS_MODES: readonly ArcadeCertificationContextLossMode[];
+export declare function createCertificationPolicy(overrides?: Partial<ArcadeCertificationPolicy>): Readonly<ArcadeCertificationPolicy>;
+export declare function createCertificationEvidence(input?: Partial<ArcadeCertificationEvidence> & Record<string, any>): Readonly<ArcadeCertificationEvidence>;
+export declare function validateCertificationEvidence(input: unknown, options?: { requirePhysicalMetadata?: boolean }): Readonly<{ valid: boolean; evidence: Readonly<ArcadeCertificationEvidence>; errors: readonly string[] }>;
+export declare function assertCertificationEvidence(input: unknown, options?: { requirePhysicalMetadata?: boolean }): Readonly<ArcadeCertificationEvidence>;
+export declare function summarizeCertificationEvidence(inputs?: readonly unknown[], policy?: Partial<ArcadeCertificationPolicy>): Readonly<Record<string, any>>;
+export declare function createCertificationEvidenceIndex(inputs?: readonly unknown[], policy?: Partial<ArcadeCertificationPolicy>, options?: { generatedAt?: string }): Readonly<Record<string, any>>;
+
+// END ARCADE CERTIFICATION 1.11 TYPES

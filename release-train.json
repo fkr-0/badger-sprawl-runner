@@ -5,30 +5,30 @@
     "package.json",
     "apps/runner/package.json"
   ],
-  "current": "1.2.0",
+  "current": "1.3.0",
   "patch": {
-    "version": "1.2.1",
+    "version": "1.3.1",
     "status": "planned",
     "scope": [
-      "post-release correctness and browser-isolation fixes",
-      "artifact and vendored-Runtime consistency",
+      "post-release certification correctness and browser-isolation fixes",
+      "artifact, evidence-index and vendored-Runtime consistency",
       "no renderer ownership or gameplay feature changes"
     ]
   },
   "minor": {
-    "version": "1.3.0",
+    "version": "1.4.0",
     "status": "planned",
     "includesPatch": true,
     "scope": [
-      "all 1.2.1 maintenance fixes",
-      "physical-device calibration evidence",
-      "long-session retained-renderer certification",
-      "renderer-default decision without changing game policy"
+      "all 1.3.1 maintenance fixes",
+      "attested physical-device evidence",
+      "resumable multi-hour retained-renderer certification",
+      "cross-release evidence trend comparison"
     ]
   },
   "runtimeCompatibility": {
-    "current": "1.10.0",
-    "patch": "1.10.1",
-    "minor": "1.11.0"
+    "current": "1.11.0",
+    "patch": "1.11.1",
+    "minor": "1.12.0"
   }
 }

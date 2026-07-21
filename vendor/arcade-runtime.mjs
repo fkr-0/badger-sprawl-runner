@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT DIRECTLY.
 // Edit source/runtime/*.js.inc and run `npm run source:build`.
 
-export const ARCADE_RUNTIME_VERSION = '1.10.0';
+export const ARCADE_RUNTIME_VERSION = '1.11.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -7444,6 +7444,7 @@ export const ARCADE_RUNTIME_CAPABILITIES = Object.freeze([
   'assets',
   'audio',
   'browser-performance-sampling',
+  'certification-evidence',
   'collision',
   'deterministic-replay',
   'entity-world',
@@ -8211,3 +8212,324 @@ export async function runHeadlessScenario(options = {}) {
 }
 
 // END ARCADE SERVICES 0.17-1.0
+export const ARCADE_CERTIFICATION_SCHEMA_VERSION = 1;
+export const ARCADE_CERTIFICATION_EVIDENCE_KINDS = Object.freeze(['lifecycle', 'visual']);
+export const ARCADE_CERTIFICATION_SOURCES = Object.freeze([
+  'local-browser',
+  'physical-device',
+  'driver-lab',
+  'imported',
+]);
+export const ARCADE_CERTIFICATION_CONTEXT_LOSS_MODES = Object.freeze([
+  'synthetic-event',
+  'webgl-lose-context',
+  'driver-reset',
+  'not-applicable',
+]);
+
+const DEFAULT_CERTIFICATION_POLICY = Object.freeze({
+  requiredConsumers: Object.freeze([
+    'hyperblast-shooter',
+    'ethic-brawl',
+    'badger-sprawl-runner',
+  ]),
+  requiredBrowsers: Object.freeze(['chromium', 'firefox']),
+  requiredPhysicalTiers: Object.freeze(['low', 'balanced', 'high']),
+  minimumLongSessionSeconds: 7200,
+  maximumUploadP95Bytes: 0,
+  requireVisualEvidence: true,
+  requireDriverResetPerConsumer: true,
+});
+
+function certificationString(value, fallback = '') {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function certificationNumber(value, fallback = null) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function certificationBoolean(value, fallback = false) {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function certificationArray(value) {
+  return Object.freeze(Array.isArray(value) ? [...value] : []);
+}
+
+function freezeCertificationRecord(record) {
+  return Object.freeze({
+    ...record,
+    browser: Object.freeze({ ...record.browser }),
+    device: Object.freeze({ ...record.device }),
+    checks: Object.freeze({ ...record.checks }),
+    session: record.session ? Object.freeze({ ...record.session }) : null,
+    visual: record.visual ? Object.freeze({ ...record.visual }) : null,
+    budget: record.budget ? Object.freeze({ ...record.budget }) : null,
+    artifacts: certificationArray(record.artifacts),
+    notes: certificationArray(record.notes),
+  });
+}
+
+export function createCertificationPolicy(overrides = {}) {
+  return Object.freeze({
+    requiredConsumers: certificationArray(
+      overrides.requiredConsumers ?? DEFAULT_CERTIFICATION_POLICY.requiredConsumers,
+    ),
+    requiredBrowsers: certificationArray(
+      overrides.requiredBrowsers ?? DEFAULT_CERTIFICATION_POLICY.requiredBrowsers,
+    ),
+    requiredPhysicalTiers: certificationArray(
+      overrides.requiredPhysicalTiers ?? DEFAULT_CERTIFICATION_POLICY.requiredPhysicalTiers,
+    ),
+    minimumLongSessionSeconds: Math.max(
+      0,
+      certificationNumber(
+        overrides.minimumLongSessionSeconds,
+        DEFAULT_CERTIFICATION_POLICY.minimumLongSessionSeconds,
+      ),
+    ),
+    maximumUploadP95Bytes: Math.max(
+      0,
+      certificationNumber(
+        overrides.maximumUploadP95Bytes,
+        DEFAULT_CERTIFICATION_POLICY.maximumUploadP95Bytes,
+      ),
+    ),
+    requireVisualEvidence: certificationBoolean(
+      overrides.requireVisualEvidence,
+      DEFAULT_CERTIFICATION_POLICY.requireVisualEvidence,
+    ),
+    requireDriverResetPerConsumer: certificationBoolean(
+      overrides.requireDriverResetPerConsumer,
+      DEFAULT_CERTIFICATION_POLICY.requireDriverResetPerConsumer,
+    ),
+  });
+}
+
+export function createCertificationEvidence(input = {}) {
+  const kind = certificationString(input.kind, 'lifecycle');
+  const project = certificationString(input.project, 'unknown-project');
+  const browserName = certificationString(input.browser?.name, 'unknown');
+  const recordedAt = certificationString(input.recordedAt, new Date(0).toISOString());
+  const session = input.session ?? null;
+  const visual = input.visual ?? null;
+  const id = certificationString(
+    input.id,
+    `${project}:${kind}:${browserName}:${recordedAt}`,
+  );
+  return freezeCertificationRecord({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    id,
+    kind,
+    project,
+    projectVersion: certificationString(input.projectVersion, 'unknown'),
+    runtimeVersion: certificationString(input.runtimeVersion, 'unknown'),
+    recordedAt,
+    source: certificationString(input.source, 'local-browser'),
+    browser: {
+      name: browserName,
+      version: certificationString(input.browser?.version, 'unknown'),
+      userAgent: certificationString(input.browser?.userAgent, 'unknown'),
+    },
+    device: {
+      tier: certificationString(input.device?.tier, 'unknown'),
+      os: certificationString(input.device?.os, 'unknown'),
+      cpu: certificationString(input.device?.cpu, 'unknown'),
+      gpu: certificationString(input.device?.gpu, 'unknown'),
+      memoryGiB: certificationNumber(input.device?.memoryGiB),
+      logicalCores: certificationNumber(input.device?.logicalCores),
+      devicePixelRatio: certificationNumber(input.device?.devicePixelRatio),
+      powerMode: certificationString(input.device?.powerMode, 'unknown'),
+      thermalState: certificationString(input.device?.thermalState, 'unknown'),
+    },
+    checks: {
+      resize: certificationBoolean(input.checks?.resize),
+      pauseResume: certificationBoolean(input.checks?.pauseResume),
+      contextLossRestore: certificationBoolean(input.checks?.contextLossRestore),
+      teardown: certificationBoolean(input.checks?.teardown),
+      visual: input.checks?.visual == null ? null : certificationBoolean(input.checks.visual),
+      errors: certificationArray(input.checks?.errors),
+    },
+    session: session
+      ? {
+          durationSeconds: Math.max(0, certificationNumber(session.durationSeconds, 0)),
+          framesBefore: Math.max(0, certificationNumber(session.framesBefore, 0)),
+          framesAfter: Math.max(0, certificationNumber(session.framesAfter, 0)),
+          heapBeforeBytes: certificationNumber(session.heapBeforeBytes),
+          heapAfterBytes: certificationNumber(session.heapAfterBytes),
+          uploadP95Bytes: Math.max(0, certificationNumber(session.uploadP95Bytes, 0)),
+          contextLossMode: certificationString(session.contextLossMode, 'synthetic-event'),
+          contextLosses: Math.max(0, certificationNumber(session.contextLosses, 0)),
+          contextRestores: Math.max(0, certificationNumber(session.contextRestores, 0)),
+        }
+      : null,
+    visual: visual
+      ? {
+          semanticPassed: certificationBoolean(visual.semanticPassed),
+          imageStatisticsPassed: certificationBoolean(visual.imageStatisticsPassed),
+          metrics: visual.metrics ?? null,
+        }
+      : null,
+    budget: input.budget ?? null,
+    artifacts: input.artifacts,
+    notes: input.notes,
+  });
+}
+
+export function validateCertificationEvidence(input, options = {}) {
+  const evidence = createCertificationEvidence(input);
+  const errors = [];
+  const allowed = (values, value, field) => {
+    if (!values.includes(value)) errors.push(`${field} must be one of ${values.join(', ')}`);
+  };
+  allowed(ARCADE_CERTIFICATION_EVIDENCE_KINDS, evidence.kind, 'kind');
+  allowed(ARCADE_CERTIFICATION_SOURCES, evidence.source, 'source');
+  if (evidence.project === 'unknown-project') errors.push('project is required');
+  if (evidence.projectVersion === 'unknown') errors.push('projectVersion is required');
+  if (evidence.runtimeVersion === 'unknown') errors.push('runtimeVersion is required');
+  if (evidence.browser.name === 'unknown') errors.push('browser.name is required');
+  if (Number.isNaN(Date.parse(evidence.recordedAt))) errors.push('recordedAt must be ISO-compatible');
+  if (evidence.checks.errors.length > 0) errors.push('checks.errors must be empty');
+
+  if (evidence.kind === 'lifecycle') {
+    if (!evidence.session) errors.push('lifecycle evidence requires session');
+    if (!evidence.checks.resize) errors.push('resize check did not pass');
+    if (!evidence.checks.pauseResume) errors.push('pauseResume check did not pass');
+    if (!evidence.checks.contextLossRestore) errors.push('contextLossRestore check did not pass');
+    if (!evidence.checks.teardown) errors.push('teardown check did not pass');
+    if (evidence.session) {
+      allowed(
+        ARCADE_CERTIFICATION_CONTEXT_LOSS_MODES,
+        evidence.session.contextLossMode,
+        'session.contextLossMode',
+      );
+      if (evidence.session.framesAfter <= evidence.session.framesBefore) {
+        errors.push('session.framesAfter must be greater than framesBefore');
+      }
+      if (evidence.session.contextLosses < 1 || evidence.session.contextRestores < 1) {
+        errors.push('lifecycle evidence requires at least one context loss and restore');
+      }
+    }
+  }
+
+  if (evidence.kind === 'visual') {
+    if (!evidence.visual) errors.push('visual evidence requires visual metrics');
+    if (!evidence.checks.visual) errors.push('visual check did not pass');
+    if (!evidence.visual?.semanticPassed) errors.push('visual semantic check did not pass');
+    if (!evidence.visual?.imageStatisticsPassed) errors.push('visual image-statistics check did not pass');
+  }
+
+  const requirePhysicalMetadata = options.requirePhysicalMetadata
+    ?? (evidence.source === 'physical-device' || evidence.source === 'driver-lab');
+  if (requirePhysicalMetadata) {
+    for (const field of ['tier', 'os', 'cpu', 'gpu', 'powerMode', 'thermalState']) {
+      if (evidence.device[field] === 'unknown') errors.push(`device.${field} is required`);
+    }
+    if (!(evidence.device.memoryGiB > 0)) errors.push('device.memoryGiB is required');
+    if (!(evidence.device.logicalCores > 0)) errors.push('device.logicalCores is required');
+  }
+
+  return Object.freeze({ valid: errors.length === 0, evidence, errors: Object.freeze(errors) });
+}
+
+export function assertCertificationEvidence(input, options = {}) {
+  const result = validateCertificationEvidence(input, options);
+  if (!result.valid) throw new Error(`invalid certification evidence: ${result.errors.join('; ')}`);
+  return result.evidence;
+}
+
+function certificationRecordPasses(record, policy) {
+  const validation = validateCertificationEvidence(record);
+  if (!validation.valid) return false;
+  if (record.kind === 'lifecycle') {
+    return record.session.uploadP95Bytes <= policy.maximumUploadP95Bytes;
+  }
+  return true;
+}
+
+export function summarizeCertificationEvidence(inputs = [], policyInput = {}) {
+  const policy = createCertificationPolicy(policyInput);
+  const records = certificationArray(inputs).map((input) => createCertificationEvidence(input));
+  const invalid = records
+    .map((record) => validateCertificationEvidence(record))
+    .filter((result) => !result.valid);
+  const lifecycle = records.filter((record) => record.kind === 'lifecycle');
+  const visual = records.filter((record) => record.kind === 'visual');
+  const localLifecycleMissing = [];
+  for (const project of policy.requiredConsumers) {
+    for (const browser of policy.requiredBrowsers) {
+      const match = lifecycle.find((record) =>
+        record.project === project
+        && record.browser.name === browser
+        && record.source === 'local-browser'
+        && certificationRecordPasses(record, policy));
+      if (!match) localLifecycleMissing.push(`${project}:${browser}`);
+    }
+  }
+  const visualMissing = policy.requireVisualEvidence
+    ? policy.requiredConsumers.filter((project) => !visual.some((record) =>
+        record.project === project && certificationRecordPasses(record, policy)))
+    : [];
+  const physicalTierMissing = policy.requiredPhysicalTiers.filter((tier) => !lifecycle.some((record) =>
+    record.source === 'physical-device'
+    && record.device.tier === tier
+    && record.session.durationSeconds >= policy.minimumLongSessionSeconds
+    && certificationRecordPasses(record, policy)));
+  const longSessionMissing = policy.requiredConsumers.filter((project) => !lifecycle.some((record) =>
+    record.project === project
+    && record.source === 'physical-device'
+    && record.session.durationSeconds >= policy.minimumLongSessionSeconds
+    && certificationRecordPasses(record, policy)));
+  const driverResetMissing = policy.requireDriverResetPerConsumer
+    ? policy.requiredConsumers.filter((project) => !lifecycle.some((record) =>
+        record.project === project
+        && record.session.contextLossMode === 'driver-reset'
+        && certificationRecordPasses(record, policy)))
+    : [];
+  const blockers = [];
+  if (invalid.length) blockers.push(`${invalid.length} invalid evidence record(s)`);
+  if (localLifecycleMissing.length) blockers.push(`missing local lifecycle: ${localLifecycleMissing.join(', ')}`);
+  if (visualMissing.length) blockers.push(`missing visual evidence: ${visualMissing.join(', ')}`);
+  if (physicalTierMissing.length) blockers.push(`missing physical tiers: ${physicalTierMissing.join(', ')}`);
+  if (longSessionMissing.length) blockers.push(`missing long sessions: ${longSessionMissing.join(', ')}`);
+  if (driverResetMissing.length) blockers.push(`missing driver resets: ${driverResetMissing.join(', ')}`);
+  return Object.freeze({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    evidenceCount: records.length,
+    validEvidenceCount: records.length - invalid.length,
+    localMatrixPassed: localLifecycleMissing.length === 0 && visualMissing.length === 0 && invalid.length === 0,
+    rendererDefaultEligible: blockers.length === 0,
+    blockers: Object.freeze(blockers),
+    coverage: Object.freeze({
+      localLifecycleMissing: Object.freeze(localLifecycleMissing),
+      visualMissing: Object.freeze(visualMissing),
+      physicalTierMissing: Object.freeze(physicalTierMissing),
+      longSessionMissing: Object.freeze(longSessionMissing),
+      driverResetMissing: Object.freeze(driverResetMissing),
+      contextLossModes: Object.freeze([...new Set(lifecycle.map((record) => record.session?.contextLossMode).filter(Boolean))].sort()),
+    }),
+    policy,
+  });
+}
+
+export function createCertificationEvidenceIndex(inputs = [], policyInput = {}, options = {}) {
+  const evidence = certificationArray(inputs)
+    .map((input) => assertCertificationEvidence(input))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const duplicateIds = evidence
+    .filter((record, index) => index > 0 && record.id === evidence[index - 1]?.id)
+    .map((record) => record.id);
+  if (duplicateIds.length > 0) {
+    throw new Error(`duplicate certification evidence id(s): ${[...new Set(duplicateIds)].join(', ')}`);
+  }
+  return Object.freeze({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    generatedAt: certificationString(options.generatedAt, new Date().toISOString()),
+    evidence: Object.freeze(evidence),
+    summary: summarizeCertificationEvidence(evidence, policyInput),
+  });
+}
+
+// END ARCADE CERTIFICATION 1.11

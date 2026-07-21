@@ -2,13 +2,33 @@
 
 All notable changes to Badger Sprawl Runner are documented here.
 
-## [1.3.0] - Planned
+## [1.4.0] - Planned
 
-- Add physical-device and sustained-session evidence before considering a retained-renderer default change.
+- Add attested physical-device evidence and resumable multi-hour retained-renderer certification.
 
-## [1.2.1] - Unreleased
+## [1.3.1] - Unreleased
 
 - No changes yet.
+
+## [1.3.0] - 2026-07-21
+
+### Added
+
+- Machine-readable lifecycle and visual certification evidence with browser, GPU, CPU, memory, device-pixel-ratio, power-mode and thermal-state metadata.
+- Automatic evidence output for Chromium and Firefox lifecycle runs and Chromium Canvas/native visual-parity runs.
+- Actual `WEBGL_lose_context` loss and restoration where available, with a separately recorded synthetic fallback.
+- Long-session evidence fields for frame progression, heap observations, upload p95 and context-loss counters.
+
+### Changed
+
+- Migrated the vendored Arcade Runtime to 1.11.0 and its public certification-evidence contract.
+- Browser certification now contributes to a validated cross-game evidence index instead of remaining terminal-only output.
+- Retained-renderer default eligibility remains blocked until physical tiers, two-hour sessions and real driver-reset evidence are attached.
+
+### Fixed
+
+- Certification records preserve the exact context-loss mode, preventing synthetic events from being mistaken for extension or driver recovery.
+- Aggregate browser certification uses isolated ports so stale worktree servers cannot provide false evidence.
 
 ## [1.2.0] - 2026-07-21
 

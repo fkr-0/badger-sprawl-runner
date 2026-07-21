@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import {
+	captureCertificationEnvironment,
+	writeCertificationEvidence,
+} from './certification-evidence';
 
 interface HarnessWindow extends Window {
 	__badger: BadgerTestHarness;
@@ -85,11 +89,16 @@ async function enterStage(page: Page, mode: 'canvas' | 'bridge') {
 		enemies: (window as HarnessWindow).__badger.getEnemies(),
 	}));
 	const png = await page.locator('.game-shell').screenshot();
-	return { semantic, metrics: await metrics(page, png) };
+	const environment =
+		mode === 'bridge'
+			? await captureCertificationEnvironment(page, '#badger-pixi-bridge')
+			: null;
+	return { semantic, metrics: await metrics(page, png), environment };
 }
 
 test('Canvas and retained Pixi runner compositions preserve semantic and visual structure', async ({
 	browser,
+	browserName,
 }) => {
 	const baseURL = String(test.info().project.use.baseURL ?? 'http://127.0.0.1:5173');
 	const capture = async (mode: 'canvas' | 'bridge') => {
@@ -118,5 +127,14 @@ test('Canvas and retained Pixi runner compositions preserve semantic and visual 
 	expect(bridge.metrics.edgeRatio).toBeGreaterThan(0.008);
 	expect(Math.abs(bridge.metrics.meanLuma - canvas.metrics.meanLuma)).toBeLessThan(0.3);
 	expect(Math.abs(bridge.metrics.chromaRatio - canvas.metrics.chromaRatio)).toBeLessThan(0.4);
+	if (!bridge.environment) throw new Error('Missing native renderer certification environment');
+	await writeCertificationEvidence('visual', browserName, bridge.environment, {
+		checks: { visual: true, errors: [] },
+		visual: {
+			semanticPassed: true,
+			imageStatisticsPassed: true,
+			metrics: { canvas: canvas.metrics, bridge: bridge.metrics },
+		},
+	});
 	console.info('Badger visual parity metrics', { canvas: canvas.metrics, bridge: bridge.metrics });
 });
