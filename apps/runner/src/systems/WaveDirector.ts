@@ -2,7 +2,14 @@
  * WaveDirector - manages horde mode wave spawning and progression
  */
 
-import { type EntityRegistry, createEntityRegistry } from '../../../../vendor/arcade-runtime.mjs';
+import {
+	advanceEncounter,
+	type ArcadeEncounterState,
+	type EntityRegistry,
+	createEncounterState,
+	createEntityRegistry,
+	inspectEncounterState,
+} from '../../../../vendor/arcade-runtime.mjs';
 import {
 	createEnemy,
 	getEnemyCost,
@@ -11,6 +18,7 @@ import {
 } from '../actors/EnemyFactory';
 import type { EnemyEntity } from './EnemySystem';
 import type { EnemySystem } from './EnemySystem';
+import { BADGER_HORDE_ENCOUNTER_PLAN } from '../game/RuntimeStageComposition';
 
 export interface WaveConfig {
 	waveNumber: number;
@@ -41,6 +49,7 @@ export class WaveDirector {
 	private spawnTimer = 0;
 	private waveTimer = 0;
 	private arenaWidth = 1600;
+	private encounterState: ArcadeEncounterState = createEncounterState(BADGER_HORDE_ENCOUNTER_PLAN);
 
 	// Wave budgets increase with difficulty
 	private readonly waveBudgets = [5, 8, 12, 15, 20, 25, 30, 35, 40, 50];
@@ -48,8 +57,14 @@ export class WaveDirector {
 	constructor(private enemySystem: EnemySystem) {}
 
 	startWave(waveNumber: number): void {
-		this.waveNumber = waveNumber;
+		this.waveNumber = Math.max(1, Math.min(BADGER_HORDE_ENCOUNTER_PLAN.encounters.length, waveNumber));
 		this.waveActive = true;
+		this.encounterState = createEncounterState(BADGER_HORDE_ENCOUNTER_PLAN, {
+			index: this.waveNumber - 1,
+			completedEncounterIds: BADGER_HORDE_ENCOUNTER_PLAN.encounters
+				.slice(0, this.waveNumber - 1)
+				.map((encounter) => encounter.id),
+		});
 		this.spawnRegistry.reset();
 		this.enemyRegistry.reset();
 		this.spawnSequence = 0;
@@ -104,11 +119,16 @@ export class WaveDirector {
 		return {
 			spawnQueue: this.spawnRegistry.snapshot(),
 			enemies: this.enemyRegistry.snapshot(),
+			encounterState: this.encounterState,
+			encounter: inspectEncounterState(BADGER_HORDE_ENCOUNTER_PLAN, this.encounterState),
 		};
 	}
 
 	getWaveProgress(): { current: number; total: number } {
-		return { current: this.waveNumber, total: 10 };
+		return {
+			current: this.waveNumber,
+			total: inspectEncounterState(BADGER_HORDE_ENCOUNTER_PLAN, this.encounterState).total,
+		};
 	}
 
 	step(dt: number, _playerX: number): void {
@@ -143,6 +163,7 @@ export class WaveDirector {
 		// Check wave completion
 		if (this.spawnRegistry.values().length === 0 && this.enemyRegistry.values().length === 0) {
 			this.waveActive = false;
+			this.encounterState = advanceEncounter(BADGER_HORDE_ENCOUNTER_PLAN, this.encounterState).state;
 			console.log(`Wave ${this.waveNumber} complete!`);
 		}
 	}
@@ -155,10 +176,11 @@ export class WaveDirector {
 		this.spawnSequence = 0;
 		this.spawnTimer = 0;
 		this.waveTimer = 0;
+		this.encounterState = createEncounterState(BADGER_HORDE_ENCOUNTER_PLAN);
 		this.enemySystem.clearEnemies();
 	}
 
 	getTotalWaves(): number {
-		return 10;
+		return BADGER_HORDE_ENCOUNTER_PLAN.encounters.length;
 	}
 }

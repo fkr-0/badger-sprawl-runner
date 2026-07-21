@@ -53,6 +53,21 @@ describe('buildStoryProgressSummary', () => {
 		});
 		expect(summary.ctaLabel).toBe('Campaign Complete');
 		expect(summary.finalBroadcastDoctrine).toBe('Publish Tools');
+		expect(summary.completedStages).toBe(8);
+		expect(summary.currentStageName).toBe('Final Broadcast');
+	});
+
+	it('orders and filters completed stages through the runtime graph', () => {
+		const summary = buildStoryProgressSummary({
+			...baseProgress,
+			currentStageId: 'mirror-palace',
+			completedStageIds: ['drainmarket', 'unknown-stage', 'lower-sprawl'],
+		});
+		expect(summary).toMatchObject({
+			currentStageName: 'Treason at the Mirror Banquet',
+			completedStages: 2,
+			totalStages: 8,
+		});
 	});
 
 	it('formats menu display lines', () => {

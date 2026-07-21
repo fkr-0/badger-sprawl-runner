@@ -9,8 +9,6 @@ import {
 } from '../../../../vendor/arcade-runtime.mjs';
 
 export const BADGER_ARCADE_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
-/** @deprecated Use BADGER_ARCADE_RUNTIME_VERSION. */
-export const BADGER_ARCADE_PIXI_RUNTIME_VERSION = BADGER_ARCADE_RUNTIME_VERSION;
 
 export const BADGER_PIXI_LAYERS = [
 	'backdrop',
@@ -42,21 +40,21 @@ export const BADGER_PIXI_RENDER_PLAN = defineArcadeRenderPlan(
 			name: 'stage-backdrop',
 			layer: 'backdrop',
 			legacyPass: 'stageBackdrop',
-			migration: 'canvas-bridge',
+			migration: 'native',
 			activation: 'ready',
 		},
 		{
 			name: 'parallax',
 			layer: 'world-back',
 			legacyPass: 'parallax',
-			migration: 'canvas-bridge',
+			migration: 'native',
 			activation: 'ready',
 		},
 		{
 			name: 'terrain',
 			layer: 'world',
 			legacyPass: 'terrain',
-			migration: 'canvas-bridge',
+			migration: 'native',
 			activation: 'ready',
 		},
 		{
@@ -64,7 +62,7 @@ export const BADGER_PIXI_RENDER_PLAN = defineArcadeRenderPlan(
 			layer: 'actors',
 			legacyPass: 'actors',
 			migration: 'native',
-			activation: 'planned',
+			activation: 'ready',
 			required: true,
 		},
 		{
@@ -72,27 +70,27 @@ export const BADGER_PIXI_RENDER_PLAN = defineArcadeRenderPlan(
 			layer: 'projectiles',
 			legacyPass: 'projectiles',
 			migration: 'native',
-			activation: 'planned',
+			activation: 'ready',
 		},
 		{
 			name: 'vfx',
 			layer: 'effects',
 			legacyPass: 'vfx',
 			migration: 'native',
-			activation: 'planned',
+			activation: 'ready',
 		},
 		{
 			name: 'foreground',
 			layer: 'world-front',
 			legacyPass: 'foreground',
 			migration: 'canvas-bridge',
-			activation: 'ready',
+			activation: 'planned',
 		},
 		{
 			name: 'runner-hud',
 			layer: 'hud',
 			legacyPass: 'runnerHud',
-			migration: 'canvas-bridge',
+			migration: 'native',
 			activation: 'ready',
 		},
 		{
@@ -100,12 +98,12 @@ export const BADGER_PIXI_RENDER_PLAN = defineArcadeRenderPlan(
 			layer: 'overlay',
 			legacyPass: 'sceneUi',
 			migration: 'canvas-bridge',
-			activation: 'ready',
+			activation: 'planned',
 		},
 	] as const,
 	{ layers: BADGER_PIXI_LAYERS }
 );
 
-export const BADGER_PIXI_BRIDGE_PASSES = BADGER_PIXI_RENDER_PLAN.filter(
-	(pass) => pass.migration === 'canvas-bridge' && pass.activation === 'ready'
-);
+export const BADGER_PIXI_BRIDGE_PASSES = [] as readonly (
+	(typeof BADGER_PIXI_RENDER_PLAN)[number]
+)[];

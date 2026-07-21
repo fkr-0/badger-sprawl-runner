@@ -1,3 +1,4 @@
+import { sampleSpriteAnimationFrame } from '@badger/sprite-contracts';
 import type { Scene, SceneContext } from '../engine/SceneManager';
 import { CAMPAIGN } from '../game/Campaign';
 import { type ChoiceOutcome, type GameFlow, createGameFlow } from '../game/GameFlow';
@@ -470,8 +471,12 @@ export class StoryFlowScene implements Scene {
 		const portrait = getDialoguePortrait(speaker);
 		const sprites = renderer.getSpriteRenderer();
 		if (!portrait.sheetId || !sprites.hasSheet(portrait.sheetId)) return;
-		const animation = sprites.getSheet(portrait.sheetId)?.sheet.animations[portrait.animation];
-		const frame = animation ? Math.floor(this.storyTime * animation.fps) % animation.frames : 0;
+		const loadedSheet = sprites.getSheet(portrait.sheetId);
+		const frame = loadedSheet?.sheet.animations[portrait.animation]
+			? sampleSpriteAnimationFrame(loadedSheet.sheet, portrait.animation, this.storyTime, {
+					mode: 'loop',
+				})
+			: 0;
 		ctx.save();
 		ctx.globalAlpha = 0.2;
 		sprites.drawFrame(
@@ -519,8 +524,10 @@ export class StoryFlowScene implements Scene {
 		const choiceFigureSheet = getStoryChoiceFigureSheet(stage.id);
 		const sprites = renderer.getSpriteRenderer();
 		if (choiceFigureSheet && sprites.hasSheet(choiceFigureSheet)) {
-			const animation = sprites.getSheet(choiceFigureSheet)?.sheet.animations.idle;
-			const frame = animation ? Math.floor(this.storyTime * animation.fps) % animation.frames : 0;
+			const loadedSheet = sprites.getSheet(choiceFigureSheet);
+			const frame = loadedSheet?.sheet.animations.idle
+				? sampleSpriteAnimationFrame(loadedSheet.sheet, 'idle', this.storyTime, { mode: 'loop' })
+				: 0;
 			ctx.save();
 			ctx.globalAlpha = 0.18;
 			sprites.drawFrame(

@@ -209,21 +209,70 @@ try {
 	bridgePage.on('response', (response) => {
 		if (response.status() >= 400) bridgeFailures.push(`${response.status()} ${response.url()}`);
 	});
-	await bridgePage.goto(`http://127.0.0.1:${address.port}/dist/index.html?renderer=bridge`, {
-		waitUntil: 'networkidle',
-	});
+	await bridgePage.goto(
+		`http://127.0.0.1:${address.port}/dist/index.html?renderer=bridge&debug=1`,
+		{
+			waitUntil: 'networkidle',
+		}
+	);
 	await bridgePage.waitForSelector('#badger-pixi-bridge');
 	await bridgePage.waitForFunction(() =>
 		performance.getEntriesByType('resource').some((entry) => entry.name.includes('pixi-runtime-'))
 	);
+	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'TitleScene');
+	await bridgePage.locator('#game').click();
+	await bridgePage.keyboard.press('Enter');
+	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'StoryFlowScene');
+	for (let safety = 0; safety < 8; safety += 1) {
+		const mode = await bridgePage.evaluate(() => window.__badger?.getStoryState().mode);
+		if (mode === 'stage') break;
+		await bridgePage.keyboard.press('Enter');
+		await bridgePage.waitForTimeout(35);
+	}
+	await bridgePage.keyboard.press('2');
+	await bridgePage.keyboard.press('KeyR');
+	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'StageRunScene');
+	await bridgePage.waitForFunction(
+		() => document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-hud') === 'true'
+	);
 	const bridgeState = await bridgePage.evaluate(() => ({
 		mode: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-renderer-mode'),
+		activePasses: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-arcade-active-passes'),
+		nativeHud: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-hud'),
+		nativeBackdrop: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-backdrop'),
+		nativeParallax: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-parallax'),
+		hudHealth: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-hud-health'),
+		nativeActors: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-actors'),
+		nativeTerrain: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-native-terrain'),
+		nativeProjectiles: document
+			.querySelector('#badger-pixi-bridge')
+			?.getAttribute('data-native-projectiles'),
+		hardwareTier: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-hardware-tier'),
+		hardwareBudget: document.querySelector('#badger-pixi-bridge')?.getAttribute('data-hardware-budget'),
 		pixiUrls: performance
 			.getEntriesByType('resource')
 			.map((entry) => entry.name)
 			.filter((url) => url.includes('pixi-runtime-')),
 	}));
 	assert(bridgeState.mode === 'bridge', 'Pixi bridge canvas did not initialize in bridge mode');
+	assert(
+		bridgeState.activePasses === null || bridgeState.activePasses === '',
+		'no full-frame Canvas texture pass should remain'
+	);
+	assert(bridgeState.nativeHud === 'true', 'Pixi bridge did not activate the native HUD');
+	assert(
+		bridgeState.nativeParallax === 'true',
+		'selected stage did not activate retained native world background ownership'
+	);
+	assert(bridgeState.nativeActors === 'true', 'Pixi bridge did not activate native actors');
+	assert(bridgeState.nativeTerrain === 'true', 'Pixi bridge did not activate retained native terrain');
+	assert(bridgeState.nativeProjectiles === 'true', 'Pixi bridge did not activate native projectiles');
+	assert(/^(low|balanced|high)$/.test(bridgeState.hardwareTier ?? ''), 'hardware tier telemetry is missing');
+	assert(/^(warming|pass)$/.test(bridgeState.hardwareBudget ?? ''), 'hardware budget reported failure');
+	assert(
+		/^\d+(?:\.\d+)?\/\d+(?:\.\d+)?$/.test(bridgeState.hudHealth ?? ''),
+		'native HUD health telemetry is missing'
+	);
 	assert(bridgeState.pixiUrls.length > 0, 'bridge route did not load the lazy Pixi chunk');
 	assert(
 		bridgeErrors.length === 0,

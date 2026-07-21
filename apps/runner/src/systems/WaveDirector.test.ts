@@ -17,7 +17,10 @@ describe('WaveDirector enemy integration', () => {
 		expect(director.getEnemiesRemaining()).toBeGreaterThan(0);
 
 		director.step(1, 100);
-		expect(enemySystem.getEnemies().length).toBeGreaterThan(0);
+		const spawnedEnemies = enemySystem.getEnemies();
+		expect(spawnedEnemies.length).toBeGreaterThan(0);
+		expect(spawnedEnemies.every((enemy) => Boolean(enemy.spriteSheetId))).toBe(true);
+		expect(spawnedEnemies.every((enemy) => enemy.spriteAnimation === 'patrol_or_move')).toBe(true);
 
 		director.reset();
 		expect(director.isWaveActive()).toBe(false);
@@ -65,6 +68,11 @@ describe('WaveDirector enemy integration', () => {
 			'wave-1-spawn-0',
 			'wave-1-spawn-1',
 		]);
+		expect(queued.encounter).toMatchObject({
+			currentEncounterId: 'horde-wave-1',
+			completed: 0,
+			total: 10,
+		});
 
 		director.step(1, 100);
 		const active = director.getLifecycleSnapshot();
@@ -76,7 +84,13 @@ describe('WaveDirector enemy integration', () => {
 
 		for (const enemy of enemySystem.getEnemies()) enemy.hp = 0;
 		director.step(0, 100);
-		expect(director.getLifecycleSnapshot().enemies.entities).toHaveLength(0);
+		const completed = director.getLifecycleSnapshot();
+		expect(completed.enemies.entities).toHaveLength(0);
+		expect(completed.encounter).toMatchObject({
+			currentEncounterId: 'horde-wave-2',
+			completed: 1,
+			sequence: 1,
+		});
 		expect(director.isWaveActive()).toBe(false);
 	});
 });

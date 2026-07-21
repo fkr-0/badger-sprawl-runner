@@ -68,18 +68,30 @@ export interface BadgerTestHarness {
 	routeMode: (modeId: MenuOptionId) => void;
 	getLoadedSheetIds: () => string[];
 	hasSheet: (sheetId: string) => boolean;
+	getSpriteLoadReport: () => ReturnType<
+		RunnerApp['getRenderer']
+	>['getSpriteLoadReport'] extends () => infer T
+		? T
+		: never;
 	getRendererMode: () => 'canvas' | 'bridge';
 	getRendererPerformance: () => ArcadePerformanceSummary;
+	getRendererBudget: () => ReturnType<RunnerApp['getRendererBudget']>;
+	resetRendererPerformance: () => void;
 	getBridgePerformance: () => ArcadePerformanceSummary | null;
+	getBridgeHardwareBudget: () => Readonly<Record<string, unknown>> | null;
+	getBridgeLifecycle: () => Readonly<Record<string, unknown>> | null;
+	resizeBridge: (width: number, height: number) => void;
+	startBridge: () => void;
+	pauseBridge: () => void;
+	resumeBridge: () => void;
+	simulateBridgeContextLoss: () => void;
+	simulateBridgeContextRestore: () => void;
+	destroyBridge: () => void;
 }
 
 interface RunnerWindow extends Window {
 	__app?: RunnerApp;
 	__badger?: BadgerTestHarness;
-}
-
-interface SpriteRendererWithSheetMap {
-	sheets?: Map<string, unknown>;
 }
 
 function installTestHarness(app: RunnerApp): void {
@@ -248,19 +260,28 @@ function installTestHarness(app: RunnerApp): void {
 		getLoadedSheetIds: () => {
 			const renderer = app.getRenderer?.();
 			const spriteRenderer = renderer?.getSpriteRenderer?.();
-			if (!spriteRenderer) return [];
-			// Access internal sheets map via reflection
-			const sheets = (spriteRenderer as unknown as SpriteRendererWithSheetMap).sheets;
-			return sheets ? Array.from(sheets.keys()) : [];
+			return spriteRenderer ? [...spriteRenderer.getLoadedSheetIds()] : [];
 		},
 		hasSheet: (sheetId: string) => {
 			const renderer = app.getRenderer?.();
 			const spriteRenderer = renderer?.getSpriteRenderer?.();
 			return spriteRenderer?.hasSheet(sheetId) ?? false;
 		},
+		getSpriteLoadReport: () => app.getRenderer().getSpriteLoadReport(),
 		getRendererMode: () => app.getRendererMode(),
 		getRendererPerformance: () => app.getRendererPerformance(),
+		getRendererBudget: () => app.getRendererBudget(),
+		resetRendererPerformance: () => app.resetRendererPerformance(),
 		getBridgePerformance: () => app.getBridgePerformance(),
+		getBridgeHardwareBudget: () => app.getBridgeHardwareBudget(),
+		getBridgeLifecycle: () => app.getBridgeLifecycle(),
+		resizeBridge: (width, height) => app.resizeBridge(width, height),
+		startBridge: () => app.startBridge(),
+		pauseBridge: () => app.pauseBridge(),
+		resumeBridge: () => app.resumeBridge(),
+		simulateBridgeContextLoss: () => app.simulateBridgeContextLoss(),
+		simulateBridgeContextRestore: () => app.simulateBridgeContextRestore(),
+		destroyBridge: () => app.destroyBridge(),
 	};
 	runnerWindow.__badger = h;
 }

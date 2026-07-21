@@ -7,6 +7,8 @@ export type ArcadePixiNamespace = {
   Application: typeof import('pixi.js').Application;
   Container: typeof import('pixi.js').Container;
   Assets: typeof import('pixi.js').Assets;
+  Graphics?: typeof import('pixi.js').Graphics;
+  Text?: typeof import('pixi.js').Text;
   TextureStyle?: typeof import('pixi.js').TextureStyle;
   Texture?: typeof import('pixi.js').Texture;
   Sprite?: typeof import('pixi.js').Sprite;
@@ -1294,7 +1296,7 @@ export declare function stepActionGrace(state: ArcadeActionGraceState, input?: {
 
 export type ArcadeHudGaugeState = 'empty' | 'critical' | 'low' | 'normal' | 'full';
 export type ArcadeHudGaugeSegment = Readonly<{ index: number; fill: number; active: boolean; full: boolean }>;
-export declare function resolveHudGauge(input?: {
+export interface ArcadeHudGaugeInput {
   value?: number;
   min?: number;
   minimum?: number;
@@ -1307,7 +1309,8 @@ export declare function resolveHudGauge(input?: {
   time?: number;
   pulsePeriod?: number;
   pulseAmount?: number;
-}): Readonly<{
+}
+export declare function resolveHudGauge(input?: ArcadeHudGaugeInput): Readonly<{
   value: number;
   min: number;
   max: number;
@@ -1319,6 +1322,246 @@ export declare function resolveHudGauge(input?: {
   direction: 'forward' | 'reverse';
   segments: readonly ArcadeHudGaugeSegment[];
 }>;
+
+export interface ArcadeStageIssue {
+  code: string;
+  path: string;
+  message: string;
+  referenceType?: string;
+  referenceId?: string;
+  nodeId?: string;
+  transitionId?: string;
+  targetNodeId?: string;
+}
+
+export interface ArcadeStageReferenceCatalogs {
+  actors?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+  assets?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+  spawnTables?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+  objectives?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+  services?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+  encounterPlans?: readonly unknown[] | ReadonlySet<unknown> | ReadonlyMap<unknown, unknown> | Record<string, unknown>;
+}
+
+export interface ArcadeStageTransitionDefinition {
+  id?: string;
+  to: string;
+  signal?: string;
+  on?: string;
+  priority?: number;
+  completeCurrent?: boolean;
+  metadata?: unknown;
+}
+
+export interface ArcadeStageNodeDefinition {
+  id: string;
+  kind?: string;
+  terminal?: boolean;
+  transitions?: readonly (string | ArcadeStageTransitionDefinition)[];
+  next?: string | ArcadeStageTransitionDefinition | readonly (string | ArcadeStageTransitionDefinition)[];
+  actorIds?: readonly string[];
+  actors?: readonly string[];
+  assetIds?: readonly string[];
+  assets?: readonly string[];
+  spawnTableIds?: readonly string[];
+  spawnTables?: readonly string[];
+  objectiveIds?: readonly string[];
+  objectives?: readonly string[];
+  serviceIds?: readonly string[];
+  services?: readonly string[];
+  encounterPlanIds?: readonly string[];
+  encounterPlans?: readonly string[];
+  metadata?: unknown;
+}
+
+export interface ArcadeStageGraphDefinition {
+  id: string;
+  startNodeId?: string;
+  start?: string;
+  nodes: readonly ArcadeStageNodeDefinition[];
+  metadata?: unknown;
+}
+
+export interface ArcadeStageTransition {
+  readonly id: string;
+  readonly to: string;
+  readonly signal: string;
+  readonly priority: number;
+  readonly order: number;
+  readonly completeCurrent: boolean;
+  readonly metadata?: unknown;
+}
+
+export interface ArcadeStageNode {
+  readonly id: string;
+  readonly kind: string;
+  readonly terminal: boolean;
+  readonly transitions: readonly ArcadeStageTransition[];
+  readonly actorIds: readonly string[];
+  readonly assetIds: readonly string[];
+  readonly spawnTableIds: readonly string[];
+  readonly objectiveIds: readonly string[];
+  readonly serviceIds: readonly string[];
+  readonly encounterPlanIds: readonly string[];
+  readonly metadata?: unknown;
+}
+
+export interface ArcadeStageGraph {
+  readonly id: string;
+  readonly startNodeId: string;
+  readonly nodes: readonly ArcadeStageNode[];
+  readonly metadata?: unknown;
+}
+
+export interface ArcadeStageGraphState {
+  readonly graphId: string;
+  readonly currentNodeId: string;
+  readonly completedNodeIds: readonly string[];
+  readonly visitedNodeIds: readonly string[];
+  readonly status: 'active' | 'complete';
+  readonly sequence: number;
+  readonly revision: number;
+}
+
+export declare function validateStageGraph(definition: ArcadeStageGraphDefinition, catalogs?: ArcadeStageReferenceCatalogs): Readonly<{
+  ok: boolean;
+  graph: ArcadeStageGraph | null;
+  errors: readonly ArcadeStageIssue[];
+  warnings: readonly ArcadeStageIssue[];
+}>;
+export declare function createStageGraph(definition: ArcadeStageGraphDefinition, catalogs?: ArcadeStageReferenceCatalogs): ArcadeStageGraph;
+export declare function getStageNode(graph: ArcadeStageGraph, nodeId: string): ArcadeStageNode | null;
+export declare function createStageGraphState(graph: ArcadeStageGraph, raw?: Partial<ArcadeStageGraphState>): ArcadeStageGraphState;
+export declare function getCurrentStageNode(graph: ArcadeStageGraph, state: ArcadeStageGraphState): ArcadeStageNode | null;
+export declare function advanceStageGraph(
+  graph: ArcadeStageGraph,
+  state: ArcadeStageGraphState,
+  signal?: string,
+  options?: { canTransition?: (transition: ArcadeStageTransition, node: ArcadeStageNode, state: ArcadeStageGraphState, graph: ArcadeStageGraph) => boolean },
+): Readonly<{ state: ArcadeStageGraphState; changed: boolean; transition: ArcadeStageTransition | null; events: readonly Readonly<Record<string, unknown>>[] }>;
+export declare function inspectStageGraphState(graph: ArcadeStageGraph, state: ArcadeStageGraphState): Readonly<{
+  graphId: string;
+  currentNodeId: string;
+  currentKind: string | null;
+  status: 'active' | 'complete';
+  completed: number;
+  total: number;
+  ratio: number;
+  availableSignals: readonly string[];
+  sequence: number;
+  revision: number;
+}>;
+
+export interface ArcadeEncounterDefinition {
+  id: string;
+  kind?: string;
+  delay?: number;
+  actorIds?: readonly string[];
+  actors?: readonly string[];
+  assetIds?: readonly string[];
+  assets?: readonly string[];
+  spawnTableIds?: readonly string[];
+  spawnTables?: readonly string[];
+  objectiveIds?: readonly string[];
+  objectives?: readonly string[];
+  serviceIds?: readonly string[];
+  services?: readonly string[];
+  metadata?: unknown;
+}
+
+export interface ArcadeEncounterPlanDefinition {
+  id: string;
+  encounters?: readonly ArcadeEncounterDefinition[];
+  steps?: readonly ArcadeEncounterDefinition[];
+  metadata?: unknown;
+}
+
+export interface ArcadeEncounter {
+  readonly id: string;
+  readonly kind: string;
+  readonly delay: number;
+  readonly actorIds: readonly string[];
+  readonly assetIds: readonly string[];
+  readonly spawnTableIds: readonly string[];
+  readonly objectiveIds: readonly string[];
+  readonly serviceIds: readonly string[];
+  readonly encounterPlanIds: readonly string[];
+  readonly metadata?: unknown;
+}
+
+export interface ArcadeEncounterPlan {
+  readonly id: string;
+  readonly encounters: readonly ArcadeEncounter[];
+  readonly metadata?: unknown;
+}
+
+export interface ArcadeEncounterState {
+  readonly planId: string;
+  readonly index: number;
+  readonly currentEncounterId: string | null;
+  readonly completedEncounterIds: readonly string[];
+  readonly status: 'active' | 'complete';
+  readonly sequence: number;
+  readonly revision: number;
+}
+
+export declare function validateEncounterPlan(definition: ArcadeEncounterPlanDefinition, catalogs?: ArcadeStageReferenceCatalogs): Readonly<{
+  ok: boolean;
+  plan: ArcadeEncounterPlan | null;
+  errors: readonly ArcadeStageIssue[];
+}>;
+export declare function createEncounterPlan(definition: ArcadeEncounterPlanDefinition, catalogs?: ArcadeStageReferenceCatalogs): ArcadeEncounterPlan;
+export declare function createEncounterState(plan: ArcadeEncounterPlan, raw?: Partial<ArcadeEncounterState>): ArcadeEncounterState;
+export declare function getCurrentEncounter(plan: ArcadeEncounterPlan, state: ArcadeEncounterState): ArcadeEncounter | null;
+export declare function advanceEncounter(
+  plan: ArcadeEncounterPlan,
+  state: ArcadeEncounterState,
+  options?: { canAdvance?: (encounter: ArcadeEncounter, state: ArcadeEncounterState, plan: ArcadeEncounterPlan) => boolean },
+): Readonly<{ state: ArcadeEncounterState; changed: boolean; encounter: ArcadeEncounter | null; events: readonly Readonly<Record<string, unknown>>[] }>;
+export declare function inspectEncounterState(plan: ArcadeEncounterPlan, state: ArcadeEncounterState): Readonly<{
+  planId: string;
+  currentEncounterId: string | null;
+  status: 'active' | 'complete';
+  completed: number;
+  total: number;
+  ratio: number;
+  sequence: number;
+  revision: number;
+}>;
+
+export interface ArcadeStageServiceScope {
+  name: string;
+  track<T>(resource: T, disposer?: (resource: T) => unknown | Promise<unknown>): T;
+  release(): Promise<boolean>;
+  snapshot(): Readonly<Record<string, unknown>>;
+}
+
+export interface ArcadeStageServiceInstallation<T = unknown> {
+  resource: T;
+  dispose?: (resource: T) => unknown | Promise<unknown>;
+}
+
+export type ArcadeStageServiceInstaller = (context: Readonly<{
+  graph: ArcadeStageGraph;
+  node: ArcadeStageNode;
+  scope: ArcadeStageServiceScope;
+  serviceId: string;
+  options: Record<string, unknown>;
+}>) => unknown | ArcadeStageServiceInstallation | Promise<unknown | ArcadeStageServiceInstallation>;
+
+export declare function installStageServices(
+  graph: ArcadeStageGraph,
+  stateOrNodeId: ArcadeStageGraphState | string,
+  installers: Record<string, ArcadeStageServiceInstaller> | ReadonlyMap<string, ArcadeStageServiceInstaller>,
+  options?: { scope?: ArcadeStageServiceScope; scopeName?: string; [key: string]: unknown },
+): Promise<Readonly<{
+  graphId: string;
+  nodeId: string;
+  scope: ArcadeStageServiceScope;
+  services: Readonly<Record<string, unknown>>;
+  get(serviceId: string): unknown | null;
+  release(): Promise<boolean>;
+}>>;
 
 export type HitContactRecord = Readonly<{ hits: number; lastHitTick: number }>;
 export type HitContactPolicy = Readonly<{ maxHitsPerTarget?: number; rehitDelayTicks?: number; rehitDelayFrames?: number }>;
@@ -2008,6 +2251,83 @@ export declare function verifyRunSummary(summary: Record<string, SnapshotValue> 
 
 // BEGIN ARCADE SERVICES 0.17-1.0 TYPES
 
+export interface ArcadePixiFramePoolSnapshot {
+  readonly frame: number;
+  readonly frameOpen: boolean;
+  readonly active: number;
+  readonly capacity: number;
+  readonly maxCapacity: number;
+  readonly created: number;
+  readonly dropped: number;
+  readonly frameDropped: number;
+  readonly peakActive: number;
+  readonly destroyed: boolean;
+}
+
+export declare function createPixiFramePool<
+  Sprite extends { visible: boolean; renderable: boolean; removeFromParent?(): void; destroy?(): void },
+  Payload = unknown,
+>(options: {
+  container: { addChild(sprite: Sprite): unknown };
+  maxCapacity?: number;
+  capacity?: number;
+  initialCapacity?: number;
+  createSprite(index: number): Sprite;
+  activate?(sprite: Sprite, payload: Payload, context: Readonly<{ index: number; frame: number; reused: boolean }>): void;
+  deactivate?(sprite: Sprite, context: Readonly<{ index: number; frame: number; reason: 'create' | 'frame-end' | 'clear' }>): void;
+  destroySprite?(sprite: Sprite, context: Readonly<{ index: number; frame: number }>): void;
+}): {
+  beginFrame(): ArcadePixiFramePoolSnapshot;
+  acquire(payload: Payload): Sprite | null;
+  endFrame(): ArcadePixiFramePoolSnapshot;
+  clear(): number;
+  values(): Sprite[];
+  activeValues(): Sprite[];
+  snapshot(): ArcadePixiFramePoolSnapshot;
+  destroy(): boolean;
+};
+
+export interface ArcadePixiHudGaugeLayout {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  gap?: number;
+}
+
+export interface ArcadePixiHudGaugeStyle {
+  background?: number | string;
+  fill?: number | string;
+  warning?: number | string;
+  border?: number | string;
+  borderWidth?: number;
+  warningAlpha?: number;
+  backgroundAlpha?: number;
+  fillAlpha?: number;
+}
+
+export declare function createPixiHudGauge(options: ArcadeHudGaugeInput & ArcadePixiHudGaugeLayout & {
+  PIXI: {
+    Container: typeof import('pixi.js').Container;
+    Graphics: typeof import('pixi.js').Graphics;
+  };
+  container: { addChild(value: unknown): unknown };
+  label?: string;
+  layout?: ArcadePixiHudGaugeLayout;
+  style?: ArcadePixiHudGaugeStyle;
+}): Readonly<{
+  root: import('pixi.js').Container;
+  graphics: import('pixi.js').Graphics;
+  update(input?: ArcadeHudGaugeInput, options?: {
+    layout?: ArcadePixiHudGaugeLayout;
+    style?: ArcadePixiHudGaugeStyle;
+    visible?: boolean;
+  }): ReturnType<typeof resolveHudGauge>;
+  setLayout(layout: ArcadePixiHudGaugeLayout): ReturnType<typeof resolveHudGauge>;
+  snapshot(): Readonly<Record<string, unknown>>;
+  destroy(): boolean;
+}>;
+
 export declare const ARCADE_RUNTIME_API_LEVEL: number;
 export declare const ARCADE_RUNTIME_CAPABILITIES: readonly string[];
 export declare function getArcadeRuntimeCapabilities(): Readonly<{ package: string; version: string; apiLevel: number; capabilities: readonly string[] }>;
@@ -2021,6 +2341,69 @@ export declare function createInputDelayBuffer<Input>(options?: { delayFrames?: 
   resolve(simulationFrame: number, playerIds: readonly string[], fallback?: Input | ((playerId: string, inputFrame: number) => Input)): Readonly<{ simulationFrame: number; sourceFrame: number; inputs: Readonly<Record<string, Input>>; missing: readonly string[]; predicted: boolean }>;
   prune(beforeInputFrame: number): number;
   snapshot(): Readonly<{ delayFrames: number; writes: number; frames: readonly number[] }>;
+};
+
+export type ArcadeHardwareTier = 'low' | 'balanced' | 'high';
+export interface ArcadeHardwareBudgetProfile {
+  frameMeanMs?: number;
+  frameP95Ms?: number;
+  frameMaxMs?: number;
+  allocationBytesPerFrame?: number;
+  uploadBytesPerFrame?: number;
+  bundleBytes?: number;
+  heapBytes?: number;
+  minimumSamples?: number;
+}
+export interface ArcadeHardwareSample {
+  frameMs?: number;
+  allocationBytes?: number;
+  uploadBytes?: number;
+  heapBytes?: number;
+}
+export declare const ARCADE_HARDWARE_TIERS: readonly ArcadeHardwareTier[];
+export declare const DEFAULT_ARCADE_HARDWARE_BUDGETS: Readonly<Record<ArcadeHardwareTier, Readonly<ArcadeHardwareBudgetProfile>>>;
+export declare function detectArcadeHardwareTier(input?: {
+  deviceMemory?: number;
+  deviceMemoryGb?: number;
+  hardwareConcurrency?: number;
+  devicePixelRatio?: number;
+  softwareRenderer?: boolean;
+  renderer?: string;
+}): ArcadeHardwareTier;
+export declare function createHardwareBudgetMonitor(options?: {
+  tier?: ArcadeHardwareTier;
+  device?: Parameters<typeof detectArcadeHardwareTier>[0];
+  profiles?: Partial<Record<ArcadeHardwareTier, ArcadeHardwareBudgetProfile>>;
+  sampleSize?: number;
+  bundleBytes?: number;
+}): {
+  readonly tier: ArcadeHardwareTier;
+  readonly budget: Readonly<ArcadeHardwareBudgetProfile>;
+  record(sample?: ArcadeHardwareSample): Readonly<Required<ArcadeHardwareSample>>;
+  setBundleBytes(value: number): number;
+  evaluate(): Readonly<Record<string, unknown>>;
+  snapshot(): Readonly<Record<string, unknown>>;
+  reset(): number;
+};
+
+export interface ArcadeBrowserPerformanceSample {
+  bundleBytes: number;
+  heapBytes: number;
+  samples: number;
+  refreshes: number;
+}
+export declare function createBrowserPerformanceSampler(options?: {
+  refreshEverySamples?: number;
+  performance?: {
+    getEntriesByType?: (type: string) => readonly { name?: string; encodedBodySize?: number }[];
+    memory?: { usedJSHeapSize?: number };
+  };
+  resourcePattern?: RegExp;
+}): {
+  sample(options?: { force?: boolean }): Readonly<ArcadeBrowserPerformanceSample>;
+  invalidate(): true;
+  snapshot(): Readonly<ArcadeBrowserPerformanceSample & { refreshEverySamples: number; invalidated: boolean }>;
+  reset(): number;
 };
 
 export type ArcadeStateHistoryEntry<State> = Readonly<{ frame: number; state: State; hash: string; metadata: SnapshotValue }>;

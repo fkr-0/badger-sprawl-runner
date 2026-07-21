@@ -17,6 +17,7 @@ export const ENEMY_DEFS: Record<string, Omit<EnemyDef, 'id'>> = {
 		attackRange: 200,
 		attackCd: 1.2,
 		ai: { kind: 'patrol', patrolSpeed: 30, turnAtEdge: true },
+		spriteSheetId: 'enemy_turnstile_mite',
 	},
 
 	scooter_bailiff: {
@@ -28,6 +29,7 @@ export const ENEMY_DEFS: Record<string, Omit<EnemyDef, 'id'>> = {
 		attackRange: 180,
 		attackCd: 1.0,
 		ai: { kind: 'chase', chaseSpeed: 80 },
+		spriteSheetId: 'enemy_rent_cop_piker',
 	},
 
 	cable_crawler: {
@@ -39,6 +41,7 @@ export const ENEMY_DEFS: Record<string, Omit<EnemyDef, 'id'>> = {
 		attackRange: 150,
 		attackCd: 0.8,
 		ai: { kind: 'patrol', patrolSpeed: 40 },
+		spriteSheetId: 'enemy_error_mite',
 	},
 
 	drone_wasp: {
@@ -50,6 +53,7 @@ export const ENEMY_DEFS: Record<string, Omit<EnemyDef, 'id'>> = {
 		attackRange: 250,
 		attackCd: 1.5,
 		ai: { kind: 'sine', centerY: 0, amplitude: 32, frequency: 1.5 },
+		spriteSheetId: 'enemy_signal_jammer_bat',
 	},
 
 	bass_turret_stub: {
@@ -61,6 +65,7 @@ export const ENEMY_DEFS: Record<string, Omit<EnemyDef, 'id'>> = {
 		attackRange: 300,
 		attackCd: 2.0,
 		ai: { kind: 'turret' },
+		spriteSheetId: 'enemy_feedback_guard',
 	},
 
 	// More enemies would be defined here

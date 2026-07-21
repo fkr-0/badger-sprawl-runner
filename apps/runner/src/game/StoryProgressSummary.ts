@@ -1,5 +1,6 @@
 import { CAMPAIGN } from './Campaign';
 import type { StoryProgress } from './GameFlow';
+import { inspectBadgerCampaignProgress } from './RuntimeStageComposition';
 
 export type StoryCtaLabel = 'New Story' | 'Continue' | 'Campaign Complete';
 
@@ -22,12 +23,13 @@ const FINAL_DOCTRINE_LABELS: Record<string, string> = {
 };
 
 export function buildStoryProgressSummary(progress: StoryProgress): StoryProgressSummary {
+	const runtimeProgress = inspectBadgerCampaignProgress(progress);
 	const currentStage =
-		CAMPAIGN.stages.find((stage) => stage.id === progress.currentStageId) ?? CAMPAIGN.stages[0];
+		CAMPAIGN.stages.find((stage) => stage.id === runtimeProgress.currentNodeId) ?? CAMPAIGN.stages[0];
 	const totalChapters = new Set(CAMPAIGN.stages.map((stage) => stage.chapter)).size;
 	const completedChapters = progress.completedChapterIds.length;
-	const completedStages = progress.completedStageIds.length;
-	const campaignComplete = progress.campaignComplete;
+	const completedStages = runtimeProgress.completed;
+	const campaignComplete = runtimeProgress.status === 'complete';
 	const firstStageId = CAMPAIGN.stages[0]?.id ?? 'lower-sprawl';
 	const hasStartedStory = completedStages > 0 || progress.currentStageId !== firstStageId;
 	return {
@@ -39,7 +41,7 @@ export function buildStoryProgressSummary(progress: StoryProgress): StoryProgres
 		completedChapters,
 		totalChapters,
 		completedStages,
-		totalStages: CAMPAIGN.stages.length,
+		totalStages: runtimeProgress.total,
 		campaignComplete,
 		finalBroadcastDoctrine: progress.finalBroadcastDoctrine
 			? FINAL_DOCTRINE_LABELS[progress.finalBroadcastDoctrine] ?? progress.finalBroadcastDoctrine

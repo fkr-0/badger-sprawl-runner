@@ -157,15 +157,31 @@ python3 -m http.server 8042
 # then open http://localhost:8042; the root entry redirects to apps/runner/dist/index.html
 ```
 
-The production page remains Canvas2D-only. Development/test tools are omitted by default; append `?debug=1` to explicitly enable the F3 overlays.
+The default production page remains Canvas2D-first. Development/test tools are omitted by default; append `?debug=1` to explicitly enable the F3 overlays, or `?renderer=bridge` to exercise the opt-in Pixi migration path.
 
 ### Shared Pixi runtime migration
 
-The shared `@arcade/pixi-runtime` v0.5 module is vendored with declarations and checksum metadata. `apps/runner/src/renderer/ArcadeRuntimeContract.ts` defines an executable ordered render plan rather than only a pass-name map. Stage backdrop, parallax, terrain, foreground, HUD, and scene UI are ready for the runtime's Canvas-texture bridge; actors, projectiles, and VFX remain the native-Pixi conversion boundary. Simulation, collision, stage objectives, sprite contracts, and the existing fixed-step game loop remain unchanged.
+The shared `@arcade/runtime` 1.9.0 module is vendored with declarations and checksum metadata. `apps/runner/src/renderer/ArcadeRuntimeContract.ts` defines an executable ordered render plan rather than only a pass-name map. Stage backdrop, parallax, player/enemy actors, railgun projectiles, combat VFX, and runner vitals use native Pixi ownership. Terrain remains the only active full-frame Canvas texture bridge. Simulation, collision, stage objectives, sprite contracts, movement/combat policy, VFX emission/update policy, and the existing fixed-step game loop remain unchanged.
 
-PixiJS 8.19 is now an explicit runner dependency. `?renderer=bridge` activates Pixi-owned stage-backdrop, parallax, and terrain texture passes while actors, projectiles, VFX, world interactions, and UI continue through the authoritative Canvas2D overlay. The default remains Canvas-only until the exposed mean and p95 stage-render measurements are compared in browser acceptance.
+PixiJS 8.19 is an explicit runner dependency. `?renderer=bridge` activates retained backdrop and parallax textures, bounded actor and VFX pools, native railgun presentation, and the native vitals HUD. Runtime sprite-frame addressing supplies exact atlas rectangles while Badger retains animation choice, parallax factors, boss scaling, combat tells, and all gameplay policy. World interactions, terrain tiles, item/gear icons, objectives, contextual panels, and specialist authored overlays continue through Canvas where they have not yet earned a native parity contract.
 
-The initial Chromium benchmark deliberately keeps Canvas as the default: uploading three full-size Canvas textures produces materially higher p95 frame cost than direct Canvas rendering. Bridge mode is therefore a migration and profiling surface, not a production-default recommendation yet.
+The current Chromium benchmark still keeps Canvas as the default, but the earlier large bridge penalty is gone. Repeated frozen production-bundle runs passed both renderer budgets and ranged from `7.1 ms` Canvas / `12.4 ms` bridge p95 to `16.9 ms` Canvas / `14.4 ms` bridge p95 across 90 post-warmup samples. The bridge also reports selected hardware tier, frame/allocation/upload/bundle/heap metrics, actor/VFX overflow, and retained-texture counts. The run-to-run reversal reinforces that these are regression guardrails rather than physical-device certification.
+
+The next runtime-integration order is:
+
+1. Replace the remaining terrain upload with retained native tile and decoration objects while preserving collision-independent set dressing.
+2. Add golden visual parity for player/enemy frame placement, mirroring, hit flashes, telegraphs, squash/stretch, and boss scaling across both renderers.
+3. Exercise resize, suspend/resume, WebGL context loss, teardown, and long-session heap/upload behavior in Chromium and Firefox.
+4. Calibrate the hardware profiles on representative desktop and lower-power physical devices before considering bridge mode as the default.
+
+For stable local or worktree benchmarking, serve the frozen production bundle rather than a hot-reloading Vite process:
+
+```sh
+pnpm build
+python3 -m http.server 5182 --bind 127.0.0.1 --directory apps/runner/dist
+BADGER_E2E_BASE_URL=http://127.0.0.1:5182 \
+  pnpm exec playwright test tests/e2e/renderer-bridge-performance.spec.ts --project=chromium
+```
 
 ## Controls
 
@@ -193,6 +209,16 @@ The initial Chromium benchmark deliberately keeps Canvas as the default: uploadi
 | Return to title | Escape |
 
 Late-stage consoles preserve verified work after a failed submission and grade results as `clean`, `recovered`, or `assisted`. After three failures, public assist pauses the timer and exposes incremental clues so the campaign cannot be blocked by a terminal challenge.
+
+## Sprite animation inspector
+
+The Vite runner exposes `sprite-review.html` as a live shared-runtime workbench. It preserves the deterministic contact-sheet baseline while adding lazy sheet selection, animation switching, loop/once/ping-pong playback, speed control, timeline scrubbing, frame stepping, pivot/hitbox/hurtbox overlays, frame-event logs, and exact atlas geometry diagnostics. Inspector state is shareable through the `inspect`, `animation`, `mode`, and `speed` query parameters.
+
+Runtime manifest reloads reuse decoded atlas images when their canonical sheet contracts are unchanged. Reports distinguish decoded, reused, added, removed, changed, unchanged, and explicitly forced sheets; strict failures preserve the complete previously committed cache. Update `source.revision` when replacing bytes behind an unchanged file path, or request a forced reload for that sheet.
+
+```text
+sprite-review.html?sheet=moss_badger_production&inspect=moss_badger_production&animation=run&mode=pingpong&speed=0.75
+```
 
 ## Release commands
 

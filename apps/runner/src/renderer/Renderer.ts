@@ -2,6 +2,7 @@
  * Renderer - central canvas context wrapper and render coordination
  */
 
+import { type LoadedSheet, sampleSpriteAnimationFrame } from '@badger/sprite-contracts';
 import { createArcadeCameraTransform } from '../../../../vendor/arcade-runtime.mjs';
 import type { Player } from '../actors/MossBadger';
 import type { StagePlatformArt } from '../game/StageArtRegistry';
@@ -10,10 +11,15 @@ import type { CombatEntity } from '../systems/CombatSystem';
 import type { Pickup } from '../systems/ItemSystem';
 import { DialoguePortraitRenderer } from './DialoguePortraitRenderer';
 import { ParallaxRenderer } from './ParallaxLayer';
-import { SpriteRenderer } from './SpriteRenderer';
+import type { ParallaxLayer } from './ParallaxLayer';
+import {
+	type SpriteManifestLoadOptions,
+	type SpriteManifestLoadReport,
+	SpriteRenderer,
+} from './SpriteRenderer';
 import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
-import { VFXPool } from './VFXPool';
+import { VFXPool, type VFXRenderSource } from './VFXPool';
 
 export const PLAYER_SPRITE_SHEET_ID = 'moss_badger_production';
 export const LOWER_SPRAWL_BACKDROP_SHEET_ID = 'lower_sprawl_backdrop';
@@ -30,6 +36,24 @@ const BOSS_RENDER_HEIGHT = 78;
 export type BadgerBridgePassName = 'stage-backdrop' | 'parallax' | 'terrain';
 export interface BadgerRendererBridgeSink {
 	queuePass(name: BadgerBridgePassName, draw: (ctx: CanvasRenderingContext2D) => void): void;
+	syncNativeHud?(player: Player): void;
+	syncNativeVfx?(source: VFXRenderSource, cameraX: number): void;
+	syncNativeStageParallax?(sheetId: string, sheet: LoadedSheet, cameraX: number): void;
+	syncNativeProceduralParallax?(layers: readonly ParallaxLayer[], cameraX: number): void;
+	syncNativeStageBackdrop?(sheetId: string, sheet: LoadedSheet): void;
+	syncNativePlayer?(player: Player, cameraX: number, sprites: SpriteRenderer): void;
+	syncNativeEnemies?(
+		enemies: readonly CombatEntity[],
+		cameraX: number,
+		sprites: SpriteRenderer
+	): void;
+	syncNativeProjectiles?(player: Player, cameraX: number): void;
+	syncNativeTerrain?(
+		platforms: readonly { x: number; y: number; w: number; h: number }[],
+		cameraX: number,
+		art: StagePlatformArt | undefined,
+		sprites: SpriteRenderer
+	): void;
 }
 
 export class Renderer {
@@ -56,6 +80,32 @@ export class Renderer {
 
 		// Initialize default parallax
 		this.parallaxRenderer.initializeDefaultSprawl(height);
+	}
+
+	renderProjectiles(player: Player, cameraX: number): void {
+		if (this.bridgeSink?.syncNativeProjectiles) {
+			this.bridgeSink.syncNativeProjectiles(player, cameraX);
+			return;
+		}
+		if ((player.railgunFlash ?? 0) <= 0) return;
+		const startX = player.x + (player.dir > 0 ? player.w : 0) - cameraX;
+		const endX = startX + player.dir * 560;
+		const y = player.y + 23;
+		this.ctx.save();
+		this.ctx.globalAlpha = Math.min(1, (player.railgunFlash ?? 0) / 0.08);
+		this.ctx.strokeStyle = '#eaf2ff';
+		this.ctx.lineWidth = 8;
+		this.ctx.beginPath();
+		this.ctx.moveTo(startX, y);
+		this.ctx.lineTo(endX, y);
+		this.ctx.stroke();
+		this.ctx.strokeStyle = '#67f3c4';
+		this.ctx.lineWidth = 3;
+		this.ctx.beginPath();
+		this.ctx.moveTo(startX, y);
+		this.ctx.lineTo(endX, y);
+		this.ctx.stroke();
+		this.ctx.restore();
 	}
 
 	clear(): void {
@@ -90,6 +140,10 @@ export class Renderer {
 	}
 
 	renderParallax(cameraX: number): void {
+		if (this.bridgeSink?.syncNativeProceduralParallax) {
+			this.bridgeSink.syncNativeProceduralParallax(this.parallaxRenderer.getLayers(), cameraX);
+			return;
+		}
 		if (
 			this.queueBridgePass('parallax', (ctx) =>
 				this.parallaxRenderer.render(ctx, cameraX, this.width, this.height)
@@ -100,7 +154,12 @@ export class Renderer {
 	}
 
 	renderStageBackdrop(sheetId: string): boolean {
-		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
+		const sheet = this.spriteRenderer.getSheet(sheetId);
+		if (!sheet) return false;
+		if (this.bridgeSink?.syncNativeStageBackdrop) {
+			this.bridgeSink.syncNativeStageBackdrop(sheetId, sheet);
+			return true;
+		}
 		if (this.queueBridgePass('stage-backdrop', (ctx) => this.drawStageBackdropTo(ctx, sheetId))) {
 			return true;
 		}
@@ -119,7 +178,12 @@ export class Renderer {
 	}
 
 	renderStageParallax(sheetId: string, cameraX: number): boolean {
-		if (!this.spriteRenderer.hasSheet(sheetId)) return false;
+		const sheet = this.spriteRenderer.getSheet(sheetId);
+		if (!sheet) return false;
+		if (this.bridgeSink?.syncNativeStageParallax) {
+			this.bridgeSink.syncNativeStageParallax(sheetId, sheet, cameraX);
+			return true;
+		}
 		if (this.queueBridgePass('parallax', (ctx) => this.drawStageParallaxTo(ctx, sheetId, cameraX)))
 			return true;
 		this.drawStageParallaxTo(this.ctx, sheetId, cameraX);
@@ -167,6 +231,10 @@ export class Renderer {
 		cameraX: number,
 		art?: StagePlatformArt
 	): void {
+		if (this.bridgeSink?.syncNativeTerrain) {
+			this.bridgeSink.syncNativeTerrain(platforms, cameraX, art, this.spriteRenderer);
+			return;
+		}
 		if (
 			this.queueBridgePass('terrain', (ctx) => this.drawPlatformsTo(ctx, platforms, cameraX, art))
 		)
@@ -193,7 +261,7 @@ export class Renderer {
 		const animationFrame = (animationName: string): number => {
 			const animation = tileSheet?.animations[animationName];
 			if (!animation || animation.frames <= 1) return 0;
-			return Math.floor(now * animation.fps) % animation.frames;
+			return sampleSpriteAnimationFrame(tileSheet, animationName, now, { mode: 'loop' });
 		};
 
 		for (const [platformIndex, p] of platforms.entries()) {
@@ -263,9 +331,11 @@ export class Renderer {
 		const sheetId = enemy.spriteSheetId;
 		if (!sheetId || !this.spriteRenderer.hasSheet(sheetId)) return false;
 		const animationName = enemy.hp <= 0 ? 'death' : (enemy.spriteAnimation ?? 'idle');
-		const animation = this.spriteRenderer.getSheet(sheetId)?.sheet.animations[animationName];
-		const frame = animation
-			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
+		const loadedSheet = this.spriteRenderer.getSheet(sheetId);
+		const frame = loadedSheet?.sheet.animations[animationName]
+			? sampleSpriteAnimationFrame(loadedSheet.sheet, animationName, performance.now() / 1000, {
+					mode: 'loop',
+				})
 			: 0;
 		this.ctx.save();
 		if ((enemy.flashTimer ?? 0) > 0) {
@@ -275,9 +345,7 @@ export class Renderer {
 		if (enemy.invuln > 0 && Math.floor(performance.now() / 70) % 2 === 0) {
 			this.ctx.globalAlpha = 0.46;
 		}
-		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(sheetId)?.sheet.frameSize ?? [
-			48, 48,
-		];
+		const [frameWidth, frameHeight] = loadedSheet?.sheet.frameSize ?? [48, 48];
 		const spriteX = x + enemy.w / 2 - frameWidth / 2;
 		const spriteY = enemy.y + enemy.h - frameHeight;
 		this.spriteRenderer.drawFrame(sheetId, animationName, frame, spriteX, spriteY, enemy.dir > 0);
@@ -290,13 +358,13 @@ export class Renderer {
 		const sheetId = enemy.bossSpriteSheetId;
 		if (!sheetId) return;
 		const animationName = enemy.bossAnimation ?? 'idle';
-		const animation = this.spriteRenderer.getSheet(sheetId)?.sheet.animations[animationName];
-		const frame = animation
-			? Math.floor((performance.now() / 1000) * animation.fps) % animation.frames
+		const loadedSheet = this.spriteRenderer.getSheet(sheetId);
+		const frame = loadedSheet?.sheet.animations[animationName]
+			? sampleSpriteAnimationFrame(loadedSheet.sheet, animationName, performance.now() / 1000, {
+					mode: 'loop',
+				})
 			: 0;
-		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(sheetId)?.sheet.frameSize ?? [
-			96, 96,
-		];
+		const [frameWidth, frameHeight] = loadedSheet?.sheet.frameSize ?? [96, 96];
 		const renderScale = Math.min(1, BOSS_RENDER_HEIGHT / frameHeight);
 		const spriteX = x + enemy.w / 2 - frameWidth / 2;
 		const spriteY = enemy.y + enemy.h - frameHeight;
@@ -345,6 +413,10 @@ export class Renderer {
 		},
 		cameraX: number
 	): void {
+		if (this.bridgeSink?.syncNativePlayer) {
+			this.bridgeSink.syncNativePlayer(player, cameraX, this.spriteRenderer);
+			return;
+		}
 		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet
 			.frameSize ?? [48, 48];
 		const x = player.x - cameraX + player.w / 2 - frameWidth / 2;
@@ -393,9 +465,18 @@ export class Renderer {
 	}
 
 	renderEnemies(enemies: CombatEntity[], cameraX: number): void {
+		const syncNativeEnemies = this.bridgeSink?.syncNativeEnemies;
+		const nativeActors = typeof syncNativeEnemies === 'function';
+		if (syncNativeEnemies) {
+			syncNativeEnemies(enemies, cameraX, this.spriteRenderer);
+		}
 		for (const enemy of enemies) {
 			const x = enemy.x - cameraX;
-			if (enemy.bossSpriteSheetId && this.spriteRenderer.hasSheet(enemy.bossSpriteSheetId)) {
+			if (
+				!nativeActors &&
+				enemy.bossSpriteSheetId &&
+				this.spriteRenderer.hasSheet(enemy.bossSpriteSheetId)
+			) {
 				this.renderBoss(enemy, x);
 				continue;
 			}
@@ -417,11 +498,17 @@ export class Renderer {
 			}
 
 			if (enemy.stun > 0) {
-				this.ctx.fillStyle = '#ffb35e';
-				this.ctx.fillRect(x - 2, enemy.y - 2, enemy.w + 4, enemy.h + 4);
+				if (nativeActors) {
+					this.ctx.strokeStyle = '#ffb35e';
+					this.ctx.lineWidth = 2;
+					this.ctx.strokeRect(x - 2, enemy.y - 2, enemy.w + 4, enemy.h + 4);
+				} else {
+					this.ctx.fillStyle = '#ffb35e';
+					this.ctx.fillRect(x - 2, enemy.y - 2, enemy.w + 4, enemy.h + 4);
+				}
 			}
 
-			const renderedSprite = this.renderEnemySprite(enemy, x);
+			const renderedSprite = nativeActors || this.renderEnemySprite(enemy, x);
 
 			if (!renderedSprite) {
 				// Fallback body for enemies without a loaded authored sheet.
@@ -459,6 +546,18 @@ export class Renderer {
 				this.ctx.fillStyle = enemy.procgenRole === 'bruiser' ? '#ff5e7a' : '#67f3c4';
 				this.ctx.fillRect(x + enemy.w / 2 - width / 2 + 1, enemy.y - 9, (width - 2) * ratio, 3);
 			}
+			if (nativeActors && enemy.bossSpriteSheetId) {
+				const barW = 96;
+				const ratio = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
+				this.ctx.fillStyle = 'rgba(4, 6, 12, 0.85)';
+				this.ctx.fillRect(x + enemy.w / 2 - barW / 2, enemy.y - 25, barW, 12);
+				this.ctx.fillStyle = ratio > 0.5 ? '#ffb35e' : '#ff5e7a';
+				this.ctx.fillRect(x + enemy.w / 2 - barW / 2 + 2, enemy.y - 23, (barW - 4) * ratio, 8);
+				this.ctx.fillStyle = '#eaf2ff';
+				this.ctx.font = '700 8px ui-monospace, monospace';
+				this.ctx.textAlign = 'center';
+				this.ctx.fillText(enemy.bossName ?? 'CAPTAIN GRIN', x + enemy.w / 2, enemy.y - 30);
+			}
 		}
 	}
 
@@ -491,11 +590,18 @@ export class Renderer {
 	}
 
 	renderVFX(cameraX: number): void {
+		if (this.bridgeSink?.syncNativeVfx) {
+			this.bridgeSink.syncNativeVfx(this.vfxPool, cameraX);
+			return;
+		}
 		this.vfxPool.render(this.ctx, cameraX, this.spriteRenderer);
 	}
 
 	renderUI(player: Player, camera: Camera): void {
-		this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer);
+		this.bridgeSink?.syncNativeHud?.(player);
+		this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer, {
+			renderVitals: this.bridgeSink?.syncNativeHud === undefined,
+		});
 	}
 
 	renderDialoguePortrait(speaker: string, x: number, y: number, size?: number): void {
@@ -514,8 +620,11 @@ export class Renderer {
 		this.vfxPool.emit(x, y, kind, count, spread);
 	}
 
-	async loadSprites(manifestUrl: string): Promise<void> {
-		await this.spriteRenderer.loadManifest(manifestUrl);
+	async loadSprites(
+		manifestUrl: string,
+		options: SpriteManifestLoadOptions = {}
+	): Promise<SpriteManifestLoadReport> {
+		return this.spriteRenderer.loadManifest(manifestUrl, options);
 	}
 
 	getContext(): CanvasRenderingContext2D {
@@ -524,6 +633,14 @@ export class Renderer {
 
 	getSpriteRenderer(): SpriteRenderer {
 		return this.spriteRenderer;
+	}
+
+	getSpriteLoadReport(): SpriteManifestLoadReport | null {
+		return this.spriteRenderer.getLastLoadReport();
+	}
+
+	resetSprites(): void {
+		this.spriteRenderer.clear();
 	}
 
 	getActorRenderContract(): {

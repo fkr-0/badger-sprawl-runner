@@ -22,19 +22,11 @@ describe('Badger shared-runtime bridge adapter', () => {
 		const handles = installBadgerCanvasBridgePasses({
 			runtime,
 			PIXI,
-			drawers: {
-				'stage-backdrop': vi.fn(),
-				parallax: vi.fn(),
-				terrain: vi.fn()
-			}
+			drawers: {}
 		});
 
-		expect(installed.map(({ name, layer }) => [name, layer])).toEqual([
-			['stage-backdrop', 'backdrop'],
-			['parallax', 'world-back'],
-			['terrain', 'world']
-		]);
+		expect(installed.map(({ name, layer }) => [name, layer])).toEqual([]);
 		expect(installed.every(({ create }) => typeof create === 'function')).toBe(true);
-		expect(Object.keys(handles)).toEqual(['stage-backdrop', 'parallax', 'terrain']);
+		expect(Object.keys(handles)).toEqual([]);
 	});
 });

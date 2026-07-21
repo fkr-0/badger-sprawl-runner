@@ -1,4 +1,3 @@
-import { createArcadeFrameProfiler } from '../../../vendor/arcade-runtime.mjs';
 import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
 import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
@@ -7,6 +6,12 @@ import type { GameFlow, MenuOptionId } from './game/GameFlow';
 import { routeModeSelection } from './game/ModeRouter';
 import type { BadgerPixiBridgeController } from './renderer/BadgerPixiBridge';
 import { Renderer } from './renderer/Renderer';
+import {
+	type BadgerRenderBudgetResult,
+	createBadgerRenderBudgetMonitor,
+	evaluateBadgerRenderBudget,
+	getBadgerRenderBudgetName,
+} from './renderer/RendererPerformanceBudget';
 import { resolveRuntimeAssetUrl } from './runtime/RuntimeEnvironment';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
@@ -23,7 +28,18 @@ export interface RunnerApp {
 	setPixiBridge(controller: BadgerPixiBridgeController | null): void;
 	getRendererMode(): 'canvas' | 'bridge';
 	getRendererPerformance(): ArcadePerformanceSummary;
+	getRendererBudget(): BadgerRenderBudgetResult;
+	resetRendererPerformance(): void;
 	getBridgePerformance(): ArcadePerformanceSummary | null;
+	getBridgeHardwareBudget(): Readonly<Record<string, unknown>> | null;
+	getBridgeLifecycle(): Readonly<Record<string, unknown>> | null;
+	resizeBridge(width: number, height: number): void;
+	startBridge(): void;
+	pauseBridge(): void;
+	resumeBridge(): void;
+	simulateBridgeContextLoss(): void;
+	simulateBridgeContextRestore(): void;
+	destroyBridge(): void;
 }
 
 export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
@@ -32,7 +48,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 
 	const eventBus = new EventBus();
 	const renderer = new Renderer(ctx, canvas.width, canvas.height);
-	const renderProfiler = createArcadeFrameProfiler({ sampleSize: 240 });
+	const renderBudgetMonitor = createBadgerRenderBudgetMonitor();
 	let pixiBridge: BadgerPixiBridgeController | null = null;
 	const sceneManager = new SceneManager({ eventBus, canvas, renderer });
 	const saveDriver = createLocalStorageSaveDriver(window.localStorage);
@@ -65,8 +81,8 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 			sceneManager.render(renderer, alpha);
 			pixiBridge?.render(bridgeActive, startedAt);
 			if (sceneManager.getCurrent()?.name === 'StageRunScene') {
-				renderProfiler.record(
-					bridgeActive ? 'bridge:stage' : 'canvas:stage',
+				renderBudgetMonitor.record(
+					getBadgerRenderBudgetName(bridgeActive ? 'bridge' : 'canvas'),
 					performance.now() - startedAt
 				);
 			}
@@ -84,10 +100,20 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	return {
 		start(): void {
 			renderer
-				.loadSprites(resolveRuntimeAssetUrl('data/sprites.json'))
-				.then(() => window.dispatchEvent(new CustomEvent('badger:sprites-ready')))
+				.loadSprites(resolveRuntimeAssetUrl('data/sprites.json'), {
+					maxRetries: 1,
+					retryDelayMs: 150,
+					onProgress: (progress) =>
+						window.dispatchEvent(new CustomEvent('badger:sprites-progress', { detail: progress })),
+				})
+				.then((report) => {
+					const eventName =
+						report.committed && !report.stale ? 'badger:sprites-ready' : 'badger:sprites-cancelled';
+					window.dispatchEvent(new CustomEvent(eventName, { detail: report }));
+				})
 				.catch((error: unknown) => {
 					console.error('Sprite manifest failed to load', error);
+					window.dispatchEvent(new CustomEvent('badger:sprites-error', { detail: error }));
 				});
 			sceneManager.replace(createTitleScene());
 			gameLoop.start();
@@ -95,6 +121,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		stop(): void {
 			gameLoop.stop();
 			sceneManager.clear();
+			renderer.resetSprites();
 			pixiBridge?.destroy();
 			pixiBridge = null;
 		},
@@ -116,10 +143,49 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 			return pixiBridge ? 'bridge' : 'canvas';
 		},
 		getRendererPerformance(): ArcadePerformanceSummary {
-			return renderProfiler.snapshot(pixiBridge ? 'bridge:stage' : 'canvas:stage');
+			return renderBudgetMonitor.profiler.snapshot(
+				getBadgerRenderBudgetName(pixiBridge ? 'bridge' : 'canvas')
+			);
+		},
+		getRendererBudget(): BadgerRenderBudgetResult {
+			return evaluateBadgerRenderBudget(renderBudgetMonitor, pixiBridge ? 'bridge' : 'canvas');
+		},
+		resetRendererPerformance(): void {
+			renderBudgetMonitor.profiler.reset(
+				getBadgerRenderBudgetName(pixiBridge ? 'bridge' : 'canvas')
+			);
 		},
 		getBridgePerformance(): ArcadePerformanceSummary | null {
 			return pixiBridge?.performance() ?? null;
+		},
+		getBridgeHardwareBudget(): Readonly<Record<string, unknown>> | null {
+			return pixiBridge?.budget() ?? null;
+		},
+		getBridgeLifecycle(): Readonly<Record<string, unknown>> | null {
+			return pixiBridge?.snapshot() ?? null;
+		},
+		resizeBridge(width, height): void {
+			pixiBridge?.runtime.resize(width, height);
+		},
+		startBridge(): void {
+			pixiBridge?.runtime.start('e2e-lifecycle');
+		},
+		pauseBridge(): void {
+			pixiBridge?.runtime.pause('e2e-lifecycle');
+		},
+		resumeBridge(): void {
+			pixiBridge?.runtime.resume('e2e-lifecycle');
+		},
+		simulateBridgeContextLoss(): void {
+			pixiBridge?.runtime.canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }));
+		},
+		simulateBridgeContextRestore(): void {
+			pixiBridge?.runtime.canvas.dispatchEvent(new Event('webglcontextrestored'));
+		},
+		destroyBridge(): void {
+			renderer.setBridgeSink(null);
+			pixiBridge?.destroy();
+			pixiBridge = null;
 		},
 	};
 }

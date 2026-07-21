@@ -37,8 +37,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install browsers
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Verify release train
+        run: pnpm run release:plan:check
 
       - name: Validate data and run unit tests
         run: pnpm run test
@@ -58,8 +61,8 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Chromium browser E2E
-        run: pnpm exec playwright test --project=chromium
+      - name: Browser E2E
+        run: pnpm exec playwright test --project=chromium --project=firefox
 
       - name: Upload browser diagnostics
         if: failure()
@@ -71,3 +74,6 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Ensure checks leave tracked files clean
+        run: git diff --exit-code

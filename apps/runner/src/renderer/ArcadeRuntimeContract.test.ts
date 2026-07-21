@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { ARCADE_CORE_VERSION as COMPAT_CORE_VERSION } from '../../../../vendor/arcade-core.mjs';
-import {
-	ARCADE_PIXI_RUNTIME_VERSION as COMPAT_PIXI_VERSION
-} from '../../../../vendor/arcade-pixi-runtime.mjs';
 import { ARCADE_RUNTIME_VERSION as SHARED_RUNTIME_VERSION } from '../../../../vendor/arcade-runtime.mjs';
 import {
-	BADGER_ARCADE_PIXI_RUNTIME_VERSION,
 	BADGER_ARCADE_RUNTIME_VERSION,
 	BADGER_CANVAS_PASS_TO_PIXI_LAYER,
 	BADGER_PIXI_BRIDGE_PASSES,
@@ -18,7 +13,6 @@ import {
 describe('shared Pixi runtime contract', () => {
 	it('pins the common runtime and preserves deterministic pass order', () => {
 		expect(BADGER_ARCADE_RUNTIME_VERSION).toBe(SHARED_RUNTIME_VERSION);
-		expect(BADGER_ARCADE_PIXI_RUNTIME_VERSION).toBe(BADGER_ARCADE_RUNTIME_VERSION);
 		expect(BADGER_PIXI_LAYERS).toEqual([
 			'backdrop',
 			'world-back',
@@ -42,14 +36,21 @@ describe('shared Pixi runtime contract', () => {
 			['runner-hud', 'hud'],
 			['scene-ui', 'overlay']
 		]);
-		expect(BADGER_PIXI_BRIDGE_PASSES.map((pass) => pass.name)).toEqual([
-			'stage-backdrop',
-			'parallax',
-			'terrain',
-			'foreground',
-			'runner-hud',
-			'scene-ui'
-		]);
+		expect(BADGER_PIXI_BRIDGE_PASSES.map((pass) => pass.name)).toEqual([]);
+		expect(BADGER_PIXI_RENDER_PLAN.find((pass) => pass.name === 'parallax')).toMatchObject({
+			migration: 'native',
+			activation: 'ready',
+		});
+		for (const name of ['stage-backdrop', 'actors', 'projectiles'] as const) {
+			expect(BADGER_PIXI_RENDER_PLAN.find((pass) => pass.name === name)).toMatchObject({
+				migration: 'native',
+				activation: 'ready',
+			});
+		}
+		expect(BADGER_PIXI_RENDER_PLAN.find((pass) => pass.name === 'vfx')).toMatchObject({
+			migration: 'native',
+			activation: 'ready',
+		});
 
 		const runtimeModule = readFileSync(
 			new URL('../../../../vendor/arcade-runtime.mjs', import.meta.url)
@@ -68,8 +69,6 @@ describe('shared Pixi runtime contract', () => {
 		);
 		expect(createHash('sha256').update(runtimeTypes).digest('hex')).toBe(metadata.typesSha256);
 
-		expect(COMPAT_CORE_VERSION).toBe(BADGER_ARCADE_RUNTIME_VERSION);
-		expect(COMPAT_PIXI_VERSION).toBe(BADGER_ARCADE_RUNTIME_VERSION);
 		expect(
 			readFileSync(new URL('../../../../vendor/arcade-core.mjs', import.meta.url), 'utf8')
 		).toContain("export * from './arcade-runtime.mjs'");

@@ -17,6 +17,10 @@ export interface ParallaxLayer {
 export class ParallaxRenderer {
 	private layers: ParallaxLayer[] = [];
 
+	getLayers(): readonly ParallaxLayer[] {
+		return this.layers;
+	}
+
 	addLayer(speed: number): ParallaxLayer {
 		const layer = { speed, elements: [] };
 		this.layers.push(layer);

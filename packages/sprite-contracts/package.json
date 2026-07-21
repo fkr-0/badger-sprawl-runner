@@ -2,7 +2,7 @@
 	"name": "@badger/sprite-contracts",
 	"version": "1.0.0",
 	"type": "module",
-	"description": "Sprite sheet schema, validation, and loader.",
+	"description": "Shared sprite schema, playback, production geometry, validation, and browser loader.",
 	"exports": {
 		".": {
 			"import": "./src/index.ts",

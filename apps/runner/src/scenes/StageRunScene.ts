@@ -4,6 +4,7 @@
  */
 
 import { resolveSkillEffects } from '@badger/progression';
+import type { SpriteAnimationEvent } from '@badger/sprite-contracts';
 import { createSystemPipeline } from '../../../../vendor/arcade-runtime.mjs';
 import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
 import {
@@ -32,15 +33,12 @@ import {
 } from '../game/DubColonyObjectives';
 import type { StageRuntimeResult } from '../game/GameFlow';
 import {
-	getStoryBossSpriteSheet,
-	isLateStoryStage,
-} from '../game/LateStageSpriteBindings';
-import {
+	type LateStageInterfaceSnapshot,
 	type LateStageObjectiveEvent,
 	type LateStageObjectiveSnapshot,
-	type LateStageInterfaceSnapshot,
 	LateStageObjectives,
 } from '../game/LateStageObjectives';
+import { getStoryBossSpriteSheet, isLateStoryStage } from '../game/LateStageSpriteBindings';
 import {
 	type LowerSprawlObjectiveEvent,
 	type LowerSprawlObjectiveSnapshot,
@@ -69,8 +67,9 @@ import { EncounterGenerator, type GeneratedEnemyPack } from '../procgen/Encounte
 import type { GeneratedSideRoom } from '../procgen/SideRoomGenerator';
 import {
 	type AnimationState,
-	advanceAnimation,
+	advanceAnimationStep,
 	createAnimationState,
+	getAnimationProgress,
 	playAnimation,
 } from '../renderer/AnimationState';
 import {
@@ -450,15 +449,15 @@ export class StageRunScene implements Scene {
 		this.player.hudToastTimer = options.training
 			? 3.2
 			: [
-					'lower-sprawl',
-					'drainmarket',
-					'chrome-arcology',
-					'mirror-palace',
-					'dub-colony',
-					'antenna-barrens',
-					'orbital-lift',
-					'asteroid-redoubt',
-				].includes(options.stageId ?? '')
+						'lower-sprawl',
+						'drainmarket',
+						'chrome-arcology',
+						'mirror-palace',
+						'dub-colony',
+						'antenna-barrens',
+						'orbital-lift',
+						'asteroid-redoubt',
+					].includes(options.stageId ?? '')
 				? 2.6
 				: 0;
 		this.configureUpdatePipeline();
@@ -625,10 +624,7 @@ export class StageRunScene implements Scene {
 		if (!objectives || events.length === 0) return;
 		for (const event of events) {
 			const snapshot = objectives.getSnapshot();
-			if (
-				event.kind === 'primary-node-completed' ||
-				event.kind === 'support-node-completed'
-			) {
+			if (event.kind === 'primary-node-completed' || event.kind === 'support-node-completed') {
 				this.player.interactionAnimationTimer = Math.max(
 					this.player.interactionAnimationTimer ?? 0,
 					0.48
@@ -667,10 +663,16 @@ export class StageRunScene implements Scene {
 				this.showToast('Console closed // field controls restored', 1.25);
 			} else if (event.kind === 'primary-node-completed') {
 				const completed = snapshot.primaryNodes.filter((node) => node.completed).length;
-				this.showToast(`${snapshot.primaryLabel} // ${completed}/${snapshot.primaryNodes.length}`, 1.45);
+				this.showToast(
+					`${snapshot.primaryLabel} // ${completed}/${snapshot.primaryNodes.length}`,
+					1.45
+				);
 			} else if (event.kind === 'support-node-completed') {
 				const completed = snapshot.supportNodes.filter((node) => node.completed).length;
-				this.showToast(`${snapshot.supportLabel} // ${completed}/${snapshot.supportNodes.length}`, 1.45);
+				this.showToast(
+					`${snapshot.supportLabel} // ${completed}/${snapshot.supportNodes.length}`,
+					1.45
+				);
 			} else if (event.kind === 'tutorial-complete') {
 				this.showToast(`Lesson recorded // ${event.id.replaceAll('-', ' ')}`, 1.55);
 			} else if (event.kind === 'minigame-complete') {
@@ -1411,7 +1413,9 @@ export class StageRunScene implements Scene {
 		);
 		if (nearbyPickup) {
 			this.player.contextHint =
-				nearbyPickup.persistence === 'story_payload' ? `Secure ${snapshot.payloadLabel}` : 'Gear cache';
+				nearbyPickup.persistence === 'story_payload'
+					? `Secure ${snapshot.payloadLabel}`
+					: 'Gear cache';
 			return;
 		}
 		const boss = this.enemies.find((enemy) => enemy.bossId === snapshot.bossId && enemy.hp > 0);
@@ -1915,11 +1919,7 @@ export class StageRunScene implements Scene {
 		const timerWidth = 176;
 		const timerX = panel.x + panel.w - timerWidth - 24;
 		const maxTime =
-			interfaceState.kind === 'fasttype'
-				? 14
-				: interfaceState.kind === 'cargo-routing'
-					? 24
-					: 28;
+			interfaceState.kind === 'fasttype' ? 14 : interfaceState.kind === 'cargo-routing' ? 24 : 28;
 		ctx.fillStyle = '#17243a';
 		ctx.fillRect(timerX, panel.y + 22, timerWidth, 10);
 		ctx.fillStyle = interfaceState.assistActive
@@ -1947,8 +1947,7 @@ export class StageRunScene implements Scene {
 		);
 
 		if (interfaceState.feedback) {
-			const feedbackColor =
-				interfaceState.feedbackKind === 'assist' ? '#8aa8ff' : '#ff5e7a';
+			const feedbackColor = interfaceState.feedbackKind === 'assist' ? '#8aa8ff' : '#ff5e7a';
 			ctx.textAlign = 'left';
 			ctx.fillStyle = 'rgba(2, 5, 12, 0.94)';
 			ctx.fillRect(panel.x + 24, panel.y + 81, panel.w - 48, 26);
@@ -1998,7 +1997,8 @@ export class StageRunScene implements Scene {
 		ctx.fillText('LIVE CARRIER INPUT', contentX, inputY);
 		ctx.fillStyle = '#050a13';
 		ctx.fillRect(contentX, inputY + 14, panel.w - 68, 66);
-		ctx.strokeStyle = interfaceState.correctPrefixLength === interfaceState.input.length ? accent : '#ff5e7a';
+		ctx.strokeStyle =
+			interfaceState.correctPrefixLength === interfaceState.input.length ? accent : '#ff5e7a';
 		ctx.lineWidth = 2;
 		ctx.strokeRect(contentX, inputY + 14, panel.w - 68, 66);
 		ctx.font = '900 22px ui-monospace, monospace';
@@ -2024,7 +2024,11 @@ export class StageRunScene implements Scene {
 
 		ctx.font = '11px ui-monospace, monospace';
 		ctx.fillStyle = '#b9c8dc';
-		ctx.fillText('Backspace edits // Enter validates exact bytes // Escape closes console', contentX, panel.y + panel.h - 28);
+		ctx.fillText(
+			'Backspace edits // Enter validates exact bytes // Escape closes console',
+			contentX,
+			panel.y + panel.h - 28
+		);
 	}
 
 	private renderSelectionInterface(
@@ -2098,7 +2102,11 @@ export class StageRunScene implements Scene {
 		ctx.fillText(interfaceState.preview, contentX + 14, previewY + 43);
 		ctx.font = '11px ui-monospace, monospace';
 		ctx.fillStyle = '#b9c8dc';
-		ctx.fillText('←/→ focus // ↑/↓ rewrite // 1–3 direct select // Enter validate // Escape cancel', contentX, panel.y + panel.h - 22);
+		ctx.fillText(
+			'←/→ focus // ↑/↓ rewrite // 1–3 direct select // Enter validate // Escape cancel',
+			contentX,
+			panel.y + panel.h - 22
+		);
 	}
 
 	private renderLateStageObjectivePanel(ctx: CanvasRenderingContext2D): void {
@@ -2119,13 +2127,29 @@ export class StageRunScene implements Scene {
 		ctx.fillText(`${snapshot.stageId.toUpperCase()} // RELEASE ROUTE`, x + 12, y + 20);
 		ctx.font = '11px ui-monospace, monospace';
 		ctx.fillStyle = snapshot.primaryComplete ? '#67f3c4' : '#eaf2ff';
-		ctx.fillText(`${snapshot.primaryLabel}: ${primary}/${snapshot.primaryNodes.length}`, x + 12, y + 41);
+		ctx.fillText(
+			`${snapshot.primaryLabel}: ${primary}/${snapshot.primaryNodes.length}`,
+			x + 12,
+			y + 41
+		);
 		ctx.fillStyle = snapshot.supportComplete ? '#67f3c4' : '#ffb35e';
-		ctx.fillText(`${snapshot.supportLabel}: ${support}/${snapshot.supportNodes.length}`, x + 12, y + 60);
+		ctx.fillText(
+			`${snapshot.supportLabel}: ${support}/${snapshot.supportNodes.length}`,
+			x + 12,
+			y + 60
+		);
 		ctx.fillStyle = snapshot.payloadCollected ? '#67f3c4' : '#eaf2ff';
-		ctx.fillText(`${snapshot.payloadLabel}: ${snapshot.payloadCollected ? 'secured' : 'missing'}`, x + 12, y + 80);
+		ctx.fillText(
+			`${snapshot.payloadLabel}: ${snapshot.payloadCollected ? 'secured' : 'missing'}`,
+			x + 12,
+			y + 80
+		);
 		ctx.fillStyle = snapshot.bossDefeated ? '#67f3c4' : '#ff5e7a';
-		ctx.fillText(`${snapshot.bossLabel}: ${snapshot.bossDefeated ? 'defeated' : 'active'}`, x + 300, y + 80);
+		ctx.fillText(
+			`${snapshot.bossLabel}: ${snapshot.bossDefeated ? 'defeated' : 'active'}`,
+			x + 300,
+			y + 80
+		);
 		ctx.restore();
 	}
 
@@ -2823,18 +2847,30 @@ export class StageRunScene implements Scene {
 		frame: number;
 		timer: number;
 		loop: boolean;
+		direction: 1 | -1;
+		playing: boolean;
+		paused: boolean;
+		completed: boolean;
+		speed: number;
+		progress: number;
 		frames: number;
 		fps: number;
 	} | null {
 		const state = this.player.animState;
 		if (!state) return null;
-		const animation = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet
-			.animations[state.currentAnim];
+		const sheet = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID);
+		const animation = sheet?.sheet.animations[state.currentAnim];
 		return {
 			currentAnim: state.currentAnim,
 			frame: state.frame,
 			timer: state.timer,
 			loop: state.loop,
+			direction: state.direction,
+			playing: state.playing,
+			paused: state.paused,
+			completed: state.completed,
+			speed: state.speed,
+			progress: sheet ? getAnimationProgress(state, sheet) : 0,
 			frames: animation?.frames ?? 0,
 			fps: animation?.fps ?? 0,
 		};
@@ -3333,11 +3369,9 @@ export class StageRunScene implements Scene {
 	}
 
 	private configureUpdatePipeline(): void {
-		this.updatePipeline.add(
-			'feedback-timers',
-			({ dt }) => this.updateFeedbackTimers(dt),
-			{ phase: 'frame' }
-		);
+		this.updatePipeline.add('feedback-timers', ({ dt }) => this.updateFeedbackTimers(dt), {
+			phase: 'frame',
+		});
 		this.updatePipeline.add('stage-objectives', (context) => this.stepStageObjectives(context), {
 			phase: 'objectives',
 		});
@@ -3358,9 +3392,13 @@ export class StageRunScene implements Scene {
 		this.updatePipeline.add('companions-and-bosses', (context) => this.stepActors(context), {
 			phase: 'actors',
 		});
-		this.updatePipeline.add('camera-and-presentation', (context) => this.stepPresentation(context), {
-			phase: 'presentation',
-		});
+		this.updatePipeline.add(
+			'camera-and-presentation',
+			(context) => this.stepPresentation(context),
+			{
+				phase: 'presentation',
+			}
+		);
 	}
 
 	private stepStageObjectives({
@@ -3426,7 +3464,8 @@ export class StageRunScene implements Scene {
 	}
 
 	private stepCombatAndWorld({ action, simDt, combatEvents }: StageRunUpdateContext): void {
-		if (!combatEvents) throw new Error('stage update pipeline requires combat events after physics');
+		if (!combatEvents)
+			throw new Error('stage update pipeline requires combat events after physics');
 		this.combat.step(this.player, this.enemies, action, simDt, combatEvents);
 		this.items.step(this.player, action, this.pickups, simDt);
 		this.handleHazardEvents(
@@ -3467,7 +3506,8 @@ export class StageRunScene implements Scene {
 
 	private stepActors(context: StageRunUpdateContext): void {
 		const { simDt, combatEvents } = context;
-		if (!combatEvents) throw new Error('stage update pipeline requires combat events before actors');
+		if (!combatEvents)
+			throw new Error('stage update pipeline requires combat events before actors');
 		this.companions.step(this.player, this.enemies, simDt, {
 			onHint: (message) => {
 				this.player.companionHint = message;
@@ -3543,7 +3583,8 @@ export class StageRunScene implements Scene {
 	}
 
 	private stepPresentation({ action, simDt, input, combatEvents }: StageRunUpdateContext): void {
-		if (!combatEvents) throw new Error('stage update pipeline requires combat events before presentation');
+		if (!combatEvents)
+			throw new Error('stage update pipeline requires combat events before presentation');
 		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 1950);
 		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), simDt, this.player.vx);
 		processMossInput(this.player, action, simDt, this.combat, this.enemies, combatEvents);
@@ -3630,7 +3671,7 @@ export class StageRunScene implements Scene {
 		this.renderLateStageWorld(ctx, cam.x);
 		rend.renderPickups(this.pickups, cam.x);
 		rend.renderPlayer(this.player, cam.x);
-		this.renderRailgunBeam(ctx, cam.x);
+		rend.renderProjectiles(this.player, cam.x);
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
 		rend.renderUI(this.player, cam);
@@ -3832,44 +3873,42 @@ export class StageRunScene implements Scene {
 		const sheet = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID);
 		if (!sheet) return;
 
-		let previousFrame = animState.frame;
-		for (const frame of advanceAnimation(animState, sheet, dt)) {
+		const step = advanceAnimationStep(animState, sheet, dt);
+		if (!step) return;
+		let previousFrame = step.previousFrame;
+		for (const frame of step.advancedFrames) {
 			this.lastAnimationFrame = previousFrame;
-			this.emitAnimationEvents(animState.currentAnim, frame);
 			previousFrame = frame;
 		}
+		for (const event of step.events) this.emitAnimationEvent(event);
 	}
 
-	private emitAnimationEvents(animName: string, frame: number): void {
+	private emitAnimationEvent(event: SpriteAnimationEvent): void {
 		const renderer = this.renderer;
 		if (!renderer) return;
-		for (const event of renderer
-			.getSpriteRenderer()
-			.getAnimationEvents(PLAYER_SPRITE_SHEET_ID, animName, frame)) {
-			switch (event.kind) {
-				case 'footstep':
-					renderer.emitVFX(
-						this.player.x + this.player.w / 2,
-						this.player.y + this.player.h,
-						'dust',
-						2,
-						18
-					);
-					break;
-				case 'vfx': {
-					const payload = event.payload ?? {};
-					const kind = typeof payload.kind === 'string' ? payload.kind : 'muzzle';
-					const count = typeof payload.count === 'number' ? payload.count : 4;
-					const spread = typeof payload.spread === 'number' ? payload.spread : 40;
-					renderer.emitVFX(
-						this.player.x + this.player.w / 2 + this.player.dir * 26,
-						this.player.y + this.player.h / 2,
-						kind,
-						count,
-						spread
-					);
-					break;
-				}
+		switch (event.kind) {
+			case 'footstep':
+				renderer.emitVFX(
+					this.player.x + this.player.w / 2,
+					this.player.y + this.player.h,
+					'dust',
+					2,
+					18
+				);
+				break;
+			case 'vfx': {
+				const payload = event.payload ?? {};
+				const kind = typeof payload.kind === 'string' ? payload.kind : 'muzzle';
+				const count = typeof payload.count === 'number' ? payload.count : 4;
+				const spread = typeof payload.spread === 'number' ? payload.spread : 40;
+				renderer.emitVFX(
+					this.player.x + this.player.w / 2 + this.player.dir * 26,
+					this.player.y + this.player.h / 2,
+					kind,
+					count,
+					spread
+				);
+				break;
 			}
 		}
 	}

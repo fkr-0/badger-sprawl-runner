@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createEnemy, getEnemyCost } from '../actors/EnemyFactory';
-import { EnemySystem, type EnemyDef } from './EnemySystem';
+import { ENEMY_DEFS, createEnemy, getEnemyCost } from '../actors/EnemyFactory';
+import {
+	EnemySystem,
+	type EnemyDef,
+	resolveEnemySpriteAnimation,
+} from './EnemySystem';
 
 const crawlerDef: EnemyDef = {
 	id: 'test_crawler',
@@ -38,12 +42,47 @@ describe('EnemySystem registry', () => {
 		expect(system.getEnemies()).toEqual([]);
 	});
 
+	it('binds every horde archetype to a production sprite sheet', () => {
+		expect(
+			Object.fromEntries(
+				Object.entries(ENEMY_DEFS).map(([id, definition]) => [id, definition.spriteSheetId])
+			)
+		).toEqual({
+			toll_rat_crawler: 'enemy_turnstile_mite',
+			scooter_bailiff: 'enemy_rent_cop_piker',
+			cable_crawler: 'enemy_error_mite',
+			drone_wasp: 'enemy_signal_jammer_bat',
+			bass_turret_stub: 'enemy_feedback_guard',
+		});
+	});
+
+	it('resolves sprite animation from combat and AI state', () => {
+		const system = new EnemySystem();
+		const enemy = system.spawnEnemy(crawlerDef, 120, 420);
+
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('patrol_or_move');
+		enemy.state = 'windup';
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('windup');
+		enemy.state = 'attack';
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('attack');
+		enemy.flashTimer = 0.1;
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('hurt');
+		enemy.flashTimer = 0;
+		enemy.stun = 0.2;
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('stun_or_parried');
+		enemy.stun = 0;
+		enemy.hp = 0;
+		expect(resolveEnemySpriteAnimation(enemy)).toBe('death');
+	});
+
 	it('clears all enemies and supports EnemyFactory creation/cost lookup', () => {
 		const system = new EnemySystem();
 		const created = createEnemy(system, 'toll_rat_crawler', 50, 410);
 
 		expect(created).not.toBeNull();
 		expect(created?.id).toBe('toll_rat_crawler');
+		expect(created?.spriteSheetId).toBe('enemy_turnstile_mite');
+		expect(created?.spriteAnimation).toBe('patrol_or_move');
 		expect(system.getEnemies()).toHaveLength(1);
 		expect(getEnemyCost('toll_rat_crawler')).toBeGreaterThan(0);
 

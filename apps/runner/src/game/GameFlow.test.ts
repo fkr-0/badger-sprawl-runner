@@ -30,6 +30,28 @@ describe('Badger Sprawl Runner game flow', () => {
 			'skills',
 			'endless',
 		]);
+		expect(flow.getCampaignRuntimeSnapshot()).toMatchObject({
+			status: 'active',
+			completed: 0,
+			total: 8,
+			ratio: 0,
+		});
+	});
+
+	it('projects persisted story progress through the shared campaign graph', () => {
+		const flow = createGameFlow(undefined, {
+			currentStageId: 'mirror-palace',
+			completedStageIds: ['lower-sprawl', 'drainmarket'],
+		});
+
+		expect(flow.getCampaignRuntimeSnapshot()).toMatchObject({
+			currentNodeId: 'mirror-palace',
+			completed: 2,
+			total: 8,
+			status: 'active',
+		});
+		flow.selectMenu('story');
+		expect(flow.getState()).toMatchObject({ mode: 'title-card', stageId: 'mirror-palace' });
 	});
 
 	it('shows a placard title card before briefing and routes stage completion through debrief and boss contract', () => {
@@ -136,6 +158,12 @@ describe('Badger Sprawl Runner game flow', () => {
 			'orbital-lift',
 			'asteroid-redoubt',
 		]);
+		expect(flow.getCampaignRuntimeSnapshot()).toMatchObject({
+			status: 'complete',
+			completed: 8,
+			total: 8,
+			ratio: 1,
+		});
 	});
 
 	it('records the Stage 2 stim-cache result flag when Drainmarket is completed', () => {

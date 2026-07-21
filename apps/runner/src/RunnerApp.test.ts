@@ -1,12 +1,44 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRunnerApp } from './RunnerApp';
 import { Renderer } from './renderer/Renderer';
+import type {
+	SpriteManifestLoadOptions,
+	SpriteManifestLoadProgress,
+	SpriteManifestLoadReport,
+} from './renderer/SpriteRenderer';
 import { TitleScene } from './scenes/TitleScene';
 import { TrainingScene } from './scenes/TrainingScene';
 import { VersusScene } from './scenes/VersusScene';
 
+function spriteLoadReport(overrides: Partial<SpriteManifestLoadReport> = {}): SpriteManifestLoadReport {
+	return {
+		generation: 1,
+		manifestUrl: 'data/sprites.json',
+		requestedSheetIds: [],
+		loadedSheetIds: [],
+		decodedSheetIds: [],
+		reloadSheetIds: [],
+		reusedSheetIds: [],
+		addedSheetIds: [],
+		removedSheetIds: [],
+		changedSheetIds: [],
+		unchangedSheetIds: [],
+		forcedReloadSheetIds: [],
+		skippedSheetIds: [],
+		failures: [],
+		allowPartial: false,
+		reuseUnchanged: true,
+		maxConcurrent: 8,
+		maxRetries: 1,
+		totalAttempts: 0,
+		stale: false,
+		committed: true,
+		...overrides,
+	};
+}
+
 function installWindowStub(): void {
-	vi.spyOn(Renderer.prototype, 'loadSprites').mockResolvedValue();
+	vi.spyOn(Renderer.prototype, 'loadSprites').mockResolvedValue(spriteLoadReport());
 	const globalWithWindow = globalThis as typeof globalThis & {
 		window?: {
 			addEventListener: () => void;
@@ -127,6 +159,7 @@ describe('RunnerApp scene shell', () => {
 
 	it('exits the active scene when the application stops', () => {
 		installWindowStub();
+		const resetSpritesSpy = vi.spyOn(Renderer.prototype, 'resetSprites');
 		const app = createRunnerApp(createCanvasStub());
 		app.start();
 		const scene = app.getCurrentScene();
@@ -136,6 +169,44 @@ describe('RunnerApp scene shell', () => {
 		app.stop();
 
 		expect(exitSpy).toHaveBeenCalledOnce();
+		expect(resetSpritesSpy).toHaveBeenCalledOnce();
 		expect(app.getCurrentScene()).toBeUndefined();
+	});
+
+	it('forwards structured sprite progress and readiness through application events', async () => {
+		installWindowStub();
+		const progress: SpriteManifestLoadProgress = {
+			generation: 1,
+			manifestUrl: 'data/sprites.json',
+			phase: 'sheet-success',
+			completedSheets: 1,
+			totalSheets: 1,
+			sheetId: 'actor',
+			file: 'actor.png',
+			attempt: 1,
+			maxAttempts: 2,
+		};
+		vi.mocked(Renderer.prototype.loadSprites).mockImplementation(
+			async (_url: string, options: SpriteManifestLoadOptions = {}) => {
+				options.onProgress?.(progress);
+				return spriteLoadReport({ requestedSheetIds: ['actor'], loadedSheetIds: ['actor'] });
+			}
+		);
+		const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+		const app = createRunnerApp(createCanvasStub());
+
+		app.start();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(Renderer.prototype.loadSprites).toHaveBeenCalledWith(
+			expect.stringContaining('data/sprites.json'),
+			expect.objectContaining({ maxRetries: 1, retryDelayMs: 150 })
+		);
+		expect(dispatchSpy).toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'badger:sprites-progress', detail: progress })
+		);
+		expect(dispatchSpy).toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'badger:sprites-ready' })
+		);
 	});
 });

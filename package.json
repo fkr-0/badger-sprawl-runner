@@ -1,6 +1,6 @@
 {
 	"name": "badger-sprawl-runner-workspace",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"private": true,
 	"type": "module",
 	"description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
 		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
-		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
+		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && python3 scripts/generate-sprite-render-prompts.py --check && python3 tests/sprite-atlas-assembly-contract.py && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",
@@ -23,6 +23,10 @@
 		"sprites:missing": "node scripts/generate-missing-sprites.mjs",
 		"sprites:missing:dry": "node scripts/generate-missing-sprites.mjs --dry-run",
 		"sprites:check": "node tests/public-sprite-assets.mjs",
+		"sprites:prompts": "python3 scripts/generate-sprite-render-prompts.py",
+		"sprites:prompts:check": "python3 scripts/generate-sprite-render-prompts.py --check",
+		"sprites:assemble": "python3 scripts/assemble-sprite-atlas.py",
+		"sprites:assemble:check": "python3 tests/sprite-atlas-assembly-contract.py",
 		"sprites:import:dalle": "./scripts/copy-dalle-sprites.sh",
 		"sprites:import:dalle:dry": "./scripts/copy-dalle-sprites.sh --dry-run",
 		"sprites:audit:dalle": "./scripts/copy-dalle-sprites.sh --report-only",
@@ -41,11 +45,12 @@
 		"test:e2e:training": "playwright test tests/e2e/training-mode.spec.ts tests/e2e/gameplay-ui-release-contract.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-training-test-results",
 		"test:e2e:dalle-sprites": "playwright test tests/e2e/dalle-sprite-runtime.spec.ts --project=chromium --project=firefox --reporter=line --output=/tmp/badger-sprawl-runner-dalle-sprite-results",
 		"test:e2e:sprite-review": "playwright test tests/e2e/sprite-render-review.spec.ts tests/e2e/sprite-visual-review.spec.ts --project=chromium --reporter=line --output=/tmp/badger-sprawl-runner-sprite-review-results",
-		"verify:release": "pnpm run test && pnpm run typecheck && pnpm run build && pnpm run smoke:runner && pnpm run smoke:artifact && pnpm run lint && pnpm exec playwright test --project=chromium",
+		"verify:release": "pnpm run release:plan:check && pnpm run test && pnpm run typecheck && pnpm run build && pnpm run smoke:runner && pnpm run smoke:artifact && pnpm run lint && pnpm exec playwright test --project=chromium --project=firefox",
 		"materialize:artifact-lab": "cd .. && node app-hub-v11/server/artifact-build.mjs --out .artifacts-deploy-stage --no-build",
 		"stage:artifact-lab": "pnpm run verify:release && pnpm run materialize:artifact-lab",
 		"deploy:artifact-lab:dry-run": "pnpm run verify:release && cd .. && ./artifacts-deploy --dry-run",
-		"deploy:artifact-lab": "pnpm run verify:release && cd .. && ./artifacts-deploy"
+		"deploy:artifact-lab": "pnpm run verify:release && cd .. && ./artifacts-deploy",
+		"release:plan:check": "node scripts/verify-release-train.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.3",

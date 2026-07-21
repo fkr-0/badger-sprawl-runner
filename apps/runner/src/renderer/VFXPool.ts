@@ -22,6 +22,10 @@ export interface VFXPoolStats {
 	recycledParticles: number;
 }
 
+export interface VFXRenderSource {
+	forEachActive(visitor: (particle: Readonly<Particle>) => void): void;
+}
+
 function createDormantParticle(): Particle {
 	return {
 		x: 0,
@@ -36,7 +40,7 @@ function createDormantParticle(): Particle {
 	};
 }
 
-export class VFXPool {
+export class VFXPool implements VFXRenderSource {
 	private readonly pool: RecyclingPool<Particle>;
 	private emittedParticles = 0;
 
@@ -85,8 +89,12 @@ export class VFXPool {
 		});
 	}
 
+	forEachActive(visitor: (particle: Readonly<Particle>) => void): void {
+		this.pool.forEachActive(visitor);
+	}
+
 	render(ctx: CanvasRenderingContext2D, cameraX: number, spriteRenderer?: SpriteRenderer): void {
-		this.pool.forEachActive((p) => {
+		this.forEachActive((p) => {
 			const animationName = this.getSpriteAnimation(p.kind);
 			const sheet = animationName ? spriteRenderer?.getSheet('vfx_combat') : undefined;
 			const animation = animationName ? sheet?.sheet.animations[animationName] : undefined;

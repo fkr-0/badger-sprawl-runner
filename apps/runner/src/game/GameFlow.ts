@@ -11,6 +11,11 @@ import {
 	type StageTemplate,
 } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
+import {
+	advanceBadgerCampaignStage,
+	createBadgerCampaignStageState,
+	inspectBadgerCampaignProgress,
+} from './RuntimeStageComposition';
 import { createDefaultStoryProgress, migrateStoryProgress } from './StoryProgressMigration';
 export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills' | 'endless';
 
@@ -409,6 +414,10 @@ export class GameFlow {
 		return cloneState(this.storyProgress);
 	}
 
+	getCampaignRuntimeSnapshot() {
+		return inspectBadgerCampaignProgress(this.storyProgress);
+	}
+
 	getMenuOptions(): MenuOption[] {
 		return MENU_OPTIONS.map((option) => ({ ...option }));
 	}
@@ -545,7 +554,7 @@ export class GameFlow {
 			case 'story': {
 				const stageId = this.storyProgress.campaignComplete
 					? STAGES[0]?.id
-					: this.storyProgress.currentStageId;
+					: createBadgerCampaignStageState(this.storyProgress).currentNodeId;
 				const stageIndex = STAGES.findIndex((stage) => stage.id === stageId);
 				const stage = STAGES[stageIndex] ?? STAGES[0];
 				if (!stage) {
@@ -706,19 +715,33 @@ export class GameFlow {
 			return;
 		}
 
-		const nextStage = STAGES[this.state.stageIndex + 1];
-		if (nextStage) {
-			this.storyProgress = { ...this.storyProgress, currentStageId: nextStage.id };
+		const progression = advanceBadgerCampaignStage(this.storyProgress);
+		if (progression.state.status !== 'complete' && progression.changed) {
+			const nextStage = STAGES.find((stage) => stage.id === progression.state.currentNodeId);
+			const nextStageIndex = nextStage ? STAGES.indexOf(nextStage) : -1;
+			if (!nextStage || nextStageIndex < 0) {
+				this.returnToMenu();
+				return;
+			}
+			this.storyProgress = {
+				...this.storyProgress,
+				currentStageId: nextStage.id,
+				completedStageIds: [...progression.state.completedNodeIds],
+			};
 			this.state = {
 				mode: 'title-card',
 				stageId: nextStage.id,
-				stageIndex: this.state.stageIndex + 1,
+				stageIndex: nextStageIndex,
 				placard: nextStage.placard ?? nextStage.name,
 			};
 			return;
 		}
 
-		this.storyProgress = { ...this.storyProgress, campaignComplete: true };
+		this.storyProgress = {
+			...this.storyProgress,
+			completedStageIds: [...progression.state.completedNodeIds],
+			campaignComplete: progression.state.status === 'complete',
+		};
 		this.returnToMenu();
 	}
 

@@ -36,7 +36,8 @@ export class UIRenderer {
 		ctx: CanvasRenderingContext2D,
 		player: Player,
 		camera: Camera,
-		spriteRenderer?: SpriteRenderer
+		spriteRenderer?: SpriteRenderer,
+		options: { renderVitals?: boolean } = {}
 	): void {
 		void camera;
 		const companionLines = this.getCompanionLines(player);
@@ -47,7 +48,9 @@ export class UIRenderer {
 			(player.gearIconSlots ?? []).length
 		);
 		this.renderScreenFeedback(ctx, player);
-		this.renderVitals(ctx, player, spriteRenderer, layout.vitals);
+		if (options.renderVitals !== false) {
+			this.renderVitals(ctx, player, spriteRenderer, layout.vitals);
+		}
 		this.renderCompanionStatus(ctx, companionLines, layout.companions);
 		this.renderObjective(ctx, player, layout.objective);
 		this.renderGearLoadout(ctx, player, spriteRenderer, layout.gear);

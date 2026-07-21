@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT DIRECTLY.
 // Edit source/runtime/*.js.inc and run `npm run source:build`.
 
-export const ARCADE_RUNTIME_VERSION = '1.7.0';
+export const ARCADE_RUNTIME_VERSION = '1.10.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -3623,6 +3623,531 @@ export function resolveHudGauge(input = {}) {
   });
 }
 
+function arcadeStageFinite(value, fallback = 0) {
+  return Number.isFinite(value) ? Number(value) : fallback;
+}
+
+function arcadeStageId(value, label = 'id') {
+  const id = String(value ?? '').trim();
+  if (!id) throw new Error(`${label} is required`);
+  return id;
+}
+
+function arcadeStageIds(values) {
+  const input = Array.isArray(values) ? values : values === undefined || values === null ? [] : [values];
+  return Object.freeze([...new Set(input.map((value) => String(value ?? '').trim()).filter(Boolean))]);
+}
+
+function arcadeStageIssue(code, path, message, extra = {}) {
+  return Object.freeze({ code, path, message, ...extra });
+}
+
+function arcadeStageCatalogIds(catalog) {
+  if (catalog === undefined || catalog === null) return null;
+  if (catalog instanceof Set) return new Set([...catalog].map((value) => String(value)));
+  if (catalog instanceof Map) return new Set([...catalog.keys()].map((value) => String(value)));
+  if (Array.isArray(catalog)) {
+    return new Set(catalog.map((value) => String(value?.id ?? value)).filter(Boolean));
+  }
+  if (typeof catalog === 'object') return new Set(Object.keys(catalog));
+  throw new Error('stage reference catalog must be an array, object, Map or Set');
+}
+
+const ARCADE_STAGE_REFERENCE_FIELDS = Object.freeze([
+  Object.freeze({ field: 'actorIds', aliases: ['actorIds', 'actors'], catalog: 'actors' }),
+  Object.freeze({ field: 'assetIds', aliases: ['assetIds', 'assets'], catalog: 'assets' }),
+  Object.freeze({ field: 'spawnTableIds', aliases: ['spawnTableIds', 'spawnTables'], catalog: 'spawnTables' }),
+  Object.freeze({ field: 'objectiveIds', aliases: ['objectiveIds', 'objectives'], catalog: 'objectives' }),
+  Object.freeze({ field: 'serviceIds', aliases: ['serviceIds', 'services'], catalog: 'services' }),
+  Object.freeze({ field: 'encounterPlanIds', aliases: ['encounterPlanIds', 'encounterPlans'], catalog: 'encounterPlans' }),
+]);
+
+function arcadeStageReferences(raw = {}) {
+  const result = {};
+  for (const definition of ARCADE_STAGE_REFERENCE_FIELDS) {
+    const value = definition.aliases.find((alias) => raw[alias] !== undefined);
+    result[definition.field] = arcadeStageIds(value === undefined ? [] : raw[value]);
+  }
+  return result;
+}
+
+function arcadeStageValidateReferences(owner, path, catalogs, issues) {
+  for (const definition of ARCADE_STAGE_REFERENCE_FIELDS) {
+    const available = arcadeStageCatalogIds(catalogs?.[definition.catalog]);
+    if (available === null) continue;
+    for (const referenceId of owner[definition.field]) {
+      if (!available.has(referenceId)) {
+        issues.push(arcadeStageIssue(
+          'unknown-reference',
+          `${path}.${definition.field}`,
+          `unknown ${definition.catalog} reference "${referenceId}"`,
+          { referenceType: definition.catalog, referenceId },
+        ));
+      }
+    }
+  }
+}
+
+function normalizeArcadeStageTransition(raw, nodeId, index, issues) {
+  const transition = typeof raw === 'string' ? { to: raw } : raw;
+  if (!transition || typeof transition !== 'object') {
+    issues.push(arcadeStageIssue('invalid-transition', `nodes.${nodeId}.transitions[${index}]`, 'stage transition must be a string or object'));
+    return null;
+  }
+  const to = String(transition.to ?? transition.nodeId ?? '').trim();
+  if (!to) {
+    issues.push(arcadeStageIssue('missing-transition-target', `nodes.${nodeId}.transitions[${index}].to`, 'stage transition target is required'));
+    return null;
+  }
+  const signal = String(transition.signal ?? transition.on ?? 'complete').trim() || 'complete';
+  const priority = Math.floor(arcadeStageFinite(transition.priority, 0));
+  const id = String(transition.id ?? `${nodeId}:${signal}:${to}:${index}`).trim();
+  return Object.freeze({
+    id,
+    to,
+    signal,
+    priority,
+    order: index,
+    completeCurrent: transition.completeCurrent !== false,
+    ...(transition.metadata === undefined ? {} : { metadata: transition.metadata }),
+  });
+}
+
+function normalizeArcadeStageNode(raw, index, issues) {
+  if (!raw || typeof raw !== 'object') {
+    issues.push(arcadeStageIssue('invalid-node', `nodes[${index}]`, 'stage node must be an object'));
+    return null;
+  }
+  const id = String(raw.id ?? '').trim();
+  if (!id) {
+    issues.push(arcadeStageIssue('missing-node-id', `nodes[${index}].id`, 'stage node id is required'));
+    return null;
+  }
+  const rawTransitions = raw.transitions ?? raw.next ?? [];
+  const transitionList = Array.isArray(rawTransitions)
+    ? rawTransitions
+    : rawTransitions === undefined || rawTransitions === null
+      ? []
+      : [rawTransitions];
+  const transitions = transitionList
+    .map((transition, transitionIndex) => normalizeArcadeStageTransition(transition, id, transitionIndex, issues))
+    .filter(Boolean)
+    .sort((left, right) => right.priority - left.priority || left.order - right.order || left.id.localeCompare(right.id));
+  const references = arcadeStageReferences(raw);
+  return Object.freeze({
+    id,
+    kind: String(raw.kind ?? 'stage'),
+    terminal: raw.terminal === true || transitions.length === 0,
+    transitions: Object.freeze(transitions),
+    ...references,
+    ...(raw.metadata === undefined ? {} : { metadata: raw.metadata }),
+  });
+}
+
+function normalizeArcadeStageGraph(definition, catalogs = {}) {
+  const issues = [];
+  if (!definition || typeof definition !== 'object') {
+    return Object.freeze({
+      graph: null,
+      errors: Object.freeze([arcadeStageIssue('invalid-graph', '', 'stage graph definition must be an object')]),
+      warnings: Object.freeze([]),
+    });
+  }
+  const id = String(definition.id ?? '').trim();
+  if (!id) issues.push(arcadeStageIssue('missing-graph-id', 'id', 'stage graph id is required'));
+  const rawNodes = Array.isArray(definition.nodes) ? definition.nodes : [];
+  if (rawNodes.length === 0) issues.push(arcadeStageIssue('missing-nodes', 'nodes', 'stage graph requires at least one node'));
+  const nodes = rawNodes.map((node, index) => normalizeArcadeStageNode(node, index, issues)).filter(Boolean);
+  const byId = new Map();
+  for (const node of nodes) {
+    if (byId.has(node.id)) issues.push(arcadeStageIssue('duplicate-node-id', `nodes.${node.id}`, `duplicate stage node "${node.id}"`));
+    else byId.set(node.id, node);
+  }
+  const startNodeId = String(definition.startNodeId ?? definition.start ?? nodes[0]?.id ?? '').trim();
+  if (startNodeId && !byId.has(startNodeId)) {
+    issues.push(arcadeStageIssue('unknown-start-node', 'startNodeId', `unknown start node "${startNodeId}"`));
+  }
+  for (const node of nodes) {
+    arcadeStageValidateReferences(node, `nodes.${node.id}`, catalogs, issues);
+    for (const transition of node.transitions) {
+      if (!byId.has(transition.to)) {
+        issues.push(arcadeStageIssue(
+          'unknown-transition-target',
+          `nodes.${node.id}.transitions.${transition.id}`,
+          `transition "${transition.id}" targets unknown node "${transition.to}"`,
+          { nodeId: node.id, transitionId: transition.id, targetNodeId: transition.to },
+        ));
+      }
+    }
+  }
+  const warnings = [];
+  if (startNodeId && byId.has(startNodeId)) {
+    const reachable = new Set();
+    const visit = (nodeId) => {
+      if (reachable.has(nodeId)) return;
+      reachable.add(nodeId);
+      for (const transition of byId.get(nodeId)?.transitions ?? []) {
+        if (byId.has(transition.to)) visit(transition.to);
+      }
+    };
+    visit(startNodeId);
+    for (const node of nodes) {
+      if (!reachable.has(node.id)) {
+        warnings.push(arcadeStageIssue('unreachable-node', `nodes.${node.id}`, `stage node "${node.id}" is unreachable from "${startNodeId}"`));
+      }
+    }
+  }
+  const graph = Object.freeze({
+    id,
+    startNodeId,
+    nodes: Object.freeze(nodes),
+    ...(definition.metadata === undefined ? {} : { metadata: definition.metadata }),
+  });
+  return Object.freeze({ graph, errors: Object.freeze(issues), warnings: Object.freeze(warnings) });
+}
+
+export function validateStageGraph(definition, catalogs = {}) {
+  const result = normalizeArcadeStageGraph(definition, catalogs);
+  return Object.freeze({
+    ok: result.errors.length === 0,
+    graph: result.graph,
+    errors: result.errors,
+    warnings: result.warnings,
+  });
+}
+
+export function createStageGraph(definition, catalogs = {}) {
+  const result = validateStageGraph(definition, catalogs);
+  if (!result.ok) {
+    const error = new Error(`invalid stage graph: ${result.errors.map((issue) => issue.message).join('; ')}`);
+    error.issues = result.errors;
+    throw error;
+  }
+  return result.graph;
+}
+
+export function getStageNode(graph, nodeId) {
+  const id = arcadeStageId(nodeId, 'stage node id');
+  return graph?.nodes?.find((node) => node.id === id) ?? null;
+}
+
+function freezeArcadeStageGraphState(graph, raw = {}) {
+  if (raw.graphId !== undefined && raw.graphId !== null && String(raw.graphId) !== graph.id) {
+    throw new Error(`stage graph state belongs to "${raw.graphId}", expected "${graph.id}"`);
+  }
+  const validIds = new Set(graph.nodes.map((node) => node.id));
+  const currentNodeId = validIds.has(String(raw.currentNodeId ?? ''))
+    ? String(raw.currentNodeId)
+    : graph.startNodeId;
+  const completedNodeIds = arcadeStageIds(raw.completedNodeIds).filter((id) => validIds.has(id));
+  const visitedNodeIds = arcadeStageIds([...(raw.visitedNodeIds ?? []), currentNodeId]).filter((id) => validIds.has(id));
+  return Object.freeze({
+    graphId: graph.id,
+    currentNodeId,
+    completedNodeIds: Object.freeze(completedNodeIds),
+    visitedNodeIds: Object.freeze(visitedNodeIds),
+    status: raw.status === 'complete' ? 'complete' : 'active',
+    sequence: Math.max(0, Math.floor(arcadeStageFinite(raw.sequence, 0))),
+    revision: Math.max(0, Math.floor(arcadeStageFinite(raw.revision, 0))),
+  });
+}
+
+export function createStageGraphState(graph, raw = {}) {
+  if (!graph?.id || !Array.isArray(graph.nodes) || !graph.startNodeId) throw new Error('validated stage graph is required');
+  return freezeArcadeStageGraphState(graph, raw);
+}
+
+export function getCurrentStageNode(graph, state) {
+  const normalized = freezeArcadeStageGraphState(graph, state);
+  return getStageNode(graph, normalized.currentNodeId);
+}
+
+export function advanceStageGraph(graph, state, signal = 'complete', options = {}) {
+  const normalized = freezeArcadeStageGraphState(graph, state);
+  const current = getStageNode(graph, normalized.currentNodeId);
+  if (!current) throw new Error(`unknown current stage node "${normalized.currentNodeId}"`);
+  const resolvedSignal = arcadeStageId(signal, 'stage transition signal');
+  if (normalized.status === 'complete') {
+    return Object.freeze({
+      state: normalized,
+      changed: false,
+      transition: null,
+      events: Object.freeze([Object.freeze({ kind: 'graph-already-complete', graphId: graph.id, nodeId: current.id, signal: resolvedSignal })]),
+    });
+  }
+  const candidates = current.transitions.filter((transition) => transition.signal === resolvedSignal);
+  const transition = candidates.find((candidate) => options.canTransition?.(candidate, current, normalized, graph) !== false) ?? null;
+  if (!transition) {
+    if (resolvedSignal === 'complete' && current.terminal) {
+      const completedNodeIds = arcadeStageIds([...normalized.completedNodeIds, current.id]);
+      const next = freezeArcadeStageGraphState(graph, {
+        ...normalized,
+        completedNodeIds,
+        status: 'complete',
+        sequence: normalized.sequence + 1,
+        revision: normalized.revision + 1,
+      });
+      return Object.freeze({
+        state: next,
+        changed: true,
+        transition: null,
+        events: Object.freeze([
+          Object.freeze({ kind: 'node-completed', graphId: graph.id, nodeId: current.id, sequence: next.sequence }),
+          Object.freeze({ kind: 'graph-completed', graphId: graph.id, nodeId: current.id, sequence: next.sequence }),
+        ]),
+      });
+    }
+    return Object.freeze({
+      state: normalized,
+      changed: false,
+      transition: null,
+      events: Object.freeze([Object.freeze({ kind: 'transition-blocked', graphId: graph.id, nodeId: current.id, signal: resolvedSignal })]),
+    });
+  }
+  const target = getStageNode(graph, transition.to);
+  if (!target) throw new Error(`unknown transition target "${transition.to}"`);
+  const completedNodeIds = transition.completeCurrent
+    ? arcadeStageIds([...normalized.completedNodeIds, current.id])
+    : normalized.completedNodeIds;
+  const next = freezeArcadeStageGraphState(graph, {
+    ...normalized,
+    currentNodeId: target.id,
+    completedNodeIds,
+    visitedNodeIds: [...normalized.visitedNodeIds, target.id],
+    sequence: normalized.sequence + 1,
+    revision: normalized.revision + 1,
+  });
+  return Object.freeze({
+    state: next,
+    changed: true,
+    transition,
+    events: Object.freeze([
+      ...(transition.completeCurrent
+        ? [Object.freeze({ kind: 'node-completed', graphId: graph.id, nodeId: current.id, sequence: next.sequence })]
+        : []),
+      Object.freeze({
+        kind: 'stage-transitioned',
+        graphId: graph.id,
+        fromNodeId: current.id,
+        toNodeId: target.id,
+        transitionId: transition.id,
+        signal: resolvedSignal,
+        sequence: next.sequence,
+      }),
+    ]),
+  });
+}
+
+export function inspectStageGraphState(graph, state) {
+  const normalized = freezeArcadeStageGraphState(graph, state);
+  const current = getStageNode(graph, normalized.currentNodeId);
+  return Object.freeze({
+    graphId: graph.id,
+    currentNodeId: normalized.currentNodeId,
+    currentKind: current?.kind ?? null,
+    status: normalized.status,
+    completed: normalized.completedNodeIds.length,
+    total: graph.nodes.length,
+    ratio: graph.nodes.length === 0 ? 1 : normalized.completedNodeIds.length / graph.nodes.length,
+    availableSignals: Object.freeze([...new Set((current?.transitions ?? []).map((transition) => transition.signal))]),
+    sequence: normalized.sequence,
+    revision: normalized.revision,
+  });
+}
+
+function normalizeArcadeEncounter(raw, index, issues) {
+  if (!raw || typeof raw !== 'object') {
+    issues.push(arcadeStageIssue('invalid-encounter', `encounters[${index}]`, 'encounter must be an object'));
+    return null;
+  }
+  const id = String(raw.id ?? '').trim();
+  if (!id) {
+    issues.push(arcadeStageIssue('missing-encounter-id', `encounters[${index}].id`, 'encounter id is required'));
+    return null;
+  }
+  return Object.freeze({
+    id,
+    kind: String(raw.kind ?? 'encounter'),
+    delay: Math.max(0, arcadeStageFinite(raw.delay, 0)),
+    ...arcadeStageReferences(raw),
+    ...(raw.metadata === undefined ? {} : { metadata: raw.metadata }),
+  });
+}
+
+function normalizeArcadeEncounterPlan(definition, catalogs = {}) {
+  const issues = [];
+  if (!definition || typeof definition !== 'object') {
+    return Object.freeze({
+      plan: null,
+      errors: Object.freeze([arcadeStageIssue('invalid-encounter-plan', '', 'encounter plan definition must be an object')]),
+    });
+  }
+  const id = String(definition.id ?? '').trim();
+  if (!id) issues.push(arcadeStageIssue('missing-encounter-plan-id', 'id', 'encounter plan id is required'));
+  const rawEncounters = definition.encounters ?? definition.steps ?? [];
+  if (!Array.isArray(rawEncounters)) issues.push(arcadeStageIssue('invalid-encounters', 'encounters', 'encounters must be an array'));
+  const encounters = (Array.isArray(rawEncounters) ? rawEncounters : [])
+    .map((encounter, index) => normalizeArcadeEncounter(encounter, index, issues))
+    .filter(Boolean);
+  const seen = new Set();
+  for (const encounter of encounters) {
+    if (seen.has(encounter.id)) issues.push(arcadeStageIssue('duplicate-encounter-id', `encounters.${encounter.id}`, `duplicate encounter "${encounter.id}"`));
+    seen.add(encounter.id);
+    arcadeStageValidateReferences(encounter, `encounters.${encounter.id}`, catalogs, issues);
+  }
+  return Object.freeze({
+    plan: Object.freeze({
+      id,
+      encounters: Object.freeze(encounters),
+      ...(definition.metadata === undefined ? {} : { metadata: definition.metadata }),
+    }),
+    errors: Object.freeze(issues),
+  });
+}
+
+export function validateEncounterPlan(definition, catalogs = {}) {
+  const result = normalizeArcadeEncounterPlan(definition, catalogs);
+  return Object.freeze({ ok: result.errors.length === 0, plan: result.plan, errors: result.errors });
+}
+
+export function createEncounterPlan(definition, catalogs = {}) {
+  const result = validateEncounterPlan(definition, catalogs);
+  if (!result.ok) {
+    const error = new Error(`invalid encounter plan: ${result.errors.map((issue) => issue.message).join('; ')}`);
+    error.issues = result.errors;
+    throw error;
+  }
+  return result.plan;
+}
+
+function freezeArcadeEncounterState(plan, raw = {}) {
+  if (raw.planId !== undefined && raw.planId !== null && String(raw.planId) !== plan.id) {
+    throw new Error(`encounter state belongs to "${raw.planId}", expected "${plan.id}"`);
+  }
+  const completed = arcadeStageIds(raw.completedEncounterIds).filter((id) => plan.encounters.some((encounter) => encounter.id === id));
+  const requestedIndex = Math.floor(arcadeStageFinite(raw.index, completed.length));
+  const index = Math.max(0, Math.min(plan.encounters.length, requestedIndex));
+  const complete = raw.status === 'complete' || index >= plan.encounters.length;
+  return Object.freeze({
+    planId: plan.id,
+    index: complete ? plan.encounters.length : index,
+    currentEncounterId: complete ? null : plan.encounters[index]?.id ?? null,
+    completedEncounterIds: Object.freeze(completed),
+    status: complete ? 'complete' : 'active',
+    sequence: Math.max(0, Math.floor(arcadeStageFinite(raw.sequence, 0))),
+    revision: Math.max(0, Math.floor(arcadeStageFinite(raw.revision, 0))),
+  });
+}
+
+export function createEncounterState(plan, raw = {}) {
+  if (!plan?.id || !Array.isArray(plan.encounters)) throw new Error('validated encounter plan is required');
+  return freezeArcadeEncounterState(plan, raw);
+}
+
+export function getCurrentEncounter(plan, state) {
+  const normalized = freezeArcadeEncounterState(plan, state);
+  return normalized.status === 'complete' ? null : plan.encounters[normalized.index] ?? null;
+}
+
+export function advanceEncounter(plan, state, options = {}) {
+  const normalized = freezeArcadeEncounterState(plan, state);
+  const current = getCurrentEncounter(plan, normalized);
+  if (!current) {
+    return Object.freeze({
+      state: normalized,
+      changed: false,
+      encounter: null,
+      events: Object.freeze([Object.freeze({ kind: 'encounter-plan-already-complete', planId: plan.id })]),
+    });
+  }
+  if (options.canAdvance?.(current, normalized, plan) === false) {
+    return Object.freeze({
+      state: normalized,
+      changed: false,
+      encounter: current,
+      events: Object.freeze([Object.freeze({ kind: 'encounter-advance-blocked', planId: plan.id, encounterId: current.id })]),
+    });
+  }
+  const index = normalized.index + 1;
+  const complete = index >= plan.encounters.length;
+  const next = freezeArcadeEncounterState(plan, {
+    ...normalized,
+    index,
+    completedEncounterIds: [...normalized.completedEncounterIds, current.id],
+    status: complete ? 'complete' : 'active',
+    sequence: normalized.sequence + 1,
+    revision: normalized.revision + 1,
+  });
+  return Object.freeze({
+    state: next,
+    changed: true,
+    encounter: current,
+    events: Object.freeze([
+      Object.freeze({ kind: 'encounter-completed', planId: plan.id, encounterId: current.id, sequence: next.sequence }),
+      ...(complete
+        ? [Object.freeze({ kind: 'encounter-plan-completed', planId: plan.id, sequence: next.sequence })]
+        : [Object.freeze({ kind: 'encounter-activated', planId: plan.id, encounterId: next.currentEncounterId, sequence: next.sequence })]),
+    ]),
+  });
+}
+
+export function inspectEncounterState(plan, state) {
+  const normalized = freezeArcadeEncounterState(plan, state);
+  return Object.freeze({
+    planId: plan.id,
+    currentEncounterId: normalized.currentEncounterId,
+    status: normalized.status,
+    completed: normalized.completedEncounterIds.length,
+    total: plan.encounters.length,
+    ratio: plan.encounters.length === 0 ? 1 : normalized.completedEncounterIds.length / plan.encounters.length,
+    sequence: normalized.sequence,
+    revision: normalized.revision,
+  });
+}
+
+export async function installStageServices(graph, stateOrNodeId, installers, options = {}) {
+  const node = typeof stateOrNodeId === 'string'
+    ? getStageNode(graph, stateOrNodeId)
+    : getCurrentStageNode(graph, stateOrNodeId);
+  if (!node) throw new Error('stage node is required for service installation');
+  if (!installers || (typeof installers !== 'object' && !(installers instanceof Map))) {
+    throw new Error('stage service installers must be an object or Map');
+  }
+  const scope = options.scope ?? createResourceScope({ name: options.scopeName ?? `stage:${graph.id}:${node.id}` });
+  const services = {};
+  try {
+    for (const serviceId of node.serviceIds) {
+      const installer = installers instanceof Map ? installers.get(serviceId) : installers[serviceId];
+      if (typeof installer !== 'function') throw new Error(`missing stage service installer "${serviceId}"`);
+      const installed = await installer(Object.freeze({ graph, node, scope, serviceId, options }));
+      const wrapped = installed && typeof installed === 'object' && Object.prototype.hasOwnProperty.call(installed, 'resource')
+        ? installed
+        : { resource: installed };
+      services[serviceId] = scope.track(wrapped.resource, wrapped.dispose);
+    }
+  } catch (error) {
+    try {
+      await scope.release();
+    } catch (releaseError) {
+      throw new AggregateError([error, releaseError], `stage service installation failed for "${node.id}"`);
+    }
+    throw error;
+  }
+  const frozenServices = Object.freeze({ ...services });
+  return Object.freeze({
+    graphId: graph.id,
+    nodeId: node.id,
+    scope,
+    services: frozenServices,
+    get(serviceId) {
+      return frozenServices[String(serviceId)] ?? null;
+    },
+    release() {
+      return scope.release();
+    },
+  });
+}
+
 function normalizeHitContactRecord(record = {}) {
   return {
     hits: Math.max(0, Math.floor(finiteNumber(record.hits, 0))),
@@ -4748,6 +5273,10 @@ export function createCanvasTexturePassOptions(options = {}) {
         dirty: true,
         redraws: 0,
         skippedFrames: 0,
+        textureBytes: resolvedWidth * resolvedHeight * 4,
+        uploads: 0,
+        lastUploadBytes: 0,
+        totalUploadBytes: 0,
         invalidate() {
           state.dirty = true;
         },
@@ -4767,9 +5296,16 @@ export function createCanvasTexturePassOptions(options = {}) {
       else state.texture.update?.();
       state.dirty = false;
       state.redraws += 1;
+      state.lastUploadBytes = state.width * state.height * 4;
+      state.textureBytes = state.lastUploadBytes;
+      state.totalUploadBytes += state.lastUploadBytes;
+      state.uploads += 1;
     },
     resize(payload, pass) {
-      if (resizeWithRuntime) resizeState(pass.state, payload.width, payload.height);
+      if (resizeWithRuntime) {
+        resizeState(pass.state, payload.width, payload.height);
+        pass.state.textureBytes = pass.state.width * pass.state.height * 4;
+      }
       onResize?.(payload, pass);
     },
     destroy(pass) {
@@ -6636,6 +7172,269 @@ export function verifyRunSummary(summary) {
 
 // END ARCADE SERVICES 0.13-0.16
 
+function arcadePixiFrameCapacity(value, fallback) {
+  const resolved = Math.floor(finiteNumber(value, fallback));
+  coreInvariant(resolved > 0, 'Pixi frame-pool capacity must be a positive integer');
+  return resolved;
+}
+
+/**
+ * Lazy, frame-scoped ownership for transient Pixi display objects.
+ *
+ * Unlike the fixed recycling pool, objects are created only when a frame first
+ * needs them. A frame never aliases one display object to multiple entities:
+ * entries above maxCapacity are reported as dropped rather than recycled while
+ * still visible.
+ */
+export function createPixiFramePool(options = {}) {
+  coreInvariant(options.container?.addChild, 'Pixi frame pool requires a container');
+  coreInvariant(typeof options.createSprite === 'function', 'Pixi frame pool requires createSprite');
+  coreInvariant(options.activate === undefined || typeof options.activate === 'function', 'Pixi frame-pool activate must be a function');
+  coreInvariant(options.deactivate === undefined || typeof options.deactivate === 'function', 'Pixi frame-pool deactivate must be a function');
+
+  const maxCapacity = arcadePixiFrameCapacity(options.maxCapacity ?? options.capacity, 256);
+  const initialCapacity = Math.min(
+    maxCapacity,
+    Math.max(0, Math.floor(finiteNumber(options.initialCapacity, 0))),
+  );
+  const sprites = [];
+  let active = 0;
+  let cursor = 0;
+  let frame = 0;
+  let frameDropped = 0;
+  let totalDropped = 0;
+  let peakActive = 0;
+  let created = 0;
+  let destroyed = false;
+  let frameOpen = false;
+
+  const deactivate = (sprite, index, reason) => {
+    sprite.visible = false;
+    sprite.renderable = false;
+    options.deactivate?.(sprite, Object.freeze({ index, frame, reason }));
+  };
+
+  const createSprite = (index) => {
+    const sprite = options.createSprite(index);
+    coreInvariant(sprite && typeof sprite === 'object', 'Pixi frame-pool createSprite must return an object');
+    deactivate(sprite, index, 'create');
+    options.container.addChild(sprite);
+    sprites.push(sprite);
+    created += 1;
+    return sprite;
+  };
+
+  for (let index = 0; index < initialCapacity; index += 1) createSprite(index);
+
+  const snapshot = () => Object.freeze({
+    frame,
+    frameOpen,
+    active,
+    capacity: sprites.length,
+    maxCapacity,
+    created,
+    dropped: totalDropped,
+    frameDropped,
+    peakActive,
+    destroyed,
+  });
+
+  return {
+    beginFrame() {
+      coreInvariant(!destroyed, 'Pixi frame pool is destroyed');
+      coreInvariant(!frameOpen, 'Pixi frame pool frame is already open');
+      frame += 1;
+      cursor = 0;
+      frameDropped = 0;
+      frameOpen = true;
+      return snapshot();
+    },
+    acquire(payload) {
+      coreInvariant(!destroyed, 'Pixi frame pool is destroyed');
+      coreInvariant(frameOpen, 'Pixi frame pool acquire requires beginFrame');
+      if (cursor >= maxCapacity) {
+        frameDropped += 1;
+        totalDropped += 1;
+        return null;
+      }
+      const index = cursor;
+      const reused = index < sprites.length;
+      const sprite = reused ? sprites[index] : createSprite(index);
+      cursor += 1;
+      sprite.visible = true;
+      sprite.renderable = true;
+      options.activate?.(sprite, payload, Object.freeze({ index, frame, reused }));
+      return sprite;
+    },
+    endFrame() {
+      coreInvariant(!destroyed, 'Pixi frame pool is destroyed');
+      coreInvariant(frameOpen, 'Pixi frame pool endFrame requires beginFrame');
+      for (let index = cursor; index < active; index += 1) {
+        deactivate(sprites[index], index, 'frame-end');
+      }
+      active = cursor;
+      peakActive = Math.max(peakActive, active);
+      frameOpen = false;
+      return snapshot();
+    },
+    clear() {
+      if (destroyed) return 0;
+      const cleared = active;
+      for (let index = 0; index < active; index += 1) deactivate(sprites[index], index, 'clear');
+      active = 0;
+      cursor = 0;
+      frameOpen = false;
+      return cleared;
+    },
+    values: () => [...sprites],
+    activeValues: () => sprites.slice(0, active),
+    snapshot,
+    destroy() {
+      if (destroyed) return false;
+      this.clear();
+      destroyed = true;
+      for (const [index, sprite] of sprites.entries()) {
+        options.destroySprite?.(sprite, Object.freeze({ index, frame }));
+        if (!options.destroySprite) {
+          sprite.removeFromParent?.();
+          sprite.destroy?.();
+        }
+      }
+      sprites.length = 0;
+      return true;
+    },
+  };
+}
+
+function arcadePixiGaugeLayout(raw = {}, fallback = {}) {
+  return Object.freeze({
+    x: finiteNumber(raw.x, fallback.x ?? 0),
+    y: finiteNumber(raw.y, fallback.y ?? 0),
+    width: positiveNumber(raw.width, fallback.width ?? 100),
+    height: positiveNumber(raw.height, fallback.height ?? 12),
+    gap: Math.max(0, finiteNumber(raw.gap, fallback.gap ?? 2)),
+  });
+}
+
+function arcadePixiGaugeStyle(raw = {}, fallback = {}) {
+  return Object.freeze({
+    background: raw.background ?? fallback.background ?? 0x1a0a2e,
+    fill: raw.fill ?? fallback.fill ?? 0xffffff,
+    warning: raw.warning ?? fallback.warning ?? 0xff073a,
+    border: raw.border ?? fallback.border ?? raw.fill ?? fallback.fill ?? 0xffffff,
+    borderWidth: Math.max(0, finiteNumber(raw.borderWidth, fallback.borderWidth ?? 1)),
+    warningAlpha: clampNumber(finiteNumber(raw.warningAlpha, fallback.warningAlpha ?? 0.72), 0, 1),
+    backgroundAlpha: clampNumber(finiteNumber(raw.backgroundAlpha, fallback.backgroundAlpha ?? 1), 0, 1),
+    fillAlpha: clampNumber(finiteNumber(raw.fillAlpha, fallback.fillAlpha ?? 1), 0, 1),
+  });
+}
+
+/** Renderer-owned native gauge with no game-specific typography or policy. */
+export function createPixiHudGauge(options = {}) {
+  const PIXI = options.PIXI;
+  coreInvariant(PIXI?.Container, 'Pixi HUD gauge requires PIXI.Container');
+  coreInvariant(PIXI?.Graphics, 'Pixi HUD gauge requires PIXI.Graphics');
+  coreInvariant(options.container?.addChild, 'Pixi HUD gauge requires a container');
+
+  const root = new PIXI.Container();
+  const graphics = new PIXI.Graphics();
+  root.label = options.label ?? 'arcade-hud-gauge';
+  root.addChild(graphics);
+  options.container.addChild(root);
+
+  let layout = arcadePixiGaugeLayout(options.layout ?? options);
+  let style = arcadePixiGaugeStyle(options.style);
+  let gauge = resolveHudGauge(options.value === undefined ? {} : options);
+  let updates = 0;
+  let destroyed = false;
+
+  const drawFill = (x, y, width, height, color, alpha) => {
+    if (width <= 0 || height <= 0) return;
+    graphics.rect(x, y, width, height).fill({ color, alpha });
+  };
+
+  const render = (input = {}, updateOptions = {}) => {
+    coreInvariant(!destroyed, 'Pixi HUD gauge is destroyed');
+    if (updateOptions.layout) layout = arcadePixiGaugeLayout(updateOptions.layout, layout);
+    if (updateOptions.style) style = arcadePixiGaugeStyle(updateOptions.style, style);
+    gauge = resolveHudGauge(input);
+    root.position?.set?.(layout.x, layout.y);
+    root.visible = updateOptions.visible !== false;
+    graphics.clear();
+    graphics.rect(0, 0, layout.width, layout.height).fill({
+      color: style.background,
+      alpha: style.backgroundAlpha,
+    });
+
+    if (gauge.segments.length > 0) {
+      const gapTotal = layout.gap * Math.max(0, gauge.segments.length - 1);
+      const segmentWidth = Math.max(0, (layout.width - gapTotal) / gauge.segments.length);
+      for (const segment of gauge.segments) {
+        const physicalIndex = gauge.direction === 'reverse'
+          ? gauge.segments.length - 1 - segment.index
+          : segment.index;
+        const segmentX = physicalIndex * (segmentWidth + layout.gap);
+        const fillWidth = segmentWidth * segment.fill;
+        const fillX = gauge.direction === 'reverse' ? segmentX + segmentWidth - fillWidth : segmentX;
+        drawFill(fillX, 0, fillWidth, layout.height, style.fill, style.fillAlpha);
+      }
+    } else {
+      const fillWidth = layout.width * gauge.ratio;
+      const fillX = gauge.direction === 'reverse' ? layout.width - fillWidth : 0;
+      drawFill(fillX, 0, fillWidth, layout.height, style.fill, style.fillAlpha);
+      if (gauge.warning) {
+        drawFill(
+          fillX,
+          0,
+          fillWidth,
+          layout.height,
+          style.warning,
+          style.warningAlpha * gauge.pulse,
+        );
+      }
+    }
+
+    if (style.borderWidth > 0) {
+      graphics.rect(0, 0, layout.width, layout.height).stroke({
+        color: style.border,
+        width: style.borderWidth,
+      });
+    }
+    updates += 1;
+    return gauge;
+  };
+
+  render(options.value === undefined ? {} : options);
+
+  return Object.freeze({
+    root,
+    graphics,
+    update: render,
+    setLayout(next) {
+      layout = arcadePixiGaugeLayout(next, layout);
+      return render(gauge, { layout });
+    },
+    snapshot() {
+      return Object.freeze({
+        label: root.label,
+        layout,
+        style,
+        gauge,
+        updates,
+        visible: root.visible !== false,
+        destroyed,
+      });
+    },
+    destroy() {
+      if (destroyed) return false;
+      destroyed = true;
+      root.removeFromParent?.();
+      root.destroy?.({ children: true });
+      return true;
+    },
+  });
+}
+
 // BEGIN ARCADE SERVICES 0.17-1.0
 
 export const ARCADE_RUNTIME_API_LEVEL = 1;
@@ -6644,12 +7443,14 @@ export const ARCADE_RUNTIME_CAPABILITIES = Object.freeze([
   'action-phases',
   'assets',
   'audio',
+  'browser-performance-sampling',
   'collision',
   'deterministic-replay',
   'entity-world',
   'gameplay-modules',
   'input',
   'localization',
+  'native-pixi-ownership',
   'netcode-adapters',
   'performance-budgets',
   'persistence',
@@ -6668,6 +7469,184 @@ export function getArcadeRuntimeCapabilities() {
     apiLevel: ARCADE_RUNTIME_API_LEVEL,
     capabilities: ARCADE_RUNTIME_CAPABILITIES,
   });
+}
+
+export const ARCADE_HARDWARE_TIERS = Object.freeze(['low', 'balanced', 'high']);
+
+export const DEFAULT_ARCADE_HARDWARE_BUDGETS = Object.freeze({
+  low: Object.freeze({
+    frameMeanMs: 24,
+    frameP95Ms: 40,
+    frameMaxMs: 100,
+    allocationBytesPerFrame: 64 * 1024,
+    uploadBytesPerFrame: 4 * 1024 * 1024,
+    bundleBytes: 2 * 1024 * 1024,
+    heapBytes: 256 * 1024 * 1024,
+    minimumSamples: 60,
+  }),
+  balanced: Object.freeze({
+    frameMeanMs: 18,
+    frameP95Ms: 30,
+    frameMaxMs: 75,
+    allocationBytesPerFrame: 128 * 1024,
+    uploadBytesPerFrame: 6 * 1024 * 1024,
+    bundleBytes: 3 * 1024 * 1024,
+    heapBytes: 512 * 1024 * 1024,
+    minimumSamples: 90,
+  }),
+  high: Object.freeze({
+    frameMeanMs: 14,
+    frameP95Ms: 24,
+    frameMaxMs: 60,
+    allocationBytesPerFrame: 256 * 1024,
+    uploadBytesPerFrame: 10 * 1024 * 1024,
+    bundleBytes: 4 * 1024 * 1024,
+    heapBytes: 1024 * 1024 * 1024,
+    minimumSamples: 120,
+  }),
+});
+
+export function detectArcadeHardwareTier(input = {}) {
+  const memoryGb = finiteNumber(input.deviceMemoryGb ?? input.deviceMemory, 4);
+  const cores = Math.max(1, Math.floor(finiteNumber(input.hardwareConcurrency, 4)));
+  const dpr = Math.max(1, finiteNumber(input.devicePixelRatio, 1));
+  const software = input.softwareRenderer === true || /swiftshader|llvmpipe|software/i.test(String(input.renderer ?? ''));
+  if (software || memoryGb <= 2 || cores <= 2 || (cores <= 4 && dpr >= 2.5)) return 'low';
+  if (memoryGb >= 8 && cores >= 8 && dpr <= 2.5) return 'high';
+  return 'balanced';
+}
+
+function arcadeResourceSummary(samples, key) {
+  const values = samples.map((sample) => Math.max(0, finiteNumber(sample[key], 0)));
+  if (!values.length) return Object.freeze({ mean: 0, p95: 0, max: 0, last: 0 });
+  const sorted = [...values].sort((a, b) => a - b);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const p95Index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * 0.95) - 1));
+  return Object.freeze({
+    mean: total / values.length,
+    p95: sorted[p95Index],
+    max: sorted[sorted.length - 1],
+    last: values[values.length - 1],
+  });
+}
+
+export function createHardwareBudgetMonitor(options = {}) {
+  const tier = options.tier ?? detectArcadeHardwareTier(options.device ?? {});
+  coreInvariant(ARCADE_HARDWARE_TIERS.includes(tier), `unknown arcade hardware tier: ${tier}`);
+  const profiles = options.profiles ?? DEFAULT_ARCADE_HARDWARE_BUDGETS;
+  const budget = Object.freeze({ ...(profiles[tier] ?? {}) });
+  const capacity = Math.max(1, Math.floor(finiteNumber(options.sampleSize, 240)));
+  const samples = [];
+  let bundleBytes = Math.max(0, finiteNumber(options.bundleBytes, 0));
+
+  const monitor = {
+    tier,
+    budget,
+    record(sample = {}) {
+      const normalized = Object.freeze({
+        frameMs: Math.max(0, finiteNumber(sample.frameMs, 0)),
+        allocationBytes: Math.max(0, finiteNumber(sample.allocationBytes, 0)),
+        uploadBytes: Math.max(0, finiteNumber(sample.uploadBytes, 0)),
+        heapBytes: Math.max(0, finiteNumber(sample.heapBytes, 0)),
+      });
+      samples.push(normalized);
+      if (samples.length > capacity) samples.splice(0, samples.length - capacity);
+      return normalized;
+    },
+    setBundleBytes(value) {
+      bundleBytes = Math.max(0, finiteNumber(value, 0));
+      return bundleBytes;
+    },
+    evaluate() {
+      const frame = arcadeResourceSummary(samples, 'frameMs');
+      const allocation = arcadeResourceSummary(samples, 'allocationBytes');
+      const upload = arcadeResourceSummary(samples, 'uploadBytes');
+      const heap = arcadeResourceSummary(samples, 'heapBytes');
+      const violations = [];
+      const check = (metric, actual, limit) => {
+        if (Number.isFinite(limit) && actual > limit) violations.push(Object.freeze({ metric, budget: limit, actual }));
+      };
+      check('frameMeanMs', frame.mean, budget.frameMeanMs);
+      check('frameP95Ms', frame.p95, budget.frameP95Ms);
+      check('frameMaxMs', frame.max, budget.frameMaxMs);
+      check('allocationBytesPerFrame', allocation.p95, budget.allocationBytesPerFrame);
+      check('uploadBytesPerFrame', upload.p95, budget.uploadBytesPerFrame);
+      check('bundleBytes', bundleBytes, budget.bundleBytes);
+      check('heapBytes', heap.max, budget.heapBytes);
+      if (Number.isFinite(budget.minimumSamples) && samples.length < budget.minimumSamples) {
+        violations.push(Object.freeze({ metric: 'count', budget: budget.minimumSamples, actual: samples.length }));
+      }
+      return Object.freeze({
+        tier,
+        pass: violations.length === 0,
+        budget,
+        samples: samples.length,
+        bundleBytes,
+        summary: Object.freeze({ frame, allocation, upload, heap }),
+        violations: Object.freeze(violations),
+      });
+    },
+    snapshot() {
+      return monitor.evaluate();
+    },
+    reset() {
+      const count = samples.length;
+      samples.length = 0;
+      return count;
+    },
+  };
+  return monitor;
+}
+
+export function createBrowserPerformanceSampler(options = {}) {
+  const refreshEverySamples = Math.max(1, Math.floor(finiteNumber(options.refreshEverySamples, 120)));
+  const performanceRef = options.performance ?? globalThis.performance;
+  const resourcePattern = options.resourcePattern ?? /\.(?:js|mjs)(?:\?|$)/;
+  coreInvariant(resourcePattern instanceof RegExp, 'browser performance resourcePattern must be a RegExp');
+  let samples = 0;
+  let refreshes = 0;
+  let bundleBytes = 0;
+  let heapBytes = 0;
+  let invalidated = true;
+
+  const refreshBundleBytes = () => {
+    const entries = performanceRef?.getEntriesByType?.('resource') ?? [];
+    bundleBytes = entries
+      .filter((entry) => {
+        resourcePattern.lastIndex = 0;
+        return resourcePattern.test(String(entry?.name ?? ''));
+      })
+      .reduce((total, entry) => total + Math.max(0, finiteNumber(entry?.encodedBodySize, 0)), 0);
+    refreshes += 1;
+    invalidated = false;
+  };
+
+  const sampler = {
+    sample(sampleOptions = {}) {
+      samples += 1;
+      const due = samples === 1 || (samples - 1) % refreshEverySamples === 0;
+      if (sampleOptions.force === true || invalidated || due) refreshBundleBytes();
+      heapBytes = Math.max(0, finiteNumber(performanceRef?.memory?.usedJSHeapSize, 0));
+      return Object.freeze({ bundleBytes, heapBytes, samples, refreshes });
+    },
+    invalidate() {
+      invalidated = true;
+      return true;
+    },
+    snapshot() {
+      return Object.freeze({ bundleBytes, heapBytes, samples, refreshes, refreshEverySamples, invalidated });
+    },
+    reset() {
+      const previous = samples;
+      samples = 0;
+      refreshes = 0;
+      bundleBytes = 0;
+      heapBytes = 0;
+      invalidated = true;
+      return previous;
+    },
+  };
+  return sampler;
 }
 
 export function assertArcadeRuntimeCompatibility(requirements = {}) {

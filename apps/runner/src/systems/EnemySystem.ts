@@ -25,6 +25,8 @@ export interface EnemyDef {
 	attackRange: number;
 	attackCd: number;
 	ai: EnemyAiDef;
+	spriteSheetId?: string;
+	spriteAnimation?: string;
 }
 
 export interface Enemy extends CombatEntity {
@@ -43,6 +45,25 @@ export interface EnemyEntity extends Enemy {
 	attackRange: number;
 	attackCd: number;
 	ai: EnemyAiDef;
+}
+
+export function resolveEnemySpriteAnimation(enemy: Enemy): string {
+	if (enemy.hp <= 0) return 'death';
+	if (enemy.stun > 0) return 'stun_or_parried';
+	if ((enemy.flashTimer ?? 0) > 0) return 'hurt';
+
+	switch (enemy.state) {
+		case 'patrol':
+		case 'alert':
+			return Math.abs(enemy.vx) > 1 ? 'patrol_or_move' : 'idle';
+		case 'windup':
+			return 'windup';
+		case 'attack':
+			return 'attack';
+		case 'idle':
+		case 'recovery':
+			return 'idle';
+	}
 }
 
 export class EnemySystem {
@@ -77,7 +98,10 @@ export class EnemySystem {
 			attackRange: def.attackRange,
 			attackCd: def.attackCd,
 			ai: def.ai,
+			spriteSheetId: def.spriteSheetId,
+			spriteAnimation: def.spriteAnimation,
 		};
+		enemy.spriteAnimation ??= resolveEnemySpriteAnimation(enemy);
 		this.enemies.push(enemy);
 		return enemy;
 	}
@@ -109,7 +133,10 @@ export class EnemySystem {
 		void player;
 
 		for (const enemy of enemies) {
-			if (enemy.hp <= 0) continue;
+			if (enemy.hp <= 0) {
+				enemy.spriteAnimation = resolveEnemySpriteAnimation(enemy);
+				continue;
+			}
 
 			enemy.timer -= dt;
 
@@ -153,6 +180,8 @@ export class EnemySystem {
 					}
 					break;
 			}
+
+			enemy.spriteAnimation = resolveEnemySpriteAnimation(enemy);
 		}
 	}
 

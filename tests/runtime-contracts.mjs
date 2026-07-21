@@ -64,7 +64,8 @@ const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
 const companionSystemSource = await text('apps/runner/src/systems/CompanionSystem.ts');
 const bossPhaseSystemSource = await text('apps/runner/src/systems/BossPhaseSystem.ts');
 const campaignSource = await text('apps/runner/src/game/Campaign.ts');
-const spriteRendererSource = await text('apps/runner/src/renderer/SpriteRenderer.ts');
+const animationStateSource = await text('apps/runner/src/renderer/AnimationState.ts');
+const spritePlaybackSource = await text('packages/sprite-contracts/src/playback.ts');
 const modeRouter = await text('apps/runner/src/game/ModeRouter.ts');
 const modeSceneFactories = await text('apps/runner/src/scenes/ModeSceneFactories.ts');
 const smokeMain = await text('apps/runner/src/smokeMain.ts');
@@ -991,19 +992,28 @@ for (const required of [
 }
 
 for (const required of [
-	'getAnimationEvents',
-	'SpriteAnimationEvent',
+	'advanceSpriteAnimation',
 	'collectArcadeSpriteAnimationEvents',
+	'completedThisStep',
+	'advancedFrames',
+	'events',
 ]) {
 	assert(
-		spriteRendererSource.includes(required),
-		`SpriteRenderer missing animation event API: ${required}`
+		spritePlaybackSource.includes(required),
+		`Shared sprite playback missing animation event API: ${required}`
+	);
+}
+for (const required of ['advanceAnimationStep', 'SpriteAnimationPlaybackStep']) {
+	assert(
+		animationStateSource.includes(required),
+		`AnimationState missing shared playback facade: ${required}`
 	);
 }
 for (const required of [
 	'advanceAnimationFrames',
-	'emitAnimationEvents',
-	'getAnimationEvents(PLAYER_SPRITE_SHEET_ID',
+	'advanceAnimationStep',
+	'step.events',
+	'emitAnimationEvent',
 	"case 'footstep'",
 	"case 'vfx'",
 ]) {
@@ -1090,7 +1100,9 @@ assert(
 	'UIRenderer must draw HUD item icons from HUD_ICON_SHEET'
 );
 assert(
-	rendererSource.includes('this.uiRenderer.render(this.ctx, player, camera, this.spriteRenderer)'),
+	/this\.uiRenderer\.render\(\s*this\.ctx,\s*player,\s*camera,\s*this\.spriteRenderer(?:\s*,|\s*\))/.test(
+		rendererSource
+	),
 	'Renderer must pass SpriteRenderer into UIRenderer so item_icons can render'
 );
 
