@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createGameFlow } from '../game/GameFlow';
+import { createDefaultAdventureSave } from '../game/adventure/AdventureState';
 import { autosaveGameFlow } from './AutosaveFeedback';
 import { SAVE_KEY, createMemorySaveDriver } from './SaveStore';
 
@@ -23,5 +24,18 @@ describe('autosaveGameFlow', () => {
 		});
 		expect(events[0]).toEqual(feedback);
 		vi.useRealTimers();
+	});
+
+	it('persists world position when adventure state is supplied', () => {
+		const driver = createMemorySaveDriver();
+		const flow = createGameFlow();
+		const adventure = createDefaultAdventureSave({
+			currentLocationId: 'lower-sprawl:settlement',
+			currentSpawnId: 'respawn',
+		});
+
+		autosaveGameFlow(driver, flow, 'world-travel', adventure);
+
+		expect(driver.getItem(SAVE_KEY)).toContain('lower-sprawl:settlement');
 	});
 });

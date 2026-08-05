@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { deployStoryStageFromTitle } from './helpers/deploy-story-stage';
 
 type Present<T> = Exclude<T, null>;
 
@@ -32,6 +33,12 @@ interface E2EBadgerHarness
 interface E2EWindow extends Window {
 	__badger: E2EBadgerHarness;
 	__lowerSprawlEvents: unknown[];
+	__lowerSprawlEnemyEvents: Array<{
+		kind: string;
+		enemyId: string;
+		attack: string;
+		playerHp?: number;
+	}>;
 	__stageCompletions: unknown[];
 	__autosaves: Array<{ reason: string }>;
 	__skillPurchases: unknown[];
@@ -46,11 +53,7 @@ async function waitForScene(page: Page, name: string): Promise<void> {
 }
 
 async function enterLowerSprawl(page: Page): Promise<void> {
-	await page.goto('/');
-	await waitForScene(page, 'TitleScene');
-	await page.locator('#game').click();
-	await page.keyboard.press('Enter');
-	await waitForScene(page, 'StoryFlowScene');
+	await deployStoryStageFromTitle(page, 'lower-sprawl');
 
 	for (let safety = 0; safety < 8; safety += 1) {
 		const mode = await page.evaluate(() => (window as E2EWindow).__badger.getStoryState().mode);
@@ -91,11 +94,23 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 			}
 			const e2eWindow = window as E2EWindow;
 			e2eWindow.__lowerSprawlEvents = [];
+			e2eWindow.__lowerSprawlEnemyEvents = [];
 			e2eWindow.__stageCompletions = [];
 			e2eWindow.__autosaves = [];
 			e2eWindow.__skillPurchases = [];
 			window.addEventListener('badger:lower-sprawl-progress', (event) => {
 				e2eWindow.__lowerSprawlEvents.push((event as CustomEvent).detail);
+			});
+			window.addEventListener('badger:lower-sprawl-enemy', (event) => {
+				const detail = (event as CustomEvent).detail as {
+					kind: string;
+					enemyId: string;
+					attack: string;
+				};
+				e2eWindow.__lowerSprawlEnemyEvents.push({
+					...detail,
+					playerHp: e2eWindow.__badger?.getPlayer()?.hp,
+				});
 			});
 			window.addEventListener('badger:stage-complete', (event) => {
 				e2eWindow.__stageCompletions.push((event as CustomEvent).detail);
@@ -195,18 +210,55 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 			(window as E2EWindow).__badger.getEnemies().find((enemy) => enemy.role === 'patrol')
 		);
 		expect(patrol).toBeTruthy();
-		await teleportTo(page, patrol.x + 45, patrol.y + 20);
-
+		await teleportTo(page, patrol.x - 90, patrol.y + 20);
+		const hpBeforeTelegraph = await page.evaluate(
+			() => (window as E2EWindow).__badger.getPlayer()?.hp
+		);
+		// Bounded perception requires admissible evidence. This swing is outside
+		// claw range but produces the authored melee sound for the local patrol.
+		await page.keyboard.press('KeyJ');
 		await expect
 			.poll(() =>
 				page.evaluate((id) => {
 					const enemy = (window as E2EWindow).__badger
 						.getEnemies()
 						.find((candidate) => candidate.id === id);
-					return enemy?.aiState;
+					return enemy?.awarenessState;
 				}, patrol.id)
 			)
-			.toMatch(/windup|attack|recovery/);
+			.not.toBe('routine');
+		const alertedPatrol = await page.evaluate((id) =>
+			(window as E2EWindow).__badger.getEnemies().find((enemy) => enemy.id === id)
+		, patrol.id);
+		await teleportTo(page, (alertedPatrol?.x ?? patrol.x) - 45, alertedPatrol?.y ?? patrol.y);
+
+		await expect
+			.poll(() =>
+				page.evaluate(
+					(id) =>
+						(window as E2EWindow).__lowerSprawlEnemyEvents.filter(
+							(event) => event.enemyId === id
+						).length,
+					patrol.id
+				)
+			)
+			.toBeGreaterThanOrEqual(2);
+		const patrolEvents = await page.evaluate(
+			(id) =>
+				(window as E2EWindow).__lowerSprawlEnemyEvents.filter(
+					(event) => event.enemyId === id
+				),
+			patrol.id
+		);
+		expect(patrolEvents.slice(0, 2).map((event) => event.kind)).toEqual([
+			'enemy-telegraph',
+			'enemy-attack',
+		]);
+		expect(patrolEvents[0]).toMatchObject({
+			playerHp: hpBeforeTelegraph,
+		});
+		expect(patrolEvents[0]?.attack).toBeTruthy();
+		expect(patrolEvents[1]?.attack).toBe(patrolEvents[0]?.attack);
 	});
 
 	test('runs production hazards, Captain Grin patterns, and the complete Burrowbreaker route', async ({
@@ -220,6 +272,13 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 				)
 			)
 			.toBe(true);
+		const captain = await page.evaluate(() =>
+			(window as E2EWindow).__badger
+				.getEnemies()
+				.find((enemy) => enemy.bossId === 'tollbooth-captain-grin')
+		);
+		expect(captain).toBeTruthy();
+		await teleportTo(page, (captain?.x ?? 1480) - 95, captain?.y ?? 418);
 
 		await expect
 			.poll(() => page.evaluate(() => (window as E2EWindow).__badger.getCaptainGrin().attackCount))
@@ -425,11 +484,28 @@ test.describe('Lower Sprawl complete vertical slice', () => {
 			.toBe('debrief');
 
 		const completion = await page.evaluate(() => (window as E2EWindow).__stageCompletions.at(-1));
-		expect(completion).toEqual({
+		expect(completion).toMatchObject({
 			stageId: 'lower-sprawl',
 			completedQuestIds: ['meter-maidens-ledger'],
 			completedMinigameIds: ['toll-gate-rhythm'],
 			completedTutorialIds: ['jump-coyote', 'public-route-reading'],
+		});
+		expect(completion).toMatchObject({
+			buildTelemetry: {
+				stageId: 'lower-sprawl',
+				replayTimeline: expect.arrayContaining([
+					expect.objectContaining({ kind: 'run-start', sequence: 0 }),
+					expect.objectContaining({ kind: 'expedition-settled' }),
+					expect.objectContaining({ kind: 'build-locked' }),
+				]),
+			},
+			expeditionCommit: {
+				stageId: 'lower-sprawl',
+				runId: expect.stringContaining('run:lower-sprawl:'),
+				inventory: expect.any(Array),
+			},
+			resolutionApproaches: expect.arrayContaining(['ballistics', 'claw', 'hacking']),
+			rewardDrops: expect.any(Array),
 		});
 
 		const progress = await page.evaluate(() => (window as E2EWindow).__badger.getStoryProgress());

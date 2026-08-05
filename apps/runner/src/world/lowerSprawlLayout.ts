@@ -1,12 +1,14 @@
 import type { CombatEntity } from '../systems/CombatSystem';
 import type { Pickup } from '../systems/ItemSystem';
 import type { Platform } from '../systems/PhysicsSystem';
+import type { StageEncounterTopology } from './EncounterTopology';
 
 export interface StageLayout {
 	id: string;
 	platforms: Platform[];
 	pickups: Pickup[];
 	enemies: CombatEntity[];
+	encounterTopology?: StageEncounterTopology;
 }
 
 export const lowerSprawlLayout: StageLayout = {
@@ -206,5 +208,8 @@ export function cloneLowerSprawlLayout(): StageLayout {
 		platforms: lowerSprawlLayout.platforms.map((platform) => ({ ...platform })),
 		pickups: lowerSprawlLayout.pickups.map((pickup) => ({ ...pickup })),
 		enemies: lowerSprawlLayout.enemies.map((enemy) => ({ ...enemy })),
+		encounterTopology: lowerSprawlLayout.encounterTopology
+			? structuredClone(lowerSprawlLayout.encounterTopology)
+			: undefined,
 	};
 }

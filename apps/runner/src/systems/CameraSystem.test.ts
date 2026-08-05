@@ -10,6 +10,14 @@ describe('CameraSystem scene integration', () => {
 		expect(camera.getState().x).toBeGreaterThan(0);
 	});
 
+	it('uses a closer story composition without changing simulation coordinates', () => {
+		const camera = new CameraSystem();
+		camera.step(600, 0, 1600, 1);
+
+		expect(camera.getState().zoom).toBeGreaterThan(1);
+		expect(camera.getState().visibleWorldWidth).toBeLessThan(960);
+	});
+
 	it('looks farther into the player travel direction', () => {
 		const neutral = new CameraSystem();
 		const moving = new CameraSystem();

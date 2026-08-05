@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 test.describe('Story heat/favor balance', () => {
 	test('projects seeded heat and favor into stage runtime balance rules', async ({ page }) => {
@@ -34,9 +35,7 @@ test.describe('Story heat/favor balance', () => {
 
 		await page.goto('/');
 		await expect(page.locator('#game')).toBeVisible();
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await expect.poll(() => consoleMessages).toContain('StoryFlowScene entered');
+		await enterStoryFlow(page);
 
 		for (let index = 0; index < 3; index += 1) {
 			await page.keyboard.press('Enter');

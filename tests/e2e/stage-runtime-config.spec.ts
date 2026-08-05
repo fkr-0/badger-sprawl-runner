@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 test.describe('Stage runtime config', () => {
 	test('projects stage modifiers into StageRunScene runtime config', async ({ page }) => {
@@ -28,9 +29,7 @@ test.describe('Stage runtime config', () => {
 
 		await page.goto('/');
 		await expect(page.locator('#game')).toBeVisible();
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await expect.poll(() => consoleMessages).toContain('StoryFlowScene entered');
+		await enterStoryFlow(page);
 
 		for (let index = 0; index < 3; index += 1) {
 			await page.keyboard.press('Enter');

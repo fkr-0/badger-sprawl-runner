@@ -1,6 +1,14 @@
-# Campaign: Worlds, Stages, Sub-Bosses, Endbosses
+# Legacy campaign content atlas: Worlds, Subzones, Sub-Bosses, Endbosses
 
-Each world is an episode in the five-act drama. Every stage has a placard, a local contradiction, 1-3 sub-bosses, a platforming identity, and at least one way to solve combat through movement, hacking, traps, or companions.
+> **Canonical story structure:** see `SPRAWL_STORY_BIBLE.md` and `TEN_PHASE_PIVOT_PLAN.md`.
+>
+> This file remains useful as a subzone, boss, enemy, and asset-production atlas. Where its
+> old “8 worlds × 4 stages” framing conflicts with the persistent adventure structure, the
+> eight live runtime chapters are canonical districts and the thirty-two entries below are
+> interpreted as routes, interiors, contracts, and stronghold sections. The repeated Dub
+> Colony section was an earlier numbering duplication and is not a second colony chapter.
+
+Each district is an episode in the five-act drama. Every authored subzone has a placard, a local contradiction, 1-3 sub-bosses, a platforming identity, and at least one way to solve combat through movement, hacking, traps, companions, or preparation.
 
 ## Campaign overview
 
@@ -86,7 +94,14 @@ Endboss: **King Feedback, the Friendly Tyrant**. He wants to centralize all colo
 
 Enemy additions: bass beetles, echo drummers, feedback cobras, amp golems, static choir, mold angels, rival selectors.
 
-## World 5 — Dub Colony: The Colony Teaches the Price of Air
+## Retired duplicate — former World 5 Dub Colony block
+
+This duplicate is retained only for historical prompt references. It describes the same
+canonical Dub Colony arc as World 4 / runtime chapter `dub-colony`; it does not add another
+district to the campaign order. New narrative and asset work must use the canonical story
+bible and the runtime order.
+
+### Archived duplicate content
 
 Placard: **A refuge can become a fortress; a fortress can become a prison.**
 

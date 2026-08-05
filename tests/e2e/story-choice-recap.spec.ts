@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 test.describe('Story choice recap', () => {
 	test('emits branch recap event after committing a story choice', async ({ page }) => {
@@ -12,12 +13,7 @@ test.describe('Story choice recap', () => {
 			});
 		});
 
-		const consoleMessages: string[] = [];
-		page.on('console', (message) => consoleMessages.push(message.text()));
-
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await expect.poll(() => consoleMessages).toContain('StoryFlowScene entered');
+		await enterStoryFlow(page);
 
 		for (let index = 0; index < 12; index += 1) {
 			const mode = await page.evaluate(() => window.__badger?.getStoryState()?.mode);

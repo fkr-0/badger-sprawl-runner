@@ -7,8 +7,19 @@ import type {
 	SpriteManifestLoadReport,
 } from './renderer/SpriteRenderer';
 import { TitleScene } from './scenes/TitleScene';
+import { LowerSprawlBuildComparisonScene } from './scenes/LowerSprawlBuildComparisonScene';
 import { TrainingScene } from './scenes/TrainingScene';
 import { VersusScene } from './scenes/VersusScene';
+import { StageRunScene } from './scenes/StageRunScene';
+import {
+	ACTIVE_EXPEDITION_SAVE_KEY,
+	saveActiveUndercityExpedition,
+	createLocalStorageSaveDriver,
+} from './storage/SaveStore';
+import {
+	buildUndercityExpedition,
+	createActiveUndercityExpeditionSave,
+} from './procgen/UndercityExpedition';
 
 function spriteLoadReport(overrides: Partial<SpriteManifestLoadReport> = {}): SpriteManifestLoadReport {
 	return {
@@ -90,11 +101,13 @@ function createContextStub(): CanvasRenderingContext2D {
 		fillRect: vi.fn(),
 		strokeRect: vi.fn(),
 		fillText: vi.fn(),
+		measureText: vi.fn((text: string) => ({ width: text.length * 7 } as TextMetrics)),
 		save: vi.fn(),
 		restore: vi.fn(),
 		translate: vi.fn(),
 		scale: vi.fn(),
 		beginPath: vi.fn(),
+		closePath: vi.fn(),
 		moveTo: vi.fn(),
 		lineTo: vi.fn(),
 		stroke: vi.fn(),
@@ -116,6 +129,59 @@ afterEach(() => {
 });
 
 describe('RunnerApp scene shell', () => {
+	it('resumes a separately saved active undercity expedition on startup', () => {
+		installWindowStub();
+		window.localStorage.removeItem(ACTIVE_EXPEDITION_SAVE_KEY);
+		const built = buildUndercityExpedition({
+			seed: 'startup-resume',
+			entranceId: 'blue-mercy-maintenance-mouth',
+			depth: 3,
+		});
+		const active = {
+			...createActiveUndercityExpeditionSave(built.manifest),
+			currentRoomIndex: 1,
+			bankedSalvage: 6,
+			unbankedSalvage: 2,
+			updatedSequence: 4,
+		};
+		saveActiveUndercityExpedition(createLocalStorageSaveDriver(window.localStorage), active);
+
+		const app = createRunnerApp(createCanvasStub());
+		app.start();
+		expect(app.getCurrentScene()).toBeInstanceOf(StageRunScene);
+		const scene = app.getCurrentScene() as StageRunScene;
+		expect(scene.getResumedUndercityRoomIndex()).toBe(1);
+		expect(scene.getExpeditionPressureSnapshot()).toMatchObject({
+			bankedSalvage: 6,
+			unbankedSalvage: 2,
+		});
+		app.stop();
+		window.localStorage.removeItem(ACTIVE_EXPEDITION_SAVE_KEY);
+	});
+
+	it('clears a completed active-expedition record instead of resuming it', () => {
+		installWindowStub();
+		window.localStorage.removeItem(ACTIVE_EXPEDITION_SAVE_KEY);
+		const built = buildUndercityExpedition({
+			seed: 'completed-no-resume',
+			entranceId: 'drainmarket-sump-archive',
+			depth: 2,
+		});
+		saveActiveUndercityExpedition(
+			createLocalStorageSaveDriver(window.localStorage),
+			{
+				...createActiveUndercityExpeditionSave(built.manifest),
+				status: 'completed',
+			}
+		);
+
+		const app = createRunnerApp(createCanvasStub());
+		app.start();
+		expect(app.getCurrentScene()).toBeInstanceOf(TitleScene);
+		expect(window.localStorage.getItem(ACTIVE_EXPEDITION_SAVE_KEY)).toBe('');
+		app.stop();
+	});
+
 	it('starts on TitleScene and routes menu selections through SceneManager', () => {
 		installWindowStub();
 		const app = createRunnerApp(createCanvasStub());
@@ -128,6 +194,9 @@ describe('RunnerApp scene shell', () => {
 
 		app.routeMode('versus');
 		expect(app.getCurrentScene()).toBeInstanceOf(VersusScene);
+
+		app.routeMode('builds');
+		expect(app.getCurrentScene()).toBeInstanceOf(LowerSprawlBuildComparisonScene);
 	});
 
 	it('starts a fixed-step render loop that updates and renders the current scene', () => {

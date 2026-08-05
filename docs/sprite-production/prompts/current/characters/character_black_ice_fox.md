@@ -1,0 +1,173 @@
+---
+generated: true
+generated_by: scripts/generate-sprite-render-prompts.py
+sheet_id: character_black_ice_fox
+status: production_target
+target_atlas: assets/sprites/characters/black_ice_fox.png
+frame_size:
+- 48
+- 48
+atlas_size:
+- 288
+- 240
+reference_images:
+- assets/sprites/moss_badger_production.png
+- generated/sprite-visual-review/badger-sprite-contact-sheet.png
+render_job_count: 5
+---
+
+# Character Black Ice Fox
+
+Production role: `npc_boss_context`. Render the jobs below separately, then assemble them into `assets/sprites/characters/black_ice_fox.png` using manifest animation order.
+
+The approved reference board establishes style only. Preserve the Badger Sprawl Runner identity described in each prompt.
+
+## Render job `character_black_ice_fox__idle`
+
+```text
+Create a production-ready pixel-art render job for Badger Sprawl Runner.
+
+Render job: character_black_ice_fox__idle
+Grid: 4 columns by 1 rows
+Cell size: 48x48 pixels
+Output size: 192x48 pixels
+Background: transparent
+
+When the operator-approved six-image neon-animal board is attached, use it as the primary visual-language reference. Use the repository-backed images listed in the job metadata as continuity references: the Moss production atlas for identity, scale, costume and anchor continuity, and the sprite review contact sheet for broader motion and pixel-cluster continuity. Render crisp hand-placed 16-bit console pixel art with hard square pixels, chunky readable clusters, dark navy or near-black outlines, strongly separated light and shadow masses, and saturated selective neon accents in cyan, violet, magenta, acid green, hot red, and orange. Select only two or three dominant accent hues for one asset rather than using the entire neon range. Keep silhouettes instantly readable, faces expressive, anatomy coherent, secondary cloth/fur motion lively, and VFX compact. No smooth gradients, no painterly blur, no anti-aliasing, no vector-clean curves, no fake 3D render, and no verbatim copied frame from either reference image.
+Output exactly one PNG. Cells must be equal-sized and perfectly aligned, with no gutters, margins, border, labels, captions, text, checkerboard, guide lines, or merged cells. Read cells left-to-right, then top-to-bottom.
+
+Asset identity: Black-Ice Fox: silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets.
+World palette family: sun-faded ochre, rust red, electric cyan, storm violet, black cable and lightning white.
+Animation: idle.
+Frame count: 4.
+Frame order:
+1. neutral
+2. inhale
+3. secondary detail
+4. exhale
+
+Orthographic side-view 2D platform-game camera, facing right unless the action requires a neutral frontal beat. Keep character identity, costume, palette, scale, camera, lighting, pixel density, and ground anchor identical in every cell. Full body and all important equipment must remain inside each cell. Use true alpha transparency.
+Anchor: keep the ground/object reference fixed at x=24, y=44 in every occupied cell.
+Animation-specific requirement: make the action readable from silhouette before adding glow, particles, or smears. The most active frame may use a compact effect, but body pose remains primary.
+Do not add logos, readable text, watermarks, scenery behind transparent sprites, duplicate limbs, cropped ears, cropped tails, inconsistent weapons, perspective changes, sub-pixel blur, semi-transparent matte fringes, or unrequested cast shadows outside the frame.
+```
+## Render job `character_black_ice_fox__talk`
+
+```text
+Create a production-ready pixel-art render job for Badger Sprawl Runner.
+
+Render job: character_black_ice_fox__talk
+Grid: 4 columns by 2 rows
+Cell size: 48x48 pixels
+Output size: 192x96 pixels
+Background: transparent
+
+When the operator-approved six-image neon-animal board is attached, use it as the primary visual-language reference. Use the repository-backed images listed in the job metadata as continuity references: the Moss production atlas for identity, scale, costume and anchor continuity, and the sprite review contact sheet for broader motion and pixel-cluster continuity. Render crisp hand-placed 16-bit console pixel art with hard square pixels, chunky readable clusters, dark navy or near-black outlines, strongly separated light and shadow masses, and saturated selective neon accents in cyan, violet, magenta, acid green, hot red, and orange. Select only two or three dominant accent hues for one asset rather than using the entire neon range. Keep silhouettes instantly readable, faces expressive, anatomy coherent, secondary cloth/fur motion lively, and VFX compact. No smooth gradients, no painterly blur, no anti-aliasing, no vector-clean curves, no fake 3D render, and no verbatim copied frame from either reference image.
+Output exactly one PNG. Cells must be equal-sized and perfectly aligned, with no gutters, margins, border, labels, captions, text, checkerboard, guide lines, or merged cells. Read cells left-to-right, then top-to-bottom.
+
+Asset identity: Black-Ice Fox: silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets.
+World palette family: sun-faded ochre, rust red, electric cyan, storm violet, black cable and lightning white.
+Animation: talk.
+Frame count: 6. Leave the final 2 cell(s) fully transparent.
+Frame order:
+1. neutral speaking pose
+2. open gesture
+3. accent gesture
+4. listening beat
+5. reply
+6. return
+
+Orthographic side-view 2D platform-game camera, facing right unless the action requires a neutral frontal beat. Keep character identity, costume, palette, scale, camera, lighting, pixel density, and ground anchor identical in every cell. Full body and all important equipment must remain inside each cell. Use true alpha transparency.
+Anchor: keep the ground/object reference fixed at x=24, y=44 in every occupied cell.
+Animation-specific requirement: make the action readable from silhouette before adding glow, particles, or smears. The most active frame may use a compact effect, but body pose remains primary.
+Do not add logos, readable text, watermarks, scenery behind transparent sprites, duplicate limbs, cropped ears, cropped tails, inconsistent weapons, perspective changes, sub-pixel blur, semi-transparent matte fringes, or unrequested cast shadows outside the frame.
+```
+## Render job `character_black_ice_fox__assist`
+
+```text
+Create a production-ready pixel-art render job for Badger Sprawl Runner.
+
+Render job: character_black_ice_fox__assist
+Grid: 4 columns by 2 rows
+Cell size: 48x48 pixels
+Output size: 192x96 pixels
+Background: transparent
+
+When the operator-approved six-image neon-animal board is attached, use it as the primary visual-language reference. Use the repository-backed images listed in the job metadata as continuity references: the Moss production atlas for identity, scale, costume and anchor continuity, and the sprite review contact sheet for broader motion and pixel-cluster continuity. Render crisp hand-placed 16-bit console pixel art with hard square pixels, chunky readable clusters, dark navy or near-black outlines, strongly separated light and shadow masses, and saturated selective neon accents in cyan, violet, magenta, acid green, hot red, and orange. Select only two or three dominant accent hues for one asset rather than using the entire neon range. Keep silhouettes instantly readable, faces expressive, anatomy coherent, secondary cloth/fur motion lively, and VFX compact. No smooth gradients, no painterly blur, no anti-aliasing, no vector-clean curves, no fake 3D render, and no verbatim copied frame from either reference image.
+Output exactly one PNG. Cells must be equal-sized and perfectly aligned, with no gutters, margins, border, labels, captions, text, checkerboard, guide lines, or merged cells. Read cells left-to-right, then top-to-bottom.
+
+Asset identity: Black-Ice Fox: silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets.
+World palette family: sun-faded ochre, rust red, electric cyan, storm violet, black cable and lightning white.
+Animation: assist.
+Frame count: 6. Leave the final 2 cell(s) fully transparent.
+Frame order:
+1. notice need
+2. prepare tool/power
+3. active assist
+4. effect peak
+5. follow-through
+6. return
+
+Orthographic side-view 2D platform-game camera, facing right unless the action requires a neutral frontal beat. Keep character identity, costume, palette, scale, camera, lighting, pixel density, and ground anchor identical in every cell. Full body and all important equipment must remain inside each cell. Use true alpha transparency.
+Anchor: keep the ground/object reference fixed at x=24, y=44 in every occupied cell.
+Animation-specific requirement: make the action readable from silhouette before adding glow, particles, or smears. The most active frame may use a compact effect, but body pose remains primary.
+Do not add logos, readable text, watermarks, scenery behind transparent sprites, duplicate limbs, cropped ears, cropped tails, inconsistent weapons, perspective changes, sub-pixel blur, semi-transparent matte fringes, or unrequested cast shadows outside the frame.
+```
+## Render job `character_black_ice_fox__react`
+
+```text
+Create a production-ready pixel-art render job for Badger Sprawl Runner.
+
+Render job: character_black_ice_fox__react
+Grid: 4 columns by 1 rows
+Cell size: 48x48 pixels
+Output size: 192x48 pixels
+Background: transparent
+
+When the operator-approved six-image neon-animal board is attached, use it as the primary visual-language reference. Use the repository-backed images listed in the job metadata as continuity references: the Moss production atlas for identity, scale, costume and anchor continuity, and the sprite review contact sheet for broader motion and pixel-cluster continuity. Render crisp hand-placed 16-bit console pixel art with hard square pixels, chunky readable clusters, dark navy or near-black outlines, strongly separated light and shadow masses, and saturated selective neon accents in cyan, violet, magenta, acid green, hot red, and orange. Select only two or three dominant accent hues for one asset rather than using the entire neon range. Keep silhouettes instantly readable, faces expressive, anatomy coherent, secondary cloth/fur motion lively, and VFX compact. No smooth gradients, no painterly blur, no anti-aliasing, no vector-clean curves, no fake 3D render, and no verbatim copied frame from either reference image.
+Output exactly one PNG. Cells must be equal-sized and perfectly aligned, with no gutters, margins, border, labels, captions, text, checkerboard, guide lines, or merged cells. Read cells left-to-right, then top-to-bottom.
+
+Asset identity: Black-Ice Fox: silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets.
+World palette family: sun-faded ochre, rust red, electric cyan, storm violet, black cable and lightning white.
+Animation: react.
+Frame count: 4.
+Frame order:
+1. notice
+2. strong reaction
+3. settle
+4. return
+
+Orthographic side-view 2D platform-game camera, facing right unless the action requires a neutral frontal beat. Keep character identity, costume, palette, scale, camera, lighting, pixel density, and ground anchor identical in every cell. Full body and all important equipment must remain inside each cell. Use true alpha transparency.
+Anchor: keep the ground/object reference fixed at x=24, y=44 in every occupied cell.
+Animation-specific requirement: make the action readable from silhouette before adding glow, particles, or smears. The most active frame may use a compact effect, but body pose remains primary.
+Do not add logos, readable text, watermarks, scenery behind transparent sprites, duplicate limbs, cropped ears, cropped tails, inconsistent weapons, perspective changes, sub-pixel blur, semi-transparent matte fringes, or unrequested cast shadows outside the frame.
+```
+## Render job `character_black_ice_fox__exit`
+
+```text
+Create a production-ready pixel-art render job for Badger Sprawl Runner.
+
+Render job: character_black_ice_fox__exit
+Grid: 4 columns by 1 rows
+Cell size: 48x48 pixels
+Output size: 192x48 pixels
+Background: transparent
+
+When the operator-approved six-image neon-animal board is attached, use it as the primary visual-language reference. Use the repository-backed images listed in the job metadata as continuity references: the Moss production atlas for identity, scale, costume and anchor continuity, and the sprite review contact sheet for broader motion and pixel-cluster continuity. Render crisp hand-placed 16-bit console pixel art with hard square pixels, chunky readable clusters, dark navy or near-black outlines, strongly separated light and shadow masses, and saturated selective neon accents in cyan, violet, magenta, acid green, hot red, and orange. Select only two or three dominant accent hues for one asset rather than using the entire neon range. Keep silhouettes instantly readable, faces expressive, anatomy coherent, secondary cloth/fur motion lively, and VFX compact. No smooth gradients, no painterly blur, no anti-aliasing, no vector-clean curves, no fake 3D render, and no verbatim copied frame from either reference image.
+Output exactly one PNG. Cells must be equal-sized and perfectly aligned, with no gutters, margins, border, labels, captions, text, checkerboard, guide lines, or merged cells. Read cells left-to-right, then top-to-bottom.
+
+Asset identity: Black-Ice Fox: silver fox hacker; hooded coat, crystalline black code tails, terminal gauntlets.
+World palette family: sun-faded ochre, rust red, electric cyan, storm violet, black cable and lightning white.
+Animation: exit.
+Frame count: 4.
+Frame order:
+1. turn
+2. first step
+3. move away
+4. final trailing pose
+
+Orthographic side-view 2D platform-game camera, facing right unless the action requires a neutral frontal beat. Keep character identity, costume, palette, scale, camera, lighting, pixel density, and ground anchor identical in every cell. Full body and all important equipment must remain inside each cell. Use true alpha transparency.
+Anchor: keep the ground/object reference fixed at x=24, y=44 in every occupied cell.
+Animation-specific requirement: make the action readable from silhouette before adding glow, particles, or smears. The most active frame may use a compact effect, but body pose remains primary.
+Do not add logos, readable text, watermarks, scenery behind transparent sprites, duplicate limbs, cropped ears, cropped tails, inconsistent weapons, perspective changes, sub-pixel blur, semi-transparent matte fringes, or unrequested cast shadows outside the frame.
+```

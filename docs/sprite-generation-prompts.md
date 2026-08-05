@@ -1,5 +1,7 @@
 # Sprite Generation Prompts for Image LLM
 
+> **Historical draft:** this May-era document no longer matches the 71-sheet runtime manifest. Use [`docs/sprite-production/README.md`](sprite-production/README.md), the approved style target, and its generated small-grid render queue for production work.
+
 This file contains structured prompts designed for image generation LLMs (like DALL-E, Midjourney, or Stable Diffusion) to create pixel art sprite grids for the Badger Sprawl Runner game.
 
 Each prompt is encoded with:

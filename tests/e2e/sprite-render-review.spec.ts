@@ -43,16 +43,49 @@ for (const sheetId of REVIEW_SHEETS) {
 		}
 
 		const snapshot = await page.evaluate(() => window.__spriteReview);
+		const inspector = await page.evaluate(() => window.__spriteInspector);
 		expect(snapshot).toBeTruthy();
 		expect(snapshot?.sheetIds).toEqual([sheetId]);
 		expect(snapshot?.entryCount ?? 0).toBeGreaterThan(0);
 		expect(snapshot?.width ?? 0).toBeGreaterThan(100);
 		expect(snapshot?.height ?? 0).toBeGreaterThan(100);
 		expect(snapshot?.labels.some((label) => label.includes('idle'))).toBe(true);
+		expect(inspector).toMatchObject({
+			sheetId,
+			atlasOk: true,
+		});
+		expect(inspector?.timelineFrames ?? 0).toBeGreaterThan(0);
+		expect(inspector?.sourceRect[2] ?? 0).toBeGreaterThan(0);
+		expect(page.locator('#sheet-select')).toHaveValue(sheetId);
+		expect(page.locator('#inspector-preview')).toBeVisible();
 
 		const filename = `${sheetId}.png`;
 		const outputPath = join(OUTPUT_DIRECTORY, filename);
 		if (sheetId === 'moss_badger_production') {
+			await page.locator('#sheet-select').selectOption('enemy_turnstile_mite');
+			await expect
+				.poll(() => page.evaluate(() => window.__spriteInspector?.sheetId))
+				.toBe('enemy_turnstile_mite');
+			expect(new URL(page.url()).searchParams.get('inspect')).toBe('enemy_turnstile_mite');
+			await page.locator('#sheet-select').selectOption(sheetId);
+			await expect
+				.poll(() => page.evaluate(() => window.__spriteInspector?.sheetId))
+				.toBe(sheetId);
+			await page.locator('#play-toggle').click();
+			await expect.poll(() => page.evaluate(() => window.__spriteInspector?.paused)).toBe(true);
+			await page.locator('#mode-select').selectOption('pingpong');
+			await page.locator('#timeline-input').evaluate((element) => {
+				const input = element as HTMLInputElement;
+				input.value = '750';
+				input.dispatchEvent(new Event('input', { bubbles: true }));
+			});
+			await expect
+				.poll(() => page.evaluate(() => window.__spriteInspector))
+				.toMatchObject({ mode: 'pingpong', paused: true, direction: -1 });
+			await page.locator('#next-frame').click();
+			await expect
+				.poll(() => page.evaluate(() => window.__spriteInspector?.paused))
+				.toBe(true);
 			await expect(page.locator('#review')).toHaveScreenshot('moss-badger-production.png', {
 				animations: 'disabled',
 				caret: 'hide',

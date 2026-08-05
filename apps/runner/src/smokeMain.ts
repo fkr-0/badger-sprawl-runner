@@ -1,4 +1,5 @@
 import type { MenuOptionId } from './game/GameFlow';
+import { buildLowerSprawlBuildComparison } from './game/LowerSprawlBuildComparison';
 import { TitleCardRenderer } from './renderer/TitleCardRenderer';
 import { createLocalStorageSaveDriver, loadGameFlow, saveGameFlow } from './storage/SaveStore';
 
@@ -20,9 +21,12 @@ const saveDriver = createLocalStorageSaveDriver(window.localStorage);
 const flow = loadGameFlow(saveDriver);
 const titleCardRenderer = new TitleCardRenderer();
 const skillIds = ['double_swipe', 'parry_tooth', 'rail_mastery'] as const;
+const buildComparison = buildLowerSprawlBuildComparison();
 
 let selectedMenuIndex = 0;
 let selectedSkillIndex = 0;
+let selectedBuildIndex = 0;
+let buildDetailPage: 'routes' | 'evidence' = 'routes';
 let banner = 'Choose a mode.';
 let dummyHits = 0;
 
@@ -31,6 +35,52 @@ const H = canvas.height;
 
 function clampIndex(index: number, length: number): number {
 	return (index + length) % length;
+}
+
+function drawBuilds(): void {
+	title('LOWER SPRAWL BUILD LAB', 'three routes • pressure • public consequence');
+	panel(54, 116, 852, 374);
+	const cardWidth = 248;
+	buildComparison.cards.forEach((card, index) => {
+		const x = 82 + index * 274;
+		const selected = selectedBuildIndex === index;
+		ctx.fillStyle = selected ? 'rgba(103,243,196,0.12)' : 'rgba(4,6,12,0.8)';
+		ctx.fillRect(x, 150, cardWidth, 128);
+		ctx.strokeStyle = selected ? '#67f3c4' : '#293348';
+		ctx.lineWidth = selected ? 3 : 1;
+		ctx.strokeRect(x, 150, cardWidth, 128);
+		ctx.fillStyle = selected ? '#67f3c4' : '#eaf2ff';
+		ctx.font = '700 16px ui-monospace, monospace';
+		ctx.textAlign = 'left';
+		ctx.fillText(`${card.mark} ${card.label.toUpperCase()}`, x + 12, 176);
+		ctx.fillStyle = '#92a4be';
+		ctx.font = '11px ui-monospace, monospace';
+		wrapText(card.tagline, x + 12, 198, cardWidth - 24, 15);
+		ctx.fillStyle = '#ffb35e';
+		ctx.font = '700 10px ui-monospace, monospace';
+		ctx.fillText(card.evidenceKind.replace('-', ' ').toUpperCase(), x + 12, 258);
+	});
+	const selected = buildComparison.cards[selectedBuildIndex];
+	if (selected) {
+		ctx.fillStyle = '#eaf2ff';
+		ctx.font = '700 14px ui-monospace, monospace';
+		ctx.fillText(`${buildDetailPage.toUpperCase()} // ${selected.label}`, 82, 316);
+		ctx.fillStyle = '#c1cad8';
+		ctx.font = '12px ui-monospace, monospace';
+		const lines =
+			buildDetailPage === 'routes'
+				? selected.preferredPlans.flatMap((plan) => [
+						`${plan.label.toUpperCase()} / ${plan.risk.toUpperCase()}: ${plan.playerCue}`,
+						`WORLD: ${plan.worldConsequenceHint}`,
+					])
+				: [...selected.evidenceLines, `FAILURE: ${selected.failureMode}`];
+		let y = 344;
+		for (const line of lines.slice(0, 5)) {
+			wrapText(line, 82, y, 790, 16);
+			y += 34;
+		}
+	}
+	footer('Left/Right: build • Enter/Tab: routes/evidence • Escape: menu');
 }
 
 function currentMenuId(): MenuOptionId {
@@ -60,6 +110,26 @@ window.addEventListener('keydown', (event) => {
 			if (event.code === 'Enter' || event.code === 'Space') {
 				flow.selectMenu(currentMenuId());
 				banner = `Opened ${flow.getState().mode}.`;
+				event.preventDefault();
+			}
+			break;
+		case 'builds':
+			if (event.code === 'ArrowLeft' || event.code === 'ArrowUp') {
+				selectedBuildIndex = clampIndex(
+					selectedBuildIndex - 1,
+					buildComparison.cards.length
+				);
+				event.preventDefault();
+			}
+			if (event.code === 'ArrowRight' || event.code === 'ArrowDown') {
+				selectedBuildIndex = clampIndex(
+					selectedBuildIndex + 1,
+					buildComparison.cards.length
+				);
+				event.preventDefault();
+			}
+			if (event.code === 'Enter' || event.code === 'Space' || event.code === 'Tab') {
+				buildDetailPage = buildDetailPage === 'routes' ? 'evidence' : 'routes';
 				event.preventDefault();
 			}
 			break;
@@ -177,11 +247,11 @@ function panel(x: number, y: number, w: number, h: number): void {
 }
 
 function drawMenu(): void {
-	title('BADGER SPRAWL RUNNER', 'menu online: story • versus • training • skills');
-	panel(190, 150, 580, 270);
+	title('BADGER SPRAWL RUNNER', 'menu online: world • duel • training • skills • build lab • endless');
+	panel(174, 112, 612, 396);
 	const options = flow.getMenuOptions();
 	options.forEach((option, index) => {
-		const y = 200 + index * 54;
+		const y = 158 + index * 56;
 		const selected = index === selectedMenuIndex;
 		ctx.fillStyle = selected ? '#ffb35e' : '#eaf2ff';
 		ctx.font = '700 22px ui-monospace, monospace';
@@ -361,7 +431,7 @@ function updatePanels(): void {
 	const meta = flow.getMeta();
 	statusPanel.innerHTML = `<strong>Mode:</strong> ${state.mode}<br/><strong>Blueprint shards:</strong> ${meta.blueprintShards}<br/><strong>Banner:</strong> ${banner}`;
 	miniPanel.innerHTML =
-		'<strong>Controls:</strong> Arrow keys navigate. Enter/Space confirms. Escape returns to menu.<br/><strong>Implemented slice:</strong> eight-stage story spine, placards, debriefs, VS shell, dummy training, skill tree.';
+		'<strong>Controls:</strong> Arrow keys navigate. Enter/Space confirms. Escape returns to menu.<br/><strong>Implemented slice:</strong> persistent world, eight-stage story spine, VS shell, training, skill tree, three-build Lower Sprawl lab, endless route.';
 }
 
 function draw(): void {
@@ -390,6 +460,9 @@ function draw(): void {
 			break;
 		case 'skills':
 			drawSkills();
+			break;
+		case 'builds':
+			drawBuilds();
 			break;
 	}
 	updatePanels();

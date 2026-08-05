@@ -5,6 +5,8 @@ import {
 	detectArcadeHardwareTier,
 } from '../../../../vendor/arcade-runtime.mjs';
 
+export const BADGER_PRODUCTION_BUNDLE_RESOURCE_PATTERN = /\/assets\/.*\.(?:js|mjs)(?:\?|$)/;
+
 export const BADGER_HARDWARE_BUDGETS: Readonly<
 	Record<ArcadeHardwareTier, ArcadeHardwareBudgetProfile>
 > = Object.freeze({

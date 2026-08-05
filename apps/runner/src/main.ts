@@ -1,6 +1,8 @@
 import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
+import type { DistrictStoryPhase } from './game/adventure/AdventureState';
+import { buildAdventureContentDashboard } from './game/adventure/AdventureContentDashboard';
 import { isBadgerPixiBridgeRequested } from './renderer/PixiBridgeRequest';
 import { runtimeToolsEnabled } from './runtime/RuntimeEnvironment';
 import type { SkillTreeScene } from './scenes/SkillTreeScene';
@@ -40,6 +42,9 @@ export interface BadgerTestHarness {
 	getMadameVitrine: () => ReturnType<StageRunScene['getMadameVitrineSnapshot']> | null;
 	getReflectionJudge: () => ReturnType<StageRunScene['getReflectionJudgeSnapshot']> | null;
 	getKingFeedback: () => ReturnType<StageRunScene['getKingFeedbackSnapshot']> | null;
+	getDirectorVane: () => ReturnType<StageRunScene['getDirectorVaneSnapshot']> | null;
+	getTraversalRhythm: () => ReturnType<StageRunScene['getTraversalRhythmSnapshot']> | null;
+	getContentDashboard: () => ReturnType<typeof buildAdventureContentDashboard>;
 	getCompanions: () => ReturnType<StageRunScene['getCompanionSnapshot']> | null;
 	getLowerSprawlHazards: () => ReturnType<StageRunScene['getLowerSprawlHazardSnapshot']> | null;
 	getCheckpoint: () => ReturnType<StageRunScene['getCheckpointSnapshot']> | null;
@@ -51,6 +56,12 @@ export interface BadgerTestHarness {
 	getStoryProgress: () => ReturnType<RunnerApp['getFlow']>['getStoryProgress'] extends () => infer T
 		? T
 		: never;
+	getAdventureState: () => ReturnType<RunnerApp['getAdventureState']>;
+	debugTravelTo: (locationId: string, spawnId?: string) => ReturnType<RunnerApp['debugTravelTo']>;
+	debugSetDistrictPhase: (
+		districtId: string,
+		phase: DistrictStoryPhase
+	) => ReturnType<RunnerApp['debugSetDistrictPhase']>;
 	getStoryPanelLayout: () => ReturnType<StoryFlowScene['getPanelLayoutSnapshot']> | null;
 	getStoryPresentation: () => ReturnType<StoryFlowScene['getPresentationSnapshot']> | null;
 	getSkillTree: () => ReturnType<SkillTreeScene['getSnapshot']> | null;
@@ -111,6 +122,9 @@ function installTestHarness(app: RunnerApp): void {
 		getPlayer: () => {
 			return getStageScene()?.getPlayerSnapshot() ?? null;
 		},
+		getDirectorVane: () => getStageScene()?.getDirectorVaneSnapshot() ?? null,
+		getTraversalRhythm: () => getStageScene()?.getTraversalRhythmSnapshot() ?? null,
+		getContentDashboard: () => buildAdventureContentDashboard(),
 		setEnemyHp: (enemyId, hp) => {
 			getStageScene()?.debugSetEnemyHp(enemyId, hp);
 		},
@@ -223,6 +237,9 @@ function installTestHarness(app: RunnerApp): void {
 		getStoryState: () => app.getFlow().getState(),
 		getMeta: () => app.getFlow().getMeta(),
 		getStoryProgress: () => app.getFlow().getStoryProgress(),
+		getAdventureState: () => app.getAdventureState(),
+		debugTravelTo: (locationId, spawnId) => app.debugTravelTo(locationId, spawnId),
+		debugSetDistrictPhase: (districtId, phase) => app.debugSetDistrictPhase(districtId, phase),
 		getStoryPanelLayout: () => {
 			const s = app.getCurrentScene();
 			return s && 'getPanelLayoutSnapshot' in s

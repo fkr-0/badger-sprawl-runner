@@ -1,6 +1,7 @@
 import { aabb } from '@badger/platformer-core';
 import type { CombatEntity, CombatEvents } from './CombatSystem';
 import type { Entity } from './PhysicsSystem';
+import { resolveEliteLoopResistance } from './EliteLoopResistanceSystem';
 
 export type MeleeInput = 'light' | 'heavy' | 'launcher' | 'air' | 'finisher';
 
@@ -207,7 +208,8 @@ export class MeleeComboSystem {
 		player: Entity,
 		enemies: CombatEntity[],
 		input: MeleeInput,
-		events?: CombatEvents
+		events?: CombatEvents,
+		time = 0
 	): MeleeAttackResult | null {
 		const move = resolveNextMeleeMove(this.state, input, player);
 		if (!move) return null;
@@ -218,9 +220,28 @@ export class MeleeComboSystem {
 		for (const enemy of enemies) {
 			if (enemy.hp <= 0 || enemy.invuln > 0 || !aabb(hitbox, enemy)) continue;
 			enemy.hp -= move.damage;
-			enemy.stun = Math.max(enemy.stun, move.stun);
+			const loopResistance = resolveEliteLoopResistance(
+				enemy,
+				move.id,
+				time,
+				move.stun,
+				move.damage
+			);
+			enemy.stun = Math.max(enemy.stun, loopResistance.stun);
 			enemy.vx += player.dir * move.knockbackX;
 			enemy.vy += move.knockbackY;
+			if (loopResistance.resisted) {
+				events?.onEvent?.({
+					kind: 'loop-resisted',
+					source: 'player',
+					targetId: enemy.id,
+					time,
+					moveId: move.id,
+					repeatCount: loopResistance.repeatCount,
+					stunScale: loopResistance.stunScale,
+					poiseScale: loopResistance.poiseScale,
+				});
+			}
 			hits.push({ enemy, damage: move.damage, killed: enemy.hp <= 0 });
 			events?.onEvent?.({
 				kind: enemy.hp <= 0 ? 'kill' : 'hit',

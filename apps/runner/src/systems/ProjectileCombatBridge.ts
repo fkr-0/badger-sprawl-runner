@@ -36,6 +36,7 @@ export function resolveProjectileHitsAsCombat(input: ProjectileCombatBridgeInput
 
 		const result = combat.resolveAttack(input.attacker, [target], {
 			id: `projectile:${hit.projectileId}`,
+			loopKey: `projectile:${hit.kind}`,
 			source: input.attacker.faction === 'enemy' ? 'enemy' : 'player',
 			damage: hit.damage,
 			stun: hit.kind === 'rail' ? 0.25 : hit.kind === 'rocket' ? 0.45 : 0.15,

@@ -1054,6 +1054,124 @@
       }
     },
     {
+      "id": "moss_remaining_animation_gaps",
+      "file": "assets/sprites/player-expansion/moss_remaining_animation_gaps.png",
+      "frameSize": [
+        48,
+        48
+      ],
+      "grid": {
+        "columns": 8,
+        "rows": 3
+      },
+      "role": "player_runtime_extension",
+      "animations": {
+        "air_dodge": {
+          "frames": 6,
+          "fps": 18,
+          "order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "loop": false,
+          "hurtboxes": [
+            {
+              "x": 12,
+              "y": 6,
+              "w": 24,
+              "h": 40,
+              "label": "body"
+            }
+          ],
+          "anchor": [
+            24,
+            44
+          ],
+          "tags": [
+            "airborne",
+            "evasion",
+            "player_expansion"
+          ]
+        },
+        "railgun_reload_failure": {
+          "frames": 6,
+          "fps": 14,
+          "order": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "loop": false,
+          "hurtboxes": [
+            {
+              "x": 12,
+              "y": 6,
+              "w": 24,
+              "h": 40,
+              "label": "body"
+            }
+          ],
+          "anchor": [
+            24,
+            44
+          ],
+          "tags": [
+            "combat",
+            "ranged",
+            "reload",
+            "failure",
+            "player_expansion"
+          ]
+        },
+        "railgun_charge": {
+          "frames": 6,
+          "fps": 12,
+          "order": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ],
+          "loop": false,
+          "hurtboxes": [
+            {
+              "x": 12,
+              "y": 6,
+              "w": 24,
+              "h": 40,
+              "label": "body"
+            }
+          ],
+          "anchor": [
+            24,
+            44
+          ],
+          "tags": [
+            "combat",
+            "ranged",
+            "charge",
+            "player_expansion"
+          ]
+        }
+      },
+      "source": {
+        "tool": "Chronicle render promotion",
+        "revision": "2026-07-23-chronicle-first-set",
+        "sourceDirectory": "docs/sprite-production/chronicle-images-2026-07-23",
+        "normalizedRenderDirectory": "renders/moss_remaining_animation_gaps",
+        "note": "First operator-approved Moss gap batch: air dodge, railgun reload failure, and railgun charge."
+      }
+    },
+    {
       "id": "lower_sprawl_tiles",
       "file": "assets/sprites/lower_sprawl_tiles.png",
       "frameSize": [

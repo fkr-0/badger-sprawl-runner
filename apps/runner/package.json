@@ -1,6 +1,6 @@
 {
 	"name": "@badger/runner",
-	"version": "1.2.0",
+	"version": "1.2.2",
 	"type": "module",
 	"description": "Badger Sprawl Runner — main game application.",
 	"scripts": {

@@ -6,18 +6,42 @@ export interface StageCheckpointDefinition {
 	label: string;
 	x: number;
 	y: number;
+	resetPolicy?: StageCheckpointResetPolicy;
 }
+
+export interface StageCheckpointResetPolicy {
+	id: 'story-continuity' | 'local-rehearsal' | 'boss-return';
+	enemies: 'preserve-defeated' | 'restore-local-nonboss' | 'restore-boss';
+	alarms: 'preserve-disabled' | 'rearm-local';
+	civilians: 'preserve-state' | 'restore-local';
+	objectives: 'preserve-progress';
+	unbankedSalvageLossRate: number;
+}
+
+export interface ResolvedStageCheckpointDefinition
+	extends Omit<StageCheckpointDefinition, 'resetPolicy'> {
+	resetPolicy: StageCheckpointResetPolicy;
+}
+
+export const STORY_CONTINUITY_RESET_POLICY: StageCheckpointResetPolicy = Object.freeze({
+	id: 'story-continuity',
+	enemies: 'preserve-defeated',
+	alarms: 'preserve-disabled',
+	civilians: 'preserve-state',
+	objectives: 'preserve-progress',
+	unbankedSalvageLossRate: 0.5,
+});
 
 export interface StageCheckpointSnapshot {
 	activeId: string;
 	activeLabel: string;
 	activeIndex: number;
-	checkpoints: StageCheckpointDefinition[];
+	checkpoints: ResolvedStageCheckpointDefinition[];
 }
 
 export type StageCheckpointEvent =
-	| { kind: 'checkpoint-activated'; checkpoint: StageCheckpointDefinition }
-	| { kind: 'player-respawned'; checkpoint: StageCheckpointDefinition };
+	| { kind: 'checkpoint-activated'; checkpoint: ResolvedStageCheckpointDefinition }
+	| { kind: 'player-respawned'; checkpoint: ResolvedStageCheckpointDefinition };
 
 export const LOWER_SPRAWL_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
 	{ id: 'sprawl-entry', label: 'Sprawl entry', x: 60, y: 448 },
@@ -51,9 +75,14 @@ export const DRAINMARKET_CHECKPOINTS: readonly StageCheckpointDefinition[] = [
 
 export class StageCheckpointSystem {
 	private activeIndex = 0;
+	private readonly checkpoints: ResolvedStageCheckpointDefinition[];
 
-	constructor(private readonly checkpoints: readonly StageCheckpointDefinition[]) {
+	constructor(checkpoints: readonly StageCheckpointDefinition[]) {
 		if (checkpoints.length === 0) throw new Error('StageCheckpointSystem requires a checkpoint');
+		this.checkpoints = checkpoints.map((checkpoint) => ({
+			...checkpoint,
+			resetPolicy: resolveCheckpointResetPolicy(checkpoint.resetPolicy),
+		}));
 	}
 
 	step(playerX: number): StageCheckpointEvent[] {
@@ -94,7 +123,20 @@ export class StageCheckpointSystem {
 		};
 	}
 
-	private getActiveCheckpoint(): StageCheckpointDefinition {
-		return this.checkpoints[this.activeIndex] as StageCheckpointDefinition;
+	private getActiveCheckpoint(): ResolvedStageCheckpointDefinition {
+		return this.checkpoints[this.activeIndex] as ResolvedStageCheckpointDefinition;
 	}
+}
+
+export function resolveCheckpointResetPolicy(
+	policy: StageCheckpointResetPolicy | undefined
+): StageCheckpointResetPolicy {
+	if (!policy) return { ...STORY_CONTINUITY_RESET_POLICY };
+	return {
+		...policy,
+		unbankedSalvageLossRate: Math.min(
+			1,
+			Math.max(0, Number.isFinite(policy.unbankedSalvageLossRate) ? policy.unbankedSalvageLossRate : 0.5)
+		),
+	};
 }

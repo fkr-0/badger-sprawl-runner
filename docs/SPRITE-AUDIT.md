@@ -1,5 +1,7 @@
 # Sprite Audit Report
 
+> **Latest production-art review:** see [`docs/sprite-production/STATE-REVIEW.md`](sprite-production/STATE-REVIEW.md) and [`docs/sprite-production/FULL-SCOPE-PLAN.md`](sprite-production/FULL-SCOPE-PLAN.md) for the 2026-07-21 approved-style render queue and expansion scope.
+
 Generated: 2026-06-06
 Updated: 2026-07-19 (reviewed DALL-E import, runtime reachability, and sprite-tiled terrain)
 

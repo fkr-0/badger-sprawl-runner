@@ -212,4 +212,25 @@ describe('StoryFlowScene stage launch', () => {
 		expect(onAutosave).toHaveBeenCalledWith('stage-complete');
 		expect(onReturnToTitle).toHaveBeenCalledOnce();
 	});
+
+	it('returns to the persistent world after a non-final debrief', () => {
+		const flow = createGameFlow();
+		flow.selectMenu('story');
+		enterCurrentStage(flow);
+		flow.completeStage();
+		const onReturnToWorld = vi.fn();
+		const scene = new StoryFlowScene(flow, { onReturnToWorld });
+		scene.onEnter({
+			eventBus: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
+			canvas: document.createElement('canvas'),
+		});
+
+		for (let safety = 0; safety < 8 && flow.getState().mode === 'debrief'; safety += 1) {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+		}
+		scene.onExit();
+
+		expect(flow.getStoryProgress().campaignComplete).toBe(false);
+		expect(onReturnToWorld).toHaveBeenCalledOnce();
+	});
 });

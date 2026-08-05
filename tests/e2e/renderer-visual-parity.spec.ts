@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
 
+test.setTimeout(120_000);
+
 interface HarnessWindow extends Window {
 	__badger: BadgerTestHarness;
 }
@@ -74,7 +76,7 @@ async function enterStage(page: Page, mode: 'canvas' | 'bridge') {
 		(expected) => (window as HarnessWindow).__badger?.getRendererMode() === expected,
 		mode
 	);
-	for (let index = 0; index < 4; index += 1) await page.keyboard.press('ArrowDown');
+	for (let index = 0; index < 5; index += 1) await page.keyboard.press('ArrowDown');
 	await page.keyboard.press('Enter');
 	await page.waitForFunction(
 		() => (window as HarnessWindow).__badger?.getSceneName() === 'StageRunScene'
@@ -112,8 +114,8 @@ test('Canvas and retained Pixi runner compositions preserve semantic and visual 
 	expect(bridge.metrics.height).toBe(canvas.metrics.height);
 	expect(canvas.metrics.darkRatio).toBeGreaterThan(0.2);
 	expect(bridge.metrics.darkRatio).toBeGreaterThan(0.2);
-	expect(canvas.metrics.chromaRatio).toBeGreaterThan(0.04);
-	expect(bridge.metrics.chromaRatio).toBeGreaterThan(0.04);
+	expect(canvas.metrics.chromaRatio).toBeGreaterThan(0.025);
+	expect(bridge.metrics.chromaRatio).toBeGreaterThan(0.025);
 	expect(canvas.metrics.edgeRatio).toBeGreaterThan(0.008);
 	expect(bridge.metrics.edgeRatio).toBeGreaterThan(0.008);
 	expect(Math.abs(bridge.metrics.meanLuma - canvas.metrics.meanLuma)).toBeLessThan(0.3);

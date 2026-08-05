@@ -6,6 +6,7 @@ import {
 } from '../../../../vendor/arcade-runtime.mjs';
 import type { Player } from '../actors/MossBadger';
 import type { CombatEntity } from '../systems/CombatSystem';
+import { resolvePlayerSpriteSheet } from './PlayerSpriteSheets';
 import type { SpriteRenderer } from './SpriteRenderer';
 
 interface ActorNodeParts {
@@ -119,10 +120,11 @@ export function createBadgerPixiActors(options: {
 	});
 
 	function playerPayload(player: Player, cameraX: number, sprites: SpriteRenderer): ActorPayload {
+		const animation = player.animState?.currentAnim ?? 'idle';
 		return {
 			id: 'player',
-			sheet: sprites.getSheet('moss_badger_production') ?? null,
-			animation: player.animState?.currentAnim ?? 'idle',
+			sheet: resolvePlayerSpriteSheet(sprites, animation),
+			animation,
 			frame: player.animState?.frame ?? 0,
 			x: player.x - cameraX + player.w / 2,
 			y: player.y + player.h,

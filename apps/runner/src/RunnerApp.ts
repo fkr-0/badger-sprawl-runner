@@ -3,6 +3,9 @@ import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
 import { type Scene, SceneManager } from './engine/SceneManager';
 import type { GameFlow, MenuOptionId } from './game/GameFlow';
+import { AdventureController } from './game/adventure/AdventureController';
+import type { AdventureSaveV2, DistrictStoryPhase } from './game/adventure/AdventureState';
+import { WorldDirector, type WorldCommandResult } from './game/adventure/WorldDirector';
 import { routeModeSelection } from './game/ModeRouter';
 import type { BadgerPixiBridgeController } from './renderer/BadgerPixiBridge';
 import { Renderer } from './renderer/Renderer';
@@ -16,7 +19,13 @@ import { resolveRuntimeAssetUrl } from './runtime/RuntimeEnvironment';
 import { createDefaultModeSceneFactories } from './scenes/ModeSceneFactories';
 import { TitleScene } from './scenes/TitleScene';
 import { autosaveGameFlow } from './storage/AutosaveFeedback';
-import { createLocalStorageSaveDriver, loadGameFlow } from './storage/SaveStore';
+import {
+	clearActiveUndercityExpedition,
+	createLocalStorageSaveDriver,
+	loadActiveUndercityExpedition,
+	loadGameSession,
+	saveActiveUndercityExpedition,
+} from './storage/SaveStore';
 
 export interface RunnerApp {
 	start(): void;
@@ -25,6 +34,9 @@ export interface RunnerApp {
 	getCurrentScene(): Scene | undefined;
 	getRenderer(): Renderer;
 	getFlow(): GameFlow;
+	getAdventureState(): AdventureSaveV2;
+	debugTravelTo(locationId: string, spawnId?: string): WorldCommandResult;
+	debugSetDistrictPhase(districtId: string, phase: DistrictStoryPhase): WorldCommandResult;
 	setPixiBridge(controller: BadgerPixiBridgeController | null): void;
 	getRendererMode(): 'canvas' | 'bridge';
 	getRendererPerformance(): ArcadePerformanceSummary;
@@ -52,16 +64,46 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 	let pixiBridge: BadgerPixiBridgeController | null = null;
 	const sceneManager = new SceneManager({ eventBus, canvas, renderer });
 	const saveDriver = createLocalStorageSaveDriver(window.localStorage);
-	const flow = loadGameFlow(saveDriver);
+	const session = loadGameSession(saveDriver);
+	const flow = session.flow;
+	const world = new WorldDirector(undefined, session.adventure);
+	const adventure = new AdventureController(flow, world);
+	const loadedActiveUndercity = loadActiveUndercityExpedition(saveDriver);
+	const activeUndercity =
+		loadedActiveUndercity?.status === 'active' &&
+		!session.adventure.expedition.settledRunIds.includes(
+			loadedActiveUndercity.manifest.runId
+		)
+			? loadedActiveUndercity
+			: null;
+	if (loadedActiveUndercity && !activeUndercity) {
+		clearActiveUndercityExpedition(saveDriver);
+	}
 	const factories = createDefaultModeSceneFactories({
 		storyFlow: flow,
-		onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason),
+		worldDirector: world,
+		onAutosave: (reason) =>
+			autosaveGameFlow(saveDriver, flow, reason, adventure.getAdventureState()),
+		onOpenStoryFlow: (scene) => sceneManager.replace(scene),
+		onOpenWorldMap: (scene) => sceneManager.replace(scene),
+		onOpenLocation: (scene) => sceneManager.replace(scene),
+		onOpenSkillTree: (scene) => sceneManager.replace(scene),
+		onOpenTraining: (scene) => sceneManager.replace(scene),
 		onStartStoryStage: (scene) => sceneManager.replace(scene),
-		onCompleteStoryStage: (result) => {
-			flow.recordStageRuntimeResult(result);
-			flow.completeStage();
-			autosaveGameFlow(saveDriver, flow, 'stage-complete');
+		onOpenUndercity: (scene, activeSave) => {
+			saveActiveUndercityExpedition(saveDriver, activeSave);
+			sceneManager.replace(scene);
+		},
+		onCompleteUndercity: (result) => {
+			adventure.completeOptionalExpedition(result);
+			clearActiveUndercityExpedition(saveDriver);
+			autosaveGameFlow(saveDriver, flow, 'stage-complete', adventure.getAdventureState());
 			sceneManager.replace(factories.story());
+		},
+		onCompleteStoryStage: (result) => {
+			adventure.completeStoryStage(result);
+			autosaveGameFlow(saveDriver, flow, 'stage-complete', adventure.getAdventureState());
+			sceneManager.replace(factories.storyFlow());
 		},
 		onReturnToTitle: () => sceneManager.replace(createTitleScene()),
 	});
@@ -115,7 +157,9 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 					console.error('Sprite manifest failed to load', error);
 					window.dispatchEvent(new CustomEvent('badger:sprites-error', { detail: error }));
 				});
-			sceneManager.replace(createTitleScene());
+			sceneManager.replace(
+				activeUndercity ? factories.resumeUndercity(activeUndercity) : createTitleScene()
+			);
 			gameLoop.start();
 		},
 		stop(): void {
@@ -134,6 +178,23 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 		},
 		getFlow(): GameFlow {
 			return flow;
+		},
+		getAdventureState(): AdventureSaveV2 {
+			return adventure.getAdventureState();
+		},
+		debugTravelTo(locationId, spawnId): WorldCommandResult {
+			const result = adventure.debugTravelTo(locationId, spawnId);
+			if (result.ok) {
+				autosaveGameFlow(saveDriver, flow, 'world-travel', adventure.getAdventureState());
+			}
+			return result;
+		},
+		debugSetDistrictPhase(districtId, phase): WorldCommandResult {
+			const result = adventure.debugSetDistrictPhase(districtId, phase);
+			if (result.ok) {
+				autosaveGameFlow(saveDriver, flow, 'world-travel', adventure.getAdventureState());
+			}
+			return result;
 		},
 		setPixiBridge(controller): void {
 			pixiBridge?.destroy();

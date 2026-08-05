@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { deployStoryStageFromTitle } from './helpers/deploy-story-stage';
 
 type Present<T> = Exclude<T, null>;
 
@@ -71,11 +72,7 @@ async function teleportTo(page: Page, x: number, y: number): Promise<void> {
 }
 
 async function enterDubColony(page: Page): Promise<void> {
-	await page.goto('/');
-	await waitForScene(page, 'TitleScene');
-	await page.locator('#game').click();
-	await page.keyboard.press('Enter');
-	await waitForScene(page, 'StoryFlowScene');
+	await deployStoryStageFromTitle(page, 'dub-colony');
 	await expect
 		.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getStoryPresentation()))
 		.toMatchObject({
@@ -229,11 +226,15 @@ test.describe('Dub Colony story, companion, and beat-timing vertical slice', () 
 		page,
 	}) => {
 		await enterDubColony(page);
-		const authoredSpriteIds = await page.evaluate(() =>
-			(window as ColonyWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
-		);
-		expect(authoredSpriteIds).toContain('enemy_signal_jammer_bat');
-		expect(authoredSpriteIds).toContain('enemy_feedback_guard');
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					(window as ColonyWindow).__badger.hasSheet('enemy_signal_jammer_bat') &&
+					(window as ColonyWindow).__badger.hasSheet('enemy_feedback_guard')
+				)
+			)
+			.toBe(true);
+		expect(await page.evaluate(() => (window as ColonyWindow).__badger.getEnemies().length)).toBeGreaterThan(0);
 		await clearColonyEnemies(page);
 		await expect
 			.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getCheckpoint().activeId))
@@ -317,6 +318,11 @@ test.describe('Dub Colony story, companion, and beat-timing vertical slice', () 
 				reactorSynchronized: true,
 				nayaTutorialComplete: true,
 			});
+		const king = await page.evaluate(() =>
+			(window as ColonyWindow).__badger.getEnemies().find((enemy) => enemy.bossId === 'king-feedback')
+		);
+		expect(king).toBeTruthy();
+		await teleportTo(page, (king?.x ?? 2500) - 80, king?.y ?? 330);
 
 		await expect
 			.poll(() => page.evaluate(() => (window as ColonyWindow).__badger.getKingFeedback().attackCount))

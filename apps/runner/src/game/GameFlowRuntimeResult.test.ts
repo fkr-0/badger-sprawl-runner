@@ -16,6 +16,27 @@ describe('GameFlow first-world runtime results', () => {
 			completedQuestIds: ['meter-maidens-ledger'],
 			completedMinigameIds: ['toll-gate-rhythm'],
 			completedTutorialIds: ['jump-coyote', 'public-route-reading'],
+			buildTelemetry: {
+				runId: 'run:lower-sprawl:1',
+				stageId: 'lower-sprawl',
+				durationSeconds: 120,
+				loadoutItemIds: ['signal_jammer', 'phase_pick'],
+				skillRanks: { hacking: 2 },
+				approaches: ['hacking' as const, 'ghoststep' as const],
+				damageDealt: 10,
+				damageTaken: 2,
+				kills: 1,
+				alarmsTriggered: 0,
+				alarmsSpoofed: 2,
+				alarmsDisabled: 1,
+				civiliansDocumenting: 0,
+				civiliansEvacuated: 0,
+				civiliansSheltered: 1,
+				standDownAppeals: 1,
+				salvageBanked: 5,
+				salvageLost: 0,
+				deaths: 0,
+			},
 		};
 
 		flow.recordStageRuntimeResult(result);
@@ -34,6 +55,12 @@ describe('GameFlow first-world runtime results', () => {
 				'tutorial_public_route_reading',
 			])
 		);
+		expect(flow.getBuildTelemetryHistory('lower-sprawl')).toEqual([
+			expect.objectContaining({
+				runId: 'run:lower-sprawl:1',
+				approaches: ['hacking', 'ghoststep'],
+			}),
+		]);
 	});
 
 	it('exposes hydrated skill nodes after spending the first-world shard', () => {

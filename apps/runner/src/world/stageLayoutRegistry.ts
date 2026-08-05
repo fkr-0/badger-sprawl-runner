@@ -1,4 +1,5 @@
 import { getLateStageEnemySpriteSheet } from '../game/LateStageSpriteBindings';
+import { getStageEncounterTopology } from './EncounterTopologyCatalog';
 import { cloneChromeArcologyLayout } from './chromeArcologyLayout';
 import { cloneDrainmarketLayout } from './drainmarketLayout';
 import { cloneDubColonyLayout } from './dubColonyLayout';
@@ -82,14 +83,23 @@ export function isRuntimeStageId(stageId: string): stageId is RuntimeStageId {
 
 export function cloneStageLayout(stageId = 'lower-sprawl'): StageLayout {
 	const runtimeStageId = isRuntimeStageId(stageId) ? stageId : 'lower-sprawl';
-	if (runtimeStageId === 'drainmarket') return cloneDrainmarketLayout();
-	if (runtimeStageId === 'chrome-arcology') return cloneChromeArcologyLayout();
-	if (runtimeStageId === 'mirror-palace') return cloneMirrorPalaceLayout();
-	if (runtimeStageId === 'dub-colony') return cloneDubColonyLayout();
+	if (runtimeStageId === 'drainmarket') {
+		return { ...cloneDrainmarketLayout(), encounterTopology: getStageEncounterTopology(runtimeStageId) };
+	}
+	if (runtimeStageId === 'chrome-arcology') {
+		return { ...cloneChromeArcologyLayout(), encounterTopology: getStageEncounterTopology(runtimeStageId) };
+	}
+	if (runtimeStageId === 'mirror-palace') {
+		return { ...cloneMirrorPalaceLayout(), encounterTopology: getStageEncounterTopology(runtimeStageId) };
+	}
+	if (runtimeStageId === 'dub-colony') {
+		return { ...cloneDubColonyLayout(), encounterTopology: getStageEncounterTopology(runtimeStageId) };
+	}
 	const theme = STAGE_LAYOUT_THEMES[runtimeStageId];
 	const layout = cloneLowerSprawlLayout();
 	return {
 		id: `${runtimeStageId}-runtime`,
+		encounterTopology: getStageEncounterTopology(runtimeStageId),
 		platforms: layout.platforms.map((platform, index) => ({
 			...platform,
 			x: index === 0 ? platform.x : platform.x + (theme.accentOffset % 38),

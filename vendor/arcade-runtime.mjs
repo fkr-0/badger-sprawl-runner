@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT DIRECTLY.
 // Edit source/runtime/*.js.inc and run `npm run source:build`.
 
-export const ARCADE_RUNTIME_VERSION = '1.10.0';
+export const ARCADE_RUNTIME_VERSION = '1.12.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -2091,10 +2091,23 @@ export function createGridFocusNavigator(options = {}) {
       focusedIndex = items.findIndex((item, index) => item.id === previousId && isAvailable(index));
       if (focusedIndex < 0) focusedIndex = items.findIndex((_item, index) => isAvailable(index));
       preferredColumn = focusedIndex >= 0 ? focusedIndex % columns : 0;
-      return navigator.current();
+      const item = navigator.current();
+      const nextId = item?.id ?? null;
+      if (nextId !== previousId) {
+        events.emit('focus:change', Object.freeze({
+          previousId,
+          id: nextId,
+          reason: 'items-updated',
+          item,
+        }));
+      }
+      return item;
     },
     current() {
       return focusedIndex >= 0 ? items[focusedIndex] ?? null : null;
+    },
+    index() {
+      return focusedIndex;
     },
     focus(id, reason = 'programmatic') {
       const nextIndex = items.findIndex((item, index) => item.id === id && isAvailable(index));
@@ -2105,6 +2118,11 @@ export function createGridFocusNavigator(options = {}) {
       const item = navigator.current();
       events.emit('focus:change', Object.freeze({ previousId, id: item.id, reason, item }));
       return true;
+    },
+    focusIndex(index, reason = 'programmatic') {
+      const nextIndex = Math.floor(arcadeInteractionFinite(index, -1));
+      if (nextIndex < 0 || nextIndex >= items.length || !isAvailable(nextIndex)) return false;
+      return navigator.focus(items[nextIndex].id, reason);
     },
     move(direction) {
       if (focusedIndex < 0) return null;
@@ -2121,6 +2139,11 @@ export function createGridFocusNavigator(options = {}) {
       const previousPreferredColumn = preferredColumn;
       navigator.focus(items[nextIndex]?.id, direction);
       if (vertical) preferredColumn = previousPreferredColumn;
+      return navigator.current();
+    },
+    moveBy(direction, amount = 1) {
+      const count = Math.max(0, Math.floor(arcadeInteractionFinite(amount, 0)));
+      for (let step = 0; step < count; step += 1) navigator.move(direction);
       return navigator.current();
     },
     activate() {
@@ -3621,6 +3644,153 @@ export function resolveHudGauge(input = {}) {
     direction: input.direction === 'reverse' ? 'reverse' : 'forward',
     segments: Object.freeze(segments),
   });
+}
+
+function arcadeResolutionEvidenceId(value, label = 'resolution evidence id') {
+  const id = String(value ?? '').trim();
+  arcadeGameplayInvariant(id.length > 0, `${label} is required`);
+  return id;
+}
+
+function arcadeResolutionEvidenceRecord(values, normalizeValue) {
+  return Object.freeze(Object.fromEntries(
+    [...values.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([id, value]) => [id, normalizeValue(value)]),
+  ));
+}
+
+/**
+ * Collect policy-neutral evidence describing how a situation was resolved.
+ * Consumers decide which actions constitute an approach and derive their own
+ * constraints, such as non-lethal or undetected, from the frozen snapshot.
+ */
+export function createResolutionEvidenceTracker(options = {}) {
+  const events = options.events ?? createEventBus();
+  const knownApproaches = options.knownApproaches
+    ? new Set(options.knownApproaches.map((value) => arcadeResolutionEvidenceId(value)))
+    : null;
+  const approaches = new Set(
+    (options.approaches ?? []).map((value) => arcadeResolutionEvidenceId(value)),
+  );
+  const counters = new Map(
+    Object.entries(options.counters ?? {}).map(([id, value]) => [
+      arcadeResolutionEvidenceId(id, 'counter id'),
+      arcadeGameplayNonNegative(value, `counter "${id}" value`),
+    ]),
+  );
+  const flags = new Map(
+    Object.entries(options.flags ?? {}).map(([id, value]) => [
+      arcadeResolutionEvidenceId(id, 'flag id'),
+      Boolean(value),
+    ]),
+  );
+  const durations = new Map(
+    Object.entries(options.durations ?? {}).map(([id, value]) => [
+      arcadeResolutionEvidenceId(id, 'duration id'),
+      arcadeGameplayNonNegative(value, `duration "${id}" value`),
+    ]),
+  );
+  const constraints = Object.entries(options.constraints ?? {})
+    .map(([id, resolve]) => {
+      arcadeGameplayInvariant(typeof resolve === 'function', `constraint "${id}" must be a function`);
+      return [arcadeResolutionEvidenceId(id, 'constraint id'), resolve];
+    })
+    .sort(([left], [right]) => left.localeCompare(right));
+  let revision = Math.max(0, Math.floor(arcadeGameplayFinite(options.revision, 0)));
+
+  for (const approach of approaches) {
+    arcadeGameplayInvariant(
+      knownApproaches === null || knownApproaches.has(approach),
+      `unknown resolution approach "${approach}"`,
+    );
+  }
+
+  const baseSnapshot = () => Object.freeze({
+    approaches: Object.freeze([...approaches].sort()),
+    counters: arcadeResolutionEvidenceRecord(counters, (value) => value),
+    flags: arcadeResolutionEvidenceRecord(flags, Boolean),
+    durations: arcadeResolutionEvidenceRecord(durations, (value) => value),
+    revision,
+  });
+
+  const emitChange = (kind, id, before, after, metadata) => {
+    revision += 1;
+    const event = Object.freeze({ kind, id, before, after, revision, metadata });
+    events.emit('resolution-evidence:change', event);
+    return event;
+  };
+
+  const tracker = {
+    events,
+    recordApproach(value, metadata) {
+      const id = arcadeResolutionEvidenceId(value, 'resolution approach');
+      arcadeGameplayInvariant(
+        knownApproaches === null || knownApproaches.has(id),
+        `unknown resolution approach "${id}"`,
+      );
+      if (approaches.has(id)) return false;
+      approaches.add(id);
+      emitChange('approach', id, false, true, metadata);
+      return true;
+    },
+    hasApproach(value) {
+      return approaches.has(arcadeResolutionEvidenceId(value, 'resolution approach'));
+    },
+    incrementCounter(value, amount = 1, metadata) {
+      const id = arcadeResolutionEvidenceId(value, 'counter id');
+      const increment = arcadeGameplayNonNegative(amount, `counter "${id}" increment`);
+      const before = counters.get(id) ?? 0;
+      const after = arcadeGameplayRound(before + increment, 6);
+      if (after === before) return after;
+      counters.set(id, after);
+      emitChange('counter', id, before, after, metadata);
+      return after;
+    },
+    setFlag(value, enabled = true, metadata) {
+      const id = arcadeResolutionEvidenceId(value, 'flag id');
+      const before = flags.get(id) ?? false;
+      const after = Boolean(enabled);
+      if (after === before && flags.has(id)) return false;
+      flags.set(id, after);
+      emitChange('flag', id, before, after, metadata);
+      return true;
+    },
+    addDuration(value, delta, metadata) {
+      const id = arcadeResolutionEvidenceId(value, 'duration id');
+      const elapsed = arcadeGameplayNonNegative(delta, `duration "${id}" delta`);
+      const before = durations.get(id) ?? 0;
+      const after = arcadeGameplayRound(before + elapsed, 6);
+      if (after === before) return after;
+      durations.set(id, after);
+      emitChange('duration', id, before, after, metadata);
+      return after;
+    },
+    snapshot() {
+      const base = baseSnapshot();
+      return Object.freeze({
+        ...base,
+        constraints: Object.freeze(Object.fromEntries(
+          constraints.map(([id, resolve]) => [id, Boolean(resolve(base))]),
+        )),
+      });
+    },
+    decorate(value, decorateOptions = {}) {
+      arcadeGameplayInvariant(value && typeof value === 'object', 'decorated result must be an object');
+      const snapshot = tracker.snapshot();
+      const approachesKey = decorateOptions.approachesKey ?? 'resolutionApproaches';
+      const constraintsKey = decorateOptions.constraintsKey ?? 'resolutionConstraints';
+      return {
+        ...value,
+        [approachesKey]: snapshot.approaches,
+        [constraintsKey]: snapshot.constraints,
+        ...(decorateOptions.evidenceKey
+          ? { [decorateOptions.evidenceKey]: snapshot }
+          : {}),
+      };
+    },
+  };
+  return tracker;
 }
 
 function arcadeStageFinite(value, fallback = 0) {
@@ -6679,6 +6849,326 @@ export function createAudioMixer(options = {}) {
   return mixer;
 }
 
+export const ARCADE_UI_UNIT = 4;
+export const ARCADE_UI_FONT = 'ui-monospace, "Cascadia Mono", "Courier New", monospace';
+
+const ARCADE_UI_THEME_KEYS = Object.freeze([
+  'background',
+  'backgroundRaised',
+  'panel',
+  'panelStrong',
+  'text',
+  'muted',
+  'accent',
+  'accentAlt',
+  'warning',
+  'danger',
+  'line',
+]);
+
+export const DEFAULT_ARCADE_UI_THEME = Object.freeze({
+  background: '#080b12',
+  backgroundRaised: '#111827',
+  panel: 'rgba(8, 11, 18, 0.82)',
+  panelStrong: 'rgba(8, 11, 18, 0.94)',
+  text: '#f5f7ff',
+  muted: '#9ca8bd',
+  accent: '#67f3c4',
+  accentAlt: '#8aa8ff',
+  warning: '#ffb35e',
+  danger: '#ff5e7a',
+  line: 'rgba(156, 168, 189, 0.32)',
+});
+
+export function createArcadeUiTheme(theme = {}) {
+  const resolved = {};
+  for (const key of ARCADE_UI_THEME_KEYS) {
+    const value = theme[key] ?? DEFAULT_ARCADE_UI_THEME[key];
+    coreInvariant(
+      typeof value === 'string' && value.length > 0,
+      `arcade UI theme "${key}" must be a non-empty string`,
+    );
+    resolved[key] = value;
+  }
+  return Object.freeze(resolved);
+}
+
+function resolveArcadeUiTheme(theme) {
+  if (!theme) return DEFAULT_ARCADE_UI_THEME;
+  return ARCADE_UI_THEME_KEYS.every((key) => typeof theme[key] === 'string')
+    ? theme
+    : createArcadeUiTheme(theme);
+}
+
+export function drawArcadeBackdropCanvas(context, theme = DEFAULT_ARCADE_UI_THEME) {
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const { width, height } = context.canvas;
+  const gradient = context.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, resolvedTheme.backgroundRaised);
+  gradient.addColorStop(1, resolvedTheme.background);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+
+  context.save();
+  context.globalAlpha = 0.16;
+  context.fillStyle = resolvedTheme.line;
+  for (let y = 0; y < height; y += ARCADE_UI_UNIT * 3) context.fillRect(0, y, width, 1);
+  context.globalAlpha = 0.1;
+  for (let x = 0; x < width; x += ARCADE_UI_UNIT * 12) context.fillRect(x, 0, 1, height);
+  context.restore();
+}
+
+export function drawArcadePanelCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade panel options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const { x, y, width, height, strong = false, label } = options;
+  const accent = options.accent ?? resolvedTheme.accent;
+  const cut = ARCADE_UI_UNIT * 2;
+
+  context.save();
+  context.fillStyle = strong ? resolvedTheme.panelStrong : resolvedTheme.panel;
+  context.beginPath();
+  context.moveTo(x + cut, y);
+  context.lineTo(x + width, y);
+  context.lineTo(x + width, y + height - cut);
+  context.lineTo(x + width - cut, y + height);
+  context.lineTo(x, y + height);
+  context.lineTo(x, y + cut);
+  context.closePath();
+  context.fill();
+  context.strokeStyle = resolvedTheme.line;
+  context.lineWidth = 1;
+  context.stroke();
+  context.fillStyle = accent;
+  context.fillRect(x, y + cut, ARCADE_UI_UNIT, Math.max(0, height - cut * 2));
+  context.fillRect(x + cut, y, Math.min(width * 0.28, 120), 2);
+
+  if (label) {
+    context.textAlign = 'left';
+    context.textBaseline = 'alphabetic';
+    context.font = `700 10px ${ARCADE_UI_FONT}`;
+    context.fillStyle = accent;
+    context.fillText(String(label).toUpperCase(), x + ARCADE_UI_UNIT * 4, y + ARCADE_UI_UNIT * 5);
+  }
+  context.restore();
+}
+
+export function drawArcadeMenuRowCanvas(
+  context,
+  label,
+  x,
+  y,
+  width,
+  selected,
+  theme = DEFAULT_ARCADE_UI_THEME,
+) {
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const height = ARCADE_UI_UNIT * 9;
+  context.save();
+  context.globalAlpha = selected ? 0.13 : 0.025;
+  context.fillStyle = selected ? resolvedTheme.accent : resolvedTheme.text;
+  context.fillRect(x, y, width, height);
+  context.globalAlpha = 1;
+  context.fillStyle = selected ? resolvedTheme.accent : resolvedTheme.line;
+  context.fillRect(x, y, selected ? ARCADE_UI_UNIT : 1, height);
+  context.strokeStyle = selected ? resolvedTheme.accent : resolvedTheme.line;
+  context.lineWidth = 1;
+  context.strokeRect(x, y, width, height);
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+  context.font = `${selected ? 800 : 650} 16px ${ARCADE_UI_FONT}`;
+  context.fillStyle = selected ? resolvedTheme.text : resolvedTheme.muted;
+  context.fillText(String(label).toUpperCase(), x + ARCADE_UI_UNIT * 5, y + height / 2);
+  context.textAlign = 'right';
+  context.fillStyle = selected ? resolvedTheme.accent : resolvedTheme.muted;
+  context.fillText(selected ? '◆' : '·', x + width - ARCADE_UI_UNIT * 4, y + height / 2);
+  context.restore();
+}
+
+export function drawArcadeFooterCanvas(context, text, theme = DEFAULT_ARCADE_UI_THEME) {
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const { width, height } = context.canvas;
+  context.save();
+  context.fillStyle = resolvedTheme.panelStrong;
+  context.fillRect(0, height - ARCADE_UI_UNIT * 9, width, ARCADE_UI_UNIT * 9);
+  context.fillStyle = resolvedTheme.line;
+  context.fillRect(0, height - ARCADE_UI_UNIT * 9, width, 1);
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = `700 12px ${ARCADE_UI_FONT}`;
+  context.fillStyle = resolvedTheme.muted;
+  context.fillText(String(text).toUpperCase(), width / 2, height - ARCADE_UI_UNIT * 4.5);
+  context.restore();
+}
+
+export function drawArcadeChipCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade chip options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const accent = options.accent ?? resolvedTheme.accent;
+  const active = options.active ?? false;
+  const align = options.align ?? 'left';
+  const text = String(options.text ?? '').toUpperCase();
+  context.save();
+  context.font = `800 10px ${ARCADE_UI_FONT}`;
+  const measuredWidth = Math.ceil(context.measureText(text).width);
+  const width = options.width ?? Math.max(44, measuredWidth + ARCADE_UI_UNIT * 6);
+  const height = ARCADE_UI_UNIT * 6;
+  const x = align === 'center'
+    ? options.x - width / 2
+    : align === 'right'
+      ? options.x - width
+      : options.x;
+
+  context.fillStyle = active ? accent : resolvedTheme.panelStrong;
+  context.globalAlpha = active ? 0.2 : 0.92;
+  context.fillRect(x, options.y, width, height);
+  context.globalAlpha = 1;
+  context.strokeStyle = active ? accent : resolvedTheme.line;
+  context.lineWidth = active ? 2 : 1;
+  context.strokeRect(x + 0.5, options.y + 0.5, width - 1, height - 1);
+  context.fillStyle = accent;
+  context.fillRect(x, options.y, active ? ARCADE_UI_UNIT : 2, height);
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillStyle = active ? resolvedTheme.text : resolvedTheme.muted;
+  context.fillText(text, x + width / 2, options.y + height / 2 + 0.5);
+  context.restore();
+}
+
+export function drawArcadeMeterCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade meter options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const accent = options.accent ?? resolvedTheme.accent;
+  const height = options.height ?? ARCADE_UI_UNIT * 3;
+  const gauge = resolveHudGauge({
+    value: options.value,
+    min: options.min ?? options.minimum,
+    max: options.max ?? options.maximum,
+    direction: options.reverse ? 'reverse' : 'forward',
+  });
+  const fillWidth = Math.round(options.width * gauge.ratio);
+
+  context.save();
+  if (options.label) {
+    context.font = `750 9px ${ARCADE_UI_FONT}`;
+    context.textBaseline = 'alphabetic';
+    context.textAlign = options.reverse ? 'right' : 'left';
+    context.fillStyle = resolvedTheme.muted;
+    context.fillText(
+      String(options.label).toUpperCase(),
+      options.reverse ? options.x + options.width : options.x,
+      options.y - ARCADE_UI_UNIT,
+    );
+  }
+  if (options.valueLabel) {
+    context.font = `800 9px ${ARCADE_UI_FONT}`;
+    context.textAlign = options.reverse ? 'left' : 'right';
+    context.fillStyle = accent;
+    context.fillText(
+      String(options.valueLabel).toUpperCase(),
+      options.reverse ? options.x : options.x + options.width,
+      options.y - ARCADE_UI_UNIT,
+    );
+  }
+  context.fillStyle = resolvedTheme.backgroundRaised;
+  context.fillRect(options.x, options.y, options.width, height);
+  context.fillStyle = resolvedTheme.line;
+  context.fillRect(options.x, options.y, options.width, 1);
+  context.fillStyle = accent;
+  context.fillRect(
+    options.reverse ? options.x + options.width - fillWidth : options.x,
+    options.y,
+    fillWidth,
+    height,
+  );
+  context.strokeStyle = resolvedTheme.line;
+  context.lineWidth = 1;
+  context.strokeRect(options.x + 0.5, options.y + 0.5, options.width - 1, height - 1);
+  context.restore();
+  return gauge;
+}
+
+export function drawArcadeScreenTitleCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade screen-title options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const y = options.y ?? 48;
+  const accent = options.accent ?? resolvedTheme.accentAlt;
+  context.save();
+  context.textAlign = 'center';
+  context.textBaseline = 'alphabetic';
+  context.font = `800 10px ${ARCADE_UI_FONT}`;
+  context.fillStyle = resolvedTheme.muted;
+  context.fillText(String(options.eyebrow ?? '').toUpperCase(), context.canvas.width / 2, y);
+  context.font = `900 ${options.titleSize ?? 38}px ${ARCADE_UI_FONT}`;
+  context.fillStyle = accent;
+  context.fillText(String(options.title ?? '').toUpperCase(), context.canvas.width / 2, y + 38);
+  context.globalAlpha = 0.85;
+  context.fillRect(context.canvas.width / 2 - 92, y + 49, 184, 2);
+  context.globalAlpha = 1;
+  if (options.subtitle) {
+    context.font = `700 11px ${ARCADE_UI_FONT}`;
+    context.fillStyle = resolvedTheme.muted;
+    context.fillText(String(options.subtitle).toUpperCase(), context.canvas.width / 2, y + 68);
+  }
+  context.restore();
+}
+
+/**
+ * Creates a small persistence notification channel that can feed both the
+ * runtime event bus and an optional browser CustomEvent without owning save
+ * serialization or storage policy.
+ */
+export function createPersistenceFeedback(options = {}) {
+  const labels = Object.freeze({ ...(options.labels ?? {}) });
+  const events = options.events ?? createEventBus();
+  const now = options.now ?? (() => Date.now());
+  const target = options.target ?? globalThis;
+  const eventName = options.eventName ?? 'arcade:persistence-feedback';
+  let count = 0;
+  let last = null;
+
+  const create = (reason, detail = {}) => {
+    const resolvedReason = String(reason ?? '').trim();
+    coreInvariant(resolvedReason.length > 0, 'persistence feedback reason is required');
+    const label = detail.label ?? labels[resolvedReason] ?? resolvedReason;
+    return Object.freeze({
+      ...detail,
+      reason: resolvedReason,
+      label: String(label),
+      timestamp: finiteNumber(detail.timestamp, finiteNumber(now(), Date.now())),
+    });
+  };
+
+  const channel = {
+    events,
+    create,
+    dispatch(feedback) {
+      const normalized = create(feedback?.reason, feedback ?? {});
+      last = normalized;
+      count += 1;
+      events.emit('persistence:feedback', normalized);
+      options.onFeedback?.(normalized);
+      if (eventName && typeof target?.dispatchEvent === 'function') {
+        const EventCtor = options.CustomEvent ?? target?.CustomEvent ?? globalThis.CustomEvent;
+        const event = typeof options.createEvent === 'function'
+          ? options.createEvent(eventName, normalized)
+          : typeof EventCtor === 'function'
+            ? new EventCtor(eventName, { detail: normalized })
+            : null;
+        if (event) target.dispatchEvent(event);
+      }
+      return normalized;
+    },
+    emit(reason, detail = {}) {
+      return channel.dispatch(create(reason, detail));
+    },
+    snapshot() {
+      return Object.freeze({ count, last });
+    },
+  };
+  return channel;
+}
+
 export function resolveSafeAreaLayout(input = {}) {
   const viewportWidth = positiveNumber(input.viewportWidth, 1);
   const viewportHeight = positiveNumber(input.viewportHeight, 1);
@@ -7171,6 +7661,365 @@ export function verifyRunSummary(summary) {
 }
 
 // END ARCADE SERVICES 0.13-0.16
+
+const ARCADE_NOTICE_KIND_PRIORITY = Object.freeze({
+  info: 0,
+  success: 100,
+  warning: 200,
+  danger: 300,
+});
+
+function arcadeUiExperienceFinite(value, fallback = 0) {
+  return Number.isFinite(value) ? Number(value) : fallback;
+}
+
+function arcadeUiExperiencePositive(value, fallback, label) {
+  const resolved = arcadeUiExperienceFinite(value, fallback);
+  coreInvariant(resolved > 0, `${label} must be positive`);
+  return resolved;
+}
+
+function arcadeUiExperienceInputLabel(value) {
+  if (Array.isArray(value)) return value.map((entry) => String(entry)).join(' + ');
+  return value == null ? '' : String(value);
+}
+
+export function fitArcadeTextCanvas(context, text, maxWidth, options = {}) {
+  coreInvariant(context && typeof context.measureText === 'function', 'arcade text fitting requires a canvas context');
+  const width = Math.max(0, arcadeUiExperienceFinite(maxWidth, 0));
+  const value = String(text ?? '');
+  if (context.measureText(value).width <= width) return value;
+  const ellipsis = String(options.ellipsis ?? '…');
+  if (width <= 0 || context.measureText(ellipsis).width > width) return '';
+  const glyphs = Array.from(value);
+  let low = 0;
+  let high = glyphs.length;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    const candidate = `${glyphs.slice(0, middle).join('').trimEnd()}${ellipsis}`;
+    if (context.measureText(candidate).width <= width) low = middle;
+    else high = middle - 1;
+  }
+  return `${glyphs.slice(0, low).join('').trimEnd()}${ellipsis}`;
+}
+
+export function wrapArcadeTextCanvas(context, text, maxWidth, options = {}) {
+  coreInvariant(context && typeof context.measureText === 'function', 'arcade text wrapping requires a canvas context');
+  const width = Math.max(0, arcadeUiExperienceFinite(maxWidth, 0));
+  const maxLines = options.maxLines == null
+    ? Number.POSITIVE_INFINITY
+    : Math.max(1, Math.floor(arcadeUiExperienceFinite(options.maxLines, 1)));
+  const lineHeight = arcadeUiExperiencePositive(options.lineHeight ?? 16, 16, 'arcade text line height');
+  const lines = [];
+
+  for (const paragraph of String(text ?? '').split(/\r?\n/)) {
+    const words = paragraph.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      lines.push('');
+      continue;
+    }
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (context.measureText(candidate).width <= width) {
+        line = candidate;
+        continue;
+      }
+      if (line) lines.push(line);
+      line = context.measureText(word).width <= width
+        ? word
+        : fitArcadeTextCanvas(context, word, width, options);
+    }
+    if (line) lines.push(line);
+  }
+
+  const truncated = lines.length > maxLines;
+  const visibleLines = lines.slice(0, maxLines);
+  if (truncated && visibleLines.length > 0) {
+    const lastIndex = visibleLines.length - 1;
+    const ellipsis = String(options.ellipsis ?? '…');
+    const line = visibleLines[lastIndex];
+    visibleLines[lastIndex] = context.measureText(`${line}${ellipsis}`).width <= width
+      ? `${line}${ellipsis}`
+      : `${fitArcadeTextCanvas(
+          context,
+          line,
+          Math.max(0, width - context.measureText(ellipsis).width),
+          { ...options, ellipsis: '' },
+        )}${ellipsis}`;
+  }
+  return Object.freeze({
+    lines: Object.freeze(visibleLines),
+    truncated,
+    width,
+    lineHeight,
+    height: visibleLines.length * lineHeight,
+  });
+}
+
+export function drawArcadeTextBlockCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade text block options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const font = options.font ?? `12px ${ARCADE_UI_FONT}`;
+  const lineHeight = arcadeUiExperiencePositive(options.lineHeight ?? 16, 16, 'arcade text block line height');
+  context.save();
+  context.font = font;
+  context.textAlign = options.align ?? 'left';
+  context.textBaseline = options.baseline ?? 'top';
+  context.fillStyle = options.color ?? resolvedTheme.text;
+  const layout = wrapArcadeTextCanvas(context, options.text, options.width, {
+    lineHeight,
+    maxLines: options.maxLines,
+    ellipsis: options.ellipsis,
+  });
+  for (const [index, line] of layout.lines.entries()) {
+    context.fillText(line, options.x, options.y + index * lineHeight);
+  }
+  context.restore();
+  return layout;
+}
+
+export function resolveArcadeCommandHints(actions = [], options = {}) {
+  const device = options.device ?? 'keyboard';
+  coreInvariant(['keyboard', 'gamepad', 'pointer', 'touch'].includes(device), `unknown arcade command device: ${device}`);
+  const fallbackOrder = [device, 'keyboard', 'gamepad', 'pointer', 'touch'];
+  const hints = actions
+    .map((action, index) => ({ action, index }))
+    .filter(({ action }) => action && action.hidden !== true)
+    .map(({ action, index }) => {
+      let input = '';
+      for (const source of fallbackOrder) {
+        input = arcadeUiExperienceInputLabel(action.inputs?.[source]);
+        if (input) break;
+      }
+      const label = String(action.label ?? action.id ?? '').trim();
+      return Object.freeze({
+        id: String(action.id ?? (label || `command-${index}`)),
+        label,
+        input,
+        text: input ? `${input} ${label}`.trim() : label,
+        disabled: action.disabled === true,
+        priority: arcadeUiExperienceFinite(action.priority, 0),
+        index,
+      });
+    })
+    .filter((hint) => hint.label)
+    .sort((left, right) => right.priority - left.priority || left.index - right.index);
+  return Object.freeze({ device, hints: Object.freeze(hints) });
+}
+
+export function drawArcadeCommandBarCanvas(context, options, theme = DEFAULT_ARCADE_UI_THEME) {
+  coreInvariant(options && typeof options === 'object', 'arcade command bar options are required');
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const x = arcadeUiExperienceFinite(options.x, ARCADE_UI_UNIT * 3);
+  const width = Math.max(1, arcadeUiExperienceFinite(
+    options.width,
+    context.canvas.width - ARCADE_UI_UNIT * 6,
+  ));
+  const lineHeight = arcadeUiExperiencePositive(options.lineHeight ?? 14, 14, 'arcade command line height');
+  const font = options.font ?? `800 10px ${ARCADE_UI_FONT}`;
+  const model = resolveArcadeCommandHints(options.actions, { device: options.device });
+  const separator = options.separator ?? '  //  ';
+  const text = model.hints
+    .map((hint) => hint.disabled ? `${hint.text} [LOCKED]` : hint.text)
+    .join(separator)
+    .toUpperCase();
+
+  context.save();
+  context.font = font;
+  const wrapped = wrapArcadeTextCanvas(context, text, width - ARCADE_UI_UNIT * 8, {
+    lineHeight,
+    maxLines: options.maxLines ?? 2,
+  });
+  const paddingY = ARCADE_UI_UNIT * 2;
+  const height = Math.max(ARCADE_UI_UNIT * 7, wrapped.height + paddingY * 2);
+  const y = arcadeUiExperienceFinite(options.y, context.canvas.height - height - ARCADE_UI_UNIT * 2);
+  context.globalAlpha = options.backgroundAlpha ?? 0.94;
+  context.fillStyle = options.strong ? resolvedTheme.panelStrong : resolvedTheme.panel;
+  context.fillRect(x, y, width, height);
+  context.globalAlpha = 1;
+  context.fillStyle = options.accent ?? resolvedTheme.accent;
+  context.fillRect(x, y, ARCADE_UI_UNIT, height);
+  context.strokeStyle = resolvedTheme.line;
+  context.lineWidth = 1;
+  context.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+  context.fillStyle = resolvedTheme.muted;
+  context.textAlign = options.align ?? 'center';
+  context.textBaseline = 'top';
+  const textX = context.textAlign === 'left'
+    ? x + ARCADE_UI_UNIT * 5
+    : context.textAlign === 'right'
+      ? x + width - ARCADE_UI_UNIT * 4
+      : x + width / 2;
+  const textY = y + (height - wrapped.height) / 2;
+  for (const [index, line] of wrapped.lines.entries()) {
+    context.fillText(line, textX, textY + index * lineHeight);
+  }
+  context.restore();
+  return Object.freeze({ ...model, text, x, y, width, height, lines: wrapped.lines, truncated: wrapped.truncated });
+}
+
+function arcadeNoticeFreeze(notice) {
+  return Object.freeze({ ...notice, detail: Object.freeze({ ...(notice.detail ?? {}) }) });
+}
+
+export function createArcadeNoticeQueue(options = {}) {
+  const capacity = Math.max(1, Math.floor(arcadeUiExperienceFinite(options.capacity, 8)));
+  const defaultDuration = arcadeUiExperiencePositive(options.defaultDuration ?? 180, 180, 'arcade notice duration');
+  const events = options.events ?? createEventBus();
+  let nextSequence = 0;
+  let notices = [];
+  let currentId = null;
+
+  const sortNotices = () => {
+    notices.sort((left, right) => right.priority - left.priority || left.sequence - right.sequence);
+  };
+  const emitCurrentChange = (reason) => {
+    const nextId = notices[0]?.id ?? null;
+    if (nextId === currentId) return;
+    const previousId = currentId;
+    currentId = nextId;
+    events.emit('notice:change', Object.freeze({ previousId, id: nextId, reason, notice: notices[0] ?? null }));
+  };
+
+  const queue = {
+    events,
+    push(input, detail = {}) {
+      const raw = typeof input === 'string' ? { message: input, detail } : { ...(input ?? {}) };
+      const message = String(raw.message ?? '').trim();
+      coreInvariant(message, 'arcade notice message is required');
+      const kind = raw.kind ?? 'info';
+      coreInvariant(Object.hasOwn(ARCADE_NOTICE_KIND_PRIORITY, kind), `unknown arcade notice kind: ${kind}`);
+      const duration = arcadeUiExperiencePositive(raw.duration ?? defaultDuration, defaultDuration, 'arcade notice duration');
+      const key = String(raw.key ?? raw.id ?? `${kind}:${message}`);
+      const existingIndex = raw.dedupe === false ? -1 : notices.findIndex((notice) => notice.key === key);
+      if (existingIndex >= 0) {
+        const previous = notices[existingIndex];
+        const updated = arcadeNoticeFreeze({
+          ...previous,
+          message,
+          title: raw.title == null ? previous.title : String(raw.title),
+          kind,
+          priority: arcadeUiExperienceFinite(raw.priority, ARCADE_NOTICE_KIND_PRIORITY[kind]),
+          duration,
+          remaining: duration,
+          detail: raw.detail ?? previous.detail,
+        });
+        notices[existingIndex] = updated;
+        sortNotices();
+        events.emit('notice:update', Object.freeze({ previous, notice: updated }));
+        emitCurrentChange('update');
+        return updated;
+      }
+      const sequence = nextSequence++;
+      const notice = arcadeNoticeFreeze({
+        id: String(raw.id ?? `notice-${sequence}`),
+        key,
+        message,
+        title: raw.title == null ? '' : String(raw.title),
+        kind,
+        priority: arcadeUiExperienceFinite(raw.priority, ARCADE_NOTICE_KIND_PRIORITY[kind]),
+        duration,
+        remaining: duration,
+        sequence,
+        detail: raw.detail,
+      });
+      notices.push(notice);
+      sortNotices();
+      if (notices.length > capacity) notices = notices.slice(0, capacity);
+      events.emit('notice:push', notice);
+      emitCurrentChange('push');
+      return notice;
+    },
+    current() {
+      return notices[0] ?? null;
+    },
+    step(delta = 1) {
+      let elapsed = Math.max(0, arcadeUiExperienceFinite(delta, 0));
+      while (elapsed > 0 && notices.length > 0) {
+        const current = notices[0];
+        if (elapsed < current.remaining) {
+          notices[0] = arcadeNoticeFreeze({ ...current, remaining: current.remaining - elapsed });
+          elapsed = 0;
+          break;
+        }
+        elapsed -= current.remaining;
+        notices.shift();
+        events.emit('notice:expire', current);
+        emitCurrentChange('expire');
+      }
+      return queue.current();
+    },
+    dismiss(id, reason = 'dismiss') {
+      const index = notices.findIndex((notice) => notice.id === id);
+      if (index < 0) return false;
+      const [notice] = notices.splice(index, 1);
+      events.emit('notice:dismiss', Object.freeze({ notice, reason }));
+      emitCurrentChange(reason);
+      return true;
+    },
+    clear(reason = 'clear') {
+      const count = notices.length;
+      const removed = notices;
+      notices = [];
+      for (const notice of removed) events.emit('notice:dismiss', Object.freeze({ notice, reason }));
+      emitCurrentChange(reason);
+      return count;
+    },
+    snapshot() {
+      return Object.freeze({
+        capacity,
+        defaultDuration,
+        currentId: notices[0]?.id ?? null,
+        notices: Object.freeze(notices.map((notice) => arcadeNoticeFreeze(notice))),
+      });
+    },
+  };
+  return queue;
+}
+
+export function drawArcadeNoticeCanvas(context, notice, options = {}, theme = DEFAULT_ARCADE_UI_THEME) {
+  if (!notice) return null;
+  const resolvedTheme = resolveArcadeUiTheme(theme);
+  const accentByKind = {
+    info: resolvedTheme.accentAlt,
+    success: resolvedTheme.accent,
+    warning: resolvedTheme.warning,
+    danger: resolvedTheme.danger,
+  };
+  const width = Math.max(120, arcadeUiExperienceFinite(options.width, Math.min(480, context.canvas.width - 48)));
+  const x = arcadeUiExperienceFinite(options.x, (context.canvas.width - width) / 2);
+  const y = arcadeUiExperienceFinite(options.y, ARCADE_UI_UNIT * 5);
+  const height = Math.max(54, arcadeUiExperienceFinite(options.height, 64));
+  const accent = options.accent ?? accentByKind[notice.kind] ?? resolvedTheme.accent;
+  drawArcadePanelCanvas(context, {
+    x,
+    y,
+    width,
+    height,
+    accent,
+    strong: true,
+    label: notice.title || notice.kind,
+  }, resolvedTheme);
+  const textLayout = drawArcadeTextBlockCanvas(context, {
+    x: x + ARCADE_UI_UNIT * 5,
+    y: y + ARCADE_UI_UNIT * 7,
+    width: width - ARCADE_UI_UNIT * 10,
+    text: notice.message,
+    font: options.font ?? `800 11px ${ARCADE_UI_FONT}`,
+    lineHeight: options.lineHeight ?? 14,
+    maxLines: options.maxLines ?? 2,
+    color: resolvedTheme.text,
+  }, resolvedTheme);
+  const ratio = notice.duration > 0 ? clampNumber(notice.remaining / notice.duration, 0, 1) : 0;
+  context.save();
+  context.fillStyle = resolvedTheme.line;
+  context.fillRect(x + ARCADE_UI_UNIT * 4, y + height - ARCADE_UI_UNIT * 2, width - ARCADE_UI_UNIT * 8, 2);
+  context.fillStyle = accent;
+  context.fillRect(x + ARCADE_UI_UNIT * 4, y + height - ARCADE_UI_UNIT * 2, (width - ARCADE_UI_UNIT * 8) * ratio, 2);
+  context.restore();
+  return Object.freeze({ x, y, width, height, accent, ratio, textLayout });
+}
 
 function arcadePixiFrameCapacity(value, fallback) {
   const resolved = Math.floor(finiteNumber(value, fallback));
@@ -8211,3 +9060,324 @@ export async function runHeadlessScenario(options = {}) {
 }
 
 // END ARCADE SERVICES 0.17-1.0
+export const ARCADE_CERTIFICATION_SCHEMA_VERSION = 1;
+export const ARCADE_CERTIFICATION_EVIDENCE_KINDS = Object.freeze(['lifecycle', 'visual']);
+export const ARCADE_CERTIFICATION_SOURCES = Object.freeze([
+  'local-browser',
+  'physical-device',
+  'driver-lab',
+  'imported',
+]);
+export const ARCADE_CERTIFICATION_CONTEXT_LOSS_MODES = Object.freeze([
+  'synthetic-event',
+  'webgl-lose-context',
+  'driver-reset',
+  'not-applicable',
+]);
+
+const DEFAULT_CERTIFICATION_POLICY = Object.freeze({
+  requiredConsumers: Object.freeze([
+    'hyperblast-shooter',
+    'ethic-brawl',
+    'badger-sprawl-runner',
+  ]),
+  requiredBrowsers: Object.freeze(['chromium', 'firefox']),
+  requiredPhysicalTiers: Object.freeze(['low', 'balanced', 'high']),
+  minimumLongSessionSeconds: 7200,
+  maximumUploadP95Bytes: 0,
+  requireVisualEvidence: true,
+  requireDriverResetPerConsumer: true,
+});
+
+function certificationString(value, fallback = '') {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function certificationNumber(value, fallback = null) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function certificationBoolean(value, fallback = false) {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function certificationArray(value) {
+  return Object.freeze(Array.isArray(value) ? [...value] : []);
+}
+
+function freezeCertificationRecord(record) {
+  return Object.freeze({
+    ...record,
+    browser: Object.freeze({ ...record.browser }),
+    device: Object.freeze({ ...record.device }),
+    checks: Object.freeze({ ...record.checks }),
+    session: record.session ? Object.freeze({ ...record.session }) : null,
+    visual: record.visual ? Object.freeze({ ...record.visual }) : null,
+    budget: record.budget ? Object.freeze({ ...record.budget }) : null,
+    artifacts: certificationArray(record.artifacts),
+    notes: certificationArray(record.notes),
+  });
+}
+
+export function createCertificationPolicy(overrides = {}) {
+  return Object.freeze({
+    requiredConsumers: certificationArray(
+      overrides.requiredConsumers ?? DEFAULT_CERTIFICATION_POLICY.requiredConsumers,
+    ),
+    requiredBrowsers: certificationArray(
+      overrides.requiredBrowsers ?? DEFAULT_CERTIFICATION_POLICY.requiredBrowsers,
+    ),
+    requiredPhysicalTiers: certificationArray(
+      overrides.requiredPhysicalTiers ?? DEFAULT_CERTIFICATION_POLICY.requiredPhysicalTiers,
+    ),
+    minimumLongSessionSeconds: Math.max(
+      0,
+      certificationNumber(
+        overrides.minimumLongSessionSeconds,
+        DEFAULT_CERTIFICATION_POLICY.minimumLongSessionSeconds,
+      ),
+    ),
+    maximumUploadP95Bytes: Math.max(
+      0,
+      certificationNumber(
+        overrides.maximumUploadP95Bytes,
+        DEFAULT_CERTIFICATION_POLICY.maximumUploadP95Bytes,
+      ),
+    ),
+    requireVisualEvidence: certificationBoolean(
+      overrides.requireVisualEvidence,
+      DEFAULT_CERTIFICATION_POLICY.requireVisualEvidence,
+    ),
+    requireDriverResetPerConsumer: certificationBoolean(
+      overrides.requireDriverResetPerConsumer,
+      DEFAULT_CERTIFICATION_POLICY.requireDriverResetPerConsumer,
+    ),
+  });
+}
+
+export function createCertificationEvidence(input = {}) {
+  const kind = certificationString(input.kind, 'lifecycle');
+  const project = certificationString(input.project, 'unknown-project');
+  const browserName = certificationString(input.browser?.name, 'unknown');
+  const recordedAt = certificationString(input.recordedAt, new Date(0).toISOString());
+  const session = input.session ?? null;
+  const visual = input.visual ?? null;
+  const id = certificationString(
+    input.id,
+    `${project}:${kind}:${browserName}:${recordedAt}`,
+  );
+  return freezeCertificationRecord({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    id,
+    kind,
+    project,
+    projectVersion: certificationString(input.projectVersion, 'unknown'),
+    runtimeVersion: certificationString(input.runtimeVersion, 'unknown'),
+    recordedAt,
+    source: certificationString(input.source, 'local-browser'),
+    browser: {
+      name: browserName,
+      version: certificationString(input.browser?.version, 'unknown'),
+      userAgent: certificationString(input.browser?.userAgent, 'unknown'),
+    },
+    device: {
+      tier: certificationString(input.device?.tier, 'unknown'),
+      os: certificationString(input.device?.os, 'unknown'),
+      cpu: certificationString(input.device?.cpu, 'unknown'),
+      gpu: certificationString(input.device?.gpu, 'unknown'),
+      memoryGiB: certificationNumber(input.device?.memoryGiB),
+      logicalCores: certificationNumber(input.device?.logicalCores),
+      devicePixelRatio: certificationNumber(input.device?.devicePixelRatio),
+      powerMode: certificationString(input.device?.powerMode, 'unknown'),
+      thermalState: certificationString(input.device?.thermalState, 'unknown'),
+    },
+    checks: {
+      resize: certificationBoolean(input.checks?.resize),
+      pauseResume: certificationBoolean(input.checks?.pauseResume),
+      contextLossRestore: certificationBoolean(input.checks?.contextLossRestore),
+      teardown: certificationBoolean(input.checks?.teardown),
+      visual: input.checks?.visual == null ? null : certificationBoolean(input.checks.visual),
+      errors: certificationArray(input.checks?.errors),
+    },
+    session: session
+      ? {
+          durationSeconds: Math.max(0, certificationNumber(session.durationSeconds, 0)),
+          framesBefore: Math.max(0, certificationNumber(session.framesBefore, 0)),
+          framesAfter: Math.max(0, certificationNumber(session.framesAfter, 0)),
+          heapBeforeBytes: certificationNumber(session.heapBeforeBytes),
+          heapAfterBytes: certificationNumber(session.heapAfterBytes),
+          uploadP95Bytes: Math.max(0, certificationNumber(session.uploadP95Bytes, 0)),
+          contextLossMode: certificationString(session.contextLossMode, 'synthetic-event'),
+          contextLosses: Math.max(0, certificationNumber(session.contextLosses, 0)),
+          contextRestores: Math.max(0, certificationNumber(session.contextRestores, 0)),
+        }
+      : null,
+    visual: visual
+      ? {
+          semanticPassed: certificationBoolean(visual.semanticPassed),
+          imageStatisticsPassed: certificationBoolean(visual.imageStatisticsPassed),
+          metrics: visual.metrics ?? null,
+        }
+      : null,
+    budget: input.budget ?? null,
+    artifacts: input.artifacts,
+    notes: input.notes,
+  });
+}
+
+export function validateCertificationEvidence(input, options = {}) {
+  const evidence = createCertificationEvidence(input);
+  const errors = [];
+  const allowed = (values, value, field) => {
+    if (!values.includes(value)) errors.push(`${field} must be one of ${values.join(', ')}`);
+  };
+  allowed(ARCADE_CERTIFICATION_EVIDENCE_KINDS, evidence.kind, 'kind');
+  allowed(ARCADE_CERTIFICATION_SOURCES, evidence.source, 'source');
+  if (evidence.project === 'unknown-project') errors.push('project is required');
+  if (evidence.projectVersion === 'unknown') errors.push('projectVersion is required');
+  if (evidence.runtimeVersion === 'unknown') errors.push('runtimeVersion is required');
+  if (evidence.browser.name === 'unknown') errors.push('browser.name is required');
+  if (Number.isNaN(Date.parse(evidence.recordedAt))) errors.push('recordedAt must be ISO-compatible');
+  if (evidence.checks.errors.length > 0) errors.push('checks.errors must be empty');
+
+  if (evidence.kind === 'lifecycle') {
+    if (!evidence.session) errors.push('lifecycle evidence requires session');
+    if (!evidence.checks.resize) errors.push('resize check did not pass');
+    if (!evidence.checks.pauseResume) errors.push('pauseResume check did not pass');
+    if (!evidence.checks.contextLossRestore) errors.push('contextLossRestore check did not pass');
+    if (!evidence.checks.teardown) errors.push('teardown check did not pass');
+    if (evidence.session) {
+      allowed(
+        ARCADE_CERTIFICATION_CONTEXT_LOSS_MODES,
+        evidence.session.contextLossMode,
+        'session.contextLossMode',
+      );
+      if (evidence.session.framesAfter <= evidence.session.framesBefore) {
+        errors.push('session.framesAfter must be greater than framesBefore');
+      }
+      if (evidence.session.contextLosses < 1 || evidence.session.contextRestores < 1) {
+        errors.push('lifecycle evidence requires at least one context loss and restore');
+      }
+    }
+  }
+
+  if (evidence.kind === 'visual') {
+    if (!evidence.visual) errors.push('visual evidence requires visual metrics');
+    if (!evidence.checks.visual) errors.push('visual check did not pass');
+    if (!evidence.visual?.semanticPassed) errors.push('visual semantic check did not pass');
+    if (!evidence.visual?.imageStatisticsPassed) errors.push('visual image-statistics check did not pass');
+  }
+
+  const requirePhysicalMetadata = options.requirePhysicalMetadata
+    ?? (evidence.source === 'physical-device' || evidence.source === 'driver-lab');
+  if (requirePhysicalMetadata) {
+    for (const field of ['tier', 'os', 'cpu', 'gpu', 'powerMode', 'thermalState']) {
+      if (evidence.device[field] === 'unknown') errors.push(`device.${field} is required`);
+    }
+    if (!(evidence.device.memoryGiB > 0)) errors.push('device.memoryGiB is required');
+    if (!(evidence.device.logicalCores > 0)) errors.push('device.logicalCores is required');
+  }
+
+  return Object.freeze({ valid: errors.length === 0, evidence, errors: Object.freeze(errors) });
+}
+
+export function assertCertificationEvidence(input, options = {}) {
+  const result = validateCertificationEvidence(input, options);
+  if (!result.valid) throw new Error(`invalid certification evidence: ${result.errors.join('; ')}`);
+  return result.evidence;
+}
+
+function certificationRecordPasses(record, policy) {
+  const validation = validateCertificationEvidence(record);
+  if (!validation.valid) return false;
+  if (record.kind === 'lifecycle') {
+    return record.session.uploadP95Bytes <= policy.maximumUploadP95Bytes;
+  }
+  return true;
+}
+
+export function summarizeCertificationEvidence(inputs = [], policyInput = {}) {
+  const policy = createCertificationPolicy(policyInput);
+  const records = certificationArray(inputs).map((input) => createCertificationEvidence(input));
+  const invalid = records
+    .map((record) => validateCertificationEvidence(record))
+    .filter((result) => !result.valid);
+  const lifecycle = records.filter((record) => record.kind === 'lifecycle');
+  const visual = records.filter((record) => record.kind === 'visual');
+  const localLifecycleMissing = [];
+  for (const project of policy.requiredConsumers) {
+    for (const browser of policy.requiredBrowsers) {
+      const match = lifecycle.find((record) =>
+        record.project === project
+        && record.browser.name === browser
+        && record.source === 'local-browser'
+        && certificationRecordPasses(record, policy));
+      if (!match) localLifecycleMissing.push(`${project}:${browser}`);
+    }
+  }
+  const visualMissing = policy.requireVisualEvidence
+    ? policy.requiredConsumers.filter((project) => !visual.some((record) =>
+        record.project === project && certificationRecordPasses(record, policy)))
+    : [];
+  const physicalTierMissing = policy.requiredPhysicalTiers.filter((tier) => !lifecycle.some((record) =>
+    record.source === 'physical-device'
+    && record.device.tier === tier
+    && record.session.durationSeconds >= policy.minimumLongSessionSeconds
+    && certificationRecordPasses(record, policy)));
+  const longSessionMissing = policy.requiredConsumers.filter((project) => !lifecycle.some((record) =>
+    record.project === project
+    && record.source === 'physical-device'
+    && record.session.durationSeconds >= policy.minimumLongSessionSeconds
+    && certificationRecordPasses(record, policy)));
+  const driverResetMissing = policy.requireDriverResetPerConsumer
+    ? policy.requiredConsumers.filter((project) => !lifecycle.some((record) =>
+        record.project === project
+        && record.session.contextLossMode === 'driver-reset'
+        && certificationRecordPasses(record, policy)))
+    : [];
+  const blockers = [];
+  if (invalid.length) blockers.push(`${invalid.length} invalid evidence record(s)`);
+  if (localLifecycleMissing.length) blockers.push(`missing local lifecycle: ${localLifecycleMissing.join(', ')}`);
+  if (visualMissing.length) blockers.push(`missing visual evidence: ${visualMissing.join(', ')}`);
+  if (physicalTierMissing.length) blockers.push(`missing physical tiers: ${physicalTierMissing.join(', ')}`);
+  if (longSessionMissing.length) blockers.push(`missing long sessions: ${longSessionMissing.join(', ')}`);
+  if (driverResetMissing.length) blockers.push(`missing driver resets: ${driverResetMissing.join(', ')}`);
+  return Object.freeze({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    evidenceCount: records.length,
+    validEvidenceCount: records.length - invalid.length,
+    localMatrixPassed: localLifecycleMissing.length === 0 && visualMissing.length === 0 && invalid.length === 0,
+    rendererDefaultEligible: blockers.length === 0,
+    blockers: Object.freeze(blockers),
+    coverage: Object.freeze({
+      localLifecycleMissing: Object.freeze(localLifecycleMissing),
+      visualMissing: Object.freeze(visualMissing),
+      physicalTierMissing: Object.freeze(physicalTierMissing),
+      longSessionMissing: Object.freeze(longSessionMissing),
+      driverResetMissing: Object.freeze(driverResetMissing),
+      contextLossModes: Object.freeze([...new Set(lifecycle.map((record) => record.session?.contextLossMode).filter(Boolean))].sort()),
+    }),
+    policy,
+  });
+}
+
+export function createCertificationEvidenceIndex(inputs = [], policyInput = {}, options = {}) {
+  const evidence = certificationArray(inputs)
+    .map((input) => assertCertificationEvidence(input))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const duplicateIds = evidence
+    .filter((record, index) => index > 0 && record.id === evidence[index - 1]?.id)
+    .map((record) => record.id);
+  if (duplicateIds.length > 0) {
+    throw new Error(`duplicate certification evidence id(s): ${[...new Set(duplicateIds)].join(', ')}`);
+  }
+  return Object.freeze({
+    schemaVersion: ARCADE_CERTIFICATION_SCHEMA_VERSION,
+    generatedAt: certificationString(options.generatedAt, new Date().toISOString()),
+    evidence: Object.freeze(evidence),
+    summary: summarizeCertificationEvidence(evidence, policyInput),
+  });
+}
+
+// END ARCADE CERTIFICATION 1.11

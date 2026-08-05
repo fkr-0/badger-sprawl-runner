@@ -62,7 +62,7 @@ jobs:
         run: pnpm run lint
 
       - name: Browser E2E
-        run: pnpm exec playwright test --project=chromium --project=firefox
+        run: pnpm run test:e2e:release
 
       - name: Upload browser diagnostics
         if: failure()

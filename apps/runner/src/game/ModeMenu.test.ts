@@ -4,8 +4,9 @@ import { MODE_OPTIONS, MODE_SCENE_ROUTES } from './ModeMenu';
 import { TitleScene } from '../scenes/TitleScene';
 import { createDefaultModeSceneFactories } from '../scenes/ModeSceneFactories';
 import { SkillTreeScene } from '../scenes/SkillTreeScene';
+import { LowerSprawlBuildComparisonScene } from '../scenes/LowerSprawlBuildComparisonScene';
 import { StageRunScene } from '../scenes/StageRunScene';
-import { StoryFlowScene } from '../scenes/StoryFlowScene';
+import { SubwayMapScene } from '../scenes/SubwayMapScene';
 import { TrainingScene } from '../scenes/TrainingScene';
 import { VersusScene } from '../scenes/VersusScene';
 
@@ -15,6 +16,16 @@ describe('mode menu integration', () => {
 
 		expect(scene.name).toBe('VersusScene');
 		expect(scene.getScore()).toMatchObject({ playerScore: 0, rivalScore: 0, winScore: 3 });
+	});
+
+	it('opens the build lab as an explicit flow mode with route detail selected', () => {
+		const flow = createGameFlow();
+		flow.selectMenu('builds');
+		expect(flow.getState()).toEqual({
+			mode: 'builds',
+			selectedBuildId: 'ghost-signal',
+			detailPage: 'routes',
+		});
 	});
 
 	it('uses one canonical mode option list for GameFlow and TitleScene', () => {
@@ -85,10 +96,13 @@ describe('mode router', () => {
 		installWindowStub();
 		const factories = createDefaultModeSceneFactories();
 
-		expect(createModeScene('story', factories)).toBeInstanceOf(StoryFlowScene);
+		expect(createModeScene('story', factories)).toBeInstanceOf(SubwayMapScene);
 		expect(createModeScene('training', factories)).toBeInstanceOf(TrainingScene);
 		expect(createModeScene('versus', factories)).toBeInstanceOf(VersusScene);
 		expect(createModeScene('skills', factories)).toBeInstanceOf(SkillTreeScene);
+		expect(createModeScene('builds', factories)).toBeInstanceOf(
+			LowerSprawlBuildComparisonScene
+		);
 		expect(createModeScene('endless', factories)).toBeInstanceOf(StageRunScene);
 	});
 
@@ -102,9 +116,16 @@ describe('mode router', () => {
 		routeModeSelection(sceneManager, 'training', factories);
 		routeModeSelection(sceneManager, 'versus', factories);
 		routeModeSelection(sceneManager, 'skills', factories);
+		routeModeSelection(sceneManager, 'builds', factories);
 		routeModeSelection(sceneManager, 'endless', factories);
 
-		expect(replaced).toEqual(['TrainingScene', 'VersusScene', 'SkillTreeScene', 'StageRunScene']);
+		expect(replaced).toEqual([
+			'TrainingScene',
+			'VersusScene',
+			'SkillTreeScene',
+			'LowerSprawlBuildComparisonScene',
+			'StageRunScene',
+		]);
 	});
 
 	it('routes TitleScene selection through a SceneManager-compatible replacement path', () => {
@@ -121,18 +142,15 @@ describe('mode router', () => {
 		expect(replaced).toEqual(['TrainingScene']);
 	});
 
-	it('enters the story flow path when the story route is opened', () => {
+	it('enters the persistent world shell when the story route is opened', () => {
 		const factories = createDefaultModeSceneFactories();
 		const scene = createModeScene('story', factories);
-		expect(scene).toBeInstanceOf(StoryFlowScene);
-		const story = scene as StoryFlowScene;
+		expect(scene).toBeInstanceOf(SubwayMapScene);
+		const world = scene as SubwayMapScene;
 
-		expect(story.getFlow().getState()).toEqual({ mode: 'menu' });
-		story.onEnter({ eventBus: {}, canvas: {} } as never);
-
-		expect(story.getFlow().getState()).toMatchObject({
-			mode: 'title-card',
-			stageId: 'lower-sprawl',
+		expect(world.getSnapshot()).toMatchObject({
+			currentLocationId: 'lower-sprawl:safehouse',
+			selectedLocationId: 'lower-sprawl:safehouse',
 		});
 	});
 });

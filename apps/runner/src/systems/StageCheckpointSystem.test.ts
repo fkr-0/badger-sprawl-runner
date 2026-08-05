@@ -14,7 +14,13 @@ describe('StageCheckpointSystem', () => {
 
 		expect(system.step(199)).toEqual([]);
 		expect(system.step(450)).toEqual([
-			{ kind: 'checkpoint-activated', checkpoint: CHECKPOINTS[2] },
+			expect.objectContaining({
+				kind: 'checkpoint-activated',
+				checkpoint: expect.objectContaining({
+					...CHECKPOINTS[2],
+					resetPolicy: expect.objectContaining({ id: 'story-continuity' }),
+				}),
+			}),
 		]);
 		expect(system.getSnapshot()).toMatchObject({ activeId: 'boss', activeIndex: 2 });
 		expect(system.step(500)).toEqual([]);
@@ -28,7 +34,18 @@ describe('StageCheckpointSystem', () => {
 
 		const event = system.respawn(player);
 
-		expect(event).toEqual({ kind: 'player-respawned', checkpoint: CHECKPOINTS[1] });
+		expect(event).toEqual(
+			expect.objectContaining({
+				kind: 'player-respawned',
+				checkpoint: expect.objectContaining({
+					...CHECKPOINTS[1],
+					resetPolicy: expect.objectContaining({
+						enemies: 'preserve-defeated',
+						unbankedSalvageLossRate: 0.5,
+					}),
+				}),
+			})
+		);
 		expect(player).toMatchObject({
 			x: 200,
 			y: 120,

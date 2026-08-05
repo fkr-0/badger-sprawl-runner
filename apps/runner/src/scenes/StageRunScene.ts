@@ -16,6 +16,7 @@ import {
 } from '../actors/TrainingDummy';
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
+import { resolveDirectorVaneAudioCue } from '../audio/DirectorVaneAudioProfile';
 import {
 	type ChromeArcologyObjectiveEvent,
 	type ChromeArcologyObjectiveSnapshot,
@@ -32,6 +33,23 @@ import {
 	DubColonyObjectives,
 } from '../game/DubColonyObjectives';
 import type { StageRuntimeResult } from '../game/GameFlow';
+import { rollCuratedStoryRewards } from '../game/adventure/CuratedRewardCatalog';
+import {
+	createExpeditionCommit,
+} from '../game/adventure/ExpeditionDirector';
+import {
+	degradeEquippedItems,
+	createDefaultItemState,
+	type ExpeditionLaunchState,
+} from '../game/adventure/ExpeditionLedger';
+import { resolveItemModificationEffects } from '../game/adventure/ItemModificationCatalog';
+import { STORY_CAMERA_PROFILE, TRAINING_CAMERA_PROFILE } from '../game/GameplayTuning';
+import { getTraversalEnvironmentProfile } from '../game/OrbitalTraversalProfile';
+import { sampleTraversalRhythm } from '../game/TraversalRhythmProfile';
+import {
+	applyTraversalMotionPreference,
+	prefersReducedMotion,
+} from '../runtime/MotionAccessibility';
 import {
 	type LateStageInterfaceSnapshot,
 	type LateStageObjectiveEvent,
@@ -76,6 +94,7 @@ import {
 	GAMEPLAY_HUD_WORLD_OVERLAY_TOP,
 	buildGameplayHudLayout,
 } from '../renderer/GameplayHudLayout';
+import { resolvePlayerSpriteSheet } from '../renderer/PlayerSpriteSheets';
 import {
 	ANTENNA_BARRENS_PARALLAX_SHEET_ID,
 	ASTEROID_REDOUBT_PARALLAX_SHEET_ID,
@@ -97,6 +116,11 @@ import {
 } from '../systems/BossPhaseSystem';
 import { CameraSystem } from '../systems/CameraSystem';
 import {
+	CivilianWitnessSystem,
+	type CivilianWitnessEvent,
+} from '../systems/CivilianWitnessSystem';
+import { BuildComparisonTelemetrySystem } from '../systems/BuildComparisonTelemetrySystem';
+import {
 	CaptainGrinController,
 	type CaptainGrinEvent,
 	type CaptainGrinSnapshot,
@@ -113,6 +137,35 @@ import {
 	DrainmarketEnemySystem,
 } from '../systems/DrainmarketEnemySystem';
 import { type DubColonyEnemyEvent, DubColonyEnemySystem } from '../systems/DubColonyEnemySystem';
+import { EncounterReadinessSystem } from '../systems/EncounterReadinessSystem';
+import {
+	EncounterAcousticActorSystem,
+	type EncounterAcousticActorEvent,
+} from '../systems/EncounterAcousticActorSystem';
+import {
+	ExpeditionPressureSystem,
+	type ExpeditionPressureEvent,
+	type ExpeditionPressureSeed,
+} from '../systems/ExpeditionPressureSystem';
+import {
+	EnemyCohesionSystem,
+	type EnemyCohesionEvent,
+} from '../systems/EnemyCohesionSystem';
+import {
+	EnemyAlarmDeviceSystem,
+	type EnemyAlarmDeviceEvent,
+} from '../systems/EnemyAlarmDeviceSystem';
+import {
+	EnemyCommunicationNetwork,
+	type EnemyCommunicationEvent,
+} from '../systems/EnemyCommunicationNetwork';
+import {
+	EnemyPerceptionMemorySystem,
+	type EnemyPerceptionEvent,
+	type PlayerSoundEvent,
+} from '../systems/EnemyPerceptionMemorySystem';
+import { EnemyVisionSystem, type EnemyVisionEvent } from '../systems/EnemyVisionSystem';
+import { ResolutionApproachTracker } from '../systems/ResolutionApproachTracker';
 import {
 	FIRST_RELEASE_ITEM_CATALOG,
 	getFirstReleaseItem,
@@ -135,6 +188,11 @@ import {
 	type KingFeedbackEvent,
 	type KingFeedbackSnapshot,
 } from '../systems/KingFeedbackController';
+import {
+	DirectorVaneController,
+	type DirectorVaneEvent,
+	type DirectorVaneSnapshot,
+} from '../systems/DirectorVaneController';
 import {
 	KnifeDroneNestController,
 	type KnifeDroneNestEvent,
@@ -181,6 +239,10 @@ import {
 	type StageCheckpointSnapshot,
 	StageCheckpointSystem,
 } from '../systems/StageCheckpointSystem';
+import {
+	getEncounterZoneAtPoint,
+	type StageEncounterTopology,
+} from '../world/EncounterTopology';
 import { type RuntimeStageId, cloneStageLayout } from '../world/stageLayoutRegistry';
 
 export interface RuntimeTutorialBeat {
@@ -188,6 +250,18 @@ export interface RuntimeTutorialBeat {
 	label: string;
 	trigger: string;
 	teaches: string;
+}
+
+export interface EncounterPlanHudSnapshot {
+	zoneId: string;
+	zoneLabel: string;
+	plans: Array<{
+		id: string;
+		label: string;
+		risk: 'low' | 'medium' | 'high';
+		approaches: string[];
+		playerCue: string;
+	}>;
 }
 
 export interface TrainingRunOptions {
@@ -252,6 +326,9 @@ export interface StageRunSceneOptions {
 	procgenSeed?: string;
 	unlockedSkills?: readonly string[];
 	skillRanks?: Readonly<Record<string, number>>;
+	expedition?: ExpeditionLaunchState;
+	expeditionPressureSeed?: ExpeditionPressureSeed;
+	resumedUndercityRoomIndex?: number;
 	onStoryPayloadCollected?: (payloadId: string) => void;
 	onStageComplete?: (result: StageRuntimeResult) => void;
 	onReturnToTitle?: () => void;
@@ -267,6 +344,7 @@ interface StageRunUpdateContext {
 	input: InputSystem;
 	combatEvents: CombatEvents | null;
 	bossPhaseState: BossPhaseRuntimeState | null;
+	activeEnemies: CombatEntity[] | null;
 }
 
 export class StageRunScene implements Scene {
@@ -275,7 +353,17 @@ export class StageRunScene implements Scene {
 	private input: InputSystem | null = null;
 	private physics = new PhysicsSystem();
 	private combat = new CombatSystem();
-	private camera = new CameraSystem();
+	private camera: CameraSystem;
+	private readonly encounterReadiness = new EncounterReadinessSystem();
+	private readonly enemyPerception = new EnemyPerceptionMemorySystem();
+	private readonly enemyVision = new EnemyVisionSystem();
+	private readonly enemyCommunication = new EnemyCommunicationNetwork();
+	private readonly enemyCohesion = new EnemyCohesionSystem();
+	private readonly civilianWitnesses: CivilianWitnessSystem;
+	private readonly resolutionApproaches = new ResolutionApproachTracker();
+	private readonly expeditionPressure: ExpeditionPressureSystem;
+	private readonly buildTelemetry: BuildComparisonTelemetrySystem;
+	private readonly enemyAlarms: EnemyAlarmDeviceSystem;
 	private companions: CompanionSystem;
 	private bossPhases: BossPhaseSystem;
 	private readonly captainGrin: CaptainGrinController | null;
@@ -283,6 +371,7 @@ export class StageRunScene implements Scene {
 	private readonly madameVitrine: MadameVitrineController | null;
 	private readonly reflectionJudge: ReflectionJudgeController | null;
 	private readonly kingFeedback: KingFeedbackController | null;
+	private readonly directorVane: DirectorVaneController | null;
 	private readonly lowerSprawlHazards: LowerSprawlHazardSystem | null;
 	private readonly lowerSprawlEnemies: LowerSprawlEnemySystem | null;
 	private readonly drainmarketEnemies: DrainmarketEnemySystem | null;
@@ -292,6 +381,7 @@ export class StageRunScene implements Scene {
 	private readonly checkpoints: StageCheckpointSystem | null;
 	private encounterGenerator = new EncounterGenerator();
 	private inventory = new InventorySystem(FIRST_RELEASE_ITEM_CATALOG);
+	private expeditionItemStates: ExpeditionLaunchState['itemStates'] = {};
 	private loadoutSummary: LoadoutSummary = this.inventory.buildLoadoutSummary();
 	private loadoutBudget: LoadoutBudgetReport = validateLoadoutBudget(
 		this.loadoutSummary,
@@ -310,9 +400,14 @@ export class StageRunScene implements Scene {
 	});
 
 	private player: Player;
+	private readonly reducedMotion: boolean;
+	private stageElapsedSeconds = 0;
 	private platforms: Platform[] = [];
 	private pickups: Pickup[] = [];
 	private enemies: CombatEntity[] = [];
+	private encounterTopology: StageEncounterTopology | null = null;
+	private encounterAcousticActors = new EncounterAcousticActorSystem(null);
+	private queuedEnvironmentSounds: PlayerSoundEvent[] = [];
 
 	private renderer: Renderer | null = null;
 	private keyHandler: ((event: KeyboardEvent) => void) | null = null;
@@ -339,7 +434,22 @@ export class StageRunScene implements Scene {
 	});
 
 	constructor(private readonly options: StageRunSceneOptions = {}) {
+		this.reducedMotion = prefersReducedMotion(typeof window === 'undefined' ? undefined : window);
+		this.expeditionPressure = new ExpeditionPressureSystem(options.expeditionPressureSeed);
+		this.buildTelemetry = new BuildComparisonTelemetrySystem(
+			options.expedition?.runId ?? `runtime:${options.stageId ?? 'unassigned-stage'}`,
+			options.stageId ?? 'unassigned-stage'
+		);
 		this.training = options.training ? createTrainingMode() : null;
+		this.enemyAlarms = new EnemyAlarmDeviceSystem(
+			options.training ? 'training' : options.stageId ?? 'unassigned-stage'
+		);
+		this.civilianWitnesses = new CivilianWitnessSystem(
+			options.training ? 'training' : options.stageId ?? 'unassigned-stage'
+		);
+		this.camera = new CameraSystem(
+			options.training ? TRAINING_CAMERA_PROFILE : STORY_CAMERA_PROFILE
+		);
 		this.companions = new CompanionSystem(
 			undefined,
 			resolveCompanionGameplayModifiers(options.branchGameplayHooks ?? [])
@@ -361,6 +471,10 @@ export class StageRunScene implements Scene {
 				: null;
 		this.kingFeedback =
 			!options.training && options.stageId === 'dub-colony' ? new KingFeedbackController() : null;
+		this.directorVane =
+			!options.training && options.stageId === 'asteroid-redoubt'
+				? new DirectorVaneController()
+				: null;
 		this.lowerSprawlHazards =
 			!options.training && options.stageId === 'lower-sprawl'
 				? new LowerSprawlHazardSystem()
@@ -393,6 +507,11 @@ export class StageRunScene implements Scene {
 								? new StageCheckpointSystem(DUB_COLONY_CHECKPOINTS)
 								: null;
 		this.player = createPlayer();
+		const traversalProfile = getTraversalEnvironmentProfile(options.stageId);
+		this.player.environmentGravityMultiplier = traversalProfile.gravityMultiplier;
+		this.player.environmentAirControlMultiplier = traversalProfile.airControlMultiplier;
+		this.player.environmentMaxFallSpeedDelta = traversalProfile.maxFallSpeedDelta;
+		this.player.landingNoiseMultiplier = traversalProfile.landingNoiseMultiplier;
 		this.player.unlockedSkills = [...(options.unlockedSkills ?? [])];
 		// Initialize animation state
 		this.player.animState = createAnimationState();
@@ -423,8 +542,11 @@ export class StageRunScene implements Scene {
 			}
 			if (options.training.kitId) this.training.selectKit(options.training.kitId);
 		}
-		this.inventory.addItem('claws');
-		this.inventory.equip('claws');
+		this.hydrateExpeditionLoadout();
+		if (options.expedition) {
+			this.player.maxHp = Math.max(1, options.expedition.maxIntegrity);
+			this.player.hp = Math.max(1, Math.min(this.player.maxHp, options.expedition.integrity));
+		}
 		this.refreshLoadout();
 		this.player.checkpointLabel = this.checkpoints?.getSnapshot().activeLabel;
 		this.player.hudToast = options.training
@@ -464,6 +586,469 @@ export class StageRunScene implements Scene {
 		this.initWorld();
 		if (this.training) this.updateTrainingHints();
 		else this.updateGameplayHints();
+	}
+
+	private renderEncounterAcousticActors(
+		ctx: CanvasRenderingContext2D,
+		cameraX: number
+	): void {
+		if (!this.encounterTopology) return;
+		const snapshot = this.encounterAcousticActors.getSnapshot();
+		const doorById = new Map(snapshot.doors.map((door) => [door.portalId, door]));
+		for (const portal of this.encounterTopology.portals) {
+			const door = doorById.get(portal.id);
+			if (!door) continue;
+			const x = portal.x - cameraX;
+			if (x + portal.w < -20 || x > ctx.canvas.width + 20) continue;
+			ctx.save();
+			ctx.fillStyle = door.open ? 'rgba(103, 243, 196, 0.12)' : 'rgba(255, 179, 94, 0.24)';
+			ctx.fillRect(x, portal.y, portal.w, portal.h);
+			ctx.strokeStyle = door.open ? '#67f3c4' : '#ffb35e';
+			ctx.lineWidth = door.open ? 2 : 4;
+			ctx.setLineDash(door.open ? [8, 8] : []);
+			ctx.strokeRect(x, portal.y, portal.w, portal.h);
+			ctx.fillStyle = '#eaf2ff';
+			ctx.font = '800 9px ui-monospace, monospace';
+			ctx.textAlign = 'center';
+			ctx.fillText(door.open ? 'OPEN ⇄' : 'SEALED ■', x + portal.w / 2, portal.y - 7);
+			ctx.restore();
+		}
+		for (const trap of snapshot.traps) {
+			const x = trap.x - cameraX;
+			if (x < -30 || x > ctx.canvas.width + 30) continue;
+			ctx.save();
+			const stateColor =
+				trap.state === 'disabled'
+					? '#465166'
+					: trap.state === 'spoofed'
+						? '#67f3c4'
+						: trap.state === 'cooldown'
+							? '#8aa8ff'
+							: '#ffb35e';
+			ctx.strokeStyle = stateColor;
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.moveTo(x, trap.y - 14);
+			ctx.lineTo(x + 13, trap.y + 10);
+			ctx.lineTo(x - 13, trap.y + 10);
+			ctx.closePath();
+			ctx.stroke();
+			ctx.fillStyle = '#eaf2ff';
+			ctx.font = '800 9px ui-monospace, monospace';
+			ctx.textAlign = 'center';
+			ctx.fillText(
+				trap.state === 'disabled'
+					? '× OFF'
+					: trap.state === 'spoofed'
+						? '↝ FALSE'
+						: trap.state === 'cooldown'
+							? '… RESET'
+							: '△ LISTEN',
+				x,
+				trap.y - 22
+			);
+			ctx.restore();
+		}
+	}
+
+	private handleEncounterAcousticActorEvents(events: EncounterAcousticActorEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'door-opened') {
+				this.player.contextHint = 'DOOR REPORT // LOCAL SIGHT AND SOUND ROUTE OPEN';
+			} else if (event.kind === 'door-closed') {
+				this.player.contextHint = 'DOOR SEALED // LOCAL KNOWLEDGE ROUTE CONTAINED';
+			} else if (event.kind === 'trap-triggered') {
+				this.player.contextHint = 'ACOUSTIC TRAP // NEARBY ACTORS ARE CHECKING THE CHIME';
+			} else if (event.kind === 'trap-spoofed') {
+				this.player.contextHint = 'TRAP STORY REWRITTEN // FALSE SOURCE ENTERED THE SOUND MAP';
+				this.resolutionApproaches.recordSemanticApproach('hacking');
+			} else {
+				this.player.contextHint = 'TRAP DISABLED // THE FLOOR LOST A LISTENING POST';
+			}
+			window.dispatchEvent(
+				new CustomEvent('badger:encounter-acoustic-actor', { detail: event })
+			);
+		}
+	}
+
+	getEncounterAcousticActorSnapshot(): ReturnType<EncounterAcousticActorSystem['getSnapshot']> {
+		return this.encounterAcousticActors.getSnapshot();
+	}
+
+	getTraversalRhythmSnapshot() {
+		return applyTraversalMotionPreference(
+			sampleTraversalRhythm(this.options.stageId, this.stageElapsedSeconds),
+			this.reducedMotion
+		);
+	}
+
+	private renderApproachPlanHud(ctx: CanvasRenderingContext2D): void {
+		const snapshot = this.getEncounterPlanHudSnapshot();
+		if (!snapshot) return;
+		const width = Math.min(500, ctx.canvas.width - 44);
+		const x = 22;
+		const y = ctx.canvas.height - 116;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.9)';
+		ctx.fillRect(x, y, width, 92);
+		ctx.strokeStyle = '#67f3c4';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(x, y, width, 92);
+		ctx.textAlign = 'left';
+		ctx.fillStyle = '#67f3c4';
+		ctx.font = '800 10px ui-monospace, monospace';
+		ctx.fillText(`ROUTE READ // ${snapshot.zoneLabel.toUpperCase()}`, x + 12, y + 17);
+		for (const [index, plan] of snapshot.plans.entries()) {
+			const lineY = y + 39 + index * 25;
+			ctx.fillStyle = index === 0 ? '#eaf2ff' : '#c1cad8';
+			ctx.font = '800 10px ui-monospace, monospace';
+			ctx.fillText(
+				`${index === 0 ? 'A' : 'B'} // ${plan.label.toUpperCase()} // ${plan.risk.toUpperCase()}`,
+				x + 12,
+				lineY
+			);
+			ctx.fillStyle = '#92a4be';
+			ctx.font = '9px ui-monospace, monospace';
+			ctx.fillText(
+				`${plan.approaches.join(' + ').toUpperCase()} — ${truncateHudText(plan.playerCue, 66)}`,
+				x + 12,
+				lineY + 11
+			);
+		}
+		ctx.restore();
+	}
+
+	getEncounterPlanHudSnapshot(): EncounterPlanHudSnapshot | null {
+		if (!this.encounterTopology || this.training) return null;
+		const zone = getEncounterZoneAtPoint(
+			this.encounterTopology,
+			this.player.x + this.player.w / 2,
+			this.player.y + this.player.h / 2
+		);
+		if (!zone?.major) return null;
+		const plans = this.encounterTopology.approachPlans
+			.filter((plan) => plan.zoneId === zone.id)
+			.slice(0, 2)
+			.map((plan) => ({
+				id: plan.id,
+				label: plan.label,
+				risk: plan.risk,
+				approaches: [...plan.approaches],
+				playerCue: plan.playerCue,
+			}));
+		return plans.length > 0 ? { zoneId: zone.id, zoneLabel: zone.label, plans } : null;
+	}
+
+	private renderExpeditionPressureHud(ctx: CanvasRenderingContext2D): void {
+		if (this.training) return;
+		const pressure = this.expeditionPressure.getSnapshot();
+		const width = 264;
+		const x = ctx.canvas.width - width - 22;
+		const y = 88;
+		ctx.save();
+		ctx.fillStyle = 'rgba(4, 6, 12, 0.86)';
+		ctx.fillRect(x, y, width, 48);
+		ctx.strokeStyle = pressure.unbankedSalvage > 0 ? '#ffb35e' : '#465166';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(x, y, width, 48);
+		ctx.textAlign = 'left';
+		ctx.fillStyle = '#92a4be';
+		ctx.font = '700 9px ui-monospace, monospace';
+		ctx.fillText('EXPEDITION PRESSURE // CHECKPOINT BANKING', x + 12, y + 15);
+		ctx.font = '800 11px ui-monospace, monospace';
+		ctx.fillStyle = '#ffb35e';
+		ctx.fillText(`△ FIELD ${pressure.unbankedSalvage}`, x + 12, y + 35);
+		ctx.fillStyle = '#67f3c4';
+		ctx.fillText(`■ BANK ${pressure.bankedSalvage}`, x + 102, y + 35);
+		ctx.fillStyle = '#eaf2ff';
+		ctx.fillText(`× LOST ${pressure.lostSalvage}`, x + 190, y + 35);
+		ctx.restore();
+	}
+
+	private renderCivilianWitnesses(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		const witnesses = this.civilianWitnesses.getSnapshot();
+		for (const witness of witnesses) {
+			if (witness.evacuationWaypoints.length >= 2) {
+				ctx.save();
+				ctx.strokeStyle = witness.state === 'evacuating' ? '#eaf2ff' : '#67f3c4';
+				ctx.globalAlpha = witness.state === 'evacuating' ? 0.72 : 0.24;
+				ctx.lineWidth = witness.state === 'evacuating' ? 3 : 2;
+				ctx.setLineDash([10, 8]);
+				ctx.beginPath();
+				for (const [index, point] of witness.evacuationWaypoints.entries()) {
+					const x = point.x - cameraX;
+					if (index === 0) ctx.moveTo(x, point.y);
+					else ctx.lineTo(x, point.y);
+				}
+				ctx.stroke();
+				ctx.restore();
+			}
+			const x = witness.x - cameraX;
+			if (x < -50 || x > ctx.canvas.width + 50) continue;
+			ctx.save();
+			const stateColor =
+				witness.state === 'evacuating'
+					? '#ffb35e'
+					: witness.state === 'sheltering'
+						? '#8aa8ff'
+						: witness.state === 'withdrawn'
+							? '#465166'
+							: '#67f3c4';
+			ctx.fillStyle = '#101725';
+			ctx.fillRect(x - 9, witness.y + 12, 18, 30);
+			ctx.fillStyle = stateColor;
+			ctx.beginPath();
+			ctx.arc(x, witness.y + 6, 7, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = stateColor;
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.arc(x, witness.y + 20, 15 + witness.stress * 7, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.fillStyle = '#eaf2ff';
+			ctx.font = '700 9px ui-monospace, monospace';
+			ctx.textAlign = 'center';
+			ctx.fillText(
+				witness.state === 'evacuating'
+					? '→'
+					: witness.state === 'documenting'
+						? 'REC'
+						: witness.state === 'sheltering'
+							? '□'
+							: '•',
+				x,
+				witness.y - 8
+			);
+			ctx.restore();
+		}
+	}
+
+	private handleExpeditionPressureEvents(events: ExpeditionPressureEvent[]): void {
+		for (const event of events) {
+			this.buildTelemetry.recordPressure(event, this.expeditionPressure.getSnapshot());
+			if (event.kind === 'salvage-collected') {
+				this.showToast(`Field salvage +${event.amount} // ${event.unbankedSalvage} exposed`, 1.15);
+			} else if (event.kind === 'salvage-banked') {
+				this.showToast(`Checkpoint banked ${event.amount} // ${event.bankedSalvage} secured`, 1.65);
+			} else if (event.kind === 'salvage-lost') {
+				this.showToast(`Signal loss ${event.amount} // ${event.remainingUnbanked} still exposed`, 1.8);
+			} else if (event.kind === 'pressure-reset-applied') {
+				this.player.contextHint = `RESET ${event.policy.id.toUpperCase()} // WORLD CONSEQUENCES PRESERVED`;
+			}
+			window.dispatchEvent(new CustomEvent('badger:expedition-pressure', { detail: event }));
+		}
+	}
+
+	getExpeditionPressureSnapshot(): ReturnType<ExpeditionPressureSystem['getSnapshot']> {
+		return this.expeditionPressure.getSnapshot();
+	}
+
+	getResumedUndercityRoomIndex(): number | null {
+		return this.options.resumedUndercityRoomIndex ?? null;
+	}
+
+	private hydrateExpeditionLoadout(): void {
+		const expedition = this.options.expedition;
+		if (expedition) {
+			this.expeditionItemStates = Object.fromEntries(
+				Object.entries(expedition.itemStates).map(([itemId, state]) => [itemId, { ...state }])
+			);
+			for (const stack of expedition.inventory) {
+				this.inventory.addItem(stack.itemId, stack.quantity);
+				this.expeditionItemStates[stack.itemId] = createDefaultItemState(
+					this.expeditionItemStates[stack.itemId]
+				);
+			}
+			for (const itemId of expedition.equippedItemIds) {
+				if ((this.expeditionItemStates[itemId]?.condition ?? 0) > 0) this.inventory.equip(itemId);
+			}
+		}
+		if (!this.inventory.has('claws')) this.inventory.addItem('claws');
+		this.expeditionItemStates.claws = createDefaultItemState(this.expeditionItemStates.claws);
+		if (this.inventory.getEquippedItemIds().length === 0) this.inventory.equip('claws');
+		this.player.stims =
+			this.inventory.getEntries().find((entry) => entry.itemId === 'stim_pack')?.quantity ?? 0;
+	}
+
+	private synchronizeConsumablesBeforeCommit(): void {
+		const persistentStims =
+			this.inventory.getEntries().find((entry) => entry.itemId === 'stim_pack')?.quantity ?? 0;
+		const runtimeStims = Math.max(0, Math.floor(this.player.stims));
+		if (persistentStims > runtimeStims) {
+			this.inventory.removeItem('stim_pack', persistentStims - runtimeStims);
+		} else if (runtimeStims > persistentStims) {
+			this.inventory.addItem('stim_pack', runtimeStims - persistentStims);
+		}
+		if (runtimeStims === 0) delete this.expeditionItemStates.stim_pack;
+	}
+
+	private handleCivilianWitnessEvents(events: CivilianWitnessEvent[]): void {
+		for (const event of events) {
+			this.buildTelemetry.recordCivilian(event);
+			if (event.kind === 'civilian-warning') {
+				this.player.contextHint = 'CIVILIAN WARNING // LOCAL AUTHORITY RECEIVED A HUMAN REPORT';
+			} else if (event.kind === 'civilian-misdirection') {
+				this.player.contextHint = 'CIVILIAN MISDIRECTION // TRUST HAS ALTERED THE LOCAL STORY';
+				this.resolutionApproaches.recordSemanticApproach('social');
+			} else if (event.kind === 'civilian-stand-down-appeal') {
+				this.player.contextHint = 'WITNESSED STAND-DOWN // LOCAL LEGITIMACY CAN END THIS FIGHT';
+				this.resolutionApproaches.recordSemanticApproach('social');
+			} else if (event.kind === 'civilian-withdrew') {
+				this.player.contextHint = 'WITNESS WITHDREW // THE SPACE LOST A SOURCE, NOT A SCORE BONUS';
+			} else if (event.kind === 'civilian-evacuating') {
+				this.player.contextHint = 'CIVILIAN ROUTE ACTIVE // KEEP THE CHALK LINE CLEAR';
+			} else if (event.kind === 'civilian-sheltered') {
+				this.player.contextHint = 'CIVILIAN SHELTERED // LOCAL ROUTE HELD';
+			}
+			window.dispatchEvent(new CustomEvent('badger:civilian-witness', { detail: event }));
+		}
+	}
+
+	private handleEnemyVisionEvents(events: EnemyVisionEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'player-spotted' && event.confidence >= 0.45) {
+				this.player.contextHint =
+					event.portalIds.length > 0
+						? 'SIGHTLINE OPEN // BREAK THE PORTAL OR LEAVE THE CONE'
+						: 'DIRECT SIGHT // COVER WILL SLOW LOCAL NOTICE';
+			} else if (event.kind === 'vision-occluded') {
+				this.player.contextHint = 'LINE BROKEN // LOCAL NOTICE IS DECAYING';
+			} else if (event.kind === 'player-lost') {
+				this.player.contextHint = 'VISUAL CONTACT LOST // LAST-KNOWN POSITION REMAINS';
+			}
+			window.dispatchEvent(new CustomEvent('badger:enemy-vision', { detail: event }));
+		}
+	}
+
+	private queueEnvironmentSound(sound: PlayerSoundEvent): void {
+		this.queuedEnvironmentSounds.push({ ...sound });
+	}
+
+	private consumeEnvironmentSounds(): PlayerSoundEvent[] {
+		const sounds = this.queuedEnvironmentSounds.map((sound) => ({ ...sound }));
+		this.queuedEnvironmentSounds = [];
+		return sounds;
+	}
+
+	getCivilianWitnessSnapshots(): ReturnType<CivilianWitnessSystem['getSnapshot']> {
+		return this.civilianWitnesses.getSnapshot();
+	}
+
+	private recordWitnessPublicAid(amount: number): void {
+		const witnessId = this.civilianWitnesses.getSnapshot()[0]?.id;
+		if (!witnessId) return;
+		this.handleCivilianWitnessEvents(this.civilianWitnesses.recordPublicAid(witnessId, amount));
+	}
+
+	private handleEnemyCohesionEvents(events: EnemyCohesionEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'cell-cohesion-broken') {
+				this.player.contextHint = 'LOCAL COHESION BROKEN // PRESS, BYPASS, OR OFFER A WAY OUT';
+			} else if (event.kind === 'enemy-standing-down') {
+				this.player.contextHint = 'LOCAL STAND-DOWN // THE FIGHT NO LONGER NEEDS EVERY BODY';
+			} else if (event.kind === 'enemy-retreating') {
+				this.player.contextHint = 'ENEMY RETREATING // PURSUIT IS A CHOICE, NOT AN OBJECTIVE';
+			}
+			window.dispatchEvent(new CustomEvent('badger:enemy-cohesion', { detail: event }));
+		}
+	}
+
+	getAlarmDeviceSnapshots(): ReturnType<EnemyAlarmDeviceSystem['getSnapshot']> {
+		return this.enemyAlarms.getSnapshot();
+	}
+
+	private handleEnemyAlarmEvents(events: EnemyAlarmDeviceEvent[]): void {
+		for (const event of events) {
+			this.buildTelemetry.recordAlarm(event);
+			if (event.kind === 'alarm-suspicious') {
+				this.player.contextHint = 'LOCAL SENSOR INTEREST // BREAK LINE OR REWRITE THE REPORT';
+			} else if (event.kind === 'alarm-triggered') {
+				this.player.contextHint = 'LOCAL ALARM // ONE CELL HAS YOUR LAST-KNOWN POSITION';
+				this.queueEnvironmentSound({
+					kind: 'alarm',
+					x: event.x,
+					y: event.y,
+					intensity: 0.9,
+					radius: 760,
+					sourceId: event.deviceId,
+					sourceKind: 'device',
+				});
+			} else if (event.kind === 'alarm-spoofed') {
+				this.player.contextHint = 'FALSE REPORT PLANTED // PATROL CELL CHECKING THE WRONG STORY';
+				this.resolutionApproaches.recordSemanticApproach('hacking');
+				this.recordWitnessPublicAid(0.16);
+				this.queueEnvironmentSound({
+					kind: 'decoy',
+					x: event.falseX,
+					y: event.falseY,
+					intensity: 0.42,
+					radius: 500,
+					sourceId: event.deviceId,
+					sourceKind: 'decoy',
+				});
+			} else if (event.kind === 'alarm-damaged') {
+				this.player.contextHint = `ALARM CASING HIT // ${Math.max(0, event.durability).toFixed(2)} DURABILITY`;
+				const device = this.enemyAlarms
+					.getSnapshot()
+					.find((candidate) => candidate.id === event.deviceId);
+				if (device) {
+					this.queueEnvironmentSound({
+						kind: 'impact',
+						x: device.x,
+						y: device.y,
+						intensity: 0.46,
+						radius: 360,
+						sourceId: event.deviceId,
+						sourceKind: 'device',
+					});
+				}
+			} else {
+				this.player.contextHint = 'ALARM DISABLED // LOCAL KNOWLEDGE TOPOLOGY BROKEN';
+				this.recordWitnessPublicAid(0.24);
+				const device = this.enemyAlarms
+					.getSnapshot()
+					.find((candidate) => candidate.id === event.deviceId);
+				if (device) {
+					this.queueEnvironmentSound({
+						kind: 'impact',
+						x: device.x,
+						y: device.y,
+						intensity: 0.34,
+						radius: 300,
+						sourceId: event.deviceId,
+						sourceKind: 'device',
+					});
+				}
+			}
+			window.dispatchEvent(new CustomEvent('badger:enemy-alarm', { detail: event }));
+		}
+	}
+
+	private handleEnemyPerceptionEvents(events: EnemyPerceptionEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'sound-heard' && event.confidence >= 0.34) {
+				this.player.contextHint =
+					event.soundKind === 'rail-shot'
+						? 'WEAPON REPORT HEARD // NEARBY ENEMIES ARE CHECKING THE SOURCE'
+						: 'LOCAL SOUND REPORT // LAST-KNOWN POSITION IS NOT YOUR CURRENT POSITION';
+			} else if (event.kind === 'search-ended') {
+				this.player.contextHint = 'SEARCH DECAYED // LOCAL ROUTINE RESUMING';
+			}
+			window.dispatchEvent(new CustomEvent('badger:enemy-perception', { detail: event }));
+		}
+	}
+
+	private handleEnemyCommunicationEvents(events: EnemyCommunicationEvent[]): void {
+		for (const event of events) {
+			if (event.kind === 'cell-suspicious') {
+				this.player.contextHint = 'LOCAL RADIO TRAFFIC // A PATROL CELL IS CHECKING A REPORT';
+			} else if (event.kind === 'cell-alerted') {
+				this.player.contextHint = 'LOCAL CELL ALERT // BREAK CONTACT OR SILENCE THE RELAY';
+			} else if (event.kind === 'cell-conflicted') {
+				this.player.contextHint = 'CONTRADICTORY REPORTS // LOCAL RESPONSE TRUST IS FALLING';
+			}
+			window.dispatchEvent(new CustomEvent('badger:enemy-communication', { detail: event }));
+		}
 	}
 
 	getUpdatePipelineSnapshot(): ReturnType<typeof this.updatePipeline.snapshot> {
@@ -952,6 +1537,57 @@ export class StageRunScene implements Scene {
 		}
 	}
 
+	private handleDirectorVaneEvents(events: DirectorVaneEvent[]): void {
+		for (const event of events) {
+			window.dispatchEvent(
+				new CustomEvent('badger:audio-cue', {
+					detail: {
+						source: 'director-vane',
+						eventKind: event.kind,
+						cue: resolveDirectorVaneAudioCue(event),
+					},
+				})
+			);
+			if (event.kind === 'vane-phase-transition') {
+				this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 12);
+				this.showToast(
+					event.action === 'chromatic-lock'
+						? 'Skylock colors the routes // valid schedule, invalid owner'
+						: event.action === 'counterclaim'
+							? 'Vane claims every missing appeal was never valid'
+							: event.action === 'ownership-collapse'
+								? 'Witness channels interrupt ownership'
+								: 'Competence is presenting itself as title deed',
+					1.9
+				);
+			}
+			if (event.kind === 'vane-color-window') {
+				this.player.contextHint = event.open
+					? `SKYLOCK COLOR ${event.color + 1} // ROUTE WINDOW OPEN`
+					: `SKYLOCK COLOR ${event.color + 1} // ROUTE WINDOW SEALED`;
+			}
+			if (event.kind === 'vane-contradiction-closed') {
+				this.player.contextHint = 'PROOF CLOSED // THE OMITTED APPEAL EXISTS IN BOTH STATES';
+				this.resolutionApproaches.recordSemanticApproach('hacking');
+				this.resolutionApproaches.recordSemanticApproach('exploration');
+				this.renderer?.emitVFX(2500, 360, 'emp', 22, 150);
+				this.showToast('Proof by contradiction breaks the completeness claim', 2.1);
+			}
+			if (event.kind === 'vane-witness-interruption') {
+				this.player.contextHint = `WITNESS INTERRUPTIONS ${event.count} // COMMAND CHANNEL CONTESTED`;
+				this.resolutionApproaches.recordSemanticApproach('social');
+			}
+			if (event.kind === 'vane-doctrine-unprotected') {
+				this.player.contextHint = 'BROADCAST UNGROUNDED // RETURN WITH MATERIAL SUPPORT';
+				this.showToast('A slogan cannot defend its own transmitter', 1.8);
+			}
+			if (event.kind === 'vane-defeated') {
+				this.player.contextHint = 'COMMAND CHANNEL OPEN // OWNERSHIP DOES NOT FOLLOW';
+			}
+			window.dispatchEvent(new CustomEvent('badger:director-vane-pattern', { detail: event }));
+		}
+	}
+
 	private updateMirrorPalaceHints(snapshot: MirrorPalaceObjectiveSnapshot): void {
 		const heard = snapshot.guests.filter((guest) => guest.heard).length;
 		const broken = snapshot.traversalSeals.filter((seal) => seal.broken).length;
@@ -1212,6 +1848,9 @@ export class StageRunScene implements Scene {
 			return;
 		}
 		if (!this.inventory.has(pickup.itemId)) this.inventory.addItem(pickup.itemId);
+		this.expeditionItemStates[pickup.itemId] = createDefaultItemState(
+			this.expeditionItemStates[pickup.itemId]
+		);
 		this.inventory.equip(pickup.itemId);
 		this.refreshLoadout();
 		const latestBonus = this.loadoutSummary.activeBonuses.at(-1);
@@ -1235,10 +1874,19 @@ export class StageRunScene implements Scene {
 		for (const event of events) {
 			this.player.checkpointLabel = event.checkpoint.label;
 			if (event.kind === 'checkpoint-activated') {
+				this.handleExpeditionPressureEvents(
+					this.expeditionPressure.activateCheckpoint(event.checkpoint.id)
+				);
 				this.player.hp = Math.min(this.player.maxHp, this.player.hp + 1);
 				this.showToast(`Checkpoint // ${event.checkpoint.label}`, 2.1);
 				this.renderer?.emitVFX(this.player.x, this.player.y + this.player.h, 'emp', 8, 48);
 			} else {
+				this.handleExpeditionPressureEvents(
+					this.expeditionPressure.respawn(
+						event.checkpoint.id,
+						event.checkpoint.resetPolicy
+					)
+				);
 				this.showToast(`Signal restored // ${event.checkpoint.label}`, 2.3);
 				this.player.damageFlash = 0.2;
 			}
@@ -1574,9 +2222,17 @@ export class StageRunScene implements Scene {
 			this.player.unlockedSkills ?? [],
 			this.options.skillRanks ?? {}
 		);
+		const modificationEffects = resolveItemModificationEffects(
+			this.loadoutSummary.equippedItemIds,
+			this.expeditionItemStates
+		);
 		this.loadoutSummary = {
 			...this.loadoutSummary,
-			effects: mergeEffectRecords([this.loadoutSummary.effects, skillResolution.effects]),
+			effects: mergeEffectRecords([
+				this.loadoutSummary.effects,
+				skillResolution.effects,
+				modificationEffects,
+			]),
 		};
 		const effects = resolveRuntimeItemEffects(this.loadoutSummary);
 		const combatant = applyRuntimeItemEffectsToCombatEntity(this.player, effects);
@@ -1724,10 +2380,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
-		this.player.victoryAnimationTimer = 0.8;
-		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		this.dispatchStageCompletion(result);
 	}
 
 	private updateLateStageCompletion(): void {
@@ -1741,10 +2394,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
-		this.player.victoryAnimationTimer = 0.8;
-		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		this.dispatchStageCompletion(result);
 	}
 
 	private updateDubColonyCompletion(): void {
@@ -1759,10 +2409,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
-		this.player.victoryAnimationTimer = 0.8;
-		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		this.dispatchStageCompletion(result);
 	}
 
 	private updateMirrorPalaceCompletion(): void {
@@ -1775,10 +2422,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
-		this.player.victoryAnimationTimer = 0.8;
-		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		this.dispatchStageCompletion(result);
 	}
 
 	private updateChromeArcologyCompletion(): void {
@@ -1791,10 +2435,7 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
-		this.player.victoryAnimationTimer = 0.8;
-		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		this.dispatchStageCompletion(result);
 	}
 
 	private updateDrainmarketCompletion(): void {
@@ -1807,10 +2448,73 @@ export class StageRunScene implements Scene {
 		);
 		const result = objectives.claimCompletion();
 		if (!result) return;
+		this.dispatchStageCompletion(result);
+	}
+
+	private dispatchStageCompletion(result: StageRuntimeResult): void {
+		const decorated = this.resolutionApproaches.decorate(result);
+		this.handleExpeditionPressureEvents(this.expeditionPressure.settleExpedition());
+		const pressure = this.expeditionPressure.getSnapshot();
+		this.synchronizeConsumablesBeforeCommit();
+		const rewardDrops = rollCuratedStoryRewards(
+			result.stageId,
+			this.options.procgenSeed ?? `${result.stageId}:story`,
+			decorated.resolutionApproaches ?? []
+		);
+		for (const drop of rewardDrops) {
+			this.inventory.addItem(drop.itemId, drop.quantity);
+			this.expeditionItemStates[drop.itemId] = createDefaultItemState(
+				this.expeditionItemStates[drop.itemId]
+			);
+		}
+		const equippedItemIds = this.inventory.getEquippedItemIds();
+		const damageTaken = Math.max(0, this.player.maxHp - this.player.hp);
+		const hazardWear =
+			this.options.balanceRules?.hazardIntensity === 'extreme'
+				? 6
+				: this.options.balanceRules?.hazardIntensity === 'high'
+					? 4
+					: this.options.balanceRules?.hazardIntensity === 'standard'
+						? 2
+						: 0;
+		const wear = 5 + damageTaken * 3 + hazardWear;
+		const itemStates = degradeEquippedItems(
+			this.expeditionItemStates,
+			equippedItemIds,
+			wear
+		);
+		const injuries = Math.min(
+			9,
+			(this.options.expedition?.injuries ?? 0) + (this.player.hp <= this.player.maxHp / 2 ? 1 : 0)
+		);
+		const expeditionCommit = createExpeditionCommit({
+			runId:
+				this.options.expedition?.runId ??
+				`run:${result.stageId}:${this.options.procgenSeed ?? 'story'}`,
+			stageId: result.stageId,
+			inventory: this.inventory.getEntries().map(({ itemId, quantity }) => ({ itemId, quantity })),
+			equippedItemIds: equippedItemIds.filter((itemId) => (itemStates[itemId]?.condition ?? 0) > 0),
+			itemStates,
+			integrity: Math.max(1, this.player.hp),
+			maxIntegrity: this.player.maxHp,
+			injuries,
+			bankedSalvage: pressure.bankedSalvage,
+		});
+		this.buildTelemetry.setBuild(
+			this.inventory.getEquippedItemIds(),
+			this.options.skillRanks ?? {},
+			decorated.resolutionApproaches ?? []
+		);
+		const enriched: StageRuntimeResult = {
+			...decorated,
+			rewardDrops,
+			expeditionCommit,
+			buildTelemetry: this.buildTelemetry.getSnapshot(),
+		};
 		this.player.victoryAnimationTimer = 0.8;
 		this.stageCompletionDispatched = true;
-		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: result }));
-		this.options.onStageComplete?.(result);
+		window.dispatchEvent(new CustomEvent('badger:stage-complete', { detail: enriched }));
+		this.options.onStageComplete?.(enriched);
 	}
 
 	private renderLowerSprawlWorld(ctx: CanvasRenderingContext2D, cameraX: number): void {
@@ -1879,6 +2583,36 @@ export class StageRunScene implements Scene {
 			}
 		}
 		ctx.restore();
+	}
+
+	private renderEnemyAlarmDevices(ctx: CanvasRenderingContext2D, cameraX: number): void {
+		for (const device of this.enemyAlarms.getSnapshot()) {
+			const x = device.x - cameraX;
+			if (x < -40 || x > ctx.canvas.width + 40) continue;
+			ctx.save();
+			ctx.fillStyle = '#131a2a';
+			ctx.fillRect(x - 5, device.y, 10, 94);
+			ctx.fillStyle =
+				device.state === 'disabled'
+					? '#465166'
+					: device.state === 'spoofed'
+						? '#67f3c4'
+						: device.state === 'cooldown'
+							? '#ff5e7a'
+							: device.detection >= 0.45
+								? '#ffb35e'
+								: '#8aa8ff';
+			ctx.beginPath();
+			ctx.arc(x, device.y, 10, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = '#eaf2ff';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.moveTo(x - 5, device.y);
+			ctx.lineTo(x + 5, device.y);
+			ctx.stroke();
+			ctx.restore();
+		}
 	}
 
 	private renderLateStageInterface(ctx: CanvasRenderingContext2D): void {
@@ -2858,7 +3592,8 @@ export class StageRunScene implements Scene {
 	} | null {
 		const state = this.player.animState;
 		if (!state) return null;
-		const sheet = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID);
+		const sprites = this.renderer?.getSpriteRenderer();
+		const sheet = sprites ? resolvePlayerSpriteSheet(sprites, state.currentAnim) : null;
 		const animation = sheet?.sheet.animations[state.currentAnim];
 		return {
 			currentAnim: state.currentAnim,
@@ -2924,6 +3659,10 @@ export class StageRunScene implements Scene {
 		return this.kingFeedback?.getSnapshot() ?? null;
 	}
 
+	getDirectorVaneSnapshot(): DirectorVaneSnapshot | null {
+		return this.directorVane?.getSnapshot() ?? null;
+	}
+
 	getCompanionSnapshot(): ReturnType<CompanionSystem['getState']> & { nayaAssistTimer: number } {
 		return {
 			...this.companions.getState(),
@@ -2965,6 +3704,30 @@ export class StageRunScene implements Scene {
 				rocket: this.player.skillTrackRanks?.rocket ?? 0,
 				hacking: this.player.skillTrackRanks?.hacking ?? 0,
 			},
+		};
+	}
+
+	getExpeditionSnapshot(): ExpeditionLaunchState {
+		const inventory = this.inventory
+			.getEntries()
+			.map(({ itemId, quantity }) => ({
+				itemId,
+				quantity: itemId === 'stim_pack' ? Math.max(0, Math.floor(this.player.stims)) : quantity,
+			}))
+			.filter((entry) => entry.quantity > 0);
+		return {
+			runId: this.options.expedition?.runId ?? 'debug-expedition',
+			inventory,
+			equippedItemIds: this.inventory.getEquippedItemIds(),
+			itemStates: Object.fromEntries(
+				Object.entries(this.expeditionItemStates).map(([itemId, state]) => [
+					itemId,
+					{ ...state },
+				])
+			),
+			integrity: Math.max(1, this.player.hp),
+			maxIntegrity: this.player.maxHp,
+			injuries: this.options.expedition?.injuries ?? 0,
 		};
 	}
 
@@ -3096,6 +3859,24 @@ export class StageRunScene implements Scene {
 		role?: string;
 		aiState?: string;
 		attackTelegraph?: number;
+		awarenessState?: CombatEntity['awarenessState'];
+		awarenessLevel?: number;
+		communicationCellId?: string;
+		communicationRole?: CombatEntity['communicationRole'];
+		networkAlert?: number;
+		networkReportTrust?: number;
+		networkReportConflict?: number;
+		networkReportSourceId?: string;
+		networkReportSourceKind?: CombatEntity['networkReportSourceKind'];
+		networkSourceTrustWeight?: number;
+		networkDoctrineLabel?: string;
+		morale?: number;
+		cohesionState?: CombatEntity['cohesionState'];
+		lastKnownPlayerX?: number;
+		lastKnownPlayerY?: number;
+		perceptionState?: CombatEntity['perceptionState'];
+		soundConfidence?: number;
+		lastHeardSoundKind?: string;
 		spriteSheetId?: string;
 		spriteAnimation?: string;
 	}> {
@@ -3112,6 +3893,24 @@ export class StageRunScene implements Scene {
 			role: e.procgenRole,
 			aiState: e.aiState,
 			attackTelegraph: e.attackTelegraph,
+			awarenessState: e.awarenessState,
+			awarenessLevel: e.awarenessLevel,
+			communicationCellId: e.communicationCellId,
+			communicationRole: e.communicationRole,
+			networkAlert: e.networkAlert,
+			networkReportTrust: e.networkReportTrust,
+			networkReportConflict: e.networkReportConflict,
+			networkReportSourceId: e.networkReportSourceId,
+			networkReportSourceKind: e.networkReportSourceKind,
+			networkSourceTrustWeight: e.networkSourceTrustWeight,
+			networkDoctrineLabel: e.networkDoctrineLabel,
+			morale: e.morale,
+			cohesionState: e.cohesionState,
+			lastKnownPlayerX: e.lastKnownPlayerX,
+			lastKnownPlayerY: e.lastKnownPlayerY,
+			perceptionState: e.perceptionState,
+			soundConfidence: e.soundConfidence,
+			lastHeardSoundKind: e.lastHeardSoundKind,
 			spriteSheetId: e.spriteSheetId,
 			spriteAnimation: e.spriteAnimation,
 		}));
@@ -3362,7 +4161,13 @@ export class StageRunScene implements Scene {
 		dummy.hp = Number.POSITIVE_INFINITY;
 		dummy.maxHp = Number.POSITIVE_INFINITY;
 		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 960);
-		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), dt, this.player.vx);
+		this.camera.step(
+			this.player.x,
+			0,
+			Math.max(0, worldRight - this.camera.getVisibleWorldWidth()),
+			dt,
+			this.player.vx
+		);
 		this.updateAnimation(dt);
 		this.updateTrainingHints();
 		input.clearPressed();
@@ -3458,30 +4263,112 @@ export class StageRunScene implements Scene {
 			onLand: (fallDistance) => {
 				this.emitLandingParticles(fallDistance);
 				this.triggerLandingShockwave();
+				if (fallDistance >= 28) {
+					this.queueEnvironmentSound({
+						kind: 'impact',
+						x: this.player.x + this.player.w / 2,
+						y: this.player.y + this.player.h,
+						intensity: Math.min(0.9, 0.22 + fallDistance / 420),
+						radius: Math.min(720, 220 + fallDistance * 1.6),
+						sourceId: 'player-landing',
+						sourceKind: 'environment',
+					});
+				}
 			},
 			onCoyoteJump: () => this.emitCoyoteParticles(),
 		});
 	}
 
-	private stepCombatAndWorld({ action, simDt, combatEvents }: StageRunUpdateContext): void {
+	private stepCombatAndWorld(context: StageRunUpdateContext): void {
+		const { action, simDt, combatEvents } = context;
 		if (!combatEvents)
 			throw new Error('stage update pipeline requires combat events after physics');
+		this.resolutionApproaches.observeAction(action);
 		this.combat.step(this.player, this.enemies, action, simDt, combatEvents);
+		const acousticStep = this.encounterAcousticActors.step(this.player, action, simDt);
+		this.handleEncounterAcousticActorEvents(acousticStep.events);
+		for (const sound of acousticStep.sounds) this.queueEnvironmentSound(sound);
+		const visionStep = this.encounterTopology
+			? this.enemyVision.step(
+					this.enemies,
+					this.player,
+					this.encounterTopology,
+					acousticStep.portalStates
+				)
+			: null;
+		if (visionStep) this.handleEnemyVisionEvents(visionStep.events);
+		this.encounterReadiness.step(
+			this.enemies,
+			this.player,
+			simDt,
+			visionStep?.evidenceByEnemyId
+		);
+		this.handleEnemyPerceptionEvents(
+			this.enemyPerception.step(
+				this.enemies,
+				this.player,
+				action,
+				simDt,
+				this.encounterReadiness,
+				{
+					externalSounds: this.consumeEnvironmentSounds(),
+					topology: this.encounterTopology ?? undefined,
+					portalStates: acousticStep.portalStates,
+				}
+			)
+		);
+		const alarmStep = this.enemyAlarms.step(
+			this.player,
+			action,
+			simDt,
+			this.enemyCommunication
+		);
+		this.handleEnemyAlarmEvents(this.enemyAlarms.resolvePlayerAttack(this.player, action));
+		this.handleEnemyAlarmEvents(alarmStep.events);
+		this.handleEnemyCommunicationEvents(alarmStep.communicationEvents);
+		this.handleEnemyCommunicationEvents(
+			this.enemyCommunication.step(
+				this.options.stageId ?? 'unassigned-stage',
+				this.enemies,
+				this.player,
+				simDt,
+				this.encounterReadiness
+			)
+		);
+		const civilianStep = this.civilianWitnesses.step(
+			this.player,
+			action,
+			this.enemies,
+			simDt,
+			this.enemyCommunication,
+			this.enemyCohesion
+		);
+		this.handleCivilianWitnessEvents(civilianStep.events);
+		this.handleEnemyCommunicationEvents(civilianStep.communicationEvents);
+		this.handleEnemyCohesionEvents(this.enemyCohesion.step(this.enemies, this.player, simDt));
+		this.resolutionApproaches.observeEncounter(this.enemies, this.player, simDt);
+		const activeEnemies = this.encounterReadiness.step(
+			this.enemies,
+			this.player,
+			0,
+			visionStep?.evidenceByEnemyId
+		);
+		context.activeEnemies = activeEnemies;
 		this.items.step(this.player, action, this.pickups, simDt);
 		this.handleHazardEvents(
 			this.lowerSprawlHazards?.step(this.player, simDt, this.combat, combatEvents) ?? []
 		);
 		this.handleEnemyEvents(
-			this.lowerSprawlEnemies?.step(this.enemies, this.player, simDt, this.combat, combatEvents) ??
+			this.lowerSprawlEnemies?.step(activeEnemies, this.player, simDt, this.combat, combatEvents) ??
 				[]
 		);
 		this.handleDrainmarketEnemyEvents(
-			this.drainmarketEnemies?.step(this.enemies, this.player, simDt, this.combat, combatEvents) ??
+			this.drainmarketEnemies?.step(activeEnemies, this.player, simDt, this.combat, combatEvents) ??
 				[]
 		);
 		this.handleChromeArcologyEnemyEvents(
 			this.chromeArcologyEnemies?.step(
-				this.enemies,
+				activeEnemies,
 				this.player,
 				simDt,
 				this.combat,
@@ -3489,12 +4376,17 @@ export class StageRunScene implements Scene {
 			) ?? []
 		);
 		this.handleMirrorPalaceEnemyEvents(
-			this.mirrorPalaceEnemies?.step(this.enemies, this.player, simDt, this.combat, combatEvents) ??
-				[]
+			this.mirrorPalaceEnemies?.step(
+				activeEnemies,
+				this.player,
+				simDt,
+				this.combat,
+				combatEvents
+			) ?? []
 		);
 		this.handleDubColonyEnemyEvents(
 			this.dubColonyEnemies?.step(
-				this.enemies,
+				activeEnemies,
 				this.player,
 				action,
 				simDt,
@@ -3505,10 +4397,12 @@ export class StageRunScene implements Scene {
 	}
 
 	private stepActors(context: StageRunUpdateContext): void {
-		const { simDt, combatEvents } = context;
+		const { simDt, combatEvents, activeEnemies, action } = context;
 		if (!combatEvents)
 			throw new Error('stage update pipeline requires combat events before actors');
-		this.companions.step(this.player, this.enemies, simDt, {
+		if (!activeEnemies)
+			throw new Error('stage update pipeline requires encounter readiness before actors');
+		this.companions.step(this.player, activeEnemies, simDt, {
 			onHint: (message) => {
 				this.player.companionHint = message;
 			},
@@ -3520,12 +4414,12 @@ export class StageRunScene implements Scene {
 		for (const enemy of this.enemies) {
 			enemy.rookMarked = companionState.rookOverlayUntil > 0 && enemy.hp > 0;
 		}
-		const bossPhaseState = this.bossPhases.step(this.player, this.enemies, simDt);
+		const bossPhaseState = this.bossPhases.step(this.player, activeEnemies, simDt);
 		context.bossPhaseState = bossPhaseState;
 		this.player.bossPhaseHint = bossPhaseState
 			? `Boss ${bossPhaseState.phaseIndex + 1}/${bossPhaseState.phaseCount}: ${bossPhaseState.activePhaseLabel}`
 			: undefined;
-		const captain = this.enemies.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
+		const captain = activeEnemies.find((enemy) => enemy.bossId === 'tollbooth-captain-grin');
 		this.handleCaptainEvents(
 			this.captainGrin?.step(
 				captain,
@@ -3536,7 +4430,7 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		const knifeNest = this.enemies.find((enemy) => enemy.bossId === 'knife-drone-nest');
+		const knifeNest = activeEnemies.find((enemy) => enemy.bossId === 'knife-drone-nest');
 		this.handleKnifeDroneNestEvents(
 			this.knifeDroneNest?.step(
 				knifeNest,
@@ -3547,7 +4441,7 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		const vitrine = this.enemies.find((enemy) => enemy.bossId === 'madame-vitrine');
+		const vitrine = activeEnemies.find((enemy) => enemy.bossId === 'madame-vitrine');
 		this.handleMadameVitrineEvents(
 			this.madameVitrine?.step(
 				vitrine,
@@ -3558,7 +4452,7 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		const reflectionJudge = this.enemies.find((enemy) => enemy.bossId === 'reflection-judge');
+		const reflectionJudge = activeEnemies.find((enemy) => enemy.bossId === 'reflection-judge');
 		this.handleReflectionJudgeEvents(
 			this.reflectionJudge?.step(
 				reflectionJudge,
@@ -3569,7 +4463,7 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
-		const kingFeedback = this.enemies.find((enemy) => enemy.bossId === 'king-feedback');
+		const kingFeedback = activeEnemies.find((enemy) => enemy.bossId === 'king-feedback');
 		this.handleKingFeedbackEvents(
 			this.kingFeedback?.step(
 				kingFeedback,
@@ -3580,13 +4474,35 @@ export class StageRunScene implements Scene {
 				combatEvents
 			) ?? []
 		);
+		// Combat targeting excludes dead actors, but Vane's presentation controller
+		// still owns the one-shot defeat transition and its release evidence.
+		const directorVane = this.enemies.find((enemy) => enemy.bossId === 'director-vane');
+		this.handleDirectorVaneEvents(
+			this.directorVane?.step(directorVane, bossPhaseState, action, simDt, {
+				witnessCount: this.civilianWitnesses.getSnapshot().filter(
+					(witness) => witness.state !== 'withdrawn'
+				).length,
+				coalitionEvidenceCount:
+					(this.options.acquiredPayloadIds?.length ?? 0) +
+					(this.options.branchGameplayHooks?.length ?? 0),
+				doctrineGrounded:
+					(this.options.storyResultFlags?.some((flag) => flag.startsWith('broadcast_')) ?? false) &&
+					(this.options.acquiredPayloadIds?.length ?? 0) >= 4,
+			}) ?? []
+		);
 	}
 
 	private stepPresentation({ action, simDt, input, combatEvents }: StageRunUpdateContext): void {
 		if (!combatEvents)
 			throw new Error('stage update pipeline requires combat events before presentation');
 		const worldRight = Math.max(...this.platforms.map((platform) => platform.x + platform.w), 1950);
-		this.camera.step(this.player.x, 0, Math.max(0, worldRight - 960), simDt, this.player.vx);
+		this.camera.step(
+			this.player.x,
+			0,
+			Math.max(0, worldRight - this.camera.getVisibleWorldWidth()),
+			simDt,
+			this.player.vx
+		);
 		processMossInput(this.player, action, simDt, this.combat, this.enemies, combatEvents);
 		this.updateAnimation(simDt);
 		this.updateLowerSprawlCompletion();
@@ -3603,11 +4519,13 @@ export class StageRunScene implements Scene {
 	update(dt: number): void {
 		const input = this.input;
 		if (!input) return;
+		this.stageElapsedSeconds += Math.max(0, dt);
 		const action = input.snapshot();
 		if (this.training) {
 			this.updateTraining(dt, action);
 			return;
 		}
+		this.buildTelemetry.step(dt);
 		const simDt = this.player.focus > 0 ? dt * 0.62 : dt;
 		this.updatePipeline.run({
 			dt,
@@ -3616,6 +4534,7 @@ export class StageRunScene implements Scene {
 			input,
 			combatEvents: null,
 			bossPhaseState: null,
+			activeEnemies: null,
 		});
 	}
 
@@ -3624,17 +4543,18 @@ export class StageRunScene implements Scene {
 
 		// Apply screen shake offset
 		const shakeX =
-			this.screenShakeIntensity > 0 ? (Math.random() - 0.5) * this.screenShakeIntensity * 2 : 0;
+			!this.reducedMotion && this.screenShakeIntensity > 0
+				? (Math.random() - 0.5) * this.screenShakeIntensity * 2
+				: 0;
 		const shakeY =
-			this.screenShakeIntensity > 0 ? (Math.random() - 0.5) * this.screenShakeIntensity * 2 : 0;
+			!this.reducedMotion && this.screenShakeIntensity > 0
+				? (Math.random() - 0.5) * this.screenShakeIntensity * 2
+				: 0;
 
-		// Save context for screen shake
 		const ctx = rend.getContext();
-		ctx.save();
-		ctx.translate(shakeX, shakeY);
-
 		// Render order: background -> parallax -> platforms -> pickups -> player -> enemies -> vfx -> ui
 		rend.clear();
+		rend.beginWorldView(cam, shakeX, shakeY);
 		const hasStageArt =
 			this.options.stageId === 'lower-sprawl'
 				? rend.renderStageParallax(LOWER_SPRAWL_PARALLAX_SHEET_ID, cam.x) ||
@@ -3669,12 +4589,18 @@ export class StageRunScene implements Scene {
 		this.renderMirrorPalaceWorld(ctx, cam.x);
 		this.renderDubColonyWorld(ctx, cam.x);
 		this.renderLateStageWorld(ctx, cam.x);
+		this.renderEnemyAlarmDevices(ctx, cam.x);
+		this.renderEncounterAcousticActors(ctx, cam.x);
+		this.renderCivilianWitnesses(ctx, cam.x);
 		rend.renderPickups(this.pickups, cam.x);
 		rend.renderPlayer(this.player, cam.x);
 		rend.renderProjectiles(this.player, cam.x);
 		rend.renderEnemies(this.enemies, cam.x);
 		rend.renderVFX(cam.x);
+		rend.endWorldView();
 		rend.renderUI(this.player, cam);
+		this.renderExpeditionPressureHud(ctx);
+		this.renderApproachPlanHud(ctx);
 		if (this.training) this.renderTrainingOverlay(ctx, cam.x);
 		if (this.debugOverlayVisible) {
 			this.renderBalanceOverlay(ctx);
@@ -3846,7 +4772,7 @@ export class StageRunScene implements Scene {
 		} else if (this.player.justLanded) {
 			playAnimation(animState, 'land', false);
 		} else if (this.player.isDodging) {
-			playAnimation(animState, 'skid', false);
+			playAnimation(animState, this.player.onGround ? 'skid' : 'air_dodge', false);
 		} else if (!this.player.onGround) {
 			playAnimation(animState, this.player.vy < 0 ? 'jump_up' : 'fall');
 		} else if (Math.abs(this.player.vx) > 10) {
@@ -3870,7 +4796,8 @@ export class StageRunScene implements Scene {
 	}
 
 	private advanceAnimationFrames(animState: AnimationState, dt: number): void {
-		const sheet = this.renderer?.getSpriteRenderer().getSheet(PLAYER_SPRITE_SHEET_ID);
+		const sprites = this.renderer?.getSpriteRenderer();
+		const sheet = sprites ? resolvePlayerSpriteSheet(sprites, animState.currentAnim) : null;
 		if (!sheet) return;
 
 		const step = advanceAnimationStep(animState, sheet, dt);
@@ -3951,6 +4878,8 @@ export class StageRunScene implements Scene {
 	}
 
 	private handleCombatEvent(event: CombatEvent): void {
+		this.buildTelemetry.recordCombat(event);
+		this.resolutionApproaches.observeCombatEvent(event);
 		const incomingHit =
 			event.source === 'enemy' && (event.kind === 'hit' || event.kind === 'damage');
 		if (incomingHit) {
@@ -3965,6 +4894,10 @@ export class StageRunScene implements Scene {
 		}
 		if (event.kind === 'kill' && event.source === 'player') {
 			this.showToast(`Target cleared // chain ${this.player.comboCount ?? 0}`, 0.9);
+		}
+		if (event.kind === 'loop-resisted' && event.source === 'player') {
+			this.player.contextHint = `ELITE ADAPTED // REPEAT ${event.repeatCount ?? 2} RESISTS CONTROL, NOT DAMAGE`;
+			this.showToast('Pattern read // vary move, route, or timing', 1.1);
 		}
 
 		const renderer = this.renderer;
@@ -4008,6 +4941,19 @@ export class StageRunScene implements Scene {
 				}
 				break;
 			case 'kill':
+				if (event.source === 'player' && event.targetId) {
+					const target = this.enemies.find((enemy) => enemy.id === event.targetId);
+					const salvage = target?.bossId
+						? 8
+						: target?.procgenRole === 'bruiser'
+							? 3
+							: ['ranged', 'turret', 'trapper'].includes(target?.procgenRole ?? '')
+								? 2
+								: 1;
+					this.handleExpeditionPressureEvents(
+						this.expeditionPressure.collect(`enemy:${event.targetId}`, salvage)
+					);
+				}
 				renderer.emitVFX(
 					this.player.x + this.player.w / 2 + this.player.dir * 30,
 					this.player.y + 20,
@@ -4034,11 +4980,25 @@ export class StageRunScene implements Scene {
 					46
 				);
 				break;
+			case 'loop-resisted':
+				renderer.emitVFX(
+					this.player.x + this.player.w / 2 + this.player.dir * 38,
+					this.player.y + 16,
+					'emp',
+					4,
+					34
+				);
+				break;
 		}
 	}
 
 	private initWorld(): void {
 		const layout = cloneStageLayout(this.options.stageId);
+		this.encounterTopology = this.training ? null : layout.encounterTopology ?? null;
+		this.encounterAcousticActors = new EncounterAcousticActorSystem(this.encounterTopology);
+		this.civilianWitnesses.configureEvacuationRoutes(
+			this.encounterTopology?.civilianRoutes ?? []
+		);
 		if (this.training) {
 			this.initTrainingWorld(layout);
 			return;
@@ -4067,6 +5027,11 @@ export class StageRunScene implements Scene {
 			...(bossPlaceholder ? [bossPlaceholder] : []),
 		];
 		for (const enemy of this.enemies) {
+			enemy.combatRank ??= enemy.bossId
+				? 'boss'
+				: enemy.procgenRole === 'bruiser' || (enemy.procgenAffixes ?? []).includes('elite')
+					? 'elite'
+					: 'standard';
 			const lowerSprawlControlled =
 				this.options.stageId === 'lower-sprawl' &&
 				['patrol', 'turret', 'bruiser'].includes(enemy.procgenRole ?? '');
@@ -4178,4 +5143,9 @@ export class StageRunScene implements Scene {
 			procgenRole: 'boss',
 		};
 	}
+}
+
+function truncateHudText(value: string, maxLength: number): string {
+	if (value.length <= maxLength) return value;
+	return `${value.slice(0, Math.max(1, maxLength - 1)).trimEnd()}…`;
 }

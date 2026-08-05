@@ -9,6 +9,7 @@ const root = new URL('../', import.meta.url).pathname;
 const promptRoots = [
 	{ path: 'llm-sprite-generation', optional: true },
 	{ path: 'docs/workflows', optional: false },
+	{ path: 'docs/sprite-production', optional: false },
 ];
 const gridObjectPattern = /grid:\s*\{[^}\n]*columns:\s*(\d+)[^}\n]*rows:\s*(\d+)[^}\n]*\}/g;
 const proseGridPatterns = [

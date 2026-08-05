@@ -51,7 +51,9 @@ for (const implementedTask of [
 }
 
 assert(
-	spriteRenderer.includes('normalizeSpriteManifest(await response.json())'),
+	spriteRenderer.includes('manifest = normalizeSpriteManifest(await this.fetchManifest(manifestUrl))') &&
+		spriteRenderer.includes('const runtimeSheets = manifest.sheets.filter(isRuntimeSpriteSheet)') &&
+		spriteRenderer.includes('this.manifest = manifest'),
 	'SpriteRenderer must normalize data/sprites.json before reading sheets'
 );
 assert(

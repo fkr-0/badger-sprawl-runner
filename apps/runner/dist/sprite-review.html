@@ -5,24 +5,204 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Badger Sprite Review</title>
 		<style>
-			:root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+			:root {
+				color-scheme: dark;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: #0b1017;
+				color: #eef3f8;
+			}
 			* { box-sizing: border-box; }
 			body { margin: 0; min-height: 100vh; background: #0b1017; color: #eef3f8; }
-			header { position: sticky; top: 0; z-index: 2; padding: 14px 18px; background: rgba(11, 16, 23, .94); border-bottom: 1px solid #334155; }
+			header {
+				position: sticky;
+				top: 0;
+				z-index: 4;
+				padding: 14px 18px;
+				background: rgba(11, 16, 23, .96);
+				border-bottom: 1px solid #334155;
+				backdrop-filter: blur(12px);
+			}
 			h1 { margin: 0 0 4px; font-size: 16px; }
 			p { margin: 0; color: #9fb0c2; font-size: 12px; }
 			main { padding: 18px; overflow: auto; }
-			canvas { display: block; image-rendering: pixelated; box-shadow: 0 14px 40px rgba(0, 0, 0, .45); }
+			.workbench {
+				display: grid;
+				grid-template-columns: minmax(480px, 1fr) minmax(360px, .8fr);
+				gap: 16px;
+				margin-bottom: 22px;
+				max-width: 1280px;
+			}
+			.panel {
+				background: #111923;
+				border: 1px solid #334155;
+				border-radius: 10px;
+				box-shadow: 0 14px 40px rgba(0, 0, 0, .28);
+				overflow: hidden;
+			}
+			.panel-heading {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 12px 14px;
+				border-bottom: 1px solid #29384a;
+			}
+			.panel-heading h2 { margin: 0; font-size: 13px; color: #67f3c4; }
+			.panel-heading span { color: #8195aa; font-size: 10px; }
+			.preview-wrap { display: grid; place-items: center; min-height: 390px; padding: 14px; }
+			#inspector-preview {
+				display: block;
+				width: min(100%, 480px);
+				height: auto;
+				image-rendering: pixelated;
+				border: 1px solid #29384a;
+				background: #0d1219;
+			}
+			.controls { display: grid; gap: 12px; padding: 14px; }
+			.control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+			.field { display: grid; gap: 5px; min-width: 0; }
+			.field.wide { grid-column: 1 / -1; }
+			label, .field-label { color: #9fb0c2; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+			select, input[type="range"], button {
+				font: inherit;
+			}
+			select {
+				width: 100%;
+				min-width: 0;
+				padding: 7px 8px;
+				color: #eef3f8;
+				background: #0c131c;
+				border: 1px solid #36495f;
+				border-radius: 5px;
+			}
+			.range-row { display: grid; grid-template-columns: 1fr 56px; align-items: center; gap: 8px; }
+			output { text-align: right; color: #ffcf5a; font-size: 11px; }
+			.button-row { display: flex; flex-wrap: wrap; gap: 7px; }
+			button {
+				padding: 7px 10px;
+				border: 1px solid #40546a;
+				border-radius: 5px;
+				background: #182431;
+				color: #e7edf5;
+				cursor: pointer;
+			}
+			button:hover { border-color: #67f3c4; color: #67f3c4; }
+			button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #67f3c4; outline-offset: 2px; }
+			.readout {
+				padding: 9px 10px;
+				border: 1px solid #29384a;
+				border-radius: 6px;
+				background: #0d141d;
+				color: #b8c7d7;
+				font-size: 10px;
+				line-height: 1.55;
+				word-break: break-word;
+			}
+			.readout.good { border-color: #2c6b58; }
+			.timeline-frames {
+				display: grid;
+				grid-template-columns: repeat(var(--timeline-columns, 1), minmax(20px, 1fr));
+				gap: 3px;
+				overflow-x: auto;
+				padding-bottom: 3px;
+			}
+			.timeline-frame { min-width: 24px; padding: 5px 4px; font-size: 9px; }
+			.timeline-frame[data-active="true"] { background: #2b5d52; border-color: #67f3c4; color: #fff; }
+			.timeline-frame[data-event="true"]::after { content: "•"; margin-left: 2px; color: #ffcf5a; }
+			.legend { display: flex; flex-wrap: wrap; gap: 12px; color: #7f93a8; font-size: 9px; }
+			.legend span::before { content: ""; display: inline-block; width: 10px; height: 2px; margin-right: 5px; vertical-align: middle; }
+			.legend .pivot::before { background: #ffcf5a; }
+			.legend .hurt::before { background: #67f3c4; }
+			.legend .hit::before { background: #ff6b7a; }
+			#event-log { min-height: 68px; max-height: 132px; overflow: auto; white-space: pre-wrap; }
+			.contact-heading { margin: 0 0 10px; color: #9fb0c2; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+			#review { display: block; image-rendering: pixelated; box-shadow: 0 14px 40px rgba(0, 0, 0, .45); }
 			#error { white-space: pre-wrap; color: #ff8f9b; }
+			body[data-inspector-status="loading"] .workbench { opacity: .6; }
+			body[data-status="error"] .workbench, body[data-status="error"] #review { display: none; }
+			@media (max-width: 980px) {
+				.workbench { grid-template-columns: 1fr; }
+				.control-grid { grid-template-columns: 1fr; }
+				.field.wide { grid-column: auto; }
+			}
 		</style>
-		<script type="module" crossorigin src="./assets/sprite-review-BA_L7vaJ.js"></script>
+		<script type="module" crossorigin src="./assets/sprite-review-CrIuBzlr.js"></script>
 	</head>
-	<body data-status="loading">
+	<body data-status="loading" data-inspector-status="loading">
 		<header>
 			<h1 id="title">Badger Sprite Review</h1>
 			<p id="summary">Loading sprite manifest…</p>
 		</header>
 		<main>
+			<section class="workbench" aria-label="Live sprite animation inspector">
+				<article class="panel">
+					<div class="panel-heading">
+						<h2>Live animation preview</h2>
+						<span>Space play/pause · ←/→ step · R restart</span>
+					</div>
+					<div class="preview-wrap">
+						<canvas id="inspector-preview" width="480" height="360"></canvas>
+					</div>
+					<div class="legend" style="padding: 0 14px 14px">
+						<span class="pivot">pivot</span>
+						<span class="hurt">hurtbox</span>
+						<span class="hit">hitbox</span>
+					</div>
+				</article>
+				<article class="panel">
+					<div class="panel-heading">
+						<h2>Playback and atlas diagnostics</h2>
+						<span>shared sprite-contracts clock</span>
+					</div>
+					<div class="controls">
+						<div class="control-grid">
+							<div class="field wide">
+								<label for="sheet-select">Sheet</label>
+								<select id="sheet-select"></select>
+							</div>
+							<div class="field">
+								<label for="animation-select">Animation</label>
+								<select id="animation-select"></select>
+							</div>
+							<div class="field">
+								<label for="mode-select">Mode</label>
+								<select id="mode-select">
+									<option value="loop">loop</option>
+									<option value="once">once</option>
+									<option value="pingpong">ping-pong</option>
+								</select>
+							</div>
+							<div class="field wide">
+								<label for="speed-input">Playback speed</label>
+								<div class="range-row">
+									<input id="speed-input" type="range" min="0" max="4" step="0.05" value="1" />
+									<output id="speed-output" for="speed-input">1.00×</output>
+								</div>
+							</div>
+						</div>
+						<div class="button-row">
+							<button id="play-toggle" type="button">Pause</button>
+							<button id="restart" type="button">Restart</button>
+							<button id="previous-frame" type="button">Previous frame</button>
+							<button id="next-frame" type="button">Next frame</button>
+						</div>
+						<div class="field">
+							<label for="timeline-input">Timeline</label>
+							<input id="timeline-input" type="range" min="0" max="1000" step="1" value="0" />
+							<div id="timeline-frames" class="timeline-frames"></div>
+						</div>
+						<div id="frame-readout" class="readout good"></div>
+						<div id="atlas-readout" class="readout"></div>
+						<div id="event-readout" class="readout"></div>
+						<div class="button-row">
+							<span class="field-label">Crossed-frame event log</span>
+							<button id="clear-events" type="button">Clear</button>
+						</div>
+						<pre id="event-log" class="readout">Playback event log is empty.</pre>
+					</div>
+				</article>
+			</section>
+			<h2 class="contact-heading">Static contact sheet baseline</h2>
 			<canvas id="review" width="1" height="1"></canvas>
 			<pre id="error"></pre>
 		</main>

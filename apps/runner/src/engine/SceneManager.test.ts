@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { type Scene, type SceneContext, SceneManager } from './SceneManager';
 
@@ -18,10 +19,10 @@ function collectTsFiles(dir: string): string[] {
 
 describe('SceneManager renderer boundary', () => {
 	it('uses the concrete Renderer type rather than unknown and scene-local casts', () => {
-		const root = process.cwd();
+		const srcRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 		const files = [
-			join(root, 'src/engine/SceneManager.ts'),
-			...collectTsFiles(join(root, 'src/scenes')),
+			join(srcRoot, 'engine/SceneManager.ts'),
+			...collectTsFiles(join(srcRoot, 'scenes')),
 		];
 		const offenders = files.flatMap((file) => {
 			const text = readFileSync(file, 'utf8');
@@ -29,7 +30,7 @@ describe('SceneManager renderer boundary', () => {
 			if (text.includes('renderer: unknown')) problems.push('renderer: unknown');
 			if (text.includes('renderer?: unknown')) problems.push('renderer?: unknown');
 			if (text.includes('as Renderer')) problems.push('as Renderer');
-			return problems.map((problem) => `${file.replace(`${root}/`, '')}: ${problem}`);
+			return problems.map((problem) => `${relative(srcRoot, file)}: ${problem}`);
 		});
 
 		expect(offenders).toEqual([]);
