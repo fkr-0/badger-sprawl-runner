@@ -444,7 +444,7 @@ export const CAMPAIGN: CampaignDefinition = {
 				speaker: 'Lio',
 				lines: ['I did not stop caring.', 'They bought the debt before I learned how to refuse.'],
 			},
-			rewards: ['mirror_pass', 'lio_betrayal_flag'],
+			rewards: ['mirror_pass', 'lio_betrayal_flag', 'blueprint_shard'],
 			tutorialBeats: [
 				{
 					id: 'rocket-switchback',
@@ -558,7 +558,7 @@ export const CAMPAIGN: CampaignDefinition = {
 				speaker: 'Auntie Subharmonic',
 				lines: ['The vote was not a cutscene.', 'It was the machine showing its gears.'],
 			},
-			rewards: ['bass_reactor_core', 'naya_root_companion'],
+			rewards: ['bass_reactor_core', 'naya_root_companion', 'blueprint_shard'],
 			tutorialBeats: [
 				{
 					id: 'naya-shield-sync',
@@ -657,7 +657,7 @@ export const CAMPAIGN: CampaignDefinition = {
 				speaker: 'The Choir of Static',
 				lines: ['Names return to voices.', 'The ledger loses one shard of its teeth.'],
 			},
-			rewards: ['debt_ledger_shard', 'codegate_mastery'],
+			rewards: ['debt_ledger_shard', 'codegate_mastery', 'two_blueprint_shards'],
 			todo: [
 				'increase code-gate frequency',
 				'add Black-Ice Fox hack duel placeholder',
@@ -755,7 +755,7 @@ export const CAMPAIGN: CampaignDefinition = {
 				speaker: 'Sister Version',
 				lines: ['Obedience had gears.', 'You jammed them with names.'],
 			},
-			rewards: ['cargo_reversal_key', 'prisoner_allies'],
+			rewards: ['cargo_reversal_key', 'prisoner_allies', 'two_blueprint_shards'],
 			todo: [
 				'add lift chase template',
 				'add cargo reversal branching',
@@ -854,7 +854,7 @@ export const CAMPAIGN: CampaignDefinition = {
 					'Now the question is whether it remembers how to listen.',
 				],
 			},
-			rewards: ['campaign_complete', 'final_broadcast_flag'],
+			rewards: ['campaign_complete', 'final_broadcast_flag', 'two_blueprint_shards'],
 			todo: [
 				'add final broadcast choice UI',
 				'add Director Vane multi-phase placeholder',

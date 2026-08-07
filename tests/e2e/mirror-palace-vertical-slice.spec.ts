@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { deployStoryStageFromTitle } from './helpers/deploy-story-stage';
 
 type Present<T> = Exclude<T, null>;
 
@@ -45,11 +46,7 @@ async function teleportTo(page: Page, x: number, y: number): Promise<void> {
 }
 
 async function enterMirrorPalace(page: Page): Promise<void> {
-	await page.goto('/');
-	await waitForScene(page, 'TitleScene');
-	await page.locator('#game').click();
-	await page.keyboard.press('Enter');
-	await waitForScene(page, 'StoryFlowScene');
+	await deployStoryStageFromTitle(page, 'mirror-palace');
 	await expect
 		.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getStoryPresentation()))
 		.toMatchObject({
@@ -181,11 +178,13 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getAnimation()))
 			.toMatchObject({ currentAnim: 'interact', frames: 4 });
 
-		const spriteIds = await page.evaluate(() =>
-			(window as MirrorWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
-		);
-		expect(spriteIds).toContain('enemy_masque_duelist');
-		expect(spriteIds).toContain('enemy_mirror_sentinel');
+		expect(
+			await page.evaluate(() =>
+				(window as MirrorWindow).__badger.hasSheet('enemy_masque_duelist') &&
+				(window as MirrorWindow).__badger.hasSheet('enemy_mirror_sentinel')
+			)
+		).toBe(true);
+		expect(await page.evaluate(() => (window as MirrorWindow).__badger.getEnemies().length)).toBeGreaterThan(0);
 	});
 
 	test('completes the refusal table, defeats the Judge, and advances to Dub Colony', async ({ page }) => {

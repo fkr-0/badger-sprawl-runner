@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 test.describe('Story branch screen', () => {
 	test('keeps dialogue rows separated and launches the committed branch with Enter', async ({ page }) => {
@@ -6,10 +7,7 @@ test.describe('Story branch screen', () => {
 		await expect(page.locator('#game')).toBeVisible();
 		await page.locator('#game').click();
 
-		await page.keyboard.press('Enter');
-		await expect
-			.poll(() => page.evaluate(() => (window as any).__badger?.getSceneName()))
-			.toBe('StoryFlowScene');
+		await enterStoryFlow(page);
 
 		for (let index = 0; index < 12; index += 1) {
 			const mode = await page.evaluate(() => (window as any).__badger?.getStoryState()?.mode);

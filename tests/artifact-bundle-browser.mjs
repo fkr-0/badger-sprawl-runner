@@ -80,6 +80,26 @@ await page.addInitScript(() => {
 		value: drawnImages,
 		writable: false,
 	});
+	for (const key of [
+		'__artifactSceneName',
+		'__artifactWorldMap',
+		'__artifactStoryPresentation',
+	]) {
+		Object.defineProperty(window, key, {
+			configurable: false,
+			value: null,
+			writable: true,
+		});
+	}
+	window.addEventListener('badger:scene-change', (event) => {
+		window.__artifactSceneName = event.detail?.sceneName ?? null;
+	});
+	window.addEventListener('badger:world-map', (event) => {
+		window.__artifactWorldMap = event.detail ?? null;
+	});
+	window.addEventListener('badger:story-presentation', (event) => {
+		window.__artifactStoryPresentation = event.detail ?? null;
+	});
 	window.addEventListener('badger:stage-runtime-config', () => {
 		window.__artifactStageStarted = true;
 	});
@@ -98,6 +118,7 @@ try {
 		waitUntil: 'networkidle',
 	});
 	await page.waitForURL('**/dist/index.html');
+	await page.waitForFunction(() => window.__artifactSceneName === 'TitleScene');
 	await page.waitForFunction(() => {
 		const urls = performance.getEntriesByType('resource').map((entry) => entry.name);
 		return (
@@ -155,12 +176,80 @@ try {
 
 	await page.locator('#game').click();
 	await page.keyboard.press('Enter');
-	for (let step = 0; step < 8; step += 1) {
-		await page.keyboard.press('Enter');
-		await page.waitForTimeout(35);
+	await page.waitForFunction(() => window.__artifactSceneName === 'SubwayMapScene');
+
+	const selectMapLocation = async (locationId) => {
+		for (let step = 0; step < 64; step += 1) {
+			const selectedLocationId = await page.evaluate(
+				() => window.__artifactWorldMap?.selectedLocationId ?? null
+			);
+			if (selectedLocationId === locationId) return;
+			await page.keyboard.press('ArrowRight');
+			await page.waitForFunction(
+				(previous) => window.__artifactWorldMap?.selectedLocationId !== previous,
+				selectedLocationId
+			);
+		}
+		throw new Error(`production map could not select ${locationId}`);
+	};
+
+	let activeRouteId = null;
+	for (let step = 0; step < 64; step += 1) {
+		const selection = await page.evaluate(() => window.__artifactWorldMap);
+		if (selection?.selectedExpeditionStageId === 'chrome-arcology') {
+			activeRouteId = selection.selectedLocationId;
+			break;
+		}
+		await page.keyboard.press('ArrowRight');
+		await page.waitForFunction(
+			(previous) => window.__artifactWorldMap?.selectedLocationId !== previous,
+			selection?.selectedLocationId ?? null
+		);
 	}
-	await page.keyboard.press('2');
+	assert(activeRouteId, 'production map could not locate the active Chrome Arcology route');
+
+	const visitedLocations = new Set();
+	for (let travelStep = 0; travelStep < 16; travelStep += 1) {
+		const map = await page.evaluate(() => window.__artifactWorldMap);
+		if (map?.currentLocationId === activeRouteId) {
+			await selectMapLocation(activeRouteId);
+			await page.keyboard.press('Enter');
+			break;
+		}
+		visitedLocations.add(map?.currentLocationId);
+		const sameDistrictReachable = map?.reachableLocationIds?.find(
+			(locationId) =>
+				locationId === activeRouteId ||
+				(locationId.startsWith('chrome-arcology:') && !visitedLocations.has(locationId))
+		);
+		const nextLocation =
+			sameDistrictReachable ??
+			map?.reachableLocationIds?.find((locationId) => !visitedLocations.has(locationId));
+		assert(nextLocation, `no unvisited route from ${map?.currentLocationId ?? 'unknown'}`);
+		await selectMapLocation(nextLocation);
+		await page.keyboard.press('Enter');
+		if (nextLocation === activeRouteId) break;
+		await page.waitForFunction(() => window.__artifactSceneName === 'LocationScene');
+		await page.keyboard.press('KeyM');
+		await page.waitForFunction(() => window.__artifactSceneName === 'SubwayMapScene');
+	}
+	await page.waitForFunction(() => window.__artifactSceneName === 'StoryFlowScene');
+	for (let step = 0; step < 16; step += 1) {
+		const presentation = await page.evaluate(() => window.__artifactStoryPresentation);
+		if (presentation?.mode === 'stage') break;
+		const previousPresentation = JSON.stringify(presentation);
+		await page.keyboard.press('Enter');
+		await page.waitForFunction(
+			(previous) => JSON.stringify(window.__artifactStoryPresentation) !== previous,
+			previousPresentation
+		);
+	}
+	assert(
+		(await page.evaluate(() => window.__artifactStoryPresentation?.mode)) === 'stage',
+		'production story flow did not reach stage selection'
+	);
 	await page.keyboard.press('KeyR');
+	await page.waitForFunction(() => window.__artifactSceneName === 'StageRunScene');
 	await page.waitForFunction(() => window.__artifactStageStarted === true);
 	await page.waitForFunction(() => {
 		const drawn = window.__artifactDrawnImages ?? [];
@@ -222,6 +311,19 @@ try {
 	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'TitleScene');
 	await bridgePage.locator('#game').click();
 	await bridgePage.keyboard.press('Enter');
+	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'SubwayMapScene');
+	await bridgePage.evaluate(() => {
+		const stageId = window.__badger?.getStoryProgress().currentStageId;
+		if (!stageId) throw new Error('artifact debug harness has no active story stage');
+		const routeId = `${stageId}:route`;
+		const travel = window.__badger?.debugTravelTo(routeId);
+		if (!travel?.ok) throw new Error(`failed to prepare artifact story route: ${travel?.reason}`);
+		const scene = window.__app?.getCurrentScene();
+		if (!scene?.selectLocation?.(routeId)) {
+			throw new Error('artifact SubwayMapScene could not select the active route');
+		}
+		scene.confirmSelection?.();
+	});
 	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'StoryFlowScene');
 	for (let safety = 0; safety < 8; safety += 1) {
 		const mode = await bridgePage.evaluate(() => window.__badger?.getStoryState().mode);
@@ -229,7 +331,6 @@ try {
 		await bridgePage.keyboard.press('Enter');
 		await bridgePage.waitForTimeout(35);
 	}
-	await bridgePage.keyboard.press('2');
 	await bridgePage.keyboard.press('KeyR');
 	await bridgePage.waitForFunction(() => window.__badger?.getSceneName() === 'StageRunScene');
 	await bridgePage.waitForFunction(

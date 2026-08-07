@@ -60,12 +60,8 @@ test.describe('Game Loads With Sprite System', () => {
 		await waitForHarness(page);
 		await waitForScene(page, 'TitleScene');
 
-		// Navigate to Endless mode
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
+		// Enter Endless mode without coupling sprite coverage to title-menu ordering.
+		await page.evaluate(() => (window as any).__badger?.routeMode('endless'));
 		await waitForScene(page, 'StageRunScene');
 
 		// Wait a moment for sprites to load

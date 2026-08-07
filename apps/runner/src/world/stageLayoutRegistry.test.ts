@@ -46,6 +46,16 @@ describe('stageLayoutRegistry', () => {
 		expect(layout.enemies.some((enemy) => enemy.procgenFamily === 'knife_drone')).toBe(true);
 	});
 
+	it('preserves authored Lower Sprawl enemy sprite sheets outside late-stage remapping', () => {
+		const layout = cloneStageLayout('lower-sprawl');
+		expect(layout.enemies.find((enemy) => enemy.id === 'toll-scooter-west')?.spriteSheetId).toBe(
+			'enemy_turnstile_mite'
+		);
+		expect(layout.enemies.find((enemy) => enemy.id === 'receipt-crawler-east')?.spriteSheetId).toBe(
+			'enemy_rent_cop_piker'
+		);
+	});
+
 	it('places authored sprite rosters into the three unfinished late stages', () => {
 		expect(cloneStageLayout('antenna-barrens').enemies.map((enemy) => enemy.spriteSheetId)).toEqual([
 			'enemy_error_mite',

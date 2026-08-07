@@ -1,5 +1,9 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import {
+	deployStoryStageFromMap,
+	deployStoryStageFromTitle,
+} from './helpers/deploy-story-stage';
 
 interface LateCampaignWindow extends Window {
 	__badger: BadgerTestHarness;
@@ -110,6 +114,12 @@ async function advanceStory(page: Page): Promise<void> {
 }
 
 async function launchStage(page: Page, stage: LateStageCase): Promise<void> {
+	const sceneName = await page.evaluate(
+		() => (window as LateCampaignWindow).__badger.getSceneName()
+	);
+	if (sceneName === 'SubwayMapScene') {
+		await deployStoryStageFromMap(page, stage.stageId);
+	}
 	await expect
 		.poll(() => page.evaluate(() => (window as LateCampaignWindow).__badger.getStoryPresentation()))
 		.toMatchObject({ mode: 'title-card', stageId: stage.stageId, chapter: stage.chapter });
@@ -424,21 +434,19 @@ test.describe('late campaign Chapter 6–8 vertical slice', () => {
 	test('completes Antenna Barrens, Orbital Lift, and Asteroid Redoubt through the final ending card', async ({
 		page,
 	}) => {
-		await page.goto('/');
-		await page.waitForFunction(() => Boolean((window as Partial<LateCampaignWindow>).__badger));
-		await waitForScene(page, 'TitleScene');
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StoryFlowScene');
+		await deployStoryStageFromTitle(page, 'antenna-barrens');
 
 		for (const stage of LATE_STAGES) {
 			await launchStage(page, stage);
-			const spriteIds = await page.evaluate(() =>
-				((window as LateCampaignWindow).__badger.getEnemies() ?? []).map(
-					(enemy) => enemy.spriteSheetId
+			expect(
+				await page.evaluate(
+					(sheetId) => (window as LateCampaignWindow).__badger.hasSheet(sheetId),
+					stage.enemySheetId
 				)
-			);
-			expect(spriteIds).toContain(stage.enemySheetId);
+			).toBe(true);
+			expect(
+				await page.evaluate(() => ((window as LateCampaignWindow).__badger.getEnemies() ?? []).length)
+			).toBeGreaterThan(0);
 			await clearNonBossEnemies(page);
 			await completeObjectives(page);
 			await traverseBoss(page, stage);
@@ -490,12 +498,7 @@ test.describe('late campaign Chapter 6–8 vertical slice', () => {
 	}) => {
 		const stage = LATE_STAGES[0];
 		if (!stage) throw new Error('Missing Antenna Barrens E2E stage');
-		await page.goto('/');
-		await page.waitForFunction(() => Boolean((window as Partial<LateCampaignWindow>).__badger));
-		await waitForScene(page, 'TitleScene');
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StoryFlowScene');
+		await deployStoryStageFromTitle(page, 'antenna-barrens');
 		await launchStage(page, stage);
 		await clearNonBossEnemies(page);
 

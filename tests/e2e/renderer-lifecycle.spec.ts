@@ -24,8 +24,7 @@ async function enterStage(page: Page): Promise<void> {
 	await page.waitForFunction(
 		() => (window as HarnessWindow).__badger?.getRendererMode() === 'bridge'
 	);
-	for (let index = 0; index < 4; index += 1) await page.keyboard.press('ArrowDown');
-	await page.keyboard.press('Enter');
+	await page.evaluate(() => (window as HarnessWindow).__badger.routeMode('endless'));
 	await waitForScene(page, 'StageRunScene');
 	await expect(page.locator('#badger-pixi-bridge')).toHaveAttribute('data-native-terrain', 'true');
 }

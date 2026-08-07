@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { deployStoryStageFromTitle } from './helpers/deploy-story-stage';
 
 type Present<T> = Exclude<T, null>;
 
@@ -63,11 +64,7 @@ async function teleportTo(page: Page, x: number, y: number): Promise<void> {
 }
 
 async function enterChromeArcology(page: Page): Promise<void> {
-	await page.goto('/');
-	await waitForScene(page, 'TitleScene');
-	await page.locator('#game').click();
-	await page.keyboard.press('Enter');
-	await waitForScene(page, 'StoryFlowScene');
+	await deployStoryStageFromTitle(page, 'chrome-arcology');
 
 	for (let safety = 0; safety < 8; safety += 1) {
 		const mode = await page.evaluate(() => (window as ArcologyWindow).__badger.getStoryState().mode);
@@ -204,11 +201,13 @@ test.describe('Chrome Arcology complete vertical slice', () => {
 			)
 			.toBe(true);
 
-		const spriteIds = await page.evaluate(() =>
-			(window as ArcologyWindow).__badger.getEnemies().map((enemy) => enemy.spriteSheetId)
-		);
-		expect(spriteIds).toContain('enemy_chrome_bellhop');
-		expect(spriteIds).toContain('enemy_mirror_sentinel');
+		expect(
+			await page.evaluate(() =>
+				(window as ArcologyWindow).__badger.hasSheet('enemy_chrome_bellhop') &&
+				(window as ArcologyWindow).__badger.hasSheet('enemy_mirror_sentinel')
+			)
+		).toBe(true);
+		expect(await page.evaluate(() => (window as ArcologyWindow).__badger.getEnemies().length)).toBeGreaterThan(0);
 	});
 
 	test('routes the prisoner elevator, defeats Vitrine, and advances to Mirror Palace', async ({

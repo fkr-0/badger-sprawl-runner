@@ -3,6 +3,7 @@
  */
 
 import type { Scene, SceneContext } from '../engine/SceneManager';
+import type { DummyPresetId, TrainingKitId, TrainingLessonId } from '../game/TrainingMode';
 import {
 	type TrainingStageSelection,
 	createTrainingStageSeed,
@@ -16,6 +17,12 @@ export interface TrainingSceneOptions {
 	onReturnToTitle?: () => void;
 	seed?: string;
 	stageId?: RuntimeStageId;
+	buildPresetId?: string;
+	unlockedSkills?: readonly string[];
+	skillRanks?: Readonly<Record<string, number>>;
+	lessonId?: TrainingLessonId;
+	dummyPresetId?: DummyPresetId;
+	kitId?: TrainingKitId;
 }
 
 export class TrainingScene implements Scene {
@@ -54,6 +61,24 @@ export class TrainingScene implements Scene {
 		return { ...this.selection };
 	}
 
+	getBuildPreset(): {
+		id?: string;
+		unlockedSkills: string[];
+		skillRanks: Record<string, number>;
+		lessonId?: TrainingLessonId;
+		dummyPresetId?: DummyPresetId;
+		kitId?: TrainingKitId;
+	} {
+		return {
+			id: this.options.buildPresetId,
+			unlockedSkills: [...(this.options.unlockedSkills ?? [])],
+			skillRanks: { ...(this.options.skillRanks ?? {}) },
+			lessonId: this.options.lessonId,
+			dummyPresetId: this.options.dummyPresetId,
+			kitId: this.options.kitId,
+		};
+	}
+
 	debugTeleportPlayer(x: number, y: number): void {
 		this.stageScene.debugTeleportPlayer(x, y);
 	}
@@ -85,14 +110,16 @@ export class TrainingScene implements Scene {
 		return new StageRunScene({
 			stageId: this.selection.stageId,
 			procgenSeed: this.selection.seed,
+			unlockedSkills: this.options.unlockedSkills,
+			skillRanks: this.options.skillRanks,
 			generatedEnemyPacks: [],
 			generatedSideRooms: [],
 			training: {
 				enabled: true,
 				seed: this.selection.seed,
-				lessonId: previous?.lessonId,
-				dummyPresetId: previous?.dummyPresetId,
-				kitId: previous?.kitId,
+				lessonId: previous?.lessonId ?? this.options.lessonId,
+				dummyPresetId: previous?.dummyPresetId ?? this.options.dummyPresetId,
+				kitId: previous?.kitId ?? this.options.kitId,
 				onRerollStage: () => this.rerollStage(),
 			},
 			onReturnToTitle: this.options.onReturnToTitle,

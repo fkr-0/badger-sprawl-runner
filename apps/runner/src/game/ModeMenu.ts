@@ -8,8 +8,8 @@ export interface ModeSceneRoute {
 export const MODE_OPTIONS: MenuOption[] = [
 	{
 		id: 'story',
-		label: 'Story Run',
-		description: 'Play the complete eight-stage Brechtian campaign skeleton.',
+		label: 'Story Adventure',
+		description: 'Live in the Sprawl, open routes, and change eight persistent districts.',
 	},
 	{ id: 'versus', label: 'VS Mode', description: 'Local duel prototype: first to 3 tags.' },
 	{
@@ -23,6 +23,11 @@ export const MODE_OPTIONS: MenuOption[] = [
 		description: 'Spend blueprint shards on persistent upgrades.',
 	},
 	{
+		id: 'builds',
+		label: 'Lower Sprawl Build Lab',
+		description: 'Compare three routes through pressure, public consequence, and real run evidence.',
+	},
+	{
 		id: 'endless',
 		label: 'Endless Sprawl',
 		description: 'Replay procedural floors with escalating enemy budgets and side rooms.',
@@ -30,9 +35,10 @@ export const MODE_OPTIONS: MenuOption[] = [
 ];
 
 export const MODE_SCENE_ROUTES: Record<MenuOptionId, ModeSceneRoute> = {
-	story: { sceneName: 'DialogueScene', status: 'implemented' },
+	story: { sceneName: 'SubwayMapScene', status: 'implemented' },
 	versus: { sceneName: 'VersusScene', status: 'implemented' },
 	training: { sceneName: 'TrainingScene', status: 'implemented' },
 	skills: { sceneName: 'SkillTreeScene', status: 'implemented' },
+	builds: { sceneName: 'LowerSprawlBuildComparisonScene', status: 'implemented' },
 	endless: { sceneName: 'StageRunScene', status: 'implemented' },
 };

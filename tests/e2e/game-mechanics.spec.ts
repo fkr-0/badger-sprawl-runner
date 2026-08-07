@@ -21,6 +21,13 @@ async function waitForScene(page: import('@playwright/test').Page, name: string,
 	);
 }
 
+async function enterEndlessStage(page: import('@playwright/test').Page): Promise<void> {
+	await page.goto('/');
+	await waitForScene(page, 'TitleScene');
+	await page.evaluate(() => (window as any).__badger.routeMode('endless'));
+	await waitForScene(page, 'StageRunScene');
+}
+
 test.describe('Game Initialization', () => {
 	test('should load the game canvas', async ({ page }) => {
 		await page.goto('/');
@@ -43,15 +50,7 @@ test.describe('Game Initialization', () => {
 
 test.describe('Platforming Physics via StageRunScene', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/');
-		await waitForScene(page, 'TitleScene');
-		// Navigate to Endless mode (4th option) which launches StageRunScene directly
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StageRunScene');
+		await enterEndlessStage(page);
 	});
 
 	test('player should spawn with correct initial state', async ({ page }) => {
@@ -124,14 +123,7 @@ test.describe('Platforming Physics via StageRunScene', () => {
 
 test.describe('Combat System via StageRunScene', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/');
-		await waitForScene(page, 'TitleScene');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StageRunScene');
+		await enterEndlessStage(page);
 	});
 
 	test('enemies should be spawned in the world', async ({ page }) => {
@@ -160,14 +152,7 @@ test.describe('Combat System via StageRunScene', () => {
 
 test.describe('Pickup System via StageRunScene', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/');
-		await waitForScene(page, 'TitleScene');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StageRunScene');
+		await enterEndlessStage(page);
 	});
 
 	test('pickups should exist in the world', async ({ page }) => {
@@ -206,15 +191,7 @@ test.describe('Pickup System via StageRunScene', () => {
 
 test.describe('Scene Navigation', () => {
 	test('Escape should return from StageRunScene to TitleScene', async ({ page }) => {
-		await page.goto('/');
-		await waitForScene(page, 'TitleScene');
-
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('ArrowDown');
-		await page.keyboard.press('Enter');
-		await waitForScene(page, 'StageRunScene');
+		await enterEndlessStage(page);
 
 		await page.keyboard.press('Escape');
 		await waitForScene(page, 'TitleScene');

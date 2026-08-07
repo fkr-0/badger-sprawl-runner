@@ -9,6 +9,7 @@ const root = new URL('../', import.meta.url).pathname;
 const promptRoots = [
 	{ path: 'llm-sprite-generation', optional: true },
 	{ path: 'docs/workflows', optional: false },
+	{ path: 'docs/sprite-production', optional: false },
 ];
 const gridObjectPattern = /grid:\s*\{[^}\n]*columns:\s*(\d+)[^}\n]*rows:\s*(\d+)[^}\n]*\}/g;
 const proseGridPatterns = [
@@ -21,11 +22,13 @@ const outputHintPattern = /(?:^|[_-])(\d+)x(\d+)(?:[_-]|\.)/gi;
 const rowReferencePattern = /\brow[_ ](\d+)\b/gi;
 const sheetDimensionPattern =
 	/\b(\d+)x(\d+)\s+px,\s+(?:exactly\s+)?(\d+)\s*(?:columns?\s+by|x|by)\s*(\d+)\s*(?:rows?|grid)[^\n.]*?(\d+)x\5\s+px/gi;
+const nonPromptDirectories = new Set(['accepted-renders']);
 
 async function* walk(dir) {
 	for (const entry of await readdir(dir, { withFileTypes: true })) {
 		const path = join(dir, entry.name);
 		if (entry.isDirectory()) {
+			if (nonPromptDirectories.has(entry.name)) continue;
 			yield* walk(path);
 		} else if (/\.(?:ya?ml|json|md)$/.test(entry.name)) {
 			yield path;

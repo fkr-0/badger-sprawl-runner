@@ -833,8 +833,11 @@ export declare function createGridFocusNavigator(options?: {
   events: ArcadeEventBus<any>;
   setItems(items: readonly ArcadeGridFocusItem[], columns?: number): ArcadeGridFocusItem | null;
   current(): ArcadeGridFocusItem | null;
+  index(): number;
   focus(id: string, reason?: string): boolean;
+  focusIndex(index: number, reason?: string): boolean;
   move(direction: ArcadeGridDirection): ArcadeGridFocusItem | null;
+  moveBy(direction: ArcadeGridDirection, amount?: number): ArcadeGridFocusItem | null;
   activate(): boolean;
   snapshot(): Readonly<{ focusedId: string | null; focusedIndex: number; preferredColumn: number; columns: number; items: readonly unknown[] }>;
 };
@@ -1322,6 +1325,42 @@ export declare function resolveHudGauge(input?: ArcadeHudGaugeInput): Readonly<{
   direction: 'forward' | 'reverse';
   segments: readonly ArcadeHudGaugeSegment[];
 }>;
+
+export type ArcadeResolutionEvidenceBase = Readonly<{
+  approaches: readonly string[];
+  counters: Readonly<Record<string, number>>;
+  flags: Readonly<Record<string, boolean>>;
+  durations: Readonly<Record<string, number>>;
+  revision: number;
+}>;
+
+export type ArcadeResolutionEvidenceSnapshot = ArcadeResolutionEvidenceBase & Readonly<{
+  constraints: Readonly<Record<string, boolean>>;
+}>;
+
+export declare function createResolutionEvidenceTracker(options?: {
+  knownApproaches?: readonly string[];
+  approaches?: readonly string[];
+  counters?: Readonly<Record<string, number>>;
+  flags?: Readonly<Record<string, boolean>>;
+  durations?: Readonly<Record<string, number>>;
+  constraints?: Readonly<Record<string, (snapshot: ArcadeResolutionEvidenceBase) => boolean>>;
+  revision?: number;
+  events?: ArcadeEventBus<any>;
+}): {
+  events: ArcadeEventBus<any>;
+  recordApproach(id: string, metadata?: unknown): boolean;
+  hasApproach(id: string): boolean;
+  incrementCounter(id: string, amount?: number, metadata?: unknown): number;
+  setFlag(id: string, enabled?: boolean, metadata?: unknown): boolean;
+  addDuration(id: string, delta: number, metadata?: unknown): number;
+  snapshot(): ArcadeResolutionEvidenceSnapshot;
+  decorate<T extends object>(value: T, options?: {
+    approachesKey?: string;
+    constraintsKey?: string;
+    evidenceKey?: string;
+  }): T & Record<string, unknown>;
+};
 
 export interface ArcadeStageIssue {
   code: string;
@@ -2186,6 +2225,58 @@ export declare function createAudioMixer(options: { context?: AudioContext; crea
   destroy(): Promise<void>;
 };
 
+export type ArcadeUiCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+export type ArcadeUiTheme = Readonly<{
+  background: string;
+  backgroundRaised: string;
+  panel: string;
+  panelStrong: string;
+  text: string;
+  muted: string;
+  accent: string;
+  accentAlt: string;
+  warning: string;
+  danger: string;
+  line: string;
+}>;
+export type ArcadePanelOptions = Readonly<{ x: number; y: number; width: number; height: number; accent?: string; strong?: boolean; label?: string }>;
+export type ArcadeChipOptions = Readonly<{ x: number; y: number; text: string; accent?: string; active?: boolean; align?: 'left' | 'center' | 'right'; width?: number }>;
+export type ArcadeMeterOptions = Readonly<{ x: number; y: number; width: number; height?: number; value: number; min?: number; minimum?: number; max?: number; maximum?: number; accent?: string; label?: string; valueLabel?: string; reverse?: boolean }>;
+export type ArcadeScreenTitleOptions = Readonly<{ eyebrow: string; title: string; subtitle?: string; y?: number; accent?: string; titleSize?: number }>;
+export declare const ARCADE_UI_UNIT: number;
+export declare const ARCADE_UI_FONT: string;
+export declare const DEFAULT_ARCADE_UI_THEME: ArcadeUiTheme;
+export declare function createArcadeUiTheme(theme?: Partial<ArcadeUiTheme>): ArcadeUiTheme;
+export declare function drawArcadeBackdropCanvas(context: ArcadeUiCanvasContext, theme?: ArcadeUiTheme): void;
+export declare function drawArcadePanelCanvas(context: ArcadeUiCanvasContext, options: ArcadePanelOptions, theme?: ArcadeUiTheme): void;
+export declare function drawArcadeMenuRowCanvas(context: ArcadeUiCanvasContext, label: string, x: number, y: number, width: number, selected: boolean, theme?: ArcadeUiTheme): void;
+export declare function drawArcadeFooterCanvas(context: ArcadeUiCanvasContext, text: string, theme?: ArcadeUiTheme): void;
+export declare function drawArcadeChipCanvas(context: ArcadeUiCanvasContext, options: ArcadeChipOptions, theme?: ArcadeUiTheme): void;
+export declare function drawArcadeMeterCanvas(context: ArcadeUiCanvasContext, options: ArcadeMeterOptions, theme?: ArcadeUiTheme): ReturnType<typeof resolveHudGauge>;
+export declare function drawArcadeScreenTitleCanvas(context: ArcadeUiCanvasContext, options: ArcadeScreenTitleOptions, theme?: ArcadeUiTheme): void;
+
+export type ArcadePersistenceFeedback<Reason extends string = string> = Readonly<{
+  reason: Reason;
+  label: string;
+  timestamp: number;
+} & Record<string, unknown>>;
+export declare function createPersistenceFeedback<Reason extends string = string>(options?: {
+  labels?: Readonly<Partial<Record<Reason, string>>>;
+  now?: () => number;
+  eventName?: string | null;
+  target?: { dispatchEvent?(event: Event): boolean; CustomEvent?: typeof CustomEvent };
+  CustomEvent?: typeof CustomEvent;
+  createEvent?: (eventName: string, feedback: ArcadePersistenceFeedback<Reason>) => Event;
+  onFeedback?: (feedback: ArcadePersistenceFeedback<Reason>) => void;
+  events?: ArcadeEventBus<any>;
+}): {
+  events: ArcadeEventBus<any>;
+  create(reason: Reason, detail?: Readonly<Record<string, unknown>>): ArcadePersistenceFeedback<Reason>;
+  dispatch(feedback: ArcadePersistenceFeedback<Reason>): ArcadePersistenceFeedback<Reason>;
+  emit(reason: Reason, detail?: Readonly<Record<string, unknown>>): ArcadePersistenceFeedback<Reason>;
+  snapshot(): Readonly<{ count: number; last: ArcadePersistenceFeedback<Reason> | null }>;
+};
+
 export declare function resolveSafeAreaLayout(input: { viewportWidth: number; viewportHeight: number; designWidth?: number; designHeight?: number; safeArea?: Partial<Record<'top' | 'right' | 'bottom' | 'left', number>>; mode?: 'contain' | 'cover' | 'stretch' }): Readonly<{ viewport: Readonly<ArcadeRect>; safeArea: Readonly<Record<'top' | 'right' | 'bottom' | 'left', number>>; available: Readonly<ArcadeRect>; content: Readonly<ArcadeRect>; scale: Readonly<{ x: number; y: number }> }>;
 export type FocusItem = { id: string; disabled?: boolean; hidden?: boolean; onActivate?(item: FocusItem): void };
 export declare function createFocusNavigator(options?: { items?: readonly FocusItem[]; initialId?: string; wrap?: boolean; events?: ArcadeEventBus<any> }): {
@@ -2250,6 +2341,167 @@ export declare function verifyRunSummary(summary: Record<string, SnapshotValue> 
 // END ARCADE SERVICES 0.13-0.16 TYPES
 
 // BEGIN ARCADE SERVICES 0.17-1.0 TYPES
+
+export type ArcadeTextLayout = Readonly<{
+  lines: readonly string[];
+  truncated: boolean;
+  width: number;
+  lineHeight: number;
+  height: number;
+}>;
+
+export declare function fitArcadeTextCanvas(
+  context: ArcadeUiCanvasContext,
+  text: unknown,
+  maxWidth: number,
+  options?: { ellipsis?: string },
+): string;
+
+export declare function wrapArcadeTextCanvas(
+  context: ArcadeUiCanvasContext,
+  text: unknown,
+  maxWidth: number,
+  options?: { maxLines?: number; lineHeight?: number; ellipsis?: string },
+): ArcadeTextLayout;
+
+export declare function drawArcadeTextBlockCanvas(
+  context: ArcadeUiCanvasContext,
+  options: Readonly<{
+    x: number;
+    y: number;
+    width: number;
+    text: unknown;
+    font?: string;
+    lineHeight?: number;
+    maxLines?: number;
+    ellipsis?: string;
+    align?: CanvasTextAlign;
+    baseline?: CanvasTextBaseline;
+    color?: string;
+  }>,
+  theme?: ArcadeUiTheme,
+): ArcadeTextLayout;
+
+export type ArcadeCommandDevice = 'keyboard' | 'gamepad' | 'pointer' | 'touch';
+export type ArcadeCommandHintInput = string | readonly string[];
+export type ArcadeCommandAction = Readonly<{
+  id: string;
+  label: string;
+  inputs?: Readonly<Partial<Record<ArcadeCommandDevice, ArcadeCommandHintInput>>>;
+  hidden?: boolean;
+  disabled?: boolean;
+  priority?: number;
+}>;
+export type ArcadeResolvedCommandHint = Readonly<{
+  id: string;
+  label: string;
+  input: string;
+  text: string;
+  disabled: boolean;
+  priority: number;
+  index: number;
+}>;
+export declare function resolveArcadeCommandHints(
+  actions?: readonly ArcadeCommandAction[],
+  options?: { device?: ArcadeCommandDevice },
+): Readonly<{ device: ArcadeCommandDevice; hints: readonly ArcadeResolvedCommandHint[] }>;
+
+export declare function drawArcadeCommandBarCanvas(
+  context: ArcadeUiCanvasContext,
+  options: Readonly<{
+    actions: readonly ArcadeCommandAction[];
+    device?: ArcadeCommandDevice;
+    x?: number;
+    y?: number;
+    width?: number;
+    lineHeight?: number;
+    font?: string;
+    separator?: string;
+    maxLines?: number;
+    backgroundAlpha?: number;
+    strong?: boolean;
+    accent?: string;
+    align?: CanvasTextAlign;
+  }>,
+  theme?: ArcadeUiTheme,
+): Readonly<{
+  device: ArcadeCommandDevice;
+  hints: readonly ArcadeResolvedCommandHint[];
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  lines: readonly string[];
+  truncated: boolean;
+}>;
+
+export type ArcadeNoticeKind = 'info' | 'success' | 'warning' | 'danger';
+export type ArcadeNotice = Readonly<{
+  id: string;
+  key: string;
+  message: string;
+  title: string;
+  kind: ArcadeNoticeKind;
+  priority: number;
+  duration: number;
+  remaining: number;
+  sequence: number;
+  detail: Readonly<Record<string, unknown>>;
+}>;
+export type ArcadeNoticeInput = string | Readonly<{
+  id?: string;
+  key?: string;
+  message: string;
+  title?: string;
+  kind?: ArcadeNoticeKind;
+  priority?: number;
+  duration?: number;
+  dedupe?: boolean;
+  detail?: Readonly<Record<string, unknown>>;
+}>;
+export declare function createArcadeNoticeQueue(options?: {
+  capacity?: number;
+  defaultDuration?: number;
+  events?: ArcadeEventBus<any>;
+}): {
+  events: ArcadeEventBus<any>;
+  push(input: ArcadeNoticeInput, detail?: Readonly<Record<string, unknown>>): ArcadeNotice;
+  current(): ArcadeNotice | null;
+  step(delta?: number): ArcadeNotice | null;
+  dismiss(id: string, reason?: string): boolean;
+  clear(reason?: string): number;
+  snapshot(): Readonly<{
+    capacity: number;
+    defaultDuration: number;
+    currentId: string | null;
+    notices: readonly ArcadeNotice[];
+  }>;
+};
+
+export declare function drawArcadeNoticeCanvas(
+  context: ArcadeUiCanvasContext,
+  notice: ArcadeNotice | null,
+  options?: Readonly<{
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    accent?: string;
+    font?: string;
+    lineHeight?: number;
+    maxLines?: number;
+  }>,
+  theme?: ArcadeUiTheme,
+): Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  accent: string;
+  ratio: number;
+  textLayout: ArcadeTextLayout;
+}> | null;
 
 export interface ArcadePixiFramePoolSnapshot {
   readonly frame: number;

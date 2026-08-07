@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { completeAsteroidObjectives } from './helpers/asteroid-objectives';
 
 interface SpriteRuntimeWindow extends Window {
 	__badger: BadgerTestHarness;
@@ -203,16 +204,39 @@ async function installSaveAndDrawProbe(page: Page, stage: StoryStageSeed): Promi
 	}, stage);
 }
 
-async function enterStoryStage(
-	page: Page,
-	stage: StoryStageSeed & { choiceFigureFile?: string }
-): Promise<void> {
+async function enterStoryFlow(page: Page, stageId: string): Promise<void> {
 	await page.goto('/');
 	await page.waitForFunction(() => Boolean((window as Partial<SpriteRuntimeWindow>).__badger));
 	await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.routeMode('story'));
 	await expect
 		.poll(() => page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getSceneName()))
+		.toBe('SubwayMapScene');
+	await page.evaluate((currentStageId) => {
+		const runtimeWindow = window as SpriteRuntimeWindow & {
+			__app?: {
+				getCurrentScene(): {
+					selectLocation?(locationId: string): boolean;
+					confirmSelection?(): void;
+				} | null;
+			};
+		};
+		const routeId = `${currentStageId}:route`;
+		const travel = runtimeWindow.__badger.debugTravelTo(routeId);
+		if (!travel.ok) throw new Error(`failed to prepare ${routeId}: ${travel.reason}`);
+		const scene = runtimeWindow.__app?.getCurrentScene();
+		if (!scene?.selectLocation?.(routeId)) throw new Error(`could not select ${routeId}`);
+		scene.confirmSelection?.();
+	}, stageId);
+	await expect
+		.poll(() => page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getSceneName()))
 		.toBe('StoryFlowScene');
+}
+
+async function enterStoryStage(
+	page: Page,
+	stage: StoryStageSeed & { choiceFigureFile?: string }
+): Promise<void> {
+	await enterStoryFlow(page, stage.stageId);
 	for (let safety = 0; safety < 12; safety += 1) {
 		const mode = await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getStoryState().mode);
 		if (mode === 'stage') break;
@@ -299,12 +323,7 @@ test('training combat draws the imported combat VFX atlas', async ({ page }) => 
 
 test('lower sprawl draws mapped skyline and authored enemy sheets', async ({ page }) => {
 	await installSaveAndDrawProbe(page, LOWER_SPRAWL_SEED);
-	await page.goto('/');
-	await page.waitForFunction(() => Boolean((window as Partial<SpriteRuntimeWindow>).__badger));
-	await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.routeMode('story'));
-	await expect
-		.poll(() => page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getSceneName()))
-		.toBe('StoryFlowScene');
+	await enterStoryFlow(page, LOWER_SPRAWL_SEED.stageId);
 	for (let safety = 0; safety < 12; safety += 1) {
 		const mode = await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getStoryState().mode);
 		if (mode === 'stage') break;
@@ -323,6 +342,14 @@ test('lower sprawl draws mapped skyline and authored enemy sheets', async ({ pag
 			sheetId
 		);
 	}
+	const piker = (await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getEnemies()))?.find(
+		(enemy) => enemy.spriteSheetId === 'enemy_rent_cop_piker'
+	);
+	expect(piker, JSON.stringify(await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getEnemies()))).toBeTruthy();
+	await page.evaluate(
+		([x, y]) => (window as SpriteRuntimeWindow).__badger.teleportPlayer(x - 120, y),
+		[piker?.x ?? 1180, piker?.y ?? 462]
+	);
 	for (const filename of [
 		'lower_sprawl_parallax.png',
 		'lower_sprawl_tiles.png',
@@ -331,22 +358,19 @@ test('lower sprawl draws mapped skyline and authored enemy sheets', async ({ pag
 	]) {
 		await expect
 			.poll(() =>
-				page.evaluate((file) =>
-					(window as SpriteRuntimeWindow).__drawnSpriteSources.some((source) => source.includes(file))
-				, filename)
+				page.evaluate(() =>
+					(window as SpriteRuntimeWindow).__drawnSpriteSources.map((source) =>
+						source.slice(source.lastIndexOf('/') + 1)
+					)
+				)
 			)
-			.toBe(true);
+			.toContain(filename);
 	}
 });
 
 test('drainmarket briefing draws the mapped DJ Calculus portrait', async ({ page }) => {
 	await installSaveAndDrawProbe(page, DRAINMARKET_SEED);
-	await page.goto('/');
-	await page.waitForFunction(() => Boolean((window as Partial<SpriteRuntimeWindow>).__badger));
-	await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.routeMode('story'));
-	await expect
-		.poll(() => page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getSceneName()))
-		.toBe('StoryFlowScene');
+	await enterStoryFlow(page, DRAINMARKET_SEED.stageId);
 	for (let safety = 0; safety < 6; safety += 1) {
 		const presentation = await page.evaluate(() =>
 			(window as SpriteRuntimeWindow).__badger.getStoryPresentation()
@@ -380,6 +404,7 @@ for (const stage of CASES) {
 			},
 			[stage.enemySheetId, stage.bossSheetId]
 		);
+		if (stage.stageId === 'asteroid-redoubt') await completeAsteroidObjectives(page);
 		const enemies = await page.evaluate(() => (window as SpriteRuntimeWindow).__badger.getEnemies());
 		expect(enemies?.some((enemy) => enemy.spriteSheetId === stage.enemySheetId)).toBe(true);
 		expect(enemies?.some((enemy) => enemy.bossSpriteSheetId === stage.bossSheetId)).toBe(true);
@@ -399,10 +424,12 @@ for (const stage of CASES) {
 		);
 		await expect
 			.poll(() =>
-				page.evaluate((file) =>
-					(window as SpriteRuntimeWindow).__drawnSpriteSources.some((source) => source.includes(file))
-				, stage.bossFile)
+				page.evaluate(() =>
+					(window as SpriteRuntimeWindow).__drawnSpriteSources.map((source) =>
+						source.slice(source.lastIndexOf('/') + 1)
+					)
+				)
 			)
-			.toBe(true);
+			.toContain(stage.bossFile);
 	});
 }

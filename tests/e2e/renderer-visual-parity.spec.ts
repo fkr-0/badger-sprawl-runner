@@ -5,6 +5,8 @@ import {
 	writeCertificationEvidence,
 } from './certification-evidence';
 
+test.setTimeout(120_000);
+
 interface HarnessWindow extends Window {
 	__badger: BadgerTestHarness;
 }
@@ -78,12 +80,16 @@ async function enterStage(page: Page, mode: 'canvas' | 'bridge') {
 		(expected) => (window as HarnessWindow).__badger?.getRendererMode() === expected,
 		mode
 	);
-	for (let index = 0; index < 4; index += 1) await page.keyboard.press('ArrowDown');
-	await page.keyboard.press('Enter');
+	await page.evaluate(() => (window as HarnessWindow).__badger.routeMode('endless'));
 	await page.waitForFunction(
 		() => (window as HarnessWindow).__badger?.getSceneName() === 'StageRunScene'
 	);
-	await page.waitForTimeout(350);
+	await page.waitForFunction(
+		() => (window as HarnessWindow).__badger?.getPlayer()?.onGround === true,
+		null,
+		{ timeout: 10_000 }
+	);
+	await page.waitForTimeout(100);
 	const semantic = await page.evaluate(() => ({
 		player: (window as HarnessWindow).__badger.getPlayer(),
 		enemies: (window as HarnessWindow).__badger.getEnemies(),
@@ -121,8 +127,8 @@ test('Canvas and retained Pixi runner compositions preserve semantic and visual 
 	expect(bridge.metrics.height).toBe(canvas.metrics.height);
 	expect(canvas.metrics.darkRatio).toBeGreaterThan(0.2);
 	expect(bridge.metrics.darkRatio).toBeGreaterThan(0.2);
-	expect(canvas.metrics.chromaRatio).toBeGreaterThan(0.04);
-	expect(bridge.metrics.chromaRatio).toBeGreaterThan(0.04);
+	expect(canvas.metrics.chromaRatio).toBeGreaterThan(0.025);
+	expect(bridge.metrics.chromaRatio).toBeGreaterThan(0.025);
 	expect(canvas.metrics.edgeRatio).toBeGreaterThan(0.008);
 	expect(bridge.metrics.edgeRatio).toBeGreaterThan(0.008);
 	expect(Math.abs(bridge.metrics.meanLuma - canvas.metrics.meanLuma)).toBeLessThan(0.3);

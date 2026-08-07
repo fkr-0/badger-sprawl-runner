@@ -22,8 +22,7 @@ async function enterEndlessStage(page: Page, mode: 'canvas' | 'bridge') {
 		mode,
 		{ timeout: 15_000 }
 	);
-	for (let index = 0; index < 4; index += 1) await page.keyboard.press('ArrowDown');
-	await page.keyboard.press('Enter');
+	await page.evaluate(() => (window as HarnessWindow).__badger.routeMode('endless'));
 	await waitForScene(page, 'StageRunScene');
 	await page.waitForFunction(
 		() => ((window as Partial<HarnessWindow>).__badger?.getRendererPerformance().count ?? 0) >= 15,

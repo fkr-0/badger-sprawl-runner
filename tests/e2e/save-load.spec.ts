@@ -3,6 +3,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 async function waitForScene(page: import('@playwright/test').Page, name: string, timeout = 5000): Promise<void> {
 	await page.waitForFunction(
@@ -59,16 +60,8 @@ test.describe('Story Mode Save Integration', () => {
 		await page.goto('/');
 		await waitForScene(page, 'TitleScene');
 
-		// Enter Story mode
-		await page.keyboard.press('Enter');
-		await page.waitForFunction(
-			() => {
-				const s = (window as any).__badger?.getSceneName();
-				return s === 'StoryFlowScene' || s === 'StageRunScene';
-			},
-			null,
-			{ timeout: 5000 },
-		);
+		// Enter the current persistent-city story route.
+		await enterStoryFlow(page);
 
 		// Advance dialogue
 		for (let i = 0; i < 15; i++) {

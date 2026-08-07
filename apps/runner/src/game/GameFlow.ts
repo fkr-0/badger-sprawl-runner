@@ -11,13 +11,24 @@ import {
 	type StageTemplate,
 } from './Campaign';
 import { MODE_OPTIONS } from './ModeMenu';
+import type { ResolutionApproach } from './ResolutionApproach';
+import type { DroppedItem } from '../systems/ItemDropSystem';
+import type { BuildTelemetrySnapshot } from '../systems/BuildComparisonTelemetrySystem';
+import { sanitizeBuildTelemetryHistory } from '../systems/BuildComparisonTelemetrySystem';
+import type { ExpeditionCommit } from './adventure/ExpeditionLedger';
 import {
 	advanceBadgerCampaignStage,
 	createBadgerCampaignStageState,
 	inspectBadgerCampaignProgress,
 } from './RuntimeStageComposition';
 import { createDefaultStoryProgress, migrateStoryProgress } from './StoryProgressMigration';
-export type MenuOptionId = 'story' | 'versus' | 'training' | 'skills' | 'endless';
+export type MenuOptionId =
+	| 'story'
+	| 'versus'
+	| 'training'
+	| 'skills'
+	| 'builds'
+	| 'endless';
 
 export interface MenuOption {
 	id: MenuOptionId;
@@ -137,6 +148,7 @@ export interface MetaState {
 	unlockedBoons: string[];
 	purchasedSkills: string[];
 	skillRanks?: Record<string, number>;
+	buildTelemetryHistory?: BuildTelemetrySnapshot[];
 }
 
 export interface StoryProgress {
@@ -174,6 +186,14 @@ export interface StageRuntimeResult {
 	completedQuestIds: string[];
 	completedMinigameIds: string[];
 	completedTutorialIds: string[];
+	expeditionCommit?: ExpeditionCommit;
+	rewardDrops?: DroppedItem[];
+	buildTelemetry?: BuildTelemetrySnapshot;
+	resolutionApproaches?: ResolutionApproach[];
+	resolutionConstraints?: {
+		nonLethal?: boolean;
+		undetected?: boolean;
+	};
 }
 
 export type SkillPurchaseFailure =
@@ -186,6 +206,10 @@ export type SkillPurchaseResult =
 	| { ok: true; state: MetaState; node: SkillNode }
 	| { ok: false; state: MetaState; reason: SkillPurchaseFailure };
 
+export type CredchipTransactionResult =
+	| { ok: true; balance: number }
+	| { ok: false; balance: number; reason: 'invalid-amount' | 'insufficient-credchips' };
+
 export type GameFlowState =
 	| { mode: 'menu' }
 	| { mode: 'title-card'; stageId: string; stageIndex: number; placard: string }
@@ -195,6 +219,7 @@ export type GameFlowState =
 	| { mode: 'versus'; arenaId: string; winScore: number; playerScore: number; rivalScore: number }
 	| { mode: 'training'; dummy: { label: string; invincible: true; hp: 'infinite' } }
 	| { mode: 'skills'; selectedSkillId: string }
+	| { mode: 'builds'; selectedBuildId: string; detailPage: 'routes' | 'evidence' }
 	| { mode: 'endless'; seed: string; floor: number };
 
 const MENU_OPTIONS: MenuOption[] = MODE_OPTIONS;
@@ -312,6 +337,7 @@ function createDefaultMetaState(): MetaState {
 		unlockedBoons: [],
 		purchasedSkills: [],
 		skillRanks: {},
+		buildTelemetryHistory: [],
 	};
 }
 
@@ -395,6 +421,9 @@ export class GameFlow {
 			...Object.fromEntries(this.meta.purchasedSkills.map((id) => [id, 1])),
 			...(meta.skillRanks ?? {}),
 		};
+		this.meta.buildTelemetryHistory = sanitizeBuildTelemetryHistory(
+			meta.buildTelemetryHistory
+		);
 		this.storyProgress = migrateStoryProgress({
 			...createDefaultStoryProgress(),
 			...storyProgress,
@@ -412,6 +441,11 @@ export class GameFlow {
 
 	getStoryProgress(): StoryProgress {
 		return cloneState(this.storyProgress);
+	}
+
+	getBuildTelemetryHistory(stageId?: string): BuildTelemetrySnapshot[] {
+		const history = sanitizeBuildTelemetryHistory(this.meta.buildTelemetryHistory);
+		return stageId ? history.filter((run) => run.stageId === stageId) : history;
 	}
 
 	getCampaignRuntimeSnapshot() {
@@ -488,6 +522,7 @@ export class GameFlow {
 			state.mode === 'versus' ||
 			state.mode === 'training' ||
 			state.mode === 'skills' ||
+			state.mode === 'builds' ||
 			state.mode === 'endless'
 		) {
 			return undefined;
@@ -538,6 +573,7 @@ export class GameFlow {
 			state.mode === 'versus' ||
 			state.mode === 'training' ||
 			state.mode === 'skills' ||
+			state.mode === 'builds' ||
 			state.mode === 'endless'
 		) {
 			return undefined;
@@ -586,6 +622,13 @@ export class GameFlow {
 				break;
 			case 'skills':
 				this.state = { mode: 'skills', selectedSkillId: 'double_swipe' };
+				break;
+			case 'builds':
+				this.state = {
+					mode: 'builds',
+					selectedBuildId: 'ghost-signal',
+					detailPage: 'routes',
+				};
 				break;
 			case 'endless':
 				this.state = { mode: 'endless', seed: 'endless-sprawl', floor: 1 };
@@ -774,6 +817,29 @@ export class GameFlow {
 		return result;
 	}
 
+	spendCredchips(amount: number): CredchipTransactionResult {
+		if (!Number.isInteger(amount) || amount <= 0) {
+			return { ok: false, balance: this.meta.credchips, reason: 'invalid-amount' };
+		}
+		if (this.meta.credchips < amount) {
+			return {
+				ok: false,
+				balance: this.meta.credchips,
+				reason: 'insufficient-credchips',
+			};
+		}
+		this.meta = { ...this.meta, credchips: this.meta.credchips - amount };
+		return { ok: true, balance: this.meta.credchips };
+	}
+
+	grantCredchips(amount: number): CredchipTransactionResult {
+		if (!Number.isInteger(amount) || amount <= 0) {
+			return { ok: false, balance: this.meta.credchips, reason: 'invalid-amount' };
+		}
+		this.meta = { ...this.meta, credchips: this.meta.credchips + amount };
+		return { ok: true, balance: this.meta.credchips };
+	}
+
 	recordStageRuntimeResult(result: StageRuntimeResult): void {
 		const currentStage = this.getCurrentStage();
 		if (!currentStage || currentStage.id !== result.stageId) return;
@@ -782,6 +848,12 @@ export class GameFlow {
 		let dubFavorDelta = 0;
 		let credchipDelta = 0;
 		const nextBoons = new Set(this.meta.unlockedBoons);
+		const telemetryHistory = result.buildTelemetry
+			? sanitizeBuildTelemetryHistory([
+					...(this.meta.buildTelemetryHistory ?? []),
+					result.buildTelemetry,
+				])
+			: sanitizeBuildTelemetryHistory(this.meta.buildTelemetryHistory);
 
 		for (const questId of result.completedQuestIds) {
 			const flag = `quest_${questId.replaceAll('-', '_')}`;
@@ -819,6 +891,7 @@ export class GameFlow {
 			credchips: this.meta.credchips + credchipDelta,
 			dubFavor: this.meta.dubFavor + dubFavorDelta,
 			unlockedBoons: [...nextBoons],
+			buildTelemetryHistory: telemetryHistory,
 		};
 	}
 

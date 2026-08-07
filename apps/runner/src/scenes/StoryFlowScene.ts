@@ -7,6 +7,7 @@ import { buildStageRunSceneOptions } from '../game/StageRunOptions';
 import { getDialoguePortrait } from '../renderer/DialoguePortraitRenderer';
 import type { Renderer } from '../renderer/Renderer';
 import type { AutosaveFeedback, AutosaveReason } from '../storage/AutosaveFeedback';
+import { createArcadeNoticeQueue, drawArcadeNotice, fitArcadeText } from '../ui/ArcadeUi';
 import type { StageRunSceneOptions } from './StageRunScene';
 
 function formatSigned(value: number): string {
@@ -44,6 +45,7 @@ export interface StoryPanelLayoutSnapshot {
 export interface StoryFlowSceneOptions {
 	onStartStage?: (options: StageRunSceneOptions) => void;
 	onAutosave?: (reason: AutosaveReason) => AutosaveFeedback | undefined;
+	onReturnToWorld?: () => void;
 	onReturnToTitle?: () => void;
 }
 
@@ -80,6 +82,7 @@ export class StoryFlowScene implements Scene {
 	private debugPanelVisible = false;
 	private lastDebugDetail: StageDebugDetail | null = null;
 	private lastAutosaveFeedback: AutosaveFeedback | null = null;
+	private readonly notices = createArcadeNoticeQueue({ capacity: 4, defaultDuration: 3.2 });
 	private lastPanelLayout: StoryPanelLayoutSnapshot | null = null;
 	private storyTime = 0;
 
@@ -160,6 +163,7 @@ export class StoryFlowScene implements Scene {
 		}
 		this.keyHandler = (event) => this.handleKeyDown(event);
 		window.addEventListener('keydown', this.keyHandler);
+		this.emitPresentation();
 	}
 
 	onExit(): void {
@@ -179,6 +183,7 @@ export class StoryFlowScene implements Scene {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
 				this.flow.advanceTitleCard();
+				this.emitPresentation();
 			}
 			return;
 		}
@@ -186,6 +191,7 @@ export class StoryFlowScene implements Scene {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
 				this.flow.advanceDialogue();
+				this.emitPresentation();
 			}
 			return;
 		}
@@ -199,7 +205,10 @@ export class StoryFlowScene implements Scene {
 				}
 				if (nextState.mode === 'menu' && this.flow.getStoryProgress().campaignComplete) {
 					this.options.onReturnToTitle?.();
+				} else if (nextState.mode !== 'debrief') {
+					this.options.onReturnToWorld?.();
 				}
+				this.emitPresentation();
 			}
 			return;
 		}
@@ -222,9 +231,11 @@ export class StoryFlowScene implements Scene {
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			this.selectedChoiceIndex = (this.selectedChoiceIndex + choices.length - 1) % choices.length;
+			this.emitPresentation();
 		} else if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			this.selectedChoiceIndex = (this.selectedChoiceIndex + 1) % choices.length;
+			this.emitPresentation();
 		} else if (/^[1-9]$/.test(event.key)) {
 			event.preventDefault();
 			const index = Number(event.key) - 1;
@@ -232,6 +243,7 @@ export class StoryFlowScene implements Scene {
 				this.selectedChoiceIndex = index;
 				const outcome = choices[index];
 				if (this.lastChoiceRecap?.resultFlag !== outcome?.resultFlag) this.chooseStageChoice(index);
+				this.emitPresentation();
 			}
 		} else if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
@@ -240,8 +252,15 @@ export class StoryFlowScene implements Scene {
 				this.startCurrentStage();
 			} else {
 				this.chooseStageChoice(this.selectedChoiceIndex);
+				this.emitPresentation();
 			}
 		}
+	}
+
+	private emitPresentation(): void {
+		window.dispatchEvent(
+			new CustomEvent('badger:story-presentation', { detail: this.getPresentationSnapshot() })
+		);
 	}
 
 	private syncStageSelection(stage: NonNullable<ReturnType<GameFlow['getCurrentStage']>>): void {
@@ -251,6 +270,7 @@ export class StoryFlowScene implements Scene {
 		this.lastChoiceResult = '';
 		this.lastChoiceRecap = null;
 		this.lastAutosaveFeedback = null;
+		this.notices.clear('stage-change');
 		this.lastPanelLayout = null;
 
 		const resultFlags = new Set(this.flow.getStoryProgress().resultFlags);
@@ -312,6 +332,16 @@ export class StoryFlowScene implements Scene {
 			this.lastChoiceRecap = this.buildChoiceRecap(stage.id, outcome);
 			const autosaveFeedback = this.options.onAutosave?.('branch-choice');
 			this.lastAutosaveFeedback = autosaveFeedback ? { ...autosaveFeedback } : null;
+			if (autosaveFeedback) {
+				this.notices.push({
+					key: 'story-autosave',
+					title: 'Archive pulse',
+					message: autosaveFeedback.label,
+					kind: 'success',
+					duration: 3.2,
+					detail: { reason: autosaveFeedback.reason, timestamp: autosaveFeedback.timestamp },
+				});
+			}
 			window.dispatchEvent(
 				new CustomEvent('badger:story-choice-recap', { detail: this.lastChoiceRecap })
 			);
@@ -332,7 +362,9 @@ export class StoryFlowScene implements Scene {
 	}
 
 	update(dt: number): void {
-		this.storyTime += Math.max(0, dt);
+		const elapsed = Math.max(0, dt);
+		this.storyTime += elapsed;
+		this.notices.step(elapsed);
 	}
 
 	render(renderer: Renderer, _alpha: number): void {
@@ -648,16 +680,7 @@ export class StoryFlowScene implements Scene {
 	}
 
 	private fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
-		if (ctx.measureText(text).width <= maxWidth) return text;
-		const ellipsis = '…';
-		let low = 0;
-		let high = text.length;
-		while (low < high) {
-			const middle = Math.ceil((low + high) / 2);
-			if (ctx.measureText(`${text.slice(0, middle)}${ellipsis}`).width <= maxWidth) low = middle;
-			else high = middle - 1;
-		}
-		return `${text.slice(0, low).trimEnd()}${ellipsis}`;
+		return fitArcadeText(ctx, text, maxWidth);
 	}
 
 	private renderStageDebugPanel(ctx: CanvasRenderingContext2D): void {
@@ -691,11 +714,13 @@ export class StoryFlowScene implements Scene {
 	}
 
 	private renderAutosaveFeedback(ctx: CanvasRenderingContext2D, x: number, y: number): void {
-		const feedback = this.lastAutosaveFeedback;
-		if (!feedback) return;
-		ctx.fillStyle = '#67f3c4';
-		ctx.font = '700 11px ui-monospace, monospace';
-		ctx.fillText(`✓ ${feedback.label}`, x, y);
+		drawArcadeNotice(ctx, this.notices.current(), {
+			x,
+			y: y - 18,
+			width: 260,
+			height: 50,
+			maxLines: 1,
+		});
 	}
 
 	private renderChoiceRecap(

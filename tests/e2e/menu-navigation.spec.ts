@@ -27,7 +27,7 @@ test.describe('Title Menu', () => {
 	});
 
 	test('should route to Endless mode via ArrowDown + Enter', async ({ page }) => {
-		for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowDown');
+		for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
 		await page.keyboard.press('Enter');
 		await waitForScene(page, 'StageRunScene');
 		expect(await sceneName(page)).toBe('StageRunScene');
@@ -43,16 +43,8 @@ test.describe('Title Menu', () => {
 
 	test('should route to Story mode', async ({ page }) => {
 		await page.keyboard.press('Enter');
-		await page.waitForFunction(
-			() => {
-				const s = (window as any).__badger?.getSceneName();
-				return s === 'StoryFlowScene' || s === 'StageRunScene';
-			},
-			null,
-			{ timeout: 5000 },
-		);
-		const scene = await sceneName(page);
-		expect(['StoryFlowScene', 'StageRunScene']).toContain(scene);
+		await waitForScene(page, 'SubwayMapScene');
+		expect(await sceneName(page)).toBe('SubwayMapScene');
 	});
 
 	test('should route to Training mode', async ({ page }) => {
@@ -71,7 +63,7 @@ test.describe('Title Menu', () => {
 	});
 
 	test('should route to Endless mode', async ({ page }) => {
-		for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowDown');
+		for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
 		await page.keyboard.press('Enter');
 		await waitForScene(page, 'StageRunScene');
 		expect(await sceneName(page)).toBe('StageRunScene');

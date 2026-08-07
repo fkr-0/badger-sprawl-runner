@@ -23,4 +23,24 @@ spriteSheetMaker_vH42/
 spriteSheetMaker_vH42.zip
 workflow.json
 
+# Local agent and nested-worktree state
+.ws-bridge/
+.opencode/
+.claude/worktrees/
 .worktrees/
+
+# Generated release evidence and raw/review image workspaces
+release-evidence/
+images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/
+images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet.zip
+gimp-anchor-refs/
+renders/
+renders-raw/
+renders-rejected/
+review_unmatched_images.html
+docs/sprite-production/chronicle-images-*/
+docs/sprite-production/*.zip
+
+# Python caches
+**/__pycache__/
+*.py[cod]

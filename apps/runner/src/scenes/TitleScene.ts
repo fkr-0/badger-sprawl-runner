@@ -2,25 +2,30 @@
  * TitleScene - main menu scene
  */
 
+import { createGridFocusNavigator } from '../../../../vendor/arcade-runtime.mjs';
 import type { Scene } from '../engine/SceneManager';
-import type { Renderer } from '../renderer/Renderer';
 import type { SceneContext } from '../engine/SceneManager';
-import { buildEndingCard, type EndingCard } from '../game/EndingCards';
+import { type EndingCard, buildEndingCard } from '../game/EndingCards';
 import type { MenuOption, MenuOptionId, StoryProgress } from '../game/GameFlow';
 import { MODE_OPTIONS } from '../game/ModeMenu';
 import {
+	type StoryProgressSummary,
 	buildStoryProgressSummary,
 	formatStoryProgressSummary,
-	type StoryProgressSummary,
 } from '../game/StoryProgressSummary';
+import type { Renderer } from '../renderer/Renderer';
 import {
 	ARCADE_UI_FONT,
 	BADGER_UI,
 	drawArcadeBackdrop,
-	drawArcadeFooter,
+	drawArcadeCommandBar,
 	drawArcadeMenuRow,
 	drawArcadePanel,
+	drawArcadeScreenTitle,
+	drawArcadeTextBlock,
+	fitArcadeText,
 } from '../ui/ArcadeUi';
+import type { ArcadeCommandAction } from '../ui/ArcadeUi';
 
 export type MenuCommand = 'up' | 'down' | 'confirm' | 'cancel';
 
@@ -34,8 +39,12 @@ export class TitleScene implements Scene {
 	readonly name = 'TitleScene';
 
 	private keyHandler: ((e: KeyboardEvent) => void) | null = null;
-	private selectedOption = 0;
 	private readonly menuOptions = MODE_OPTIONS;
+	private readonly navigation = createGridFocusNavigator({
+		columns: 1,
+		wrapY: true,
+		items: MODE_OPTIONS.map((option) => ({ id: option.id })),
+	});
 
 	constructor(private readonly options: TitleSceneOptions = {}) {}
 
@@ -48,7 +57,8 @@ export class TitleScene implements Scene {
 	}
 
 	private getCurrentOption(): MenuOption {
-		return this.menuOptions[this.selectedOption] ?? this.getDefaultOption();
+		const focusedId = this.navigation.current()?.id;
+		return this.menuOptions.find((option) => option.id === focusedId) ?? this.getDefaultOption();
 	}
 
 	getSelectedOption(): MenuOption {
@@ -56,8 +66,8 @@ export class TitleScene implements Scene {
 	}
 
 	moveSelection(delta: number): void {
-		this.selectedOption =
-			(this.selectedOption + delta + this.menuOptions.length) % this.menuOptions.length;
+		const direction = delta < 0 ? 'up' : 'down';
+		this.navigation.moveBy(direction, Math.abs(delta));
 	}
 
 	confirmSelection(): void {
@@ -83,20 +93,30 @@ export class TitleScene implements Scene {
 
 	onEnter(_ctx: SceneContext): void {
 		console.log('TitleScene entered');
-		window.dispatchEvent(new CustomEvent('badger:title-progress-summary', { detail: this.getStoryProgressSummary() }));
+		window.dispatchEvent(
+			new CustomEvent('badger:title-progress-summary', { detail: this.getStoryProgressSummary() })
+		);
 		const endingCard = this.getEndingCard();
-		if (endingCard) window.dispatchEvent(new CustomEvent('badger:ending-card', { detail: endingCard }));
+		if (endingCard)
+			window.dispatchEvent(new CustomEvent('badger:ending-card', { detail: endingCard }));
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			switch (e.code) {
 				case 'ArrowUp':
-					this.moveSelection(-1);
+					this.handleMenuCommand('up');
+					e.preventDefault();
 					break;
 				case 'ArrowDown':
-					this.moveSelection(1);
+					this.handleMenuCommand('down');
+					e.preventDefault();
 					break;
 				case 'Enter':
 				case 'Space':
-					this.confirmSelection();
+					this.handleMenuCommand('confirm');
+					e.preventDefault();
+					break;
+				case 'Escape':
+					this.handleMenuCommand('cancel');
+					e.preventDefault();
 					break;
 			}
 		};
@@ -130,13 +150,14 @@ export class TitleScene implements Scene {
 	}
 
 	getStoryProgressSummary(): StoryProgressSummary | null {
-		return this.options.storyProgress ? buildStoryProgressSummary(this.options.storyProgress) : null;
+		return this.options.storyProgress
+			? buildStoryProgressSummary(this.options.storyProgress)
+			: null;
 	}
 
 	getEndingCard(): EndingCard | null {
 		return this.options.storyProgress ? buildEndingCard(this.options.storyProgress) : null;
 	}
-
 
 	private renderEndingCard(ctx: CanvasRenderingContext2D, W: number, H: number): void {
 		const card = this.getEndingCard();
@@ -159,11 +180,11 @@ export class TitleScene implements Scene {
 		ctx.fillText(card.title, x + 18, y + 42);
 		ctx.font = `12px ${ARCADE_UI_FONT}`;
 		ctx.fillStyle = BADGER_UI.text;
-		ctx.fillText(card.subtitle.slice(0, 45), x + 18, y + 62);
+		ctx.fillText(fitArcadeText(ctx, card.subtitle, width - 36), x + 18, y + 62);
 		ctx.fillStyle = BADGER_UI.muted;
-		ctx.fillText(card.body.slice(0, 49), x + 18, y + 82);
+		ctx.fillText(fitArcadeText(ctx, card.body, width - 36), x + 18, y + 82);
 		ctx.fillStyle = BADGER_UI.warning;
-		ctx.fillText(card.closingLine.slice(0, 49), x + 18, y + 102);
+		ctx.fillText(fitArcadeText(ctx, card.closingLine, width - 36), x + 18, y + 102);
 	}
 
 	private renderStoryProgress(ctx: CanvasRenderingContext2D, W: number, _H: number): void {
@@ -188,10 +209,10 @@ export class TitleScene implements Scene {
 		ctx.fillText(lines[0] ?? 'New Story', x + 18, y + 42);
 		ctx.font = `11px ${ARCADE_UI_FONT}`;
 		ctx.fillStyle = BADGER_UI.text;
-		ctx.fillText((lines[1] ?? '').slice(0, 42), x + 18, y + 61);
+		ctx.fillText(fitArcadeText(ctx, lines[1] ?? '', width - 36), x + 18, y + 61);
 		ctx.fillStyle = BADGER_UI.muted;
-		ctx.fillText((lines[2] ?? '').slice(0, 42), x + 18, y + 78);
-		ctx.fillText((lines[3] ?? '').slice(0, 42), x + 18, y + 94);
+		ctx.fillText(fitArcadeText(ctx, lines[2] ?? '', width - 36), x + 18, y + 78);
+		ctx.fillText(fitArcadeText(ctx, lines[3] ?? '', width - 36), x + 18, y + 94);
 	}
 
 	private renderTitle(ctx: CanvasRenderingContext2D): void {
@@ -199,18 +220,14 @@ export class TitleScene implements Scene {
 		const H = ctx.canvas.height;
 		drawArcadeBackdrop(ctx);
 
-		ctx.fillStyle = BADGER_UI.muted;
-		ctx.font = `700 11px ${ARCADE_UI_FONT}`;
-		ctx.textAlign = 'center';
-		ctx.fillText('SPRAWL SIGNAL // MOSS-01', W / 2, Math.max(54, H * 0.11));
-
-		ctx.fillStyle = BADGER_UI.text;
-		ctx.font = `900 46px ${ARCADE_UI_FONT}`;
-		ctx.fillText('BADGER SPRAWL RUNNER', W / 2, Math.max(104, H * 0.2));
-		ctx.fillStyle = BADGER_UI.accent;
-		ctx.fillRect(W / 2 - 92, Math.max(116, H * 0.22), 184, 3);
-		ctx.font = `700 14px ${ARCADE_UI_FONT}`;
-		ctx.fillText('A CYBER-PLATFORMER ADVENTURE', W / 2, Math.max(144, H * 0.27));
+		drawArcadeScreenTitle(ctx, {
+			eyebrow: 'Sprawl signal // Moss-01',
+			title: 'Badger Sprawl Runner',
+			subtitle: 'A cyber-platformer adventure',
+			y: Math.max(66, H * 0.12),
+			titleSize: 46,
+			accent: BADGER_UI.text,
+		});
 
 		this.renderStoryProgress(ctx, W, H);
 		this.renderEndingCard(ctx, W, H);
@@ -231,19 +248,39 @@ export class TitleScene implements Scene {
 		for (let i = 0; i < this.menuOptions.length; i++) {
 			const option = this.menuOptions[i];
 			if (!option) continue;
-			const isSelected = i === this.selectedOption;
-			drawArcadeMenuRow(ctx, option.label, menuX + 16, menuY + 30 + i * 40, menuWidth - 32, isSelected);
+			const isSelected = i === this.navigation.index();
+			drawArcadeMenuRow(
+				ctx,
+				option.label,
+				menuX + 16,
+				menuY + 30 + i * 40,
+				menuWidth - 32,
+				isSelected
+			);
 		}
 
 		const selected = this.getCurrentOption();
-		ctx.textAlign = 'left';
-		ctx.font = `11px ${ARCADE_UI_FONT}`;
-		ctx.fillStyle = BADGER_UI.muted;
-		ctx.fillText(
-			selected.description.slice(0, 72).toUpperCase(),
-			menuX + 20,
-			menuY + menuHeight - 18
-		);
-		drawArcadeFooter(ctx, '↑ ↓ navigate  //  Enter deploy');
+		drawArcadeTextBlock(ctx, {
+			x: menuX + 20,
+			y: menuY + menuHeight - 28,
+			width: menuWidth - 40,
+			text: selected.description.toUpperCase(),
+			font: `11px ${ARCADE_UI_FONT}`,
+			lineHeight: 13,
+			maxLines: 2,
+			color: BADGER_UI.muted,
+		});
+		drawArcadeCommandBar(ctx, TITLE_COMMANDS);
 	}
 }
+
+const TITLE_COMMANDS: readonly ArcadeCommandAction[] = [
+	{
+		id: 'navigate',
+		label: 'choose route',
+		inputs: { keyboard: '↑ / ↓', gamepad: 'D-Pad' },
+		priority: 10,
+	},
+	{ id: 'confirm', label: 'deploy', inputs: { keyboard: 'Enter', gamepad: 'A' }, priority: 9 },
+	{ id: 'cancel', label: 'return', inputs: { keyboard: 'Esc', gamepad: 'B' } },
+];

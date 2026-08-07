@@ -19,7 +19,7 @@ function enterCurrentStage(flow: ReturnType<typeof createGameFlow>): void {
 }
 
 describe('Badger Sprawl Runner game flow', () => {
-	it('starts on a working menu with story, versus, training, and skills entries', () => {
+	it('starts on a working menu with world, combat, training, skill, build, and endless entries', () => {
 		const flow = createGameFlow();
 
 		expect(flow.getState().mode).toBe('menu');
@@ -28,6 +28,7 @@ describe('Badger Sprawl Runner game flow', () => {
 			'versus',
 			'training',
 			'skills',
+			'builds',
 			'endless',
 		]);
 		expect(flow.getCampaignRuntimeSnapshot()).toMatchObject({

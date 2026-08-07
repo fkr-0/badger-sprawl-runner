@@ -12,6 +12,7 @@ import {
 	createMeleeComboState,
 } from './MeleeComboSystem';
 import type { Entity } from './PhysicsSystem';
+import { resolveEliteLoopResistance } from './EliteLoopResistanceSystem';
 import {
 	type StatusEffect,
 	type StatusEvent,
@@ -67,8 +68,39 @@ export interface CombatEntity extends Entity {
 	procgenFamily?: string;
 	procgenRole?: string;
 	procgenAffixes?: string[];
+	combatRank?: 'standard' | 'elite' | 'boss';
+	loopResistanceMoveId?: string;
+	loopResistanceRepeatCount?: number;
+	loopResistanceLastHitTime?: number;
+	loopResistanceUntil?: number;
 	isDummy?: boolean;
 	flashTimer?: number;
+	awarenessState?: 'off-guard' | 'routine' | 'alert' | 'engaged';
+	awarenessLevel?: number;
+	awarenessDisposition?: 'off-guard' | 'routine' | 'alert';
+	communicationCellId?: string;
+	communicationRole?: 'observer' | 'relay' | 'enforcer' | 'isolated';
+	networkAlert?: number;
+	networkReportTrust?: number;
+	networkReportConflict?: number;
+	networkReportSourceId?: string;
+	networkReportSourceKind?: 'witness' | 'civilian-witness' | 'sensor' | 'spoofed-sensor' | 'relay';
+	networkSourceTrustWeight?: number;
+	networkDoctrineLabel?: string;
+	morale?: number;
+	cohesionState?: 'committed' | 'wavering' | 'retreating' | 'standing-down';
+	lastKnownPlayerX?: number;
+	lastKnownPlayerY?: number;
+	perceptionState?: 'calm' | 'investigating' | 'searching';
+	soundConfidence?: number;
+	lastHeardSoundKind?: string;
+	lastHeardSoundSourceId?: string;
+	soundPortalIds?: string[];
+	visionState?: 'visible' | 'occluded' | 'hidden';
+	visionConfidence?: number;
+	visionBlockerId?: string;
+	visionPortalIds?: string[];
+	encounterZoneId?: string;
 }
 
 function effectBool(entity: CombatEntity, key: string): boolean {
@@ -88,6 +120,7 @@ export type CombatEventKind =
 	| 'damage'
 	| 'block'
 	| 'poise-break'
+	| 'loop-resisted'
 	| 'combo-drop';
 
 export interface CombatEvent {
@@ -99,6 +132,9 @@ export interface CombatEvent {
 	combo?: number;
 	time?: number;
 	moveId?: string;
+	repeatCount?: number;
+	stunScale?: number;
+	poiseScale?: number;
 }
 
 export interface CombatEvents {
@@ -110,6 +146,7 @@ export interface CombatEvents {
 
 export interface AttackSpec {
 	id: string;
+	loopKey?: string;
 	source: 'player' | 'enemy';
 	damage: number;
 	damageType?: DamageType;
@@ -338,7 +375,7 @@ export class CombatSystem {
 			this.meleeCombos.set(player, combo);
 		}
 		combo.setUnlockedSkills(player.unlockedSkills ?? []);
-		const result = combo.attack(player, enemies, input, events);
+		const result = combo.attack(player, enemies, input, events, time);
 		if (!result) return null;
 		const finisherBonus =
 			result.move.input === 'finisher' ? effectNumber(player, 'finisherDamageBonus') : 0;
@@ -486,11 +523,30 @@ export class CombatSystem {
 
 			target.hp -= damage;
 			if (attack.source === 'enemy') target.invuln = Math.max(target.invuln, 0.5);
-			target.stun = Math.max(target.stun, attack.stun);
+			const loopResistance = resolveEliteLoopResistance(
+				target,
+				attack.loopKey ?? attack.id,
+				time,
+				attack.stun,
+				attack.poiseDamage ?? damage
+			);
+			target.stun = Math.max(target.stun, loopResistance.stun);
 			target.vx += attacker.dir * attack.knockbackX;
 			target.vy += attack.knockbackY ?? 0;
+			if (loopResistance.resisted) {
+				events?.onEvent?.({
+					kind: 'loop-resisted',
+					source: attack.source,
+					targetId: target.id,
+					time,
+					moveId: attack.loopKey ?? attack.id,
+					repeatCount: loopResistance.repeatCount,
+					stunScale: loopResistance.stunScale,
+					poiseScale: loopResistance.poiseScale,
+				});
+			}
 
-			const poiseDamage = attack.poiseDamage ?? damage;
+			const poiseDamage = loopResistance.poiseDamage;
 			if ((target.poise ?? 0) > 0) {
 				target.poise = Math.max(0, (target.poise ?? 0) - poiseDamage);
 				if (target.poise === 0) {

@@ -41,6 +41,10 @@ export interface Entity {
 	bossPhaseHint?: string;
 	airControlMultiplier?: number;
 	maxFallSpeedBonus?: number;
+	environmentGravityMultiplier?: number;
+	environmentAirControlMultiplier?: number;
+	environmentMaxFallSpeedDelta?: number;
+	landingNoiseMultiplier?: number;
 
 	// Game-feel and presentation state.
 	scaleX?: number;
@@ -140,15 +144,24 @@ export class PhysicsSystem {
 				: 1;
 		const runtimeParams = {
 			...defaultParams,
-			gravity: defaultParams.gravity * gravityMultiplier,
+			gravity:
+				defaultParams.gravity *
+				gravityMultiplier *
+				(player.environmentGravityMultiplier ?? 1),
 			runAccelGround: defaultParams.runAccelGround * (reversing ? TURN_ACCEL_MULTIPLIER_GROUND : 1),
 			runAccelAir:
 				defaultParams.runAccelAir *
 				(player.airControlMultiplier ?? 1) *
+				(player.environmentAirControlMultiplier ?? 1) *
 				(reversing ? TURN_ACCEL_MULTIPLIER_AIR : 1),
 			friction: player.isDodging ? DODGE_FRICTION : defaultParams.friction,
 			maxRunSpeed: player.isDodging ? DODGE_MAX_SPEED : defaultParams.maxRunSpeed,
-			maxFallSpeed: defaultParams.maxFallSpeed + (player.maxFallSpeedBonus ?? 0),
+			maxFallSpeed: Math.max(
+				240,
+				defaultParams.maxFallSpeed +
+					(player.maxFallSpeedBonus ?? 0) +
+					(player.environmentMaxFallSpeedDelta ?? 0)
+			),
 		};
 
 		const travelVy = player.vy;

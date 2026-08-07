@@ -1,0 +1,818 @@
+# =============================================================================
+# BADGER SPRAWL RUNNER — Comprehensive Code Review & Completion Guide
+# Generated: 2026-06-04
+# Project status: ~35% playable. Architecture scaffolded, many broken links.
+# =============================================================================
+
+meta:
+  total_source_files: ~180
+  total_test_files: ~55
+  estimated_build_status: VERIFIED GREEN 2026-06-04 (pnpm -r typecheck && pnpm -r test && pnpm -r build)
+  estimated_test_status: VERIFIED GREEN 2026-06-04 (workspace package tests pass; RunnerApp shell regression included)
+  overall_playability: PARTIAL PLAYABLE SHELL (RunnerApp render/update loop wired; further renderer/input/gameplay gaps remain)
+
+# =============================================================================
+# SECTION 1: CRITICAL BUILD-BREAKING BUGS
+# These must be fixed before anything compiles or runs.
+# =============================================================================
+
+build_breakers:
+
+  - id: BB-001
+    severity: CRITICAL
+    status: RESOLVED 2026-06-04
+    title: "WaveDirector imports non-existent symbols from EnemySystem"
+    file: apps/runner/src/systems/WaveDirector.ts
+    lines: [5, 6, 7]
+    detail: |
+      RESOLVED: EnemySystem now exports EnemyDef and EnemyEntity, owns an enemy
+      registry, and provides spawnEnemy(), getEnemies(), and clearEnemies().
+      EnemyFactory now exports getEnemyCost(). WaveDirector spawns through the
+      registry and reset() clears it.
+    fix: |
+      Implemented in EnemySystem.ts and EnemyFactory.ts. Covered by
+      EnemySystem.test.ts and WaveDirector.test.ts. Hidden Horde/Wave type surface
+      verified with targeted strict tsc over EnemySystem, EnemyFactory,
+      WaveDirector, and HordeScene.
+
+  - id: BB-002
+    severity: CRITICAL
+    status: RESOLVED 2026-06-04
+    title: "EnemyFactory imports non-existent EnemyDef and EnemyEntity from EnemySystem"
+    file: apps/runner/src/actors/EnemyFactory.ts
+    lines: [5]
+    detail: |
+      RESOLVED: EnemyDef and EnemyEntity are exported from EnemySystem.ts, and
+      EnemySystem exposes spawnEnemy/getEnemies/clearEnemies used by EnemyFactory.
+    fix: |
+      Implemented in EnemySystem.ts. Covered by EnemySystem.test.ts.
+
+  - id: BB-003
+    severity: CRITICAL
+    status: RESOLVED 2026-06-04
+    title: "HordeScene calls non-existent EnemySystem methods and wrong signature"
+    file: apps/runner/src/scenes/HordeScene.ts
+    lines: [73, 87, 109, 150]
+    detail: |
+      RESOLVED: EnemySystem now supports getEnemies() and a compatibility overload
+      for step(enemies, player, platforms, dt), so HordeScene typechecks. The
+      related CameraSystem.getState() and CombatSystem ActionMap mismatches were
+      also fixed while verifying HordeScene.
+    fix: |
+      Implemented in EnemySystem.ts, CameraSystem.ts, and CombatSystem.ts.
+      Covered by EnemySystem.test.ts, WaveDirector.test.ts, CameraSystem.test.ts,
+      and targeted strict tsc over HordeScene integration files.
+
+  - id: BB-004
+    severity: CRITICAL
+    status: RESOLVED 2026-06-04
+    title: "No game loop — app.start() does not create a render/update cycle"
+    file: apps/runner/src/main.ts + apps/runner/src/RunnerApp.ts
+    detail: |
+      RESOLVED: RunnerApp now creates the canvas Renderer and existing fixed-step
+      GameLoop, wires SceneManager.update/render through the loop, clears through
+      Renderer before rendering, starts requestAnimationFrame from start(), and
+      exposes stop() to cancel the loop.
+    fix: |
+      Implemented in apps/runner/src/RunnerApp.ts. Covered by
+      apps/runner/src/RunnerApp.test.ts regression that captures rAF and verifies
+      update/render/clear. Runner package test script now includes RunnerApp.test.ts.
+
+  - id: BB-005
+    severity: CRITICAL
+    status: RESOLVED 2026-06-04
+    title: "Renderer is typed as 'unknown' throughout — no rendering pipeline exists"
+    file: apps/runner/src/engine/SceneManager.ts (line 12, 59)
+    detail: |
+      RESOLVED: Scene.render(), SceneContext.renderer, and SceneManager.render()
+      now use the concrete Renderer type. RunnerApp already instantiates the
+      canvas Renderer and passes it into SceneContext. Scene-local `as Renderer`
+      casts were removed from the renderer boundary.
+    fix: |
+      Implemented in SceneManager.ts and scene files. Covered by
+      SceneManager.test.ts source regression that rejects `renderer: unknown`,
+      `renderer?: unknown`, and scene-local `as Renderer` casts.
+
+  - id: BB-006
+    severity: HIGH
+    status: RESOLVED 2026-06-04
+    title: "main.ts requires DOM elements that may not exist in test environments"
+    file: apps/runner/src/main.ts
+    lines: [3-9]
+    detail: |
+      RESOLVED: The legacy src/main.js prototype was removed so module
+      resolution no longer imports the stale document-touching entry. main.ts
+      now exports bootstrapRunnerApp(doc), returns null when #game is absent,
+      tolerates missing optional #status/#minigame panels, and only auto-runs
+      when document exists.
+    fix: |
+      Implemented in main.ts and deletion of main.js. Covered by
+      MainBootstrap.test.ts, which imports ./main in the non-browser Vitest
+      environment and verifies it does not throw.
+
+# =============================================================================
+# SECTION 2: TYPE SYSTEM & INTERFACE MISMATCHES
+# These cause confusing runtime behavior or test failures.
+# =============================================================================
+
+type_mismatches:
+
+  - id: TM-001
+    severity: HIGH
+    status: RESOLVED 2026-06-04
+    title: "EnemySystem.step() signature does not include platforms"
+    file: apps/runner/src/systems/EnemySystem.ts line 17 vs HordeScene.ts line 87
+    detail: |
+      RESOLVED: EnemySystem.step() now has a scene-compatible overload for
+      step(enemies, player, platforms, dt) and applies platform collision for
+      non-drone enemies using platformer-core gravityStep/platformStep.
+    fix: |
+      Implemented in EnemySystem.ts. Covered by EnemySystem.test.ts regression
+      verifying an enemy lands on passed platforms and zeros vertical velocity.
+
+  - id: TM-002
+    severity: MEDIUM
+    status: RESOLVED 2026-06-04
+    title: "SceneContext.renderer is 'unknown' but scenes need concrete Renderer"
+    file: apps/runner/src/engine/SceneManager.ts line 18
+    detail: |
+      RESOLVED: SceneContext.renderer is a required concrete Renderer and scene
+      render signatures accept Renderer directly.
+    fix: |
+      Implemented in SceneManager.ts and scene files. Covered by SceneManager.test.ts.
+
+  - id: TM-003
+    severity: MEDIUM
+    title: "WaveDirector.spawnQueue uses cumulative delay but step() uses delta comparison"
+    file: apps/runner/src/systems/WaveDirector.ts lines 85-109
+    detail: |
+      Spawn delays are random 0-2 seconds each. step() checks `this.spawnTimer >= this.spawnQueue[0].delay`.
+      But spawnTimer resets to 0 after each spawn (line 108), so the delay is per-spawn.
+      The `spawnDelay` field on WaveConfig (line 13) is never used.
+      Also `pointIndex` (line 53) is incremented but never used for spawn positions.
+    fix: |
+      Use spawn points from getEnemySpawnPoints() for positioning.
+      Either use cumulative delays or per-spawn delays consistently.
+
+  - id: TM-004
+    severity: LOW
+    title: "WaveConfig interface defined but never used"
+    file: apps/runner/src/systems/WaveDirector.ts lines 9-14
+    detail: |
+      WaveConfig has waveNumber, budget, enemies, spawnDelay — none of these are referenced.
+      Wave budgets are hardcoded in waveBudgets array.
+    fix: |
+      Use WaveConfig to parameterize waves or remove the dead interface.
+
+  - id: TM-005
+    severity: MEDIUM
+    status: RESOLVED 2026-06-04
+    title: "CombatSystem.step() actionMap signature mismatch with InputSystem"
+    file: apps/runner/src/systems/CombatSystem.ts line 186
+    detail: |
+      RESOLVED: CombatSystem.step() now uses the shared ActionMap type from
+      InputSystem, matching HordeScene's InputSystem.snapshot() call site.
+    fix: |
+      Implemented in CombatSystem.ts and verified by targeted strict tsc over
+      HordeScene integration files.
+
+  - id: TM-006
+    severity: MEDIUM
+    title: "processMossInput called with CombatSystem instance instead of expected interface"
+    file: apps/runner/src/scenes/HordeScene.ts line 84
+    detail: |
+      `processMossInput(this.player, action, dt, this.combat)` — need to verify
+      MossBadger.ts's processMossInput signature matches this usage.
+    fix: |
+      Verify and align signatures.
+
+# =============================================================================
+# SECTION 3: LOGIC BUGS & CORRECTNESS ISSUES
+# =============================================================================
+
+logic_bugs:
+
+  - id: LB-001
+    severity: HIGH
+    status: RESOLVED 2026-06-04
+    title: "platformStep.ts uses hardcoded 0.016 dt for prevY calculation"
+    file: packages/platformer-core/src/systems/platformStep.ts
+    detail: |
+      RESOLVED: PlatformStepInput now carries the caller's actual dt and
+      platformStep computes previous Y with `prevY = y - prevVy * dt`.
+      PhysicsSystem and physicsWorldStep pass their real step dt.
+    fix: |
+      Implemented in packages/platformer-core/src/systems/platformStep.ts and
+      callers. Covered by a 30fps landing regression in physics.test.ts plus
+      physics-world-step regression coverage.
+
+  - id: LB-002
+    severity: MEDIUM
+    title: "WaveDirector enqueues enemies but never uses spawn points for positioning"
+    file: apps/runner/src/systems/WaveDirector.ts lines 40, 88-106
+    detail: |
+      getEnemySpawnPoints() is called (line 40) but the result is only used for pointIndex counting.
+      Actual spawn position (line 104) is `playerX + 400 + Math.random() * 200` — always ahead of player.
+      Spawn points array is never indexed.
+    fix: |
+      Use spawnPoints[pointIndex % spawnPoints.length] for actual x position.
+
+  - id: LB-003
+    severity: MEDIUM
+    title: "HordeScene uses Math.random() for platform generation — non-deterministic"
+    file: apps/runner/src/scenes/HordeScene.ts lines 221-228
+    detail: |
+      initArena() uses Math.random() for platform width. This makes the arena
+      different every time, breaking replay/restart consistency.
+    fix: |
+      Use a seeded PRNG or fixed platform definitions.
+
+  - id: LB-004
+    severity: LOW
+    title: "CombatSystem.damage() sets invuln to 1.1s — extremely long"
+    file: apps/runner/src/systems/CombatSystem.ts line 442
+    detail: |
+      After taking damage, player gets 1.1 seconds of invulnerability. This is very long
+      for a fast-paced platformer and makes the game feel sluggish.
+    fix: |
+      Reduce to 0.3-0.5s or make it configurable.
+
+  - id: LB-005
+    severity: LOW
+    title: "flyingObjectStep.ts fluid viscosity can over-damp velocity"
+    file: packages/platformer-core/src/systems/flyingObjectStep.ts
+    detail: |
+      If `fluid.viscosity * fluid.density * dt > 1`, the multiplier goes negative,
+      reversing velocity instead of damping it.
+    fix: |
+      Clamp: `Math.max(0, 1 - fluid.viscosity * fluid.density * dt)`
+
+# =============================================================================
+# SECTION 4: TEST ISSUES
+# =============================================================================
+
+test_issues:
+
+  - id: TI-001
+    severity: HIGH
+    title: "GameFlow.test.ts has orphaned test blocks outside describe"
+    file: apps/runner/src/game/GameFlow.test.ts
+    lines: [~358-417]
+    detail: |
+      Four `it()` blocks are after the closing `});` of the main describe block.
+      They will run but without shared setup, and their failures may be swallowed.
+    fix: |
+      Move them inside the describe block.
+
+  - id: TI-002
+    severity: MEDIUM
+    title: "No integration tests for scene transitions"
+    detail: |
+      SceneManager has no test file. Scene lifecycle (onEnter/onExit ordering,
+      replace vs push/pop) is untested. ModeSceneFactories.test.ts exists but
+      likely only tests factory creation, not actual scene behavior.
+    fix: |
+      Add SceneManager.test.ts covering push/pop/replace lifecycle.
+
+  - id: TI-003
+    severity: MEDIUM
+    title: "E2E tests reference features that don't exist yet"
+    detail: |
+      tests/e2e/ has 16 spec files covering:
+      - autosave-feedback, boss-placeholder, concrete-scene-return
+      - details-targets, ending-card, endless-sprawl
+      - game-mechanics, legacy-save-migration, stage-debug-panel
+      - stage-runtime-config, story-balance, story-choice-recap
+      - story-content, title-continue-cta, title-progress, tutorial-overlay
+      Most of these test features that are stubbed or not implemented.
+      They will fail when run against the actual app.
+    fix: |
+      Mark untestable specs with test.skip() or test.fixme() until features land.
+
+  - id: TI-004
+    severity: LOW
+    title: "RunnerApp.test.ts likely fails — no render loop to test"
+    file: apps/runner/src/RunnerApp.test.ts
+    detail: |
+      Tests probably call app.start() and check state, but start() doesn't
+      do anything observable without a game loop.
+    fix: |
+      Update tests after game loop is connected.
+
+# =============================================================================
+# SECTION 5: MISSING PACKAGE IMPLEMENTATIONS
+# =============================================================================
+
+package_gaps:
+
+  - package: "@badger/codegate"
+    completion: ~15%
+    missing:
+      - All 6 gate kinds are type stubs only (no actual minigame logic)
+      - Gate kinds from game-manifest.json: wire_match, circuit_trace, signal_tune, 
+        glitch_dodge, code_crack, memory_flip
+      - render-canvas.ts and render-dom.ts have type scaffolding but no working gates
+      - No input handling for minigames
+      - No scoring/completion logic
+    what_exists:
+      - Types: MiniGameSpec, GateKind, GateResult
+      - Factory: createCodeGate()
+      - Stub renderers
+
+  - package: "@badger/progression"
+    completion: ~30%
+    missing:
+      - ChapterManager: chapter progression logic is type-only stubs
+      - DialogueSystem: dialogue types defined, no runtime (separate from apps/runner DialogueSystem.ts)
+      - MetaProgression: meta-save types but no persistence logic
+      - RunAggregator: basic run stat collection, no aggregation logic
+      - ShopEngine: shop types only, no purchase/availability logic
+      - SkillTree: skill tree types only, no unlock/path logic
+      - BoonPool: boon pool defined but selection/rarity logic is minimal
+    what_exists:
+      - derivedStats: computeDerivedStats() works
+      - Types for all systems
+      - Unit tests for derivedStats
+
+  - package: "@badger/sprite-contracts"
+    completion: ~40%
+    missing:
+      - Loader is a no-op stub (returns empty array)
+      - No actual sprite sheet loading from disk/network
+      - No atlas parsing
+      - No frame extraction
+    what_exists:
+      - Types: SpriteSheet, SpriteAnimation, SpriteFrame, SpriteAtlas
+      - Validation: validateSpriteSheet() works
+      - Unit tests for validation
+
+  - package: "@badger/platformer-core"
+    completion: ~85%
+    missing:
+      - platformStep.ts actual dt parameter wired (LB-001 resolved 2026-06-04)
+      - flyingObjectStep.ts viscosity clamping (LB-005)
+      - Not integrated into app (gravityStep, movementStep, platformStep exist but
+        HordeScene uses its own PhysicsSystem wrapper)
+    what_exists:
+      - All physics step functions: gravityStep, movementStep, platformStep, coyoteStep, aabb
+      - PhysicsParams defaults
+      - Unit tests for all step functions
+      - flyingObjectStep for projectiles
+
+# =============================================================================
+# SECTION 6: MISSING RUNTIME INTEGRATIONS
+# Systems that exist as types/stubs but are not connected at runtime.
+# =============================================================================
+
+missing_runtime:
+
+  - id: MR-001
+    title: "No rendering pipeline"
+    severity: CRITICAL
+    detail: |
+      There is no Canvas2D or WebGL renderer. Scenes call renderer.renderPlayer(),
+      renderer.renderEnemies(), renderer.emitVFX() etc. but no object implements
+      these methods. The game is invisible even if the loop ran.
+    files_needed:
+      - apps/runner/src/renderer/CanvasRenderer.ts (implement Renderer interface)
+    depends_on: BB-005
+
+  - id: MR-002
+    title: "No sprite loading or atlas rendering"
+    severity: CRITICAL
+    detail: |
+      data/sprites.json defines 63 sprite sheets (player, enemies, tiles, parallax, VFX, items).
+      sprites.json is also at apps/runner/public/data/sprites.json.
+      sprite-contracts loader is a no-op. No Image() loading, no atlas slicing,
+      no animation frame selection.
+    files_needed:
+      - packages/sprite-contracts/src/loader.ts (implement real loader)
+      - apps/runner/src/renderer/SpriteRenderer.ts
+    depends_on: MR-001
+
+  - id: MR-003
+    title: "No input system connection to browser keyboard events"
+    severity: CRITICAL
+    detail: |
+      InputSystem.ts exists but it's unclear if it listens to keyboard events.
+      HordeScene creates `new InputSystem()` but never adds event listeners.
+      No addEventListener('keydown') / addEventListener('keyup') anywhere in the codebase.
+    files_needed:
+      - apps/runner/src/systems/InputSystem.ts (add keyboard event listeners)
+
+  - id: MR-004
+    title: "No audio playback"
+    severity: MEDIUM
+    detail: |
+      AudioManager.ts, BeatClock.ts, BeatSystem.ts, SoundBank.ts exist but:
+      - AudioManager has no Web Audio API usage
+      - SoundBank has no audio buffer loading
+      - BeatSystem has no BPM-synced playback
+      - No .ogg/.wav files in public/assets/
+    files_needed:
+      - Actual audio files in public/assets/audio/
+      - AudioManager implementation with Web Audio API
+
+  - id: MR-005
+    title: "No item system runtime"
+    severity: HIGH
+    detail: |
+      data/items.json defines 15 items. apps/runner/src/systems/ has extensive item systems:
+      InventorySystem, EquipmentSystem, ItemAffixSystem, ItemCraftingSystem,
+      ItemDropSystem, ItemDurabilitySystem, ItemEffectResolver, ItemProcSystem,
+      ItemSetSystem, ItemSocketSystem, ItemStatSystem, ItemUpgradeCurve,
+      ItemUseSystem, ItemWearSystem, LoadoutBudgetSystem, RuntimeItemApplier,
+      ConditionalItemEffectSystem, ItemTagSynergySystem
+      These all have tests but none are wired into any scene's update loop.
+
+  - id: MR-006
+    title: "No procedural generation at runtime"
+    severity: HIGH
+    detail: |
+      data/procgen/ defines affixes, enemy-families, room-chunks, stage-profiles.
+      apps/runner/src/procgen/ has EncounterGenerator.ts, EndlessSprawlRun.ts,
+      SideRoomGenerator.ts with tests.
+      EndlessSprawlRun is referenced in ModeSceneFactories (endless mode)
+      but the generated stages may not produce valid LevelData for StageRunScene.
+
+  - id: MR-007
+    title: "No dialogue runtime"
+    severity: MEDIUM
+    detail: |
+      DialogueScene.ts exists. apps/runner/src/systems/DialogueSystem.ts exists.
+      packages/progression/src/DialogueSystem.ts exists (separate system).
+      data/story-content.ts defines full branching narrative for 8 chapters.
+      None of these are connected — DialogueScene has no way to load or
+      display story content.
+
+  - id: MR-008
+    title: "No shop/skill-tree runtime"
+    severity: MEDIUM
+    detail: |
+      ShopScene.ts and SkillTreeScene.ts exist as scene implementations.
+      packages/progression has ShopEngine.ts and SkillTree.ts stubs.
+      No connection between scene UI and progression logic.
+
+  - id: MR-009
+    title: "No save/load persistence"
+    severity: MEDIUM
+    detail: |
+      SaveStore.ts has createLocalStorageSaveDriver() and loadGameFlow().
+      AutosaveFeedback.ts exists. Engine has SaveManager.ts.
+      But GameFlow.ts's getStoryProgress() returns a stub.
+      No actual story progress, inventory, or meta-progression is persisted.
+
+  - id: MR-010
+    title: "No companion system runtime"
+    severity: LOW
+    detail: |
+      CompanionSystem.ts in systems/ has tests.
+      docs/companion-system.md designs the companion mechanic.
+      Not connected to any scene.
+
+  - id: MR-011
+    title: "No boss fight runtime"
+    severity: MEDIUM
+    detail: |
+      BossPhaseSystem.ts exists with tests.
+      Enemy defs include bossId, bossPhaseLabel, bossPhaseMechanic, etc.
+      No boss scene or boss encounter logic.
+
+  - id: MR-012
+    title: "No tutorial overlay runtime"
+    severity: LOW
+    detail: |
+      E2E test exists (tutorial-overlay.spec.ts) but no TutorialOverlay
+      component or scene exists.
+
+  - id: MR-013
+    title: "No ending cards runtime"
+    severity: LOW
+    detail: |
+      EndingCards.ts and EndingCards.test.ts exist in game/.
+      E2E test exists. Not connected to campaign completion flow.
+
+  - id: MR-014
+    title: "No title screen progress display"
+    severity: LOW
+    detail: |
+      TitleScene.ts exists with test. E2E tests for title-progress and
+      title-continue-cta exist. TitleScene likely shows static content
+      without actual story progress integration.
+
+  - id: MR-015
+    title: "No campaign world/level data beyond lower-sprawl"
+    severity: MEDIUM
+    detail: |
+      data/stages/ only has lower-sprawl.layout.json.
+      game-manifest.json defines 6 worlds.
+      data/sprites.json defines tile sheets for 7 worlds.
+      Only 1 of 6+ worlds has a level layout.
+
+# =============================================================================
+# SECTION 7: DATA MODEL GAPS
+# =============================================================================
+
+data_gaps:
+
+  - id: DG-001
+    title: "Only 5 enemy defs vs 16 enemy sprite sheets"
+    detail: |
+      EnemyFactory.ts defines 5 enemies: toll_rat_crawler, scooter_bailiff,
+      cable_crawler, drone_wasp, bass_turret_stub.
+      data/sprites.json has 16 enemy sprite sheets.
+      11 enemy types have art but no gameplay definition.
+
+  - id: DG-002
+    title: "story-content.generated.ts is a generated file — verify freshness"
+    detail: |
+      This is auto-generated from story-content.ts. If the source changes,
+      the generated file must be regenerated. No build step enforces this.
+
+  - id: DG-003
+    title: "No runtime loading of JSON data files"
+    detail: |
+      game-manifest.json, items.json, progression.json, procgen/*.json are
+      all static JSON files. No module imports them at runtime.
+      They're validated by tests/validate-data.mjs but never loaded into the game.
+
+  - id: DG-004
+    title: "Sprite placeholder generation exists but no real art pipeline"
+    detail: |
+      scripts/generate-placeholder-sprites.mjs creates colored placeholder PNGs.
+      scripts/extract_sprites_by_components.py exists for ComfyUI workflow.
+      docs/sprite-generation-prompts.md has AI generation prompts.
+      No real sprite art exists — all are colored rectangles.
+
+# =============================================================================
+# SECTION 8: ARCHITECTURE & CODE QUALITY ISSUES
+# =============================================================================
+
+architecture:
+
+  - id: AR-001
+    title: "Legacy main.js alongside main.ts — entry point confusion"
+    detail: |
+      src/main.js and apps/runner/src/main.js exist as legacy JS files.
+      apps/runner/src/main.ts is the TypeScript entry. The JS files should be removed.
+
+  - id: AR-002
+    title: "Duplicate src/ at project root"
+    detail: |
+      src/main.js and src/game.css exist at project root, duplicating apps/runner/src/.
+      These appear to be from the original prototype before monorepo extraction.
+
+  - id: AR-003
+    title: "No unified event type system"
+    detail: |
+      EventBus.ts is a simple string-keyed emitter. CombatSystem has its own
+      CombatEvent types. GameFlow has story events. No unified event taxonomy.
+      This will cause coupling issues as systems grow.
+
+  - id: AR-004
+    title: "WeakMap for melee combo state is fragile"
+    detail: |
+      CombatSystem uses `WeakMap<CombatEntity, MeleeComboSystem>` for combo state.
+      Since CombatEntity objects are plain objects (not class instances), they may
+      be garbage collected unexpectedly if no other reference exists.
+
+  - id: AR-005
+    title: "Platformer-core physics not used by app"
+    detail: |
+      packages/platformer-core has well-tested physics functions.
+      apps/runner/src/systems/PhysicsSystem.ts has its own implementation.
+      The extracted package is not imported by the app — duplication.
+
+  - id: AR-006
+    title: "Excessive console.log in production code"
+    detail: |
+      WaveDirector: console.log on wave start/complete (lines 59, 118)
+      HordeScene: console.log on enter/exit (lines 44, 54)
+      EnemyFactory: console.warn on unknown enemy (line 77)
+      These should use a proper logging system or be behind DebugFlags.
+
+# =============================================================================
+# SECTION 9: COMPLETION PRIORITY ORDER
+# =============================================================================
+
+completion_order:
+
+  phase_1_unblock:
+    description: "Make the project compile and show something on screen"
+    tasks:
+      - BB-001: RESOLVED 2026-06-04 — Expand EnemySystem with EnemyEntity, EnemyDef, spawnEnemy, getEnemies, clearEnemies
+      - BB-002: RESOLVED 2026-06-04 — Fix EnemyFactory imports (resolved by BB-001)
+      - BB-003: RESOLVED 2026-06-04 — Fix HordeScene method calls (resolved by BB-001)
+      - BB-004: RESOLVED 2026-06-04 — Connect GameLoop to SceneManager in RunnerApp
+      - BB-005: RESOLVED 2026-06-04 — Define concrete Renderer boundary and remove unknown casts
+      - BB-006: RESOLVED 2026-06-04 — Clean up main.ts entry point
+      - TM-001: RESOLVED 2026-06-04 — Align EnemySystem.step() signature and platform collision
+      - MR-003: Wire InputSystem to keyboard events
+    estimated_effort: 2-3 days
+    outcome: "App compiles, shows a canvas, responds to input, renders colored rectangles"
+
+  phase_2_core_gameplay:
+    description: "Make the game playable with basic mechanics"
+    tasks:
+      - MR-001: Implement CanvasRenderer with sprite drawing
+      - MR-002: Implement sprite loader to load placeholder PNGs
+      - LB-001: RESOLVED 2026-06-04 — Fix platformStep hardcoded dt
+      - LB-002: Fix WaveDirector spawn positioning
+      - MR-015: Create level layouts for at least 2 more worlds
+      - DG-001: Add enemy defs for remaining 11 sprite sheets
+      - DG-003: Create data loader module for JSON files
+      - AR-005: Replace PhysicsSystem with platformer-core imports
+    estimated_effort: 1-2 weeks
+    outcome: "Game has levels, enemies, player movement, basic combat, sprite rendering"
+
+  phase_3_systems:
+    description: "Wire up the systems that have type stubs and tests"
+    tasks:
+      - MR-005: Wire item systems into gameplay scenes
+      - MR-006: Connect procedural generation to endless mode
+      - MR-004: Implement audio playback
+      - MR-007: Connect dialogue system to story content
+      - MR-008: Wire shop and skill tree to progression
+      - MR-009: Implement save/load with real GameFlow state
+      - MR-011: Implement boss encounters
+    estimated_effort: 2-3 weeks
+    outcome: "Game has items, procedural levels, audio, dialogue, progression, saves"
+
+  phase_4_content:
+    description: "Polish and content"
+    tasks:
+      - MR-010: Implement companion system
+      - MR-012: Add tutorial overlay
+      - MR-013: Connect ending cards to campaign completion
+      - MR-014: Title screen shows real progress
+      - DG-004: Replace placeholder sprites with real art
+      - TI-003: Fix/update E2E tests to match implementation
+      - All codegate minigame implementations
+    estimated_effort: 3-4 weeks
+    outcome: "Feature-complete game ready for playtesting"
+
+# =============================================================================
+# SECTION 10: QUICK WINS (low effort, high impact)
+# =============================================================================
+
+quick_wins:
+
+  - id: QW-001
+    title: "Remove legacy main.js files"
+    files: [src/main.js, apps/runner/src/main.js, src/game.css]
+    effort: 5 minutes
+
+  - id: QW-002
+    title: "Fix GameFlow.test.ts orphaned tests"
+    file: apps/runner/src/game/GameFlow.test.ts
+    effort: 5 minutes
+
+  - id: QW-003
+    title: "Fix platformStep.ts hardcoded dt"
+    file: packages/platformer-core/src/systems/platformStep.ts
+    effort: 5 minutes
+
+  - id: QW-004
+    title: "Clamp fluid viscosity in flyingObjectStep"
+    file: packages/platformer-core/src/systems/flyingObjectStep.ts
+    effort: 2 minutes
+
+  - id: QW-005
+    title: "Remove unused WaveConfig interface or use it"
+    file: apps/runner/src/systems/WaveDirector.ts
+    effort: 5 minutes
+
+  - id: QW-006
+    title: "Remove console.log from production code"
+    files:
+      - apps/runner/src/systems/WaveDirector.ts
+      - apps/runner/src/scenes/HordeScene.ts
+    effort: 10 minutes
+
+  - id: QW-007
+    title: "Reduce invulnerability timer from 1.1s to 0.4s"
+    file: apps/runner/src/systems/CombatSystem.ts line 442
+    effort: 1 minute
+
+# =============================================================================
+# SECTION 11: FILE INVENTORY BY COMPLETION STATUS
+# =============================================================================
+
+files_by_status:
+
+  working_and_tested:
+    - packages/platformer-core/src/systems/aabb.ts
+    - packages/platformer-core/src/systems/gravityStep.ts
+    - packages/platformer-core/src/systems/movementStep.ts
+    - packages/platformer-core/src/systems/coyoteStep.ts
+    - packages/platformer-core/src/systems/platformStep.ts (bug: hardcoded dt)
+    - packages/progression/src/derivedStats.ts
+    - packages/sprite-contracts/src/validate.ts
+    - packages/sprite-contracts/src/types.ts
+    - apps/runner/src/systems/MeleeComboSystem.ts
+    - apps/runner/src/systems/DamageModel.ts
+    - apps/runner/src/systems/StatusEffectSystem.ts
+    - apps/runner/src/systems/CombatSystem.ts
+    - apps/runner/src/systems/CombatEventLedger.ts
+    - apps/runner/src/systems/CombatTimeline.ts
+    - apps/runner/src/systems/BossPhaseSystem.ts
+    - apps/runner/src/systems/CompanionSystem.ts
+    - apps/runner/src/systems/EquipmentSystem.ts
+    - apps/runner/src/systems/InventorySystem.ts
+    - apps/runner/src/systems/ItemAffixSystem.ts
+    - apps/runner/src/systems/ItemCraftingSystem.ts
+    - apps/runner/src/systems/ItemDropSystem.ts
+    - apps/runner/src/systems/ItemDurabilitySystem.ts
+    - apps/runner/src/systems/ItemEffectResolver.ts
+    - apps/runner/src/systems/ItemProcSystem.ts
+    - apps/runner/src/systems/ItemSetSystem.ts
+    - apps/runner/src/systems/ItemSocketSystem.ts
+    - apps/runner/src/systems/ItemStatSystem.ts
+    - apps/runner/src/systems/ItemUpgradeCurve.ts
+    - apps/runner/src/systems/ItemUseSystem.ts
+    - apps/runner/src/systems/ItemWearSystem.ts
+    - apps/runner/src/systems/LoadoutBudgetSystem.ts
+    - apps/runner/src/systems/MeleeComboSystem.ts
+    - apps/runner/src/systems/PoiseStaggerSystem.ts
+    - apps/runner/src/systems/StatusEffectSystem.ts
+    - apps/runner/src/systems/DeterministicRunStep.ts
+    - apps/runner/src/systems/ReplayDiffSystem.ts
+    - apps/runner/src/systems/CombatFrameDataSystem.ts
+    - apps/runner/src/systems/CombatFrameHitSystem.ts
+    - apps/runner/src/systems/CombatHitboxLayerSystem.ts
+    - apps/runner/src/systems/CombatResourceSystem.ts
+    - apps/runner/src/systems/CombatTargetingSystem.ts
+    - apps/runner/src/systems/CombatVisibilitySystem.ts
+    - apps/runner/src/systems/CombatActionExecutor.ts
+    - apps/runner/src/systems/CombatActionSystem.ts
+    - apps/runner/src/systems/CombatEquipmentExecutor.ts
+    - apps/runner/src/systems/CombatFrameExecutor.ts
+    - apps/runner/src/systems/PhysicsCombatBridge.ts
+    - apps/runner/src/systems/ProjectileCombatBridge.ts
+    - apps/runner/src/systems/RuntimeItemApplier.ts
+    - apps/runner/src/systems/SocketEquipmentBridge.ts
+    - apps/runner/src/systems/ConditionalItemEffectSystem.ts
+    - apps/runner/src/systems/ItemTagSynergySystem.ts
+
+  stubbed_or_incomplete:
+    - packages/codegate/src/core.ts (factory only, no gate logic)
+    - packages/codegate/src/render-canvas.ts (skeleton)
+    - packages/codegate/src/render-dom.ts (skeleton)
+    - packages/codegate/src/gates/* (all 6 gate kinds stubbed)
+    - packages/progression/src/ChapterManager.ts
+    - packages/progression/src/DialogueSystem.ts
+    - packages/progression/src/MetaProgression.ts
+    - packages/progression/src/RunAggregator.ts
+    - packages/progression/src/ShopEngine.ts
+    - packages/progression/src/SkillTree.ts
+    - packages/progression/src/BoonPool.ts
+    - packages/sprite-contracts/src/loader.ts (no-op)
+    - apps/runner/src/systems/EnemySystem.ts (minimal, missing key methods)
+    - apps/runner/src/systems/InputSystem.ts (needs keyboard wiring)
+    - apps/runner/src/systems/PhysicsSystem.ts (duplicates platformer-core)
+    - apps/runner/src/systems/CameraSystem.ts (basic)
+    - apps/runner/src/systems/HackSystem.ts
+    - apps/runner/src/systems/DialogueSystem.ts
+    - apps/runner/src/systems/BeatSystem.ts
+    - apps/runner/src/systems/DebugOverlaySystem.ts
+    - apps/runner/src/systems/ItemSystem.ts
+    - apps/runner/src/systems/DeterministicReplaySystem.ts
+
+  broken:
+    - apps/runner/src/systems/WaveDirector.ts (BB-001, BB-002 resolved 2026-06-04)
+    - apps/runner/src/actors/EnemyFactory.ts (BB-002 resolved 2026-06-04)
+    - apps/runner/src/scenes/HordeScene.ts (BB-003 resolved 2026-06-04; still needs gameplay/UX verification)
+    - apps/runner/src/main.ts + RunnerApp.ts (BB-004 resolved 2026-06-04 — loop wired)
+
+  scenes_status:
+    - TitleScene.ts: exists, likely renders static text
+    - StoryFlowScene.ts: exists, connects to GameFlow
+    - StageRunScene.ts: exists, uses StageRunOptions
+    - HordeScene.ts: type surface repaired (BB-003 resolved 2026-06-04; runtime gameplay still needs deeper verification)
+    - VersusScene.ts: exists (likely stub)
+    - TrainingScene.ts: exists (likely stub)
+    - SkillTreeScene.ts: exists (likely stub)
+    - ShopScene.ts: exists (likely stub)
+    - DialogueScene.ts: exists (likely stub)
+    - ColonyHubScene.ts: exists (likely stub)
+    - MissionBriefingScene.ts: exists (likely stub)
+    - ResultsScene.ts: exists (likely stub)
+
+# =============================================================================
+# END OF REVIEW
+# =============================================================================
+</content>
+<task_progress>
+- [x] Explore project structure and understand architecture
+- [x] Review root config files (package.json, tsconfig, etc.)
+- [x] Review packages/platformer-core
+- [x] Review packages/progression
+- [x] Review packages/codegate
+- [x] Review packages/sprite-contracts
+- [x] Review apps/runner (main app) via subagents
+- [x] Review data files
+- [x] Review test files
+- [x] Review docs for stated status vs actual code
+- [x] Check remaining critical files directly
+- [x] Write comprehensive complete.yml
+</task_progress>

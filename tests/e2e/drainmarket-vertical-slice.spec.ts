@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import type { BadgerTestHarness } from '../../apps/runner/src/main';
+import { deployStoryStageFromTitle } from './helpers/deploy-story-stage';
 
 type Present<T> = Exclude<T, null>;
 
@@ -41,11 +42,7 @@ async function teleportTo(page: Page, x: number, y: number): Promise<void> {
 }
 
 async function enterDrainmarket(page: Page): Promise<void> {
-	await page.goto('/');
-	await waitForScene(page, 'TitleScene');
-	await page.locator('#game').click();
-	await page.keyboard.press('Enter');
-	await waitForScene(page, 'StoryFlowScene');
+	await deployStoryStageFromTitle(page, 'drainmarket');
 
 	for (let safety = 0; safety < 8; safety += 1) {
 		const mode = await page.evaluate(
@@ -131,9 +128,14 @@ test.describe('Drainmarket complete vertical slice', () => {
 		const knife = await page.evaluate(() =>
 			(window as DrainmarketWindow).__badger
 				.getEnemies()
-				.find((enemy) => enemy.spriteSheetId === 'enemy_knife_drone')
+				.find((enemy) => enemy.id === 'knife-drone-west')
 		);
 		expect(knife).toBeTruthy();
+		expect(
+			await page.evaluate(() =>
+				(window as DrainmarketWindow).__badger.hasSheet('enemy_knife_drone')
+			)
+		).toBe(true);
 		await teleportTo(page, (knife?.x ?? 560) + 70, knife?.y ?? 405);
 		await expect
 			.poll(() =>

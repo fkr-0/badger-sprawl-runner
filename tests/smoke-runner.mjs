@@ -57,6 +57,12 @@ assert(
 	`runner entry bundle should stay below 500 kB after code splitting; got ${entryStats.size}`
 );
 const emittedAssets = await readdir(join(distRoot, 'assets'));
+const emittedJavaScript = emittedAssets.filter((name) => name.endsWith('.js'));
+const shippedJavaScript = (
+	await Promise.all(
+		emittedJavaScript.map((name) => readFile(join(distRoot, 'assets', name), 'utf8'))
+	)
+).join('\n');
 assert(
 	emittedAssets.some((name) => /^pixi-runtime-.*\.js$/.test(name)),
 	'runner build is missing the lazy Pixi runtime chunk'
@@ -70,11 +76,11 @@ assert(
 	'Pixi runtime must remain lazy and must not be preloaded by the default canvas build'
 );
 assert(
-	!jsBundle.includes('SceneManager shell'),
+	!shippedJavaScript.includes('SceneManager shell'),
 	'runner bundle still contains the legacy debug shell'
 );
 assert(
-	!jsBundle.includes('SceneManager routes Story'),
+	!shippedJavaScript.includes('SceneManager routes Story'),
 	'runner bundle still contains legacy implementation-status copy'
 );
 assert(
@@ -86,11 +92,11 @@ assert(
 	'runner bundle contains an absolute sprite manifest URL'
 );
 assert(
-	jsBundle.includes('moss_badger_production'),
+	shippedJavaScript.includes('moss_badger_production'),
 	'runner bundle does not select the production Moss sprite sheet'
 );
 assert(
-	jsBundle.includes('lower_sprawl_backdrop'),
+	shippedJavaScript.includes('lower_sprawl_backdrop'),
 	'runner bundle does not select the Lower Sprawl production backdrop'
 );
 

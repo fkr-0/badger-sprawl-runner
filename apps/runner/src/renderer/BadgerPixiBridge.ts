@@ -27,6 +27,7 @@ import { createBadgerPixiTerrain } from './BadgerPixiTerrain';
 import { createBadgerPixiVfx } from './BadgerPixiVfx';
 import type { BadgerBridgePassName, BadgerRendererBridgeSink } from './Renderer';
 import {
+	BADGER_PRODUCTION_BUNDLE_RESOURCE_PATTERN,
 	createBadgerHardwareBudgetMonitor,
 	getBadgerBrowserHardwareProfile,
 } from './RendererHardwareBudget';
@@ -70,7 +71,10 @@ export async function createBadgerPixiBridge(options: {
 		autoRender: false,
 	});
 	const hardwareBudget = createBadgerHardwareBudgetMonitor(getBadgerBrowserHardwareProfile());
-	const performanceSampler = createBrowserPerformanceSampler({ refreshEverySamples: 120 });
+	const performanceSampler = createBrowserPerformanceSampler({
+		refreshEverySamples: 120,
+		resourcePattern: BADGER_PRODUCTION_BUNDLE_RESOURCE_PATTERN,
+	});
 	let previousActorTextureBytes = 0;
 	let previousActorCreated = 0;
 	let previousVfxCreated = 0;
@@ -123,6 +127,23 @@ export async function createBadgerPixiBridge(options: {
 
 	return {
 		runtime,
+		syncWorldView(camera, shakeX, shakeY) {
+			for (const layerId of [
+				'backdrop',
+				'world-back',
+				'world',
+				'actors',
+				'projectiles',
+				'effects',
+				'world-front',
+			] as const) {
+				const layer = runtime.layer(layerId);
+				layer.scale.set(camera.zoom);
+				layer.position.set(shakeX, camera.groundAnchorY * (1 - camera.zoom) + shakeY);
+			}
+			canvas.dataset.cameraZoom = camera.zoom.toFixed(3);
+			canvas.dataset.visibleWorldWidth = camera.visibleWorldWidth.toFixed(1);
+		},
 		beginFrame() {
 			queued.clear();
 			nativeActors.beginFrame();

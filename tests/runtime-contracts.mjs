@@ -61,6 +61,10 @@ const dialoguePortraitRendererSource = await text(
 );
 const shopSceneSource = await text('apps/runner/src/scenes/ShopScene.ts');
 const shopEngineSource = await text('packages/progression/src/ShopEngine.ts');
+const locationSceneSource = await text('apps/runner/src/scenes/LocationScene.ts');
+const worldServiceDirectorSource = await text(
+	'apps/runner/src/game/adventure/WorldServiceDirector.ts'
+);
 const companionSystemSource = await text('apps/runner/src/systems/CompanionSystem.ts');
 const bossPhaseSystemSource = await text('apps/runner/src/systems/BossPhaseSystem.ts');
 const campaignSource = await text('apps/runner/src/game/Campaign.ts');
@@ -432,7 +436,7 @@ for (const required of [
 	'onStartStoryStage: (scene) => sceneManager.replace(scene)',
 	'onReturnToTitle: () => sceneManager.replace(createTitleScene())',
 	'createLocalStorageSaveDriver(window.localStorage)',
-	'loadGameFlow(saveDriver)',
+	'loadGameSession(saveDriver)',
 	'storyProgress: flow.getStoryProgress()',
 ]) {
 	assert(
@@ -659,8 +663,8 @@ for (const required of [
 	);
 }
 for (const required of [
-	'autosaveGameFlow(saveDriver, flow, reason)',
-	'onAutosave: (reason) => autosaveGameFlow(saveDriver, flow, reason)',
+	'onAutosave: (reason) =>',
+	'autosaveGameFlow(saveDriver, flow, reason, adventure.getAdventureState())',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing autosave feedback wiring: ${required}`);
 }
@@ -707,7 +711,7 @@ for (const required of [
 	);
 }
 for (const required of [
-	'loadGameFlow(saveDriver)',
+	'loadGameSession(saveDriver)',
 	'createLocalStorageSaveDriver(window.localStorage)',
 ]) {
 	assert(runnerApp.includes(required), `RunnerApp missing save-backed GameFlow load: ${required}`);
@@ -951,17 +955,40 @@ for (const required of [
 	);
 }
 for (const required of [
-	'currentOffer',
-	'refreshOffer',
-	'this.shopEngine.generateOffer',
-	'this.metaState.orbitHeat',
-	'this.metaState.dubFavor',
-	'getGuileFromSkills',
-	'modifier.toFixed(2)',
+	'LEGACY_SHOP_SCENE_QUARANTINED',
+	'NO SHADOW SHOP',
+	'WorldServiceDirector inside LocationScene',
+	'performs no save reads and no save writes',
 ]) {
 	assert(
 		shopSceneSource.includes(required),
-		`ShopScene missing trust/heat shop wiring: ${required}`
+		`ShopScene missing shadow-economy quarantine contract: ${required}`
+	);
+}
+for (const required of [
+	'getShopOffer',
+	'purchaseItem',
+	'projectOffer',
+	'meta.orbitHeat',
+	'meta.dubFavor',
+	'executeTransaction',
+	'spendCredchips',
+	'getEconomyTelemetry',
+]) {
+	assert(
+		worldServiceDirectorSource.includes(required),
+		`WorldServiceDirector missing canonical trust/heat economy ownership: ${required}`
+	);
+}
+for (const required of [
+	'new WorldServiceDirector',
+	'this.services.getShopOffer',
+	'this.services.purchaseItem',
+	'onAutosaveWorld',
+]) {
+	assert(
+		locationSceneSource.includes(required),
+		`LocationScene missing canonical world-service shop wiring: ${required}`
 	);
 }
 

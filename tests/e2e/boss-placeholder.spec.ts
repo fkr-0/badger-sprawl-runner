@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { enterStoryFlow } from './support/story-navigation';
 
 test.describe('Stage boss placeholder', () => {
 	test('emits structured boss placeholder when story launches a stage run', async ({ page }) => {
@@ -14,9 +15,7 @@ test.describe('Stage boss placeholder', () => {
 
 		await page.goto('/');
 		await expect(page.locator('#game')).toBeVisible();
-		await page.locator('#game').click();
-		await page.keyboard.press('Enter');
-		await expect.poll(() => consoleMessages).toContain('StoryFlowScene entered');
+		await enterStoryFlow(page);
 
 		for (let index = 0; index < 12; index += 1) {
 			const mode = await page.evaluate(() => window.__badger?.getStoryState()?.mode);

@@ -12,6 +12,7 @@ import type { Pickup } from '../systems/ItemSystem';
 import { DialoguePortraitRenderer } from './DialoguePortraitRenderer';
 import { ParallaxRenderer } from './ParallaxLayer';
 import type { ParallaxLayer } from './ParallaxLayer';
+import { PLAYER_SPRITE_SHEET_ID, resolvePlayerSpriteSheet } from './PlayerSpriteSheets';
 import {
 	type SpriteManifestLoadOptions,
 	type SpriteManifestLoadReport,
@@ -21,7 +22,7 @@ import { TitleCardRenderer } from './TitleCardRenderer';
 import { UIRenderer } from './UIRenderer';
 import { VFXPool, type VFXRenderSource } from './VFXPool';
 
-export const PLAYER_SPRITE_SHEET_ID = 'moss_badger_production';
+export { PLAYER_SPRITE_SHEET_ID } from './PlayerSpriteSheets';
 export const LOWER_SPRAWL_BACKDROP_SHEET_ID = 'lower_sprawl_backdrop';
 export const LOWER_SPRAWL_PARALLAX_SHEET_ID = 'lower_sprawl_parallax';
 export const DRAINMARKET_PARALLAX_SHEET_ID = 'drainmarket_parallax';
@@ -36,6 +37,7 @@ const BOSS_RENDER_HEIGHT = 78;
 export type BadgerBridgePassName = 'stage-backdrop' | 'parallax' | 'terrain';
 export interface BadgerRendererBridgeSink {
 	queuePass(name: BadgerBridgePassName, draw: (ctx: CanvasRenderingContext2D) => void): void;
+	syncWorldView?(camera: Camera, shakeX: number, shakeY: number): void;
 	syncNativeHud?(player: Player): void;
 	syncNativeVfx?(source: VFXRenderSource, cameraX: number): void;
 	syncNativeStageParallax?(sheetId: string, sheet: LoadedSheet, cameraX: number): void;
@@ -65,6 +67,7 @@ export class Renderer {
 	private dialoguePortraitRenderer: DialoguePortraitRenderer;
 	private bridgeSink: BadgerRendererBridgeSink | null = null;
 	private cameraTransform = createArcadeCameraTransform({ anchorX: 0, anchorY: 0 });
+	private worldViewActive = false;
 
 	constructor(
 		private ctx: CanvasRenderingContext2D,
@@ -110,6 +113,22 @@ export class Renderer {
 
 	clear(): void {
 		this.ctx.clearRect(0, 0, this.width, this.height);
+	}
+
+	beginWorldView(camera: Camera, shakeX = 0, shakeY = 0): void {
+		if (this.worldViewActive) throw new Error('world view transform is already active');
+		this.worldViewActive = true;
+		this.bridgeSink?.syncWorldView?.(camera, shakeX, shakeY);
+		this.ctx.save();
+		this.ctx.translate(shakeX, camera.groundAnchorY + shakeY);
+		this.ctx.scale(camera.zoom, camera.zoom);
+		this.ctx.translate(0, -camera.groundAnchorY);
+	}
+
+	endWorldView(): void {
+		if (!this.worldViewActive) return;
+		this.ctx.restore();
+		this.worldViewActive = false;
 	}
 
 	setBridgeSink(sink: BadgerRendererBridgeSink | null): void {
@@ -417,22 +436,20 @@ export class Renderer {
 			this.bridgeSink.syncNativePlayer(player, cameraX, this.spriteRenderer);
 			return;
 		}
-		const [frameWidth, frameHeight] = this.spriteRenderer.getSheet(PLAYER_SPRITE_SHEET_ID)?.sheet
-			.frameSize ?? [48, 48];
+		const animationName = player.animState?.currentAnim ?? 'idle';
+		const playerSheet = resolvePlayerSpriteSheet(this.spriteRenderer, animationName);
+		const playerSheetId = playerSheet?.sheet.id ?? PLAYER_SPRITE_SHEET_ID;
+		const [frameWidth, frameHeight] = playerSheet?.sheet.frameSize ?? [48, 48];
 		const x = player.x - cameraX + player.w / 2 - frameWidth / 2;
 		const y = player.y + player.h - frameHeight;
 		const scaleX = player.scaleX ?? 1;
 		const scaleY = player.scaleY ?? 1;
 
 		this.ctx.save();
-		if (
-			(player.decoyTimer ?? 0) > 0 &&
-			player.animState &&
-			this.spriteRenderer.hasSheet(PLAYER_SPRITE_SHEET_ID)
-		) {
+		if ((player.decoyTimer ?? 0) > 0 && player.animState && playerSheet) {
 			this.ctx.globalAlpha = Math.min(0.34, (player.decoyTimer ?? 0) * 0.48);
 			this.spriteRenderer.drawEntity(
-				PLAYER_SPRITE_SHEET_ID,
+				playerSheetId,
 				player.animState,
 				x - player.dir * 24,
 				y + 2,
@@ -445,10 +462,10 @@ export class Renderer {
 		if ((player.damageFlash ?? 0) > 0 && Math.floor(performance.now() / 55) % 2 === 0) {
 			this.ctx.globalAlpha = 0.48;
 		}
-		if (this.spriteRenderer.hasSheet(PLAYER_SPRITE_SHEET_ID)) {
+		if (playerSheet) {
 			if (player.animState) {
 				this.spriteRenderer.drawEntity(
-					PLAYER_SPRITE_SHEET_ID,
+					playerSheetId,
 					player.animState,
 					x,
 					y,

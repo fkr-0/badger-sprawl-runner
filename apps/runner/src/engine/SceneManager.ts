@@ -12,6 +12,12 @@ export interface Scene {
 	render(renderer: Renderer, alpha: number): void;
 }
 
+export interface SceneChangeDetail {
+	operation: 'push' | 'pop' | 'replace' | 'clear';
+	previousSceneName: string | null;
+	sceneName: string | null;
+}
+
 export interface SceneContext {
 	eventBus: EventBus;
 	canvas: HTMLCanvasElement;
@@ -26,19 +32,28 @@ export class SceneManager {
 	}
 
 	push(scene: Scene): void {
+		const previousSceneName = this.stack.current()?.name ?? null;
 		this.stack.push(scene);
+		this.emitSceneChange('push', previousSceneName);
 	}
 
 	clear(): void {
+		const previousSceneName = this.stack.current()?.name ?? null;
 		this.stack.clear();
+		this.emitSceneChange('clear', previousSceneName);
 	}
 
 	pop(): Scene | undefined {
-		return this.stack.pop();
+		const previousSceneName = this.stack.current()?.name ?? null;
+		const popped = this.stack.pop();
+		this.emitSceneChange('pop', previousSceneName);
+		return popped;
 	}
 
 	replace(scene: Scene): void {
+		const previousSceneName = this.stack.current()?.name ?? null;
 		this.stack.replace(scene);
+		this.emitSceneChange('replace', previousSceneName);
 	}
 
 	getCurrent(): Scene | undefined {
@@ -51,5 +66,21 @@ export class SceneManager {
 
 	render(renderer: Renderer, alpha: number): void {
 		this.stack.render(renderer, alpha);
+	}
+
+	private emitSceneChange(
+		operation: SceneChangeDetail['operation'],
+		previousSceneName: string | null
+	): void {
+		if (typeof window === 'undefined' || typeof CustomEvent === 'undefined') return;
+		window.dispatchEvent(
+			new CustomEvent<SceneChangeDetail>('badger:scene-change', {
+				detail: {
+					operation,
+					previousSceneName,
+					sceneName: this.stack.current()?.name ?? null,
+				},
+			})
+		);
 	}
 }
