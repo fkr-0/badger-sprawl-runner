@@ -8405,6 +8405,105 @@
         "tool": "generated urban atlas normalization",
         "sourceSheet": "generated/urbanatlas/parallax1.png"
       }
+    },
+    {
+      "id": "moss_carry_stealth_stim_poc",
+      "file": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "frameSize": [
+        314,
+        314
+      ],
+      "grid": {
+        "columns": 4,
+        "rows": 4
+      },
+      "role": "player_review",
+      "animations": {
+        "carry_jump": {
+          "frames": 4,
+          "fps": 10,
+          "order": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "tags": [
+            "airborne",
+            "carry",
+            "poc"
+          ],
+          "anchor": [
+            157,
+            282
+          ]
+        },
+        "stealth_enter": {
+          "frames": 4,
+          "fps": 10,
+          "order": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "tags": [
+            "stealth",
+            "transition",
+            "poc"
+          ],
+          "anchor": [
+            157,
+            282
+          ]
+        },
+        "stealth_loop": {
+          "frames": 4,
+          "fps": 8,
+          "order": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "tags": [
+            "stealth",
+            "locomotion",
+            "loop",
+            "poc"
+          ],
+          "anchor": [
+            157,
+            282
+          ]
+        },
+        "stim_use": {
+          "frames": 4,
+          "fps": 10,
+          "order": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "tags": [
+            "item",
+            "interaction",
+            "poc"
+          ],
+          "anchor": [
+            157,
+            282
+          ]
+        }
+      },
+      "source": {
+        "tool": "OpenAI image renderer with deterministic alpha/grid normalization",
+        "sourceSheet": "moss the badger sprite sheet.png",
+        "revision": "2026-08-14-poc",
+        "description": "Review-only motion bank for carry jump, stealth enter/loop, and stim use.",
+        "classification": "archival"
+      }
     }
   ]
 }

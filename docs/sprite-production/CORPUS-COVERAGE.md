@@ -4,10 +4,10 @@ The corpus combines all current runtime atlas contracts, full-scope content expa
 
 ```yaml
 corpus_version: 2
-current_entries: 70
+current_entries: 71
 expansion_entries: 151
-total_render_jobs: 1226
-total_prompted_frames: 6292
+total_render_jobs: 1230
+total_prompted_frames: 6308
 remaining_gap_jobs: 266
 max_grid_columns: 4
 max_grid_rows: 4
@@ -26,7 +26,7 @@ max_grid_rows: 4
 | `enemy_state_gap` | 16 | 64 | 288 |
 | `item_expansion` | 1 | 4 | 48 |
 | `items` | 4 | 10 | 143 |
-| `misc` | 1 | 3 | 18 |
+| `misc` | 2 | 7 | 34 |
 | `player` | 2 | 34 | 160 |
 | `player_expansion` | 5 | 34 | 230 |
 | `player_gap` | 1 | 18 | 112 |

@@ -4,13 +4,13 @@ This directory is the current production-art source of truth for rendering work.
 
 ```yaml
 approved_reference: "operator-approved six-image neon-animal pixel-art board, supplied 2026-07-21"
-current_targets: 70
-current_jobs: 441
+current_targets: 71
+current_jobs: 445
 expansion_entries: 151
 expansion_jobs: 785
 remaining_gap_jobs: 266
-total_render_jobs: 1226
-total_prompted_frames: 6292
+total_render_jobs: 1230
+total_prompted_frames: 6308
 ```
 
 ## Start here

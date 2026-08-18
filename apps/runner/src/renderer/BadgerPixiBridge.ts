@@ -50,6 +50,7 @@ export interface BadgerPixiBridgeController extends BadgerRendererBridgeSink {
 	snapshot(): ReturnType<ArcadePixiRuntime['snapshot']>;
 	performance(): ArcadePerformanceSummary;
 	budget(): Readonly<Record<string, unknown>>;
+	resetPerformance(): void;
 	destroy(): void;
 }
 
@@ -267,6 +268,14 @@ export async function createBadgerPixiBridge(options: {
 		snapshot: () => runtime.snapshot(),
 		performance: () => runtime.performanceSnapshot('frame'),
 		budget: () => hardwareBudget.evaluate(),
+		resetPerformance: () => {
+			// Keep warm-up, shader compilation, texture creation, and browser startup
+			// stalls out of the steady-state release benchmark. The strict max-frame
+			// budget still applies to every sample collected after this reset.
+			runtime.resetPerformance('frame');
+			hardwareBudget.reset();
+			performanceSampler.reset();
+		},
 		destroy: () => {
 			nativeActors.destroy();
 			nativeProjectiles.destroy();

@@ -225,12 +225,15 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 			)
 			.toBe(true);
 		await teleportTo(page, loop.x, loop.y);
+		const reflectionStartX = await page.evaluate(
+			() => (window as MirrorWindow).__badger.getPlayer()?.x ?? 0
+		);
 		await page.keyboard.down('KeyD');
-		await page.waitForTimeout(45);
+		await expect
+			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getPlayer()?.x ?? 0))
+			.toBeGreaterThan(reflectionStartX + 1);
 		await page.keyboard.up('KeyD');
 		await page.keyboard.down('KeyA');
-		await page.waitForTimeout(45);
-		await page.keyboard.up('KeyA');
 		await expect
 			.poll(() =>
 				page.evaluate(
@@ -242,6 +245,7 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 				)
 			)
 			.toBe(true);
+		await page.keyboard.up('KeyA');
 		await teleportTo(page, switchback.x, switchback.y);
 		await expect
 			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getPlayer()?.boostCd ?? 0))
@@ -262,12 +266,26 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 		);
 		await teleportTo(page, objectives.etiquetteTerminal.x, objectives.etiquetteTerminal.y);
 		await page.keyboard.press('KeyM');
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					(window as MirrorWindow).__badger.getMirrorPalaceObjectives().etiquetteStatus
+				)
+			)
+			.toBe('active');
+
 		await page.keyboard.press('KeyL');
-		await page.waitForTimeout(70);
+		await expect
+			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getMirrorPalaceObjectives().etiquetteStep))
+			.toBe(1);
 		await page.keyboard.press('KeyJ');
-		await page.waitForTimeout(70);
+		await expect
+			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getMirrorPalaceObjectives().etiquetteStep))
+			.toBe(2);
 		await page.keyboard.press('ShiftLeft');
-		await page.waitForTimeout(70);
+		await expect
+			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getMirrorPalaceObjectives().etiquetteStep))
+			.toBe(3);
 		await page.keyboard.press('KeyL');
 		await expect
 			.poll(() =>
@@ -277,6 +295,31 @@ test.describe('Mirror Palace story and animation vertical slice', () => {
 			)
 			.toBe('solved');
 
+		// Encounter readiness intentionally keeps distant bosses dormant. Enter the
+		// Judge's authored detection range before asserting its combat pattern.
+		const reflectionJudge = await page.evaluate(() =>
+			(window as MirrorWindow).__badger
+				.getEnemies()
+				.find((enemy) => enemy.bossId === 'reflection-judge')
+		);
+		expect(reflectionJudge).toBeTruthy();
+		// Enter from the unobstructed far side of the arena. The authored stronghold
+		// cover intentionally blocks the refusal-table sightline, while close rear
+		// detection still gives the Judge a deterministic way to engage.
+		await teleportTo(
+			page,
+			(reflectionJudge?.x ?? 2280) + (reflectionJudge?.w ?? 76) + 40,
+			reflectionJudge?.y ?? 340
+		);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					(window as MirrorWindow).__badger
+						.getEnemies()
+						.find((enemy) => enemy.bossId === 'reflection-judge')?.awarenessState
+				)
+			)
+			.toBe('engaged');
 		await expect
 			.poll(() => page.evaluate(() => (window as MirrorWindow).__badger.getReflectionJudge().attackCount))
 			.toBeGreaterThan(0);

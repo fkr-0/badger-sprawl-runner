@@ -5,9 +5,9 @@ Reviewed against `data/sprites.json` and repository assets on 2026-07-21.
 ## Verified baseline
 
 ```yaml
-manifest_sheets: 72
-production_prompt_targets: 70
-small_render_jobs_generated: 441
+manifest_sheets: 73
+production_prompt_targets: 71
+small_render_jobs_generated: 445
 missing_manifest_files: 0
 non_png_or_unreadable_manifest_files: 0
 all_manifest_files_rgba: true  # verified by the preceding project audit; prompt generator validates PNG dimensions
@@ -22,7 +22,7 @@ archival_or_superseded:
 | characters | 20 |
 | enemies | 16 |
 | items | 4 |
-| misc | 2 |
+| misc | 3 |
 | player | 2 |
 | ui | 1 |
 | vfx | 1 |
@@ -40,11 +40,12 @@ archival_or_superseded:
 | ComfyUI API | 1 |
 | deterministic Pillow pixel-art generator | 1 |
 | generated urban atlas normalization | 1 |
+| OpenAI image renderer with deterministic alpha/grid normalization | 1 |
 
 
 ## Findings
 
-1. **Contract coverage is strong.** Every one of the 72 manifest entries has a corresponding PNG and the current atlases use consistent category dimensions. The runtime can therefore load art for the complete implemented campaign.
+1. **Contract coverage is strong.** Every one of the 73 manifest entries has a corresponding PNG and the current atlases use consistent category dimensions. The runtime can therefore load art for the complete implemented campaign.
 2. **Production coherence is the main weakness.** The atlas set mixes imported image-model boards, generated fallbacks, promoted authored motion, and sheets without complete provenance. Technical validity currently hides visible variation in outline weight, pixel density, palette discipline, pose clarity, and background cleanup.
 3. **The older prompt document is obsolete.** It describes a 13-state Moss sheet and a handful of assets, while the manifest now contains 17 Moss states, 16 enemies, eight bosses, 20 story characters, eight world tile families, layered environments, expanded items, skills, VFX, and a backdrop.
 4. **The implemented enemy roster is only a campaign skeleton.** Most worlds expose two regular enemy sheets, while `docs/ENEMY_BIBLE.md` and `docs/COMBAT_EXPANSION.md` specify six to nine mechanically distinct enemy roles per world. This pack adds direct prompts for the missing named roster.

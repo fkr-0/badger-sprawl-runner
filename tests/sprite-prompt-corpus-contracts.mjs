@@ -8,10 +8,10 @@ const manifestPath = join(renderRoot, 'manifest.json');
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 
 assert.equal(manifest.corpusVersion, 2, 'prompt corpus version must be 2');
-assert.equal(manifest.currentEntryCount, 70, 'current entry count drifted');
+assert.equal(manifest.currentEntryCount, 71, 'current entry count drifted');
 assert.equal(manifest.expansionEntryCount, 151, 'expansion entry count drifted');
-assert.equal(manifest.jobCount, 1226, 'individual render-job count drifted');
-assert.equal(manifest.promptedFrameCount, 6292, 'prompted occupied-frame count drifted');
+assert.equal(manifest.jobCount, 1230, 'individual render-job count drifted');
+assert.equal(manifest.promptedFrameCount, 6308, 'prompted occupied-frame count drifted');
 assert.deepEqual(manifest.constraints, { maxGridColumns: 4, maxGridRows: 4 });
 assert.deepEqual(manifest.remainingGapJobCounts, {
 	boss_action_gap: 24,

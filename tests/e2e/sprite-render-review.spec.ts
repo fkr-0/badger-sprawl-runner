@@ -107,6 +107,26 @@ for (const sheetId of REVIEW_SHEETS) {
 	});
 }
 
+test('renders the Moss carry/stealth/stim POC through the shared runtime', async ({ page }) => {
+	const sheetId = 'moss_carry_stealth_stim_poc';
+	await page.goto(`/sprite-review.html?sheet=${sheetId}&frames=4`);
+	await page.locator('body[data-status="ready"], body[data-status="error"]').waitFor();
+	const status = await page.locator('body').getAttribute('data-status');
+	if (status === 'error') {
+		throw new Error(await page.locator('#error').innerText());
+	}
+
+	const snapshot = await page.evaluate(() => window.__spriteReview);
+	expect(snapshot).toBeTruthy();
+	expect(snapshot?.sheetIds).toEqual([sheetId]);
+	expect(snapshot?.entryCount).toBe(16);
+	expect(snapshot?.labels.filter((label) => label.includes('carry_jump'))).toHaveLength(4);
+	expect(snapshot?.labels.filter((label) => label.includes('stealth_enter'))).toHaveLength(4);
+	expect(snapshot?.labels.filter((label) => label.includes('stealth_loop'))).toHaveLength(4);
+	expect(snapshot?.labels.filter((label) => label.includes('stim_use'))).toHaveLength(4);
+	await expect(page.locator('#review')).toBeVisible();
+});
+
 test.afterAll(async () => {
 	const ordered = [...records].sort((left, right) => left.sheetId.localeCompare(right.sheetId));
 	await writeFile(

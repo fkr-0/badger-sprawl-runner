@@ -215,6 +215,7 @@ export function createRunnerApp(canvas: HTMLCanvasElement): RunnerApp {
 			renderBudgetMonitor.profiler.reset(
 				getBadgerRenderBudgetName(pixiBridge ? 'bridge' : 'canvas')
 			);
+			pixiBridge?.resetPerformance();
 		},
 		getBridgePerformance(): ArcadePerformanceSummary | null {
 			return pixiBridge?.performance() ?? null;

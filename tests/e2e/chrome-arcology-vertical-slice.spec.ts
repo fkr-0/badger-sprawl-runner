@@ -289,15 +289,18 @@ test.describe('Chrome Arcology complete vertical slice', () => {
 			)
 			.toBe('solved');
 
-		await expect
-			.poll(() => page.evaluate(() => (window as ArcologyWindow).__badger.getMadameVitrine().attackCount))
-			.toBeGreaterThan(0);
 		const boss = await page.evaluate(() =>
 			(window as ArcologyWindow).__badger
 				.getEnemies()
 				.find((enemy) => enemy.bossId === 'madame-vitrine')
 		);
 		expect(boss).toBeTruthy();
+		// Encounter readiness keeps distant bosses dormant. Enter Vitrine's
+		// authored detection range before asserting that her combat loop starts.
+		await teleportTo(page, (boss?.x ?? 2180) - 80, boss?.y ?? 392);
+		await expect
+			.poll(() => page.evaluate(() => (window as ArcologyWindow).__badger.getMadameVitrine().attackCount))
+			.toBeGreaterThan(0);
 		await page.evaluate((hp) => (window as ArcologyWindow).__badger.setBossHp(hp), 7);
 		await expect
 			.poll(() => page.evaluate(() => (window as ArcologyWindow).__badger.getBossPhase()?.phaseIndex))

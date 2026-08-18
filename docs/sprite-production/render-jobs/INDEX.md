@@ -3,10 +3,10 @@
 Generated from the current runtime manifest, full-scope expansion templates, and the structured remaining-gap catalog. Do not edit individual generated jobs; update their source or generator and regenerate.
 
 - Corpus version: 2
-- Current entries: 70
+- Current entries: 71
 - Expansion entries: 151
-- Total render jobs: 1226
-- Total prompted frames: 6292
+- Total render jobs: 1230
+- Total prompted frames: 6308
 - Remaining-gap jobs: 266
 
 ## Jobs
@@ -323,6 +323,10 @@ Generated from the current runtime manifest, full-scope expansion templates, and
 | `current` | `items` | `items_core` | `items_core__batch_06` | 8 | [`current/items/items_core/items_core__batch_06.md`](current/items/items_core/items_core__batch_06.md) | `renders/items_core/batch_06_4c_2r.png` |
 | `current` | `items` | `items_extended` | `items_extended__batch_01` | 16 | [`current/items/items_extended/items_extended__batch_01.md`](current/items/items_extended/items_extended__batch_01.md) | `renders/items_extended/batch_01_4c_4r.png` |
 | `current` | `items` | `items_extended` | `items_extended__batch_02` | 16 | [`current/items/items_extended/items_extended__batch_02.md`](current/items/items_extended/items_extended__batch_02.md) | `renders/items_extended/batch_02_4c_4r.png` |
+| `current` | `misc` | `moss_carry_stealth_stim_poc` | `moss_carry_stealth_stim_poc__carry_jump` | 4 | [`current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__carry_jump.md`](current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__carry_jump.md) | `renders/moss_carry_stealth_stim_poc/carry_jump_4c_1r.png` |
+| `current` | `misc` | `moss_carry_stealth_stim_poc` | `moss_carry_stealth_stim_poc__stealth_enter` | 4 | [`current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_enter.md`](current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_enter.md) | `renders/moss_carry_stealth_stim_poc/stealth_enter_4c_1r.png` |
+| `current` | `misc` | `moss_carry_stealth_stim_poc` | `moss_carry_stealth_stim_poc__stealth_loop` | 4 | [`current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_loop.md`](current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_loop.md) | `renders/moss_carry_stealth_stim_poc/stealth_loop_4c_1r.png` |
+| `current` | `misc` | `moss_carry_stealth_stim_poc` | `moss_carry_stealth_stim_poc__stim_use` | 4 | [`current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stim_use.md`](current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stim_use.md) | `renders/moss_carry_stealth_stim_poc/stim_use_4c_1r.png` |
 | `current` | `misc` | `moss_remaining_animation_gaps` | `moss_remaining_animation_gaps__air_dodge` | 6 | [`current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__air_dodge.md`](current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__air_dodge.md) | `renders/moss_remaining_animation_gaps/air_dodge_4c_2r.png` |
 | `current` | `misc` | `moss_remaining_animation_gaps` | `moss_remaining_animation_gaps__railgun_charge` | 6 | [`current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_charge.md`](current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_charge.md) | `renders/moss_remaining_animation_gaps/railgun_charge_4c_2r.png` |
 | `current` | `misc` | `moss_remaining_animation_gaps` | `moss_remaining_animation_gaps__railgun_reload_failure` | 6 | [`current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_reload_failure.md`](current/misc/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_reload_failure.md) | `renders/moss_remaining_animation_gaps/railgun_reload_failure_4c_2r.png` |

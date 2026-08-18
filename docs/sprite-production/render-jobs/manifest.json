@@ -9,7 +9,7 @@
     "enemy_state_gap": 64,
     "item_expansion": 4,
     "items": 10,
-    "misc": 3,
+    "misc": 7,
     "player": 34,
     "player_expansion": 34,
     "player_gap": 18,
@@ -27,11 +27,11 @@
     "maxGridRows": 4
   },
   "corpusVersion": 2,
-  "currentEntryCount": 70,
-  "entryCount": 221,
+  "currentEntryCount": 71,
+  "entryCount": 222,
   "expansionEntryCount": 151,
   "generatedBy": "scripts/generate-sprite-render-prompts.py",
-  "jobCount": 1226,
+  "jobCount": 1230,
   "jobs": [
     {
       "animation": "attack",
@@ -10360,6 +10360,138 @@
       "source_entry": "items_extended",
       "source_prompt_file": "docs/sprite-production/prompts/current/items/items_extended.md",
       "target_atlas": "assets/sprites/items_extended.png",
+      "world": null
+    },
+    {
+      "animation": "carry_jump",
+      "animation_class": "locomotion",
+      "animation_state": "carry_jump",
+      "atlas_family": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "atlas_row": 0,
+      "category": "misc",
+      "cell_size": [
+        314,
+        314
+      ],
+      "frames": 4,
+      "grid": {
+        "columns": 4,
+        "rows": 1
+      },
+      "id": "moss_carry_stealth_stim_poc__carry_jump",
+      "job_key": "current:misc:moss_carry_stealth_stim_poc:moss_carry_stealth_stim_poc__carry_jump",
+      "markdown": "current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__carry_jump.md",
+      "output": "renders/moss_carry_stealth_stim_poc/carry_jump_4c_1r.png",
+      "output_size": [
+        1256,
+        314
+      ],
+      "review_state": "pending_render",
+      "runtime_clip": "current:moss_carry_stealth_stim_poc:carry_jump",
+      "scope": "current",
+      "source_class": "current_manifest",
+      "source_entry": "moss_carry_stealth_stim_poc",
+      "source_prompt_file": "docs/sprite-production/prompts/current/misc/moss_carry_stealth_stim_poc.md",
+      "target_atlas": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "world": null
+    },
+    {
+      "animation": "stealth_enter",
+      "animation_class": "sprite_animation",
+      "animation_state": "stealth_enter",
+      "atlas_family": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "atlas_row": 1,
+      "category": "misc",
+      "cell_size": [
+        314,
+        314
+      ],
+      "frames": 4,
+      "grid": {
+        "columns": 4,
+        "rows": 1
+      },
+      "id": "moss_carry_stealth_stim_poc__stealth_enter",
+      "job_key": "current:misc:moss_carry_stealth_stim_poc:moss_carry_stealth_stim_poc__stealth_enter",
+      "markdown": "current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_enter.md",
+      "output": "renders/moss_carry_stealth_stim_poc/stealth_enter_4c_1r.png",
+      "output_size": [
+        1256,
+        314
+      ],
+      "review_state": "pending_render",
+      "runtime_clip": "current:moss_carry_stealth_stim_poc:stealth_enter",
+      "scope": "current",
+      "source_class": "current_manifest",
+      "source_entry": "moss_carry_stealth_stim_poc",
+      "source_prompt_file": "docs/sprite-production/prompts/current/misc/moss_carry_stealth_stim_poc.md",
+      "target_atlas": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "world": null
+    },
+    {
+      "animation": "stealth_loop",
+      "animation_class": "sprite_animation",
+      "animation_state": "stealth_loop",
+      "atlas_family": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "atlas_row": 2,
+      "category": "misc",
+      "cell_size": [
+        314,
+        314
+      ],
+      "frames": 4,
+      "grid": {
+        "columns": 4,
+        "rows": 1
+      },
+      "id": "moss_carry_stealth_stim_poc__stealth_loop",
+      "job_key": "current:misc:moss_carry_stealth_stim_poc:moss_carry_stealth_stim_poc__stealth_loop",
+      "markdown": "current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stealth_loop.md",
+      "output": "renders/moss_carry_stealth_stim_poc/stealth_loop_4c_1r.png",
+      "output_size": [
+        1256,
+        314
+      ],
+      "review_state": "pending_render",
+      "runtime_clip": "current:moss_carry_stealth_stim_poc:stealth_loop",
+      "scope": "current",
+      "source_class": "current_manifest",
+      "source_entry": "moss_carry_stealth_stim_poc",
+      "source_prompt_file": "docs/sprite-production/prompts/current/misc/moss_carry_stealth_stim_poc.md",
+      "target_atlas": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "world": null
+    },
+    {
+      "animation": "stim_use",
+      "animation_class": "sprite_animation",
+      "animation_state": "stim_use",
+      "atlas_family": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
+      "atlas_row": 3,
+      "category": "misc",
+      "cell_size": [
+        314,
+        314
+      ],
+      "frames": 4,
+      "grid": {
+        "columns": 4,
+        "rows": 1
+      },
+      "id": "moss_carry_stealth_stim_poc__stim_use",
+      "job_key": "current:misc:moss_carry_stealth_stim_poc:moss_carry_stealth_stim_poc__stim_use",
+      "markdown": "current/misc/moss_carry_stealth_stim_poc/moss_carry_stealth_stim_poc__stim_use.md",
+      "output": "renders/moss_carry_stealth_stim_poc/stim_use_4c_1r.png",
+      "output_size": [
+        1256,
+        314
+      ],
+      "review_state": "pending_render",
+      "runtime_clip": "current:moss_carry_stealth_stim_poc:stim_use",
+      "scope": "current",
+      "source_class": "current_manifest",
+      "source_entry": "moss_carry_stealth_stim_poc",
+      "source_prompt_file": "docs/sprite-production/prompts/current/misc/moss_carry_stealth_stim_poc.md",
+      "target_atlas": "assets/sprites/characters/moss/moss-carry-stealth-stim-poc-4x4.png",
       "world": null
     },
     {
@@ -40396,7 +40528,7 @@
       "world": "straylight_mirage"
     }
   ],
-  "promptedFrameCount": 6292,
+  "promptedFrameCount": 6308,
   "remainingGapJobCounts": {
     "boss_action_gap": 24,
     "character_state_gap": 80,
@@ -40407,7 +40539,7 @@
   },
   "schemaVersion": 1,
   "sourceHashes": {
-    "data/sprites.json": "6f98d785905912dcab253df307ec10aab5fe3175f2c99efc74fa8719f9ea3987",
+    "data/sprites.json": "4669783bf2af41d63acca1b47bebb4c007169113bce5b0b1e5ac1690a4de0a9e",
     "docs/sprite-production/remaining-gaps.yml": "4aefaefb0871f76f9d0d4d9b33243dc1c0022c61a008f9fc35a9ec6925a5c45d",
     "docs/story-flavour.yml": "ecfa478c63c1ed8938f14119a15d33f3b40020db4415164e96dd80f4dc6f6094",
     "scripts/generate-sprite-render-prompts.py": "995fd2525879c12408541b3df7cf8c32b737b1b9ea0e7cb4a594e13e7c0b00ea"

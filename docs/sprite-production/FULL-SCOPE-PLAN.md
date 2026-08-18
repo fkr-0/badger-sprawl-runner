@@ -2,8 +2,8 @@
 
 ```yaml
 approved_style: "operator-approved six-image neon-animal pixel-art board, supplied 2026-07-21"
-current_atlas_targets: 70
-current_render_jobs: 441
+current_atlas_targets: 71
+current_render_jobs: 445
 planned_expansion_templates_and_sheets: 151
 planned_expansion_render_jobs: 785
 render_grid_limit:
