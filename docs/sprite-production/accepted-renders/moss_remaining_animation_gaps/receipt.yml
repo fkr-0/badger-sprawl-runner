@@ -1,0 +1,138 @@
+version: 2
+batch_id: moss_remaining_animation_gaps
+updated: 2026-07-23
+status: first_set_integrated
+
+references:
+  identity:
+    path: assets/sprites/moss_badger_production.png
+    dimensions: [384, 816]
+    mode: RGBA
+  motion_contact_sheet:
+    path: generated/sprite-visual-review/badger-sprite-contact-sheet.png
+    dimensions: [1190, 1510]
+    mode: RGBA
+  style_target:
+    description: operator-approved six-image neon-animal pixel-art board supplied 2026-07-21
+    repository_status: not_committed
+
+normalization:
+  output_grid: [4, 2]
+  cell_size: [48, 48]
+  output_size: [192, 96]
+  occupied_cells: 6
+  unused_cells: [7, 8]
+  alpha: hard_binary
+  palette: indexed_128_colors
+  resize_filter: nearest_neighbour
+  policy:
+    - preserve the first six useful action beats selected from each oversized presentation board
+    - remove the generated grey presentation background
+    - fit each selected body and compact effect inside one 48x48 cell
+    - keep cells 7 and 8 fully transparent
+    - first-set outputs were promoted after the operator requested runtime integration on 2026-07-23
+
+renders:
+  - job_id: moss_remaining_animation_gaps__air_dodge
+    status: integrated
+    runtime_animation: air_dodge
+    atlas_row: 0
+    prompt: docs/sprite-production/render-jobs/expansion/player_gap/moss_remaining_animation_gaps/moss_remaining_animation_gaps__air_dodge.md
+    output: docs/sprite-production/accepted-renders/moss_remaining_animation_gaps/air_dodge_4c_2r.png
+    output_sha256: 460ee1c7936e947081a41f5f47b7cfd37673a2f81ba9708acc167ba5b8717aa1
+    source:
+      chat_file_id: file_00000000293c81f4acc2c73ea55af5f7
+      original_name: a_collection_of_six_pixel_art_sprites_of_an_anthro.png
+      dimensions: [1536, 1024]
+      sha256: eb5e9de49ba4405f888f6159cf527a8ef4f2a175ebce4fc9451240fd4760778b
+      preserved_in_repository: false
+      note: full-resolution chat artifact was not available inside the workspace bridge; its immutable hash is recorded here
+    selected_source_poses: [1, 2, 3, 4, 5, 8]
+    cleanup:
+      - smooth grey presentation background removed by local colour-surface segmentation
+      - broad cyan speed effects retained where they remain inside the cell
+      - airborne silhouettes aligned below the virtual anchor at x=24 y=44
+
+  - job_id: moss_remaining_animation_gaps__railgun_reload_failure
+    status: integrated
+    runtime_animation: railgun_reload_failure
+    atlas_row: 1
+    prompt: docs/sprite-production/render-jobs/expansion/player_gap/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_reload_failure.md
+    output: docs/sprite-production/accepted-renders/moss_remaining_animation_gaps/railgun_reload_failure_4c_2r.png
+    output_sha256: af1804e2730a0ed1ee5026290cf1f6b6de52a385e3927a5d83ca3a7eec9f9bd9
+    source:
+      chat_file_id: file_000000005c4c81f4a18fbf08f1fae44a
+      original_name: a_series_of_six_48x48_pixel_art_sprites_of_an_anth.png
+      dimensions: [1536, 1024]
+      sha256: 61e4673db8d320204bb3990cb232d332068652802d1bb40b2b394c2b6d3ee2f1
+      preserved_in_repository: false
+      note: full-resolution chat artifact was not available inside the workspace bridge; its immutable hash is recorded here
+    selected_source_poses: [1, 2, 3, 4, 6, 7]
+    cleanup:
+      - smooth grey presentation background removed by local colour-surface segmentation
+      - chamber smoke, jam sparks and compact detached fragments retained
+      - feet aligned to the declared y=44 anchor
+
+  - job_id: moss_remaining_animation_gaps__railgun_charge
+    status: integrated
+    runtime_animation: railgun_charge
+    atlas_row: 2
+    prompt: docs/sprite-production/render-jobs/expansion/player_gap/moss_remaining_animation_gaps/moss_remaining_animation_gaps__railgun_charge.md
+    output: docs/sprite-production/accepted-renders/moss_remaining_animation_gaps/railgun_charge_4c_2r.png
+    output_sha256: 177ba871aca522888707614f7c4b68ee73580449979885b81dc71f0b5fba7069
+    source:
+      chat_file_id: file_00000000978081f4bda0475d8e7aa011
+      original_name: a_series_of_six_pixel_art_sprite_frames_arranged_i.png
+      dimensions: [1536, 1024]
+      sha256: 57a14630d95a7231e174e6ff5eb348dc73407997cd60d985c5c645ed6c648498
+      preserved_in_repository: false
+      note: full-resolution chat artifact was not available inside the workspace bridge; its immutable hash is recorded here
+    selected_source_poses: [1, 2, 3, 5, 6, 7]
+    cleanup:
+      - smooth grey presentation background removed by local colour-surface segmentation
+      - cyan capacitor growth and release-ready smoke retained
+      - feet aligned to the declared y=44 anchor
+
+integration:
+  approved_by: operator request
+  approved_on: 2026-07-23
+  sheet_id: moss_remaining_animation_gaps
+  source_atlas: assets/sprites/player-expansion/moss_remaining_animation_gaps.png
+  public_atlas: apps/runner/public/assets/sprites/player-expansion/moss_remaining_animation_gaps.png
+  atlas_dimensions: [384, 144]
+  atlas_grid: [8, 3]
+  atlas_sha256: 1351336f1a3e66dde65ccb26625b89561e491b18f6b93abf9cca4dd7807b5be6
+  manifest_paths:
+    - data/sprites.json
+    - apps/runner/public/data/sprites.json
+  runtime:
+    air_dodge: wired to airborne dodge selection
+    railgun_reload_failure: registered for future gameplay state
+    railgun_charge: registered for future gameplay state
+  command: python3 scripts/integrate-chronicle-first-sprite-set.py
+  verification: python3 scripts/integrate-chronicle-first-sprite-set.py --check
+
+remaining_queue:
+  next:
+    - moss_remaining_animation_gaps__rocket_air_brake
+  pending:
+    - moss_remaining_animation_gaps__carry_idle
+    - moss_remaining_animation_gaps__carry_jump
+    - moss_remaining_animation_gaps__carry_run
+    - moss_remaining_animation_gaps__checkpoint_respawn
+    - moss_remaining_animation_gaps__claw_cross
+    - moss_remaining_animation_gaps__fast_fall
+    - moss_remaining_animation_gaps__invoice_splitter
+    - moss_remaining_animation_gaps__katana_parry
+    - moss_remaining_animation_gaps__ledge_drop
+    - moss_remaining_animation_gaps__stealth_enter
+    - moss_remaining_animation_gaps__stealth_exit
+    - moss_remaining_animation_gaps__stealth_loop
+    - moss_remaining_animation_gaps__stim_use
+    - moss_remaining_animation_gaps__wall_jump
+
+review_requirements:
+  - keep native-scale visual review enabled for the promoted extension sheet
+  - confirm all detached railgun fragments remain within their source cell
+  - compare Moss proportions and weapon design against the production atlas
+  - exercise air_dodge in engine and keep the two railgun clips available for future state wiring

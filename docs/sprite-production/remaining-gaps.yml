@@ -1,0 +1,173 @@
+version: 1
+purpose: >-
+  Structured completion catalog for Badger Sprawl Runner animation, interactive-tile,
+  boss-action, NPC/companion, enemy-state, and VFX gaps that are not represented by
+  the current runtime atlas rows or the broader full-scope expansion templates.
+metadata_contract:
+  required:
+    - atlas_family
+    - animation_state
+    - animation_class
+    - runtime_clip
+    - source_class
+    - frames
+    - action
+  review_state: pending_render
+
+player_gaps:
+  - { id: fast_fall, frames: 4, animation_class: locomotion, runtime_clip: future:fast_fall, action: "apex tuck, deliberate downward streamline, maximum fast-fall pose, landing-ready spread" }
+  - { id: air_dodge, frames: 6, animation_class: evasion, runtime_clip: future:air_dodge, action: "airborne anticipation, compact lateral tuck, clean invulnerability silhouette, trailing coat and tail, reorientation, fall-ready recovery" }
+  - { id: wall_jump, frames: 6, animation_class: traversal, runtime_clip: future:wall_jump, action: "wall compression, claw release, explosive diagonal push, airborne extension, counter-rotation, normal fall recovery" }
+  - { id: ledge_drop, frames: 4, animation_class: traversal, runtime_clip: future:ledge_drop, action: "stable ledge hang, deliberate hand release, compact drop, fall-ready silhouette" }
+  - { id: checkpoint_respawn, frames: 8, animation_class: recovery, runtime_clip: future:checkpoint_respawn, action: "signal motes gather, crouched re-materialization, systems wake, guarded rise, check equipment, orient, ready stance, idle bridge" }
+  - { id: stim_use, frames: 6, animation_class: item_use, runtime_clip: future:stim_use, action: "retrieve stim, brace, inject or trigger, healing pulse, discard safely, guarded recovery" }
+  - { id: carry_idle, frames: 4, animation_class: carry, runtime_clip: future:carry_idle, action: "stable two-hand carry, inhale, weight adjustment, loop bridge without changing payload size" }
+  - { id: carry_run, frames: 8, animation_class: carry, runtime_clip: future:carry_run, action: "eight-frame burdened run with short stride, protected payload, stable grip and clear foot contacts" }
+  - { id: carry_jump, frames: 6, animation_class: carry, runtime_clip: future:carry_jump, action: "loaded takeoff, protected payload rise, apex, descent, two-foot impact, carry-ready recovery" }
+  - { id: claw_cross, frames: 8, animation_class: melee_skill, runtime_clip: skill:claw_cross, action: "lead rake, crossing second claw, active cross silhouette, hit-stop peak, follow-through, guarded recovery, combo seam, idle bridge" }
+  - { id: invoice_splitter, frames: 8, animation_class: melee_skill, runtime_clip: skill:invoice_splitter, action: "parry-confirm anticipation, low seam read, precise splitting strike, compact impact, recoil, counter step, guarded recovery, idle bridge" }
+  - { id: katana_parry, frames: 6, animation_class: weapon_defense, runtime_clip: future:katana_parry, action: "sheathed guard, blade intercept, contact spark, controlled deflection, resheath motion, ready recovery" }
+  - { id: stealth_enter, frames: 6, animation_class: stealth, runtime_clip: future:stealth_enter, action: "notice cover, lower profile, soften footfall, coat and scarf compress, neon rim dims, stealth-ready hold" }
+  - { id: stealth_loop, frames: 8, animation_class: stealth, runtime_clip: future:stealth_loop, action: "quiet eight-frame low walk with stable head height, restrained secondary motion and no bright VFX" }
+  - { id: stealth_exit, frames: 6, animation_class: stealth, runtime_clip: future:stealth_exit, action: "stealth hold, explosive first step, silhouette opens, scarf catches up, combat guard returns, idle bridge" }
+  - { id: rocket_air_brake, frames: 6, animation_class: traversal, runtime_clip: future:rocket_air_brake, action: "boosting pose, reverse-thrust ignition, maximum braking compression, suspended beat, pack cool-down, fall-ready recovery" }
+  - { id: railgun_charge, frames: 6, animation_class: ranged_weapon, runtime_clip: future:railgun_charge, action: "raise railgun, plant feet, capacitor glow grows, chamber alignment, maximum charge hold, release-ready frame" }
+  - { id: railgun_reload_failure, frames: 6, animation_class: ranged_weapon, runtime_clip: future:railgun_reload_failure, action: "open chamber, mistimed insert, visible jam, frustrated correction, reseat cell, guarded recovery" }
+
+enemy_state_extensions:
+  - { id: alert, frames: 4, animation_class: awareness, runtime_clip: future:enemy_alert, action: "neutral patrol, perception snap, strongest readable alert pose, pursuit-ready recovery" }
+  - { id: turn_or_reorient, frames: 4, animation_class: locomotion, runtime_clip: future:enemy_turn, action: "load near support, narrow turning silhouette, plant toward opposite direction, stable patrol recovery" }
+  - { id: evade_or_reposition, frames: 6, animation_class: evasion, runtime_clip: future:enemy_evade, action: "threat read, evasive load, fastest reposition pose, passing phase, brake, attack-ready recovery" }
+  - { id: recover, frames: 4, animation_class: recovery, runtime_clip: future:enemy_recover, action: "attack follow-through, vulnerable recoil, regain balance, return to patrol guard" }
+
+character_state_extensions:
+  - { id: walk, frames: 8, animation_class: locomotion, runtime_clip: future:character_walk, action: "eight-frame side-view walk with stable identity, clear contacts and restrained conversational secondary motion" }
+  - { id: follow_or_run, frames: 8, animation_class: locomotion, runtime_clip: future:companion_follow, action: "eight-frame purposeful follow run, readable role equipment, stable anchor and no combat VFX" }
+  - { id: hurt, frames: 4, animation_class: reaction, runtime_clip: future:character_hurt, action: "impact recoil, strongest readable reaction, balance catch, protected recovery" }
+  - { id: celebrate_or_resolve, frames: 6, animation_class: presentation, runtime_clip: future:character_resolve, action: "recognition, character-specific positive gesture, strongest held pose, secondary flourish, settle, reusable idle bridge" }
+
+boss_action_variants:
+  boss_boss_captain_grin_tollmech:
+    - { id: toll_charge, frames: 8, animation_class: boss_attack, runtime_clip: boss:charge, action: "barrier arms lock forward, exosuit crouches, high-speed toll-lane charge, impact brake and exposed recovery" }
+    - { id: receipt_burst, frames: 8, animation_class: boss_special, runtime_clip: boss:receipt_burst, action: "printer mechanisms open, receipts coil, radial paper burst peaks, jammed-machine recovery" }
+    - { id: barrier_slam, frames: 8, animation_class: boss_attack, runtime_clip: future:boss_barrier_slam, action: "one barrier arm rises, whole tollbooth weight commits, ground slam, rebound and reset" }
+  boss_boss_knife_drone_nest:
+    - { id: knife_lunge, frames: 8, animation_class: boss_attack, runtime_clip: boss:knife_lunge, action: "nest contracts, blade cluster points, forward lunge, stabbing peak, recoil and hover reset" }
+    - { id: blade_fan, frames: 8, animation_class: boss_special, runtime_clip: boss:blade_fan, action: "fan blades unfold, rotational windup, broad blade fan release, spinning recovery" }
+    - { id: syringe_rain, frames: 8, animation_class: boss_special, runtime_clip: future:boss_syringe_rain, action: "clinic receipt vents open, syringes aim upward, launch volley, empty nest shudders and reloads" }
+  boss_boss_madame_vitrine_glasscourt:
+    - { id: glass_lane, frames: 8, animation_class: boss_attack, runtime_clip: boss:glass_lane, action: "glass armor refracts, arm traces a lane, mirrored blade wall releases, composed recovery" }
+    - { id: contract_fan, frames: 8, animation_class: boss_special, runtime_clip: boss:contract_fan, action: "contract ribbons gather into a fan, cutting spread opens, ribbons snap outward, executive poise returns" }
+    - { id: mirror_dash, frames: 8, animation_class: boss_mobility, runtime_clip: boss:mirror_dash, action: "reflection splits, body leans, crystalline dash streak, reappearing strike, glass fragments settle" }
+  boss_boss_reflection_judge_court:
+    - { id: contract_gavel, frames: 8, animation_class: boss_attack, runtime_clip: boss:contract_gavel, action: "gavel sword lifts, judgment pause, vertical verdict strike, cracked-glass recoil and reset" }
+    - { id: mirror_verdict, frames: 8, animation_class: boss_special, runtime_clip: boss:mirror_verdict, action: "witness masks align, mirror plane forms, verdict pulse releases, masks return to orbit" }
+    - { id: false_self_dash, frames: 8, animation_class: boss_mobility, runtime_clip: boss:false_self_dash, action: "false reflection peels away, judge vanishes into glass, crossing dash, true body resolves, robe settles" }
+  boss_boss_king_feedback_ampthrone:
+    - { id: security_pulse, frames: 8, animation_class: boss_attack, runtime_clip: boss:security_pulse, action: "speaker armor compresses, crown cables charge, close pulse expands, anxious recoil and reset" }
+    - { id: emergency_crown, frames: 8, animation_class: boss_special, runtime_clip: boss:emergency_crown, action: "cable crown rises, throne amplifiers overload, jagged command field peaks, unstable cool-down" }
+    - { id: chorus_test, frames: 8, animation_class: boss_special, runtime_clip: boss:chorus_test, action: "speaker stacks answer in sequence, king conducts, synchronized bass wave peaks, listening recovery" }
+  boss_boss_black_ice_fox_node:
+    - { id: black_ice_dash, frames: 8, animation_class: boss_mobility, runtime_clip: future:boss_black_ice_dash, action: "crystalline tails narrow, low fox launch, high-speed frost dash, skid and predatory reset" }
+    - { id: code_tail_barrage, frames: 8, animation_class: boss_special, runtime_clip: future:boss_code_tail_barrage, action: "multiple code tails fan open, shards align, staggered black-ice barrage, tails recoil into guard" }
+    - { id: frost_node_trap, frames: 8, animation_class: boss_special, runtime_clip: future:boss_frost_node_trap, action: "paw marks a node, frost pixels root outward, trap crystallizes, fox withdraws and watches" }
+  boss_boss_elevator_angel_counterweight:
+    - { id: cargo_hook_sweep, frames: 8, animation_class: boss_attack, runtime_clip: future:boss_cargo_hook_sweep, action: "hook hand retracts, cable tension builds, broad cargo-hook sweep, counterweight recoil" }
+    - { id: gravity_flip, frames: 8, animation_class: boss_special, runtime_clip: future:boss_gravity_flip, action: "cable wings lock, halo rotates, gravity stamp inversion peaks, suspended recovery" }
+    - { id: cable_wing_gust, frames: 8, animation_class: boss_special, runtime_clip: future:boss_cable_wing_gust, action: "wings draw inward, cables whip outward, white-gold pressure gust, wing reset" }
+  boss_boss_director_vane_skylock:
+    - { id: skylock_beam, frames: 8, animation_class: boss_special, runtime_clip: future:boss_skylock_beam, action: "air-lock halo targets, ledger spine charges, narrow skylock beam releases, executive recovery" }
+    - { id: ledger_spine_lance, frames: 8, animation_class: boss_attack, runtime_clip: future:boss_ledger_spine_lance, action: "gold ledger spine unfolds into a lance, precise thrust, piercing peak, controlled retract" }
+    - { id: airlock_halo_crush, frames: 8, animation_class: boss_special, runtime_clip: future:boss_airlock_halo_crush, action: "halo expands around the body, locks onto a circular boundary, crushing contraction, unstable release" }
+
+world_gameplay_tiles:
+  lower_sprawl:
+    - { id: toll_meter, frames: 4, animation_class: interactive_tile, runtime_clip: future:lower_sprawl_toll_meter, action: "idle meter, scan/read state, accepted pulse, disabled or liberated state" }
+    - { id: steam_vent, frames: 8, animation_class: hazard_tile, runtime_clip: stage:steam_vent, action: "cold vent, warning rattle, first steam, active jet peak, sustained jet, pressure drop, drips, safe reset" }
+    - { id: market_relay, frames: 4, animation_class: checkpoint_tile, runtime_clip: future:lower_sprawl_market_relay, action: "offline, receiving signal, checkpoint activation, stable communal glow" }
+    - { id: wet_electric_rail, frames: 6, animation_class: hazard_tile, runtime_clip: future:lower_sprawl_electric_rail, action: "wet idle, spark tell, current travels, full hazard, residual spark, safe reset" }
+    - { id: toll_gate_barrier, frames: 6, animation_class: interactive_tile, runtime_clip: future:lower_sprawl_toll_gate, action: "closed, unlock pulse, arm rises, open hold, arm lowers, locked reset" }
+    - { id: rain_gutter_transition, frames: 4, animation_class: environment_tile, runtime_clip: future:lower_sprawl_gutter, action: "steady drip phases with stable collision footprint and clean tile edges" }
+  drainmarket:
+    - { id: invoice_flash, frames: 4, animation_class: cue_tile, runtime_clip: stage:invoice_flash, action: "dormant red invoice glyph without text, warning pulse, parry window peak, fade" }
+    - { id: triage_scanner, frames: 6, animation_class: interactive_tile, runtime_clip: future:drainmarket_triage_scanner, action: "idle clinic scanner, target acquire, scan sweep, result pulse, reset, assisted state" }
+    - { id: knife_nest_hatch, frames: 6, animation_class: hazard_tile, runtime_clip: future:drainmarket_nest_hatch, action: "sealed hatch, tremor, open, drone release, empty pause, reseal" }
+    - { id: leaking_valve_hazard, frames: 6, animation_class: hazard_tile, runtime_clip: future:drainmarket_valve, action: "drip, pressure tell, toxic leak, full hazard, dwindling leak, safe reset" }
+    - { id: clinic_checkpoint, frames: 4, animation_class: checkpoint_tile, runtime_clip: future:drainmarket_checkpoint, action: "dark clinic relay, mutual-aid boot, healing pulse, stable saved state" }
+    - { id: sump_grate_break, frames: 4, animation_class: breakable_tile, runtime_clip: future:drainmarket_grate_break, action: "intact grate, bent grate, breaking impact, open grate" }
+  chrome_arcology:
+    - { id: rail_sightline_marker, frames: 4, animation_class: cue_tile, runtime_clip: future:chrome_sightline, action: "dark lane marker, alignment hint, charged sightline, shot-afterglow" }
+    - { id: glass_lane, frames: 6, animation_class: hazard_tile, runtime_clip: boss:glass_lane_tile, action: "clear floor, refraction tell, glass blade rises, active lane, shards fall, safe floor" }
+    - { id: elevator_seed_router, frames: 6, animation_class: interactive_tile, runtime_clip: future:chrome_seed_router, action: "idle router, focus, first authority pulse, routing activity, accepted state, reset" }
+    - { id: laser_floor, frames: 6, animation_class: hazard_tile, runtime_clip: future:chrome_laser_floor, action: "inactive emitter, warning line, ignition, active beam, cool-down, inactive reset" }
+    - { id: cargo_lift_platform, frames: 4, animation_class: moving_tile, runtime_clip: future:chrome_cargo_lift, action: "resting platform, acceleration vibration, moving state, braking settle" }
+    - { id: brittle_glass_wall, frames: 4, animation_class: breakable_tile, runtime_clip: future:chrome_glass_wall, action: "intact glass, stressed cracks, breaking burst, empty frame with edge shards" }
+  straylight_mirage:
+    - { id: false_door, frames: 6, animation_class: interactive_tile, runtime_clip: future:mirage_false_door, action: "convincing closed door, subtle glitch, false opening, collapse into light, empty hold, reset" }
+    - { id: reflection_loop, frames: 6, animation_class: puzzle_tile, runtime_clip: future:mirage_reflection_loop, action: "stable mirror, delayed reflection, divergent reflection, loop break flash, real surface, reset" }
+    - { id: banquet_switch, frames: 4, animation_class: interactive_tile, runtime_clip: future:mirage_banquet_switch, action: "ornate idle switch, refusal input, accepted pulse, permanently changed state" }
+    - { id: lightblade_tripline, frames: 6, animation_class: hazard_tile, runtime_clip: future:mirage_tripline, action: "hidden anchors, warning glint, blade line forms, active sweep, fade, reset" }
+    - { id: zero_g_fountain, frames: 8, animation_class: environment_tile, runtime_clip: future:mirage_zero_g_fountain, action: "stable basin with eight coherent floating-fluid phases and unchanged footprint" }
+    - { id: mirror_floor_break, frames: 4, animation_class: breakable_tile, runtime_clip: future:mirage_floor_break, action: "intact mirror floor, spider cracks, collapse, transparent gap with shard edges" }
+  dub_colony:
+    - { id: woofer_pulse, frames: 8, animation_class: rhythm_tile, runtime_clip: stage:woofer_pulse, action: "eight-frame 86-BPM speaker cone cycle with one unmistakable downbeat peak" }
+    - { id: reactor_valve, frames: 6, animation_class: interactive_tile, runtime_clip: future:dub_reactor_valve, action: "idle valve, input tell, turning action, synchronized peak, overcharged state, reset" }
+    - { id: feedback_arc, frames: 6, animation_class: hazard_tile, runtime_clip: future:dub_feedback_arc, action: "quiet cable, static warning, arc ignition, active feedback, residual sparks, safe reset" }
+    - { id: vote_console, frames: 4, animation_class: interactive_tile, runtime_clip: future:dub_vote_console, action: "idle public console, listening state, collective choice pulse, recorded result without text" }
+    - { id: greenhouse_lift, frames: 4, animation_class: moving_tile, runtime_clip: future:dub_greenhouse_lift, action: "rest, organic lift expansion, moving platform, soft settle" }
+    - { id: speakerstone_break, frames: 4, animation_class: breakable_tile, runtime_clip: future:dub_speakerstone_break, action: "intact speakerstone, cracked cone, bass-fracture burst, broken rubble" }
+  antenna_barrens:
+    - { id: signal_snow, frames: 8, animation_class: environment_tile, runtime_clip: future:antenna_signal_snow, action: "eight crisp static phases with stable alpha density and no readable symbols" }
+    - { id: static_mast, frames: 6, animation_class: hazard_tile, runtime_clip: future:antenna_static_mast, action: "quiet mast, charge tell, lightning branch, full arc, residual current, safe reset" }
+    - { id: regex_terminal, frames: 6, animation_class: interactive_tile, runtime_clip: future:antenna_regex_terminal, action: "idle terminal without text, malformed pulse, correction activity, valid confirmation, public exploit state, reset" }
+    - { id: lightning_pylon, frames: 6, animation_class: hazard_tile, runtime_clip: future:antenna_lightning_pylon, action: "grounded pylon, cloud charge, strike tell, lightning impact, ground arc, recovery" }
+    - { id: wire_bridge, frames: 4, animation_class: moving_tile, runtime_clip: future:antenna_wire_bridge, action: "stable bridge, wind bend, maximum sway, return" }
+    - { id: brittle_dish, frames: 4, animation_class: breakable_tile, runtime_clip: future:antenna_dish_break, action: "intact dish, dented dish, collapse, broken mast debris" }
+  orbital_lift:
+    - { id: gravity_stamp, frames: 6, animation_class: puzzle_tile, runtime_clip: future:orbital_gravity_stamp, action: "idle stamp, rotate, inversion tell, gravity active, lock release, reset" }
+    - { id: vacuum_leak, frames: 6, animation_class: hazard_tile, runtime_clip: future:orbital_vacuum_leak, action: "sealed seam, frost tell, leak begins, full jet, pressure dwindles, resealed" }
+    - { id: cargo_strap_swing, frames: 8, animation_class: traversal_tile, runtime_clip: future:orbital_cargo_strap, action: "eight-frame pendulum strap loop with stable pivot and clear grab point" }
+    - { id: scanner_gate, frames: 6, animation_class: interactive_tile, runtime_clip: future:orbital_scanner_gate, action: "closed scanner, sweep, rejection, hacked acceptance, open, reset" }
+    - { id: counterweight_platform, frames: 4, animation_class: moving_tile, runtime_clip: future:orbital_counterweight, action: "rest, cable tension, vertical travel, braking settle" }
+    - { id: cargo_crate_break, frames: 4, animation_class: breakable_tile, runtime_clip: future:orbital_crate_break, action: "sealed crate, dented crate, break burst, scattered cargo-safe debris" }
+  asteroid_redoubt:
+    - { id: low_grav_spark_gap, frames: 6, animation_class: hazard_tile, runtime_clip: future:asteroid_spark_gap, action: "quiet gap, charge motes, first arc, active low-gravity arc, drifting residuals, safe reset" }
+    - { id: transmitter_root, frames: 6, animation_class: interactive_tile, runtime_clip: future:asteroid_transmitter_root, action: "dormant root, signal intake, branching transmission, broadcast peak, stable public node, reset" }
+    - { id: pirate_radio_shrine, frames: 4, animation_class: checkpoint_tile, runtime_clip: future:asteroid_radio_shrine, action: "dark shrine, tuning, checkpoint flare, stable broadcast glow" }
+    - { id: airlock, frames: 6, animation_class: interactive_tile, runtime_clip: future:asteroid_airlock, action: "closed, pressure equalization, opening, open hold, closing, sealed" }
+    - { id: regolith_break, frames: 4, animation_class: breakable_tile, runtime_clip: future:asteroid_regolith_break, action: "solid regolith, cracked block, low-gravity fracture, drifting rubble gap" }
+    - { id: solar_foil_platform, frames: 4, animation_class: environment_tile, runtime_clip: future:asteroid_solar_foil, action: "four subtle foil shimmer and flex phases with stable collision edge" }
+
+vfx_gaps:
+  - { id: dodge_poof, frames: 6, animation_class: player_vfx, runtime_clip: future:vfx_dodge, action: "compact displacement dust or signal poof: spawn, expand, peak, split, fade, clear" }
+  - { id: fast_fall_streak, frames: 4, animation_class: player_vfx, runtime_clip: future:vfx_fast_fall, action: "vertical streak onset, lengthen, maximum speed, fade" }
+  - { id: claw_cross_impact, frames: 6, animation_class: combat_vfx, runtime_clip: skill:vfx_claw_cross, action: "two intersecting claw arcs, contact peak, EMP-edged split and fade" }
+  - { id: invoice_splitter_impact, frames: 6, animation_class: combat_vfx, runtime_clip: skill:vfx_invoice_splitter, action: "thin seam highlight, precise split flash, paper-like fragments, fade" }
+  - { id: peoples_finisher_emp, frames: 8, animation_class: combat_vfx, runtime_clip: skill:vfx_peoples_finisher, action: "grounded anticipation ring, communal EMP expansion, peak, residual public-signal motes and fade" }
+  - { id: katana_air_smear, frames: 6, animation_class: weapon_vfx, runtime_clip: future:vfx_katana_air, action: "compact airborne blade crescent with clear growth, peak and dissipation" }
+  - { id: stealth_enter_poof, frames: 6, animation_class: stealth_vfx, runtime_clip: future:vfx_stealth_enter, action: "dark-violet signal fragments gather, silhouette-sized concealment peak, rapid fade" }
+  - { id: stealth_loop_motes, frames: 4, animation_class: stealth_vfx, runtime_clip: future:vfx_stealth_loop, action: "subtle low-alpha motes loop without obscuring the actor" }
+  - { id: stealth_exit_streak, frames: 6, animation_class: stealth_vfx, runtime_clip: future:vfx_stealth_exit, action: "compressed afterimage, acceleration streak, snap-out and fade" }
+  - { id: rail_charge_orbit, frames: 6, animation_class: weapon_vfx, runtime_clip: future:vfx_rail_charge, action: "capacitor points appear, align, orbit tightens, maximum charge, release flash, clear" }
+  - { id: perfect_reload_ring, frames: 6, animation_class: cue_vfx, runtime_clip: future:vfx_perfect_reload, action: "reload ring closes toward exact sweet spot, confirmation star and fade" }
+  - { id: rocket_air_brake_burst, frames: 6, animation_class: traversal_vfx, runtime_clip: future:vfx_air_brake, action: "reverse-thrust spark, opposing flame cone, peak compression, smoke curl and fade" }
+  - { id: stim_heal_burst, frames: 6, animation_class: item_vfx, runtime_clip: future:vfx_stim, action: "small injection spark, mint healing pulse, segmented recovery motes, fade" }
+  - { id: mirror_decoy_spawn, frames: 8, animation_class: item_vfx, runtime_clip: item:vfx_decoy, action: "reflection outline appears, false body stabilizes, flickers, fractures and fades" }
+  - { id: companion_shield_break, frames: 6, animation_class: companion_vfx, runtime_clip: future:vfx_companion_shield, action: "protective ring absorbs hit, cracks, bright break, harmless fragments fade" }
+  - { id: hack_ownership_flip, frames: 6, animation_class: hack_vfx, runtime_clip: future:vfx_ownership_flip, action: "hostile red nodes, syntax pulse, ownership inversion, ally cyan confirmation and settle" }
+  - { id: enemy_alert_burst, frames: 4, animation_class: enemy_vfx, runtime_clip: future:vfx_enemy_alert, action: "small perception spark, warning wedge, strongest alert pulse, fade" }
+  - { id: enemy_parry_stun, frames: 6, animation_class: enemy_vfx, runtime_clip: future:vfx_enemy_stun, action: "contact flash, broken attack line, rotating stun fragments, fade" }
+  - { id: receipt_paper_burst, frames: 8, animation_class: boss_vfx, runtime_clip: boss:vfx_receipt_burst, action: "paper coils spawn, radial receipt wave peaks, strips tumble, dissolve without text" }
+  - { id: blade_fan_wave, frames: 8, animation_class: boss_vfx, runtime_clip: boss:vfx_blade_fan, action: "blade glints align, fan wave expands, cutting peak, fragments retract and fade" }
+  - { id: glass_lane_rise, frames: 8, animation_class: boss_vfx, runtime_clip: boss:vfx_glass_lane, action: "refraction line, crystalline warning, glass lane erupts, holds, shatters and clears" }
+  - { id: mirror_verdict_pulse, frames: 8, animation_class: boss_vfx, runtime_clip: boss:vfx_mirror_verdict, action: "mirror plane forms, witness-mask pulse converges, verdict flash, reflection fragments fade" }
+  - { id: feedback_security_pulse, frames: 8, animation_class: boss_vfx, runtime_clip: boss:vfx_security_pulse, action: "speaker rings compress, bass pulse expands, peak distortion, clean rhythmic fade" }
+  - { id: black_ice_shatter, frames: 8, animation_class: boss_vfx, runtime_clip: future:vfx_black_ice, action: "frost node forms, black crystal branches, shatter peak, code shards evaporate" }
+  - { id: cargo_hook_trail, frames: 6, animation_class: boss_vfx, runtime_clip: future:vfx_cargo_hook, action: "cable arc begins, hook-speed trail peaks, tension snap and fade" }
+  - { id: skylock_beam, frames: 8, animation_class: boss_vfx, runtime_clip: future:vfx_skylock_beam, action: "halo target reticle without text, beam ignition, sustained narrow beam, collapse and afterglow" }
+  - { id: turret_tracer, frames: 6, animation_class: enemy_vfx, runtime_clip: future:vfx_turret_tracer, action: "aim point, thin tracer tell, shot line, impact spark, residual line, clear" }
+  - { id: shield_break, frames: 6, animation_class: enemy_vfx, runtime_clip: future:vfx_shield_break, action: "shield stress, crack network, break peak, fragments and fade" }
+  - { id: swarm_scatter, frames: 6, animation_class: enemy_vfx, runtime_clip: future:vfx_swarm_scatter, action: "tight swarm marker, hit disruption, fragments scatter, regroup hint or fade" }
+  - { id: boss_phase_transition, frames: 8, animation_class: boss_vfx, runtime_clip: future:vfx_boss_phase, action: "old phase motif destabilizes, breaks, new palette motif emerges, power peak and settle" }
+  - { id: rain_impact, frames: 4, animation_class: environment_vfx, runtime_clip: future:vfx_rain_impact, action: "drop contact, crown splash, ripple, fade" }
+  - { id: sewage_bubble, frames: 6, animation_class: environment_vfx, runtime_clip: future:vfx_sewage_bubble, action: "small bubble grows, wobbles, pops, droplets rise, surface ripple, clear" }
