@@ -1,0 +1,132 @@
+name: Badger Sprawl Runner AppImage Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated release tag to package, for example v1.5.2
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: badger-appimage-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow revision
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$DISPATCH_TAG"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $tag" >&2
+            exit 1
+          fi
+          git fetch --force --tags origin
+          if [[ "$(git cat-file -t "refs/tags/$tag")" != "tag" ]]; then
+            echo "$tag must be an annotated tag" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout exact release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: git checkout --detach "refs/tags/$RELEASE_TAG"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Validate release packet and package version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git show "refs/remotes/origin/main:release-evidence/releases/${RELEASE_TAG}.json" > "$RUNNER_TEMP/release-packet.json"
+          node scripts/verify-release-packet.mjs --packet "$RUNNER_TEMP/release-packet.json" --tag "$RELEASE_TAG"
+          node -e "const p=require('./package.json'); if (p.version !== process.env.RELEASE_VERSION) { throw new Error('package version ' + p.version + ' differs from ' + process.env.RELEASE_VERSION); }"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build AppImage
+        run: pnpm run desktop:appimage
+
+      - name: Smoke-test and hash AppImage
+        id: artifact
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          appimage="release/Badger Sprawl Runner-${RELEASE_VERSION}-x86_64.AppImage"
+          test -s "$appimage"
+          chmod +x "$appimage"
+          "$appimage" --appimage-version
+          sha256sum "$appimage" > "${appimage}.sha256"
+          echo "path=$appimage" >> "$GITHUB_OUTPUT"
+          echo "checksum=${appimage}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Upload AppImage workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: badger-sprawl-runner-${{ steps.release.outputs.tag }}-appimage
+          path: |
+            ${{ steps.artifact.outputs.path }}
+            ${{ steps.artifact.outputs.checksum }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          APPIMAGE: ${{ steps.artifact.outputs.path }}
+          CHECKSUM: ${{ steps.artifact.outputs.checksum }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --verify-tag \
+              --title "Badger Sprawl Runner ${RELEASE_VERSION}" \
+              --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" "$APPIMAGE" "$CHECKSUM" --clobber
