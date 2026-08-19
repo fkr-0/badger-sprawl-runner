@@ -8,6 +8,11 @@ All notable changes to Badger Sprawl Runner are documented here.
 
 ## [1.5.2] - Unreleased
 
+### Documentation
+
+- Added a compact machine-readable `v1.5.1` release packet recording the exact tag/commit boundary, release-member versions, verification outcomes, artifact hashes, known caveats, and explicit local-only publication state.
+- Documented the distinction between lightweight tagged-release packets and the heavyweight dated campaign-certification evidence trees.
+
 ## [1.5.1] - 2026-08-19
 
 ### Added

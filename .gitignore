@@ -30,7 +30,9 @@ workflow.json
 .worktrees/
 
 # Generated release evidence and raw/review image workspaces
-release-evidence/
+release-evidence/*
+!release-evidence/releases/
+!release-evidence/releases/**
 release/
 images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/
 images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet.zip

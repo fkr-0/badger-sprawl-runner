@@ -1,0 +1,142 @@
+{
+  "contractVersion": 1,
+  "release": {
+    "name": "Badger Sprawl Runner",
+    "version": "1.5.1",
+    "date": "2026-08-19",
+    "tag": "v1.5.1",
+    "tagObject": "f4a05246c3299db00137fa07b53cd1b3aa3c419c",
+    "tagTarget": "02fb9d465bf3293763e4f38cc24a409cfd70cf5c",
+    "baseCommit": "f19ce1b67e44c157d2f8f81e5a0a63da686e7a7d",
+    "tree": "520b67c945f040adae3dd42b41f5d91eb99dcc8d",
+    "subject": "release: badger sprawl runner 1.5.1"
+  },
+  "releaseMembers": [
+    {
+      "path": "package.json",
+      "name": "badger-sprawl-runner-workspace",
+      "version": "1.5.1"
+    },
+    {
+      "path": "apps/runner/package.json",
+      "name": "@badger/runner",
+      "version": "1.5.1"
+    }
+  ],
+  "releaseTrain": {
+    "current": "1.5.1",
+    "nextPatch": "1.5.2",
+    "nextMinor": "1.6.0",
+    "runtimeCompatibility": "1.12.0"
+  },
+  "toolchain": {
+    "node": "v24.18.0",
+    "pnpm": "9.0.0",
+    "python": "3.14.6",
+    "git": "2.55.0"
+  },
+  "verification": [
+    {
+      "command": "pnpm run release:plan:check",
+      "status": "passed",
+      "result": "release train verified: 1.5.2 patch, 1.6.0 minor"
+    },
+    {
+      "command": "pnpm run test",
+      "status": "passed",
+      "result": "data/runtime/sprite contracts passed; package suites passed with 817 package tests in aggregate"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "status": "passed",
+      "result": "all workspace packages and runner typechecked"
+    },
+    {
+      "command": "pnpm run build",
+      "status": "passed",
+      "result": "workspace packages, Vite production runner, and Artifact Lab bundle built successfully"
+    },
+    {
+      "command": "pnpm run smoke:runner",
+      "status": "passed",
+      "result": "runner smoke passed with 70 runtime sheets and 3 archival sheets"
+    },
+    {
+      "command": "pnpm run smoke:artifact",
+      "status": "passed",
+      "result": "production Artifact Lab browser smoke passed"
+    },
+    {
+      "command": "pnpm run lint",
+      "status": "passed",
+      "result": "Biome checked 407 files with no fixes required"
+    },
+    {
+      "command": "node tests/runtime-subpaths-e2e.mjs",
+      "status": "passed",
+      "result": "runtime subpath E2E contract passed"
+    },
+    {
+      "command": "pnpm --filter @badger/runner exec vitest run src/renderer/BadgerPixiBridge.test.ts",
+      "status": "passed",
+      "result": "1 test passed"
+    },
+    {
+      "command": "node scripts/run-isolated-playwright.mjs --project=firefox tests/e2e/game-mechanics.spec.ts --grep 'melee attack should trigger meleeTimer'",
+      "status": "passed",
+      "durationSeconds": 4.708,
+      "result": "Firefox melee timing regression test passed after replacing a fixed-delay observation with animation-frame polling"
+    },
+    {
+      "command": "pnpm run test:e2e:release",
+      "status": "passed",
+      "durationSeconds": 374.665,
+      "result": "247 passed, 1 skipped, 0 failed across Chromium and Firefox",
+      "skip": "tests/e2e/sprite-visual-review.spec.ts intentionally skips Firefox because visual-review PNGs are produced once with Chromium"
+    },
+    {
+      "command": "pnpm run desktop:dir",
+      "status": "passed",
+      "result": "unpacked Linux Electron application built successfully"
+    },
+    {
+      "command": "pnpm run desktop:appimage",
+      "status": "passed",
+      "result": "x86_64 AppImage built successfully"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "release/Badger Sprawl Runner-1.5.1-x86_64.AppImage",
+      "bytes": 133758628,
+      "sha256": "b0739c36810542de7bdf4d357454c448acd4c7123233d1e93df4eef78b22c9da"
+    },
+    {
+      "path": "apps/runner/dist",
+      "files": 111,
+      "bytes": 20439977,
+      "digestAlgorithm": "sha256(sorted sha256sum lines including paths)",
+      "sha256": "46d39e56bc1e0d2bc2b87a087afc5acde290984582d25ac123a300ef3afe0c76"
+    },
+    {
+      "path": "apps/runner/dist/index.html",
+      "bytes": 794,
+      "sha256": "50be38d8bb080804d094aa759405073027776eb8cbc2908c20ff7caada6d7ebf"
+    }
+  ],
+  "notes": [
+    "The first aggregate verify:release invocation was interrupted by a ws-bridge restart after its non-browser gates had passed; the mandatory constituent gates were then completed on the frozen tree, including a full clean two-browser release matrix.",
+    "Three trailing-whitespace lines remain inside the reproducibly generated Pixi Vite bundle; source and release metadata whitespace checks are clean. The generated bundle was not hand-edited.",
+    "Local Python was 3.14.6 while CI config uses Python 3.12; the Python-backed sprite contracts passed locally.",
+    "The v1.5.1 tag remains attached to the release-content commit; this evidence packet is intentionally a post-release record and does not move the tag."
+  ],
+  "publication": {
+    "pushRequested": false,
+    "commitPushed": false,
+    "tagPushed": false,
+    "remoteMainAtVerification": "f19ce1b67e44c157d2f8f81e5a0a63da686e7a7d",
+    "remoteTagPresentAtVerification": false,
+    "releasePublished": false,
+    "deploymentPerformed": false
+  }
+}
