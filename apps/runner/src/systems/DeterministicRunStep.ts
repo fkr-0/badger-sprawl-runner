@@ -6,10 +6,8 @@ import {
 	type PhysicsWorldState,
 	type ProjectileHit,
 } from '@badger/platformer-core';
-import {
-	createSystemPipeline,
-	type SystemPipelineSnapshot,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createSystemPipeline } from '@arcade/runtime/core';
+import type { SystemPipelineSnapshot } from '@arcade/runtime/core';
 import type { CombatEntity, CombatEvent } from './CombatSystem';
 import { resolveMaterialEventsAsCombat } from './PhysicsCombatBridge';
 import { resolveProjectileHitsAsCombat } from './ProjectileCombatBridge';

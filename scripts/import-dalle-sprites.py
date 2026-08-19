@@ -548,7 +548,7 @@ def main() -> int:
     base_matches: dict[str, Any] = mapping_payload["matches"]
     matches = resolved_matches(base_matches)
     manifests = [load_json(path) for path in MANIFEST_PATHS]
-    manifest_by_file = {sheet["file"]: sheet for sheet in manifests[0]["spriteSheets"]}
+    manifest_by_file = {sheet["file"]: sheet for sheet in manifests[0]["sheets"]}
     metadata = source_metadata()
 
     conflict_report = build_conflict_report(base_matches, matches)
@@ -631,7 +631,7 @@ def main() -> int:
             or metadata.get(source_number(source_path.name), {}).get("alt", ""),
         }
         for manifest in manifests:
-            manifest_sheet = next(item for item in manifest["spriteSheets"] if item["file"] == target)
+            manifest_sheet = next(item for item in manifest["sheets"] if item["file"] == target)
             manifest_sheet["source"] = source_entry
 
     if imported_files and not args.dry_run:

@@ -13,7 +13,7 @@ manifest = json.load(open('data/sprites.json'))
 
 # Build anchor templates by frame size
 templates = {}
-for s in manifest['spriteSheets']:
+for s in manifest['sheets']:
     fw, fh = s['frameSize']
     anims = s.get('animations', {})
     first_anim = list(anims.values())[0] if anims else None
@@ -58,7 +58,7 @@ for (fw, fh, anc), info in templates.items():
     print(f'Created {fname} for {len(info["sheets"])} sheets')
 
 # Generate per-sprite reference sheets
-for s in manifest['spriteSheets']:
+for s in manifest['sheets']:
     fw, fh = s['frameSize']
     anims = s.get('animations', {})
     first_anim = list(anims.values())[0] if anims else None

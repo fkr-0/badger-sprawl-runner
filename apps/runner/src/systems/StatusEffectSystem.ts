@@ -1,9 +1,5 @@
-import {
-	type TimedEffectState,
-	applyTimedEffect,
-	hasTimedEffect,
-	stepTimedEffects,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { applyTimedEffect, hasTimedEffect, stepTimedEffects } from '@arcade/runtime/core';
+import type { TimedEffectState } from '@arcade/runtime/core';
 
 export type StatusEffectKind = 'bleed' | 'burn' | 'emp' | 'slow' | 'stagger' | 'regen' | 'shield';
 

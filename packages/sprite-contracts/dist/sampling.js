@@ -1,4 +1,4 @@
-import { resolveArcadeSpriteFrame } from '../../../vendor/arcade-runtime.mjs';
+import { resolveArcadeSpriteFrame } from '@arcade/runtime/sprites';
 function requireAnimation(sheet, animationName) {
     const animation = sheet.animations[animationName];
     if (!animation) {

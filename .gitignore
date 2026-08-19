@@ -31,6 +31,7 @@ workflow.json
 
 # Generated release evidence and raw/review image workspaces
 release-evidence/
+release/
 images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet/
 images_6a23c916_DALLE_-_Pixel_Art_Sprite_Sheet.zip
 gimp-anchor-refs/

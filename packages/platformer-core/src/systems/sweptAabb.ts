@@ -1,4 +1,4 @@
-import { sweepAabb as sweepArcadeAabb } from '../../../../vendor/arcade-runtime.mjs';
+import { sweepAabb as sweepArcadeAabb } from '@arcade/runtime/core';
 import type { Rect } from '../types';
 
 export interface SweptObstacle extends Rect {

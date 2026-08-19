@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { ARCADE_RUNTIME_VERSION as SHARED_RUNTIME_VERSION } from '../../../../vendor/arcade-runtime.mjs';
+import { ARCADE_RUNTIME_VERSION as SHARED_RUNTIME_VERSION } from '@arcade/runtime/core';
 import {
 	BADGER_ARCADE_RUNTIME_VERSION,
 	BADGER_CANVAS_PASS_TO_PIXI_LAYER,

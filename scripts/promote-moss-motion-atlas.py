@@ -28,7 +28,7 @@ def load_manifest(path: Path) -> dict:
 
 
 def promote_manifest(data: dict) -> None:
-    sheets = data["spriteSheets"]
+    sheets = data["sheets"]
     authored = next(sheet for sheet in sheets if sheet["id"] == "moss_badger")
     production = next(sheet for sheet in sheets if sheet["id"] == "moss_badger_production")
 

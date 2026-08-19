@@ -47,12 +47,15 @@ describe('save store', () => {
 		expect(loadActiveUndercityExpedition(driver)).toBeNull();
 	});
 
-	it('round-trips game meta through a storage driver', () => {
+	it('round-trips game meta through a runtime versioned storage driver', () => {
 		const driver = createMemorySaveDriver();
 		const flow = createGameFlow({ blueprintShards: 1 });
 
 		expect(flow.purchaseSkill('double_swipe').ok).toBe(true);
 		saveGameFlow(driver, flow);
+
+		const raw = JSON.parse(driver.getItem(SAVE_KEY) ?? '{}') as Record<string, unknown>;
+		expect(raw).toMatchObject({ format: 1, version: 2 });
 
 		const loaded = loadGameFlow(driver);
 		expect(loaded.getMeta()).toMatchObject({
@@ -183,6 +186,20 @@ describe('save store', () => {
 
 		expect(loaded.getMeta()).toMatchObject({ blueprintShards: 0, purchasedSkills: [] });
 	});
+});
+
+it('promotes a plain v2 save into the runtime versioned envelope', () => {
+	const driver = createMemorySaveDriver({
+		[SAVE_KEY]: JSON.stringify({
+			version: 2,
+			meta: { blueprintShards: 5 },
+			storyProgress: { currentStageId: 'lower-sprawl' },
+			adventure: loadGameSession(createMemorySaveDriver()).adventure,
+		}),
+	});
+
+	expect(loadGameFlow(driver).getMeta().blueprintShards).toBe(5);
+	expect(JSON.parse(driver.getItem(SAVE_KEY) ?? '{}')).toMatchObject({ format: 1, version: 2 });
 });
 
 it('migrates legacy stage progress into persistent district state', () => {

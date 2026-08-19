@@ -5,22 +5,22 @@
     "package.json",
     "apps/runner/package.json"
   ],
-  "current": "1.4.0",
+  "current": "1.5.1",
   "patch": {
-    "version": "1.4.1",
+    "version": "1.5.2",
     "status": "planned",
     "scope": [
-      "post-integration correctness and browser-isolation fixes",
+      "post-1.5.1 correctness and packaging fixes",
       "artifact, evidence-index and vendored-Runtime consistency",
       "no new gameplay or renderer-ownership features"
     ]
   },
   "minor": {
-    "version": "1.5.0",
+    "version": "1.6.0",
     "status": "planned",
     "includesPatch": true,
     "scope": [
-      "all 1.4.1 maintenance fixes",
+      "all 1.5.2 maintenance fixes",
       "attested physical-device evidence",
       "resumable multi-hour retained-renderer certification",
       "cross-release evidence trend comparison"

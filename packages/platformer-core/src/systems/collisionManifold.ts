@@ -1,7 +1,7 @@
 import {
 	computeCollisionManifold as computeArcadeCollisionManifold,
 	manifoldsFromSpatialPairs as arcadeManifoldsFromSpatialPairs,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/core';
 import type { Rect } from '../types';
 import type { SpatialPair } from './spatialIndex';
 

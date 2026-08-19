@@ -1,4 +1,5 @@
-import type { ArcadeAnimationClock, ArcadeAnimationMode, ArcadeSpriteFrameAddress } from '../../../vendor/arcade-runtime.mjs';
+import type { ArcadeSpriteFrameAddress } from '@arcade/runtime/sprites';
+import type { ArcadeAnimationClock, ArcadeAnimationMode } from '@arcade/runtime/animation';
 import type { SpriteAnimationEvent, SpriteSheet } from './types';
 export interface SpriteAnimationPlaybackState {
     animationName: string;

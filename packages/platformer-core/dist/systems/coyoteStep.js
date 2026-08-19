@@ -1,4 +1,4 @@
-import { createActionGraceState, stepActionGrace, } from '../../../../vendor/arcade-runtime.mjs';
+import { createActionGraceState, stepActionGrace, } from '@arcade/runtime/gameplay';
 /**
  * Pure function: update timers for coyote and jump buffer
  */

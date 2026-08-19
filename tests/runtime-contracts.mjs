@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import './runtime-subpaths-e2e.mjs';
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -1158,7 +1159,7 @@ for (const id of manifest.coreItems) {
 	assert(itemIds.has(id), `core manifest item missing from items.json: ${id}`);
 }
 
-for (const sheet of sprites.spriteSheets) {
+for (const sheet of sprites.sheets) {
 	assert(
 		sheet.file.startsWith('assets/sprites/') ||
 			sheet.file.startsWith('./assets/sprites/') ||

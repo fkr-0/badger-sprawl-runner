@@ -1,7 +1,6 @@
 {
-  "schemaVersion": 1,
-  "baseGrid": 16,
-  "spriteSheets": [
+  "version": "1",
+  "sheets": [
     {
       "id": "moss_badger",
       "file": "assets/sprites/moss_badger_v2.png",

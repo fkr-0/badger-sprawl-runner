@@ -1,8 +1,10 @@
 {
 	"name": "badger-sprawl-runner-workspace",
-	"version": "1.4.0",
+	"version": "1.5.1",
 	"private": true,
 	"type": "module",
+	"main": "desktop/main.mjs",
+	"desktopName": "dev.arcade.badger-sprawl-runner",
 	"description": "Sprite-first cyber-badger 2D platformer with modular architecture.",
 	"packageManager": "pnpm@9.0.0",
 	"keywords": [
@@ -13,8 +15,11 @@
 	],
 	"scripts": {
 		"dev": "pnpm -F @badger/runner dev",
+		"desktop:dev": "node desktop/dev.mjs",
+		"desktop:dir": "pnpm build && electron-builder --dir --linux",
+		"desktop:appimage": "pnpm build && electron-builder --linux AppImage",
 		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
-		"test": "node tests/validate-data.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/sprite-prompt-corpus-contracts.mjs && python3 scripts/generate-sprite-render-prompts.py --check && python3 tests/sprite-atlas-assembly-contract.py && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && python3 scripts/integrate-chronicle-first-sprite-set.py --check && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
+		"test": "node tests/validate-data.mjs && node tests/runtime-sprite-manifest.mjs && node tests/runtime-contracts.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/sprite-prompt-corpus-contracts.mjs && python3 scripts/generate-sprite-render-prompts.py --check && python3 tests/sprite-atlas-assembly-contract.py && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && python3 scripts/integrate-chronicle-first-sprite-set.py --check && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",
@@ -63,10 +68,23 @@
 		"deploy:artifact-lab": "pnpm run verify:release && cd .. && ./artifacts-deploy",
 		"release:plan:check": "node scripts/verify-release-train.mjs"
 	},
+	"build": {
+		"appId": "dev.arcade.badger-sprawl-runner",
+		"productName": "Badger Sprawl Runner",
+		"asar": true,
+		"directories": { "output": "release" },
+		"files": ["apps/runner/dist/**/*", "desktop/main.mjs", "package.json"],
+		"artifactName": "${productName}-${version}-${arch}.${ext}",
+		"toolsets": { "appimage": "1.0.3" },
+		"linux": { "target": ["AppImage"], "category": "Game", "syncDesktopName": true }
+	},
 	"devDependencies": {
+		"@arcade/runtime": "workspace:*",
 		"@biomejs/biome": "^1.8.3",
 		"@playwright/test": "^1.60.0",
 		"@vitest/ui": "^1.0.0",
+		"electron": "^43.4.1",
+		"electron-builder": "^26.15.3",
 		"typescript": "^5.3.3",
 		"vite": "^5.1.0",
 		"vitest": "^1.0.0"

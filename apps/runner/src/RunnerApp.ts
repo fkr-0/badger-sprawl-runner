@@ -1,4 +1,4 @@
-import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
+import type { ArcadePerformanceSummary } from '@arcade/runtime/tooling';
 import { EventBus } from './engine/EventBus';
 import { GameLoop } from './engine/GameLoop';
 import { type Scene, SceneManager } from './engine/SceneManager';

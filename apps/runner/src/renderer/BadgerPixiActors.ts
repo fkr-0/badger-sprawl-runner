@@ -1,9 +1,7 @@
 import { type LoadedSheet, sampleSpriteAnimationFrame } from '@badger/sprite-contracts';
 import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
-import {
-	createPixiFramePool,
-	resolveArcadeSpriteFrame,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createPixiFramePool } from '@arcade/runtime/pixi';
+import { resolveArcadeSpriteFrame } from '@arcade/runtime/sprites';
 import type { Player } from '../actors/MossBadger';
 import type { CombatEntity } from '../systems/CombatSystem';
 import { resolvePlayerSpriteSheet } from './PlayerSpriteSheets';

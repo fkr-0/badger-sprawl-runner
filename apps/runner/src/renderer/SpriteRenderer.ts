@@ -4,13 +4,15 @@
 
 import {
 	type LoadedSheet,
-	type SpriteManifest,
 	type SpriteSheetLoadOptions,
 	bindLoadedSpriteSheet,
 	createSpriteManifestReloadPlan,
 	loadSpriteSheet,
-	normalizeSpriteManifest,
 } from '@badger/sprite-contracts';
+import {
+	normalizeArcadeSpriteManifest,
+	type ArcadeSpriteManifest as SpriteManifest,
+} from '@arcade/runtime/sprites';
 import { isRuntimeSpriteSheet } from './SpriteSheetLifecycle';
 
 export interface SpriteSheetLoadFailure {
@@ -278,7 +280,7 @@ export class SpriteRenderer {
 		};
 		let manifest: SpriteManifest;
 		try {
-			manifest = normalizeSpriteManifest(await this.fetchManifest(manifestUrl));
+			manifest = normalizeArcadeSpriteManifest(await this.fetchManifest(manifestUrl));
 		} catch (error) {
 			if (this.activeLoadController === controller) this.activeLoadController = null;
 			throw error;

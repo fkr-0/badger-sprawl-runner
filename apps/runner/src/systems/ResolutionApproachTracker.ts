@@ -1,4 +1,4 @@
-import { createResolutionEvidenceTracker } from '../../../../vendor/arcade-runtime.mjs';
+import { createResolutionEvidenceTracker } from '@arcade/runtime/gameplay';
 import type { Player } from '../actors/MossBadger';
 import type { StageRuntimeResult } from '../game/GameFlow';
 import { RESOLUTION_APPROACHES, type ResolutionApproach } from '../game/ResolutionApproach';

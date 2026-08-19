@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type {
 	ArcadePixiNamespace,
 	ArcadePixiRuntime
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/pixi';
 import { installBadgerCanvasBridgePasses } from './ArcadeRuntimeAdapter';
 
 describe('Badger shared-runtime bridge adapter', () => {

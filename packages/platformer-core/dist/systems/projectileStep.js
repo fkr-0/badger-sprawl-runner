@@ -1,4 +1,4 @@
-import { resolveHitboxContacts } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveHitboxContacts } from '@arcade/runtime/core';
 import { flyingObjectStep } from './flyingObjectStep';
 import { aabb } from './aabb';
 function projectileRect(projectile) {

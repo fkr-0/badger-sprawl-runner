@@ -2,7 +2,7 @@
  * TitleScene - main menu scene
  */
 
-import { createGridFocusNavigator } from '../../../../vendor/arcade-runtime.mjs';
+import { createGridFocusNavigator } from '@arcade/runtime/ui';
 import type { Scene } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
 import { type EndingCard, buildEndingCard } from '../game/EndingCards';

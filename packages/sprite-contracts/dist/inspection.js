@@ -1,4 +1,4 @@
-import { collectArcadeSpriteAnimationEvents, resolveArcadeSpriteFrame, } from '../../../vendor/arcade-runtime.mjs';
+import { collectArcadeSpriteAnimationEvents, resolveArcadeSpriteFrame, } from '@arcade/runtime/sprites';
 import { auditSpriteAtlasDimensions, createSpriteAtlasAssemblyPlan, deriveSpriteAtlasLayout, } from './production';
 import { sampleSpriteAnimation } from './sampling';
 function requireAnimation(sheet, animationName) {

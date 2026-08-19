@@ -1,7 +1,8 @@
 import {
 	createMemoryStorageAdapter,
 	createStorageAdapter,
-} from '../../../../vendor/arcade-runtime.mjs';
+	createVersionedStore,
+} from '@arcade/runtime/storage';
 import {
 	type GameFlow,
 	type MetaState,
@@ -25,9 +26,13 @@ export const LEGACY_SAVE_KEY = 'badger-sprawl-runner.save.v1';
 export const ACTIVE_EXPEDITION_SAVE_KEY = 'badger-sprawl-runner.active-undercity.v2';
 export const LEGACY_ACTIVE_EXPEDITION_SAVE_KEY = 'badger-sprawl-runner.active-undercity.v1';
 
+const SAVE_SCHEMA_VERSION = 2;
+
 export interface SaveDriver {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
+	removeItem?(key: string): unknown;
+	keys?(): string[];
 }
 
 export function saveActiveUndercityExpedition(
@@ -70,6 +75,12 @@ interface SavePayloadV2 {
 	adventure: AdventureSaveV2;
 }
 
+interface GameSaveData {
+	meta: Partial<MetaState>;
+	storyProgress: Partial<StoryProgress>;
+	adventure: AdventureSaveV2;
+}
+
 export interface GameSaveSession {
 	flow: GameFlow;
 	adventure: AdventureSaveV2;
@@ -80,13 +91,7 @@ export function saveGameFlow(
 	flow: GameFlow,
 	adventure = createAdventureSaveFromStoryProgress(flow.getStoryProgress())
 ): void {
-	const payload: SavePayloadV2 = {
-		version: 2,
-		meta: flow.getMeta(),
-		storyProgress: { ...flow.getStoryProgress(), schemaVersion: STORY_PROGRESS_SCHEMA_VERSION },
-		adventure: sanitizeAdventureSave(adventure),
-	};
-	driver.setItem(SAVE_KEY, JSON.stringify(payload));
+	createGameSaveStore(driver).save(createGameSaveData(flow, adventure));
 }
 
 export function loadGameFlow(driver: SaveDriver): GameFlow {
@@ -94,13 +99,74 @@ export function loadGameFlow(driver: SaveDriver): GameFlow {
 }
 
 export function loadGameSession(driver: SaveDriver): GameSaveSession {
-	const current = parseSavePayload(driver.getItem(SAVE_KEY));
-	if (current?.version === 2) return loadV2(current as Partial<SavePayloadV2>);
+	const currentRaw = driver.getItem(SAVE_KEY);
+	const current = parseSavePayload(currentRaw);
+
+	// v1.4 and earlier stored a plain v2 payload at the current key. Promote it
+	// into the runtime envelope before normal versioned-store loading.
+	if (current?.version === SAVE_SCHEMA_VERSION && !isRuntimeStoreEnvelope(current)) {
+		const session = loadV2(current as Partial<SavePayloadV2>);
+		persistSession(driver, session);
+		return session;
+	}
+
+	if (currentRaw) {
+		const loaded = createGameSaveStore(driver).load();
+		if (loaded.source !== 'default') return loadVersionedData(loaded.data);
+	}
 
 	const legacy = parseSavePayload(driver.getItem(LEGACY_SAVE_KEY));
-	if (legacy?.version === 1) return loadV1(legacy as Partial<SavePayloadV1>);
+	if (legacy?.version === 1) {
+		const session = loadV1(legacy as Partial<SavePayloadV1>);
+		persistSession(driver, session);
+		return session;
+	}
 
 	return createDefaultSession();
+}
+
+function createGameSaveStore(driver: SaveDriver) {
+	return createVersionedStore<GameSaveData>({
+		adapter: driver,
+		key: SAVE_KEY,
+		version: SAVE_SCHEMA_VERSION,
+		defaults: () => sessionToData(createDefaultSession()),
+		validate: isGameSaveData,
+	});
+}
+
+function createGameSaveData(flow: GameFlow, adventure: AdventureSaveV2): GameSaveData {
+	return {
+		meta: flow.getMeta(),
+		storyProgress: { ...flow.getStoryProgress(), schemaVersion: STORY_PROGRESS_SCHEMA_VERSION },
+		adventure: sanitizeAdventureSave(adventure),
+	};
+}
+
+function sessionToData(session: GameSaveSession): GameSaveData {
+	return createGameSaveData(session.flow, session.adventure);
+}
+
+function persistSession(driver: SaveDriver, session: GameSaveSession): void {
+	createGameSaveStore(driver).save(sessionToData(session));
+}
+
+function isGameSaveData(value: unknown): boolean {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+	const data = value as Record<string, unknown>;
+	return (
+		Boolean(data.meta && typeof data.meta === 'object' && !Array.isArray(data.meta)) &&
+		Boolean(
+			data.storyProgress &&
+				typeof data.storyProgress === 'object' &&
+				!Array.isArray(data.storyProgress)
+		) &&
+		Boolean(data.adventure && typeof data.adventure === 'object' && !Array.isArray(data.adventure))
+	);
+}
+
+function isRuntimeStoreEnvelope(value: Record<string, unknown>): boolean {
+	return value.format === 1 && typeof value.version === 'number' && 'data' in value;
 }
 
 function parseSavePayload(raw: string | null): Record<string, unknown> | null {
@@ -114,6 +180,18 @@ function parseSavePayload(raw: string | null): Record<string, unknown> | null {
 	} catch {
 		return null;
 	}
+}
+
+function loadVersionedData(payload: GameSaveData): GameSaveSession {
+	if (!payload.meta || typeof payload.meta !== 'object') return createDefaultSession();
+	const storyProgress = sanitizeStoryProgress(payload.storyProgress);
+	const flow = createGameFlow(sanitizeMeta(payload.meta), storyProgress);
+	return {
+		flow,
+		adventure: payload.adventure
+			? sanitizeAdventureSave(payload.adventure)
+			: createAdventureSaveFromStoryProgress(flow.getStoryProgress()),
+	};
 }
 
 function loadV2(payload: Partial<SavePayloadV2>): GameSaveSession {

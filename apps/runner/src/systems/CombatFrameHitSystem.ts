@@ -1,6 +1,6 @@
 import { CombatSystem, type CombatEntity, type CombatEvents } from './CombatSystem';
 import type { AttackFrameData, FrameActionState } from './CombatFrameDataSystem';
-import { createHitContactLedger } from '../../../../vendor/arcade-runtime.mjs';
+import { createHitContactLedger } from '@arcade/runtime/core';
 
 export interface FrameHitState extends FrameActionState {
 	hitTargetIds: string[];

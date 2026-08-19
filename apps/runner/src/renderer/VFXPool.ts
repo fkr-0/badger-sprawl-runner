@@ -1,6 +1,7 @@
 /** VFX rendering facade over the shared fixed-capacity recycling engine. */
 
-import { type RecyclingPool, createRecyclingPool } from '../../../../vendor/arcade-runtime.mjs';
+import { createRecyclingPool } from '@arcade/runtime/core';
+import type { RecyclingPool } from '@arcade/runtime/core';
 import type { SpriteRenderer } from './SpriteRenderer';
 
 export interface Particle {

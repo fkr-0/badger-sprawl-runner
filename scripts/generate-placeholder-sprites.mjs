@@ -140,7 +140,7 @@ await mkdir(join(publicRoot, 'data'), { recursive: true });
 await copyFile(manifestPath, join(publicRoot, 'data/sprites.json'));
 
 let written = 0;
-for (const sheet of manifest.spriteSheets) {
+for (const sheet of manifest.sheets) {
 	const target = join(publicRoot, sheet.file);
 	await mkdir(dirname(target), { recursive: true });
 	await writeFile(target, renderSheet(sheet));

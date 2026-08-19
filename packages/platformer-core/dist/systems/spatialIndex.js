@@ -1,4 +1,4 @@
-import { buildSpatialIndex as buildArcadeSpatialIndex, querySpatialIndex as queryArcadeSpatialIndex, spatialCollisionPairs as arcadeSpatialCollisionPairs, } from '../../../../vendor/arcade-runtime.mjs';
+import { buildSpatialIndex as buildArcadeSpatialIndex, querySpatialIndex as queryArcadeSpatialIndex, spatialCollisionPairs as arcadeSpatialCollisionPairs, } from '@arcade/runtime/core';
 /** Compatibility facade over @arcade/runtime's deterministic spatial hash. */
 export function buildSpatialIndex(bodies, cellSize) {
     return buildArcadeSpatialIndex(bodies, cellSize);

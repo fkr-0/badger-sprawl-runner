@@ -1,9 +1,9 @@
 import {
-	type TimelineQueueState,
 	createTimelineQueue,
 	enqueueTimelineEntry,
 	stepTimelineQueue,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/core';
+import type { TimelineQueueState } from '@arcade/runtime/core';
 import type { CombatEntity, CombatEvents } from './CombatSystem';
 import { type AttackSpec, CombatSystem } from './CombatSystem';
 import type { MeleeInput } from './MeleeComboSystem';

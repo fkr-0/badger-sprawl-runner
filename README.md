@@ -138,7 +138,7 @@ Deferred after v1.0: final production art/audio, CI-hosted artifacts, and an npm
 
 ```sh
 pnpm --version   # project declares pnpm@9.0.0
-node --version   # tested with modern Node 20+
+node --version   # web tooling: modern Node 20+; desktop build tooling: Node 22.12+
 ```
 
 ## Play the app
@@ -159,9 +159,23 @@ python3 -m http.server 8042
 
 The default production page remains Canvas2D-first. Development/test tools are omitted by default; append `?debug=1` to explicitly enable the F3 overlays, or `?renderer=bridge` to exercise the opt-in Pixi migration path.
 
+### Canonical sprite manifest and experimental desktop export
+
+`data/sprites.json` and the runner-public copy now use the canonical Arcade Runtime shape directly: `{ "version": "1", "sheets": [...] }`. Production generation, release audits, smoke tests, and E2E review tooling consume `sheets`; the deprecated `@badger/sprite-contracts` facade retains an explicit test for normalizing the old `{ schemaVersion, spriteSheets }` alias at migration boundaries.
+
+The same relative-base Vite bundle can also be wrapped experimentally as a hardened Electron application:
+
+```sh
+pnpm desktop:dev       # Vite runner + Electron
+pnpm desktop:dir       # unpacked Linux package
+pnpm desktop:appimage  # standalone AppImage
+```
+
+The production desktop shell serves `apps/runner/dist` through the restricted `arcade://` protocol with Node integration disabled, context isolation and Chromium sandboxing enabled, permission requests denied, and navigation/window creation constrained. The optional Pixi bridge installs PixiJS's bundled strict-CSP fallback generators, so the policy remains `script-src 'self'` without `'unsafe-eval'`. Building/running Electron tooling from source requires Node 22.12+; AppImage packaging pins electron-builder's static toolset `1.0.3` instead of the legacy FUSE2 runtime, and the produced AppImage does not require a separately installed Node.js runtime.
+
 ### Shared Pixi runtime migration
 
-The shared `@arcade/runtime` 1.9.0 module is vendored with declarations and checksum metadata. `apps/runner/src/renderer/ArcadeRuntimeContract.ts` defines an executable ordered render plan rather than only a pass-name map. Stage backdrop, parallax, player/enemy actors, railgun projectiles, combat VFX, and runner vitals use native Pixi ownership. Terrain remains the only active full-frame Canvas texture bridge. Simulation, collision, stage objectives, sprite contracts, movement/combat policy, VFX emission/update policy, and the existing fixed-step game loop remain unchanged.
+The shared `@arcade/runtime` 1.12.0 module is vendored with declarations and checksum metadata. `apps/runner/src/renderer/ArcadeRuntimeContract.ts` defines an executable ordered render plan rather than only a pass-name map. Stage backdrop, parallax, player/enemy actors, railgun projectiles, combat VFX, and runner vitals use native Pixi ownership. Terrain remains the only active full-frame Canvas texture bridge. Simulation, collision, stage objectives, sprite contracts, movement/combat policy, VFX emission/update policy, and the existing fixed-step game loop remain unchanged.
 
 PixiJS 8.19 is an explicit runner dependency. `?renderer=bridge` activates retained backdrop and parallax textures, bounded actor and VFX pools, native railgun presentation, and the native vitals HUD. Runtime sprite-frame addressing supplies exact atlas rectangles while Badger retains animation choice, parallax factors, boss scaling, combat tells, and all gameplay policy. World interactions, terrain tiles, item/gear icons, objectives, contextual panels, and specialist authored overlays continue through Canvas where they have not yet earned a native parity contract.
 

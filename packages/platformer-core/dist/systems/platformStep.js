@@ -1,4 +1,4 @@
-import { resolveOneWayPlatforms } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveOneWayPlatforms } from '@arcade/runtime/core';
 /** Resolve one-way platform landing through the shared arcade collision primitive. */
 export function platformStep(input) {
     const { x, y, w, h, vy, prevVy, dt, platforms, coyoteTime } = input;

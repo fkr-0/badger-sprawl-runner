@@ -3,10 +3,12 @@ import {
 	createResourcePoolState,
 	stepGameplayActionState as runtimeStepGameplayActionState,
 	tryStartGameplayAction,
-	type ArcadeGameplayActionEvent,
-	type ArcadeGameplayActionState,
-	type ArcadeResourceEvent,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/gameplay';
+import type {
+	ArcadeGameplayActionEvent,
+	ArcadeGameplayActionState,
+	ArcadeResourceEvent,
+} from '@arcade/runtime/gameplay';
 import type { CombatResourceState, ResourceCost, ResourceEvent } from './CombatResourceSystem';
 
 export interface CombatActionDefinition {

@@ -2,7 +2,7 @@ import type { MovementState, PhysicsParams } from '../PhysicsParams';
 import {
 	createActionGraceState,
 	stepActionGrace,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/gameplay';
 
 export interface CoyoteStepInput {
 	onGround: boolean;

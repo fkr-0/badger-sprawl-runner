@@ -2,7 +2,8 @@
  * Camera system: smooth follow with velocity lookahead and quick direction recovery.
  */
 
-import { createCameraRig, type CameraRig } from '../../../../vendor/arcade-runtime.mjs';
+import { createCameraRig } from '@arcade/runtime/core';
+import type { CameraRig } from '@arcade/runtime/core';
 import { STORY_CAMERA_PROFILE, type CameraProfile } from '../game/GameplayTuning';
 
 export interface Camera {

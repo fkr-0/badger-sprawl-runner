@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"type": "module",
 	"description": "Pure physics, collision, and ECS foundation for platformers.",
+	"dependencies": {
+		"@arcade/runtime": "workspace:*"
+	},
 	"exports": {
 		".": {
 			"import": "./src/index.ts",

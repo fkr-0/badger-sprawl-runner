@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { createPixiHudGauge } from '../../../../vendor/arcade-runtime.mjs';
+import { createPixiHudGauge } from '@arcade/runtime/pixi';
 import type { Player } from '../actors/MossBadger';
 import { buildGameplayHudLayout } from './GameplayHudLayout';
 

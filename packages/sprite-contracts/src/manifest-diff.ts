@@ -1,4 +1,4 @@
-import { normalizeArcadeSpriteManifest } from '../../../vendor/arcade-runtime.mjs';
+import { normalizeArcadeSpriteManifest } from '@arcade/runtime/sprites';
 import type { SpriteManifest, SpriteSheet } from './types';
 
 export interface SpriteSheetContractChange {

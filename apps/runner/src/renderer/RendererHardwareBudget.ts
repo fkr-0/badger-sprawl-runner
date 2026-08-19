@@ -3,7 +3,7 @@ import {
 	type ArcadeHardwareTier,
 	createHardwareBudgetMonitor,
 	detectArcadeHardwareTier,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/tooling';
 
 export const BADGER_PRODUCTION_BUNDLE_RESOURCE_PATTERN = /\/assets\/.*\.(?:js|mjs)(?:\?|$)/;
 

@@ -2,7 +2,10 @@
 	"name": "@badger/sprite-contracts",
 	"version": "1.0.0",
 	"type": "module",
-	"description": "Shared sprite schema, playback, production geometry, validation, and browser loader.",
+	"description": "Badger sprite adapter and production tooling over @arcade/runtime/sprites.",
+	"dependencies": {
+		"@arcade/runtime": "workspace:*"
+	},
 	"exports": {
 		".": {
 			"import": "./src/index.ts",

@@ -5,9 +5,8 @@ import {
 	createResourcePoolState,
 	payResourceCosts as runtimePayResourceCosts,
 	stepResourcePools,
-	type ArcadeResourceEvent,
-	type ArcadeResourcePoolState,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/gameplay';
+import type { ArcadeResourceEvent, ArcadeResourcePoolState } from '@arcade/runtime/gameplay';
 
 export interface CombatResourcePool {
 	kind: CombatResourceKind;

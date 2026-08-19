@@ -1,4 +1,5 @@
-import { advanceArcadeAnimationClock, collectArcadeSpriteAnimationEvents, createArcadeAnimationClock, playArcadeAnimationClock, resolveArcadeSpriteFrame, } from '../../../vendor/arcade-runtime.mjs';
+import { advanceArcadeAnimationClock, createArcadeAnimationClock, playArcadeAnimationClock, } from '@arcade/runtime/animation';
+import { collectArcadeSpriteAnimationEvents, resolveArcadeSpriteFrame, } from '@arcade/runtime/sprites';
 import { sampleSpriteAnimation } from './sampling';
 /** Change playback speed without resuming, restarting, or changing the current frame. */
 export function setSpriteAnimationSpeed(state, speed) {

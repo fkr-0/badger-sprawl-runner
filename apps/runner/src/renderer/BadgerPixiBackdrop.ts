@@ -1,6 +1,6 @@
 import type { LoadedSheet } from '@badger/sprite-contracts';
 import { type Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
-import { resolveArcadeSpriteFrame } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveArcadeSpriteFrame } from '@arcade/runtime/sprites';
 
 export function createBadgerPixiBackdrop(options: {
 	container: Container;

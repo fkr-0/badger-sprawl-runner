@@ -1,5 +1,5 @@
 import type { PhysicsParams, ProjectileHit } from '@badger/platformer-core';
-import { verifyReplayHashes as verifyArcadeReplayHashes } from '../../../../vendor/arcade-runtime.mjs';
+import { verifyReplayHashes as verifyArcadeReplayHashes } from '@arcade/runtime/testing';
 import {
 	stepDeterministicRun,
 	type DeterministicRunState,

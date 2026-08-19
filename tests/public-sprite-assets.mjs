@@ -36,12 +36,12 @@ assert(
 	'apps/runner/public/data/sprites.json must be regenerated from data/sprites.json'
 );
 assert(
-	publicManifest.spriteSheets.length === sourceManifest.spriteSheets.length,
+	publicManifest.sheets.length === sourceManifest.sheets.length,
 	'public sprite manifest sheet count must match source manifest'
 );
 
 let checked = 0;
-for (const sheet of sourceManifest.spriteSheets) {
+for (const sheet of sourceManifest.sheets) {
 	if (sheet.source?.classification === 'archival') continue;
 	const assetPath = `apps/runner/public/${sheet.file}`;
 	const info = await stat(assetPath);

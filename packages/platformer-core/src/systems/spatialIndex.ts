@@ -2,7 +2,7 @@ import {
 	buildSpatialIndex as buildArcadeSpatialIndex,
 	querySpatialIndex as queryArcadeSpatialIndex,
 	spatialCollisionPairs as arcadeSpatialCollisionPairs,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/core';
 import type { Rect } from '../types';
 
 export interface SpatialBody extends Rect {

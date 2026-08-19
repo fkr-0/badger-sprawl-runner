@@ -1,15 +1,12 @@
-import {
-	type LoadedSheet,
-	type SpriteManifest,
-	type SpriteSheet,
-	loadSpriteSheet,
-	normalizeSpriteManifest,
-} from '@badger/sprite-contracts';
+import { type LoadedSheet, loadSpriteSheet } from '@badger/sprite-contracts';
 import {
 	type ArcadeSpriteContactSheetEntry,
+	type ArcadeSpriteManifest as SpriteManifest,
+	type ArcadeSpriteSheet as SpriteSheet,
 	drawArcadeSpriteContactSheetCanvas,
+	normalizeArcadeSpriteManifest,
 	resolveArcadeSpriteFrame,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/sprites';
 import {
 	SpriteInspectorController,
 	type SpriteInspectorMode,
@@ -559,7 +556,7 @@ async function renderReview(): Promise<void> {
 
 	const response = await fetch('./data/sprites.json');
 	if (!response.ok) throw new Error(`Sprite manifest request failed: ${response.status}`);
-	const manifest = normalizeSpriteManifest(await response.json());
+	const manifest = normalizeArcadeSpriteManifest(await response.json());
 	const ids = selectedSheetIds();
 	const maximumFrames = selectedFramesPerAnimation();
 	const selected = ids.map((id) => {

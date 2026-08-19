@@ -2,6 +2,8 @@
 	"files": {
 		"ignore": [
 			".claude/worktrees/**",
+			".ws-bridge/**",
+			"release-evidence/**",
 			".worktrees/**",
 			"**/*.test.ts",
 			"tests/e2e/**",

@@ -40539,10 +40539,10 @@
   },
   "schemaVersion": 1,
   "sourceHashes": {
-    "data/sprites.json": "4669783bf2af41d63acca1b47bebb4c007169113bce5b0b1e5ac1690a4de0a9e",
+    "data/sprites.json": "6c1f7e1db8987646b3623369b8b98ef7657749c4856539b750dcc2223a36410a",
     "docs/sprite-production/remaining-gaps.yml": "4aefaefb0871f76f9d0d4d9b33243dc1c0022c61a008f9fc35a9ec6925a5c45d",
     "docs/story-flavour.yml": "ecfa478c63c1ed8938f14119a15d33f3b40020db4415164e96dd80f4dc6f6094",
-    "scripts/generate-sprite-render-prompts.py": "995fd2525879c12408541b3df7cf8c32b737b1b9ea0e7cb4a594e13e7c0b00ea"
+    "scripts/generate-sprite-render-prompts.py": "0ea5c18a853ddf633880641fa2d7effad2d6b1db0bd98fa781b344797ced8d32"
   },
   "styleReference": "operator-approved six-image neon-animal pixel-art board, supplied 2026-07-21",
   "styleReferenceImages": [

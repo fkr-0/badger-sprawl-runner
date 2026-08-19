@@ -3277,7 +3277,7 @@ def generate_pack(output: Path) -> dict[str, Any]:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     story = yaml.safe_load(STORY_PATH.read_text(encoding="utf-8"))
     gaps = yaml.safe_load(GAPS_PATH.read_text(encoding="utf-8"))
-    sheets = manifest["spriteSheets"]
+    sheets = manifest["sheets"]
 
     current_index = write_current_prompts(sheets)
     expansion_index: list[dict[str, Any]] = []

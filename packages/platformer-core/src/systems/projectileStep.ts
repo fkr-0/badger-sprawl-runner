@@ -1,5 +1,5 @@
 import type { PhysicsParams } from '../PhysicsParams';
-import { resolveHitboxContacts } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveHitboxContacts } from '@arcade/runtime/core';
 import type { FluidField, FlyingObjectState } from './flyingObjectStep';
 import { flyingObjectStep } from './flyingObjectStep';
 import { aabb, type Rect } from './aabb';

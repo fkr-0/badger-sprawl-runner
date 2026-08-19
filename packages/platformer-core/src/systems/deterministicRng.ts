@@ -1,6 +1,5 @@
+export { createDeterministicRng, createSeededRandom } from '@arcade/runtime/testing';
 export {
-	createDeterministicRng,
-	createSeededRandom,
 	hashSeed,
 	nextRng,
 	rngInt,
@@ -8,10 +7,10 @@ export {
 	rngRange,
 	rngShuffle,
 	rngWeightedPick,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/testing';
 
 export type {
 	DeterministicRngResult,
 	DeterministicRngState,
 	SeededRandomSource,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/testing';

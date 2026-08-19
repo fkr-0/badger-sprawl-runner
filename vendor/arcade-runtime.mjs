@@ -4553,6 +4553,161 @@ export function createCameraRig(initial = {}) {
   return rig;
 }
 
+// BEGIN DATA-ORIENTED ACCELERATION
+
+export const ARCADE_COMPUTE_CAPABILITIES = Object.freeze([
+  'aabb-overlap-pairs',
+]);
+
+function arcadeComputeNumericFormat(value) {
+  return value === 'f32' ? 'f32' : 'f64';
+}
+
+function arcadeComputeNumericArray(format, length) {
+  return format === 'f32' ? new Float32Array(length) : new Float64Array(length);
+}
+
+export function createArcadeSpatialBatch(bodies = [], options = {}) {
+  const numericFormat = arcadeComputeNumericFormat(options.numericFormat);
+  const sourceBodies = [...bodies]
+    .filter((body) => body?.enabled !== false)
+    .sort((a, b) => String(a?.id ?? '').localeCompare(String(b?.id ?? '')));
+  const length = sourceBodies.length;
+  const x = arcadeComputeNumericArray(numericFormat, length);
+  const y = arcadeComputeNumericArray(numericFormat, length);
+  const width = arcadeComputeNumericArray(numericFormat, length);
+  const height = arcadeComputeNumericArray(numericFormat, length);
+  const ids = new Array(length);
+
+  for (let index = 0; index < length; index += 1) {
+    const body = sourceBodies[index];
+    coreInvariant(typeof body?.id === 'string' && body.id.length > 0, 'spatial batch body id is required');
+    const size = arcadeRectSize(body);
+    coreInvariant(Number.isFinite(body.x) && Number.isFinite(body.y), `invalid spatial position: ${body.id}`);
+    coreInvariant(size.width >= 0 && size.height >= 0, `invalid spatial size: ${body.id}`);
+    ids[index] = body.id;
+    x[index] = body.x;
+    y[index] = body.y;
+    width[index] = size.width;
+    height[index] = size.height;
+  }
+
+  return Object.freeze({
+    numericFormat,
+    length,
+    ids: Object.freeze(ids),
+    x,
+    y,
+    width,
+    height,
+    bodies: Object.freeze(sourceBodies),
+  });
+}
+
+function arcadeSpatialBatchIndex(batch) {
+  const index = new Map();
+  for (let offset = 0; offset < batch.length; offset += 1) index.set(batch.ids[offset], offset);
+  return index;
+}
+
+function arcadePairBodyId(value) {
+  if (typeof value === 'string') return value;
+  return value?.id;
+}
+
+export function createArcadeAabbPairBuffer(batch, pairs = []) {
+  coreInvariant(batch && Number.isInteger(batch.length), 'spatial batch is required');
+  const indexById = arcadeSpatialBatchIndex(batch);
+  const unique = new Map();
+  for (const pair of pairs) {
+    const aId = arcadePairBodyId(pair?.a ?? pair?.[0]);
+    const bId = arcadePairBodyId(pair?.b ?? pair?.[1]);
+    const aIndex = indexById.get(aId);
+    const bIndex = indexById.get(bId);
+    coreInvariant(Number.isInteger(aIndex) && Number.isInteger(bIndex), 'AABB pair references an unknown spatial body');
+    if (aIndex === bIndex) continue;
+    const first = Math.min(aIndex, bIndex);
+    const second = Math.max(aIndex, bIndex);
+    unique.set(`${first}:${second}`, Object.freeze([first, second]));
+  }
+  const ordered = [...unique.values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const buffer = new Uint32Array(ordered.length * 2);
+  for (let index = 0; index < ordered.length; index += 1) {
+    buffer[index * 2] = ordered[index][0];
+    buffer[index * 2 + 1] = ordered[index][1];
+  }
+  return buffer;
+}
+
+function arcadeAssertAabbPairBuffer(batch, candidatePairs) {
+  coreInvariant(candidatePairs instanceof Uint32Array, 'AABB candidate pairs must be a Uint32Array');
+  coreInvariant(candidatePairs.length % 2 === 0, 'AABB candidate pair buffer length must be even');
+  for (let offset = 0; offset < candidatePairs.length; offset += 1) {
+    coreInvariant(candidatePairs[offset] < batch.length, 'AABB candidate pair index is outside the spatial batch');
+  }
+}
+
+export function filterArcadeAabbPairs(batch, candidatePairs) {
+  arcadeAssertAabbPairBuffer(batch, candidatePairs);
+  const result = new Uint32Array(candidatePairs.length);
+  let outputOffset = 0;
+  for (let offset = 0; offset < candidatePairs.length; offset += 2) {
+    const a = candidatePairs[offset];
+    const b = candidatePairs[offset + 1];
+    const overlaps = batch.x[a] < batch.x[b] + batch.width[b]
+      && batch.x[a] + batch.width[a] > batch.x[b]
+      && batch.y[a] < batch.y[b] + batch.height[b]
+      && batch.y[a] + batch.height[a] > batch.y[b];
+    if (!overlaps) continue;
+    result[outputOffset] = a;
+    result[outputOffset + 1] = b;
+    outputOffset += 2;
+  }
+  return result.slice(0, outputOffset);
+}
+
+export function createArcadeScalarComputeBackend(options = {}) {
+  const numericFormat = arcadeComputeNumericFormat(options.numericFormat);
+  return Object.freeze({
+    id: String(options.id ?? `scalar-js-${numericFormat}`),
+    kind: 'scalar',
+    authoritative: options.authoritative ?? numericFormat === 'f64',
+    numericFormat,
+    capabilities: ARCADE_COMPUTE_CAPABILITIES,
+    filterAabbPairs(batch, candidatePairs) {
+      return filterArcadeAabbPairs(batch, candidatePairs);
+    },
+  });
+}
+
+export function validateArcadeComputeBackend(backend) {
+  return Boolean(
+    backend
+    && typeof backend.id === 'string'
+    && backend.id.length > 0
+    && ['scalar', 'wasm', 'webgpu', 'custom'].includes(backend.kind)
+    && ['f64', 'f32', 'fixed'].includes(backend.numericFormat)
+    && Array.isArray(backend.capabilities)
+    && backend.capabilities.every((capability) => typeof capability === 'string')
+    && typeof backend.filterAabbPairs === 'function',
+  );
+}
+
+export function selectArcadeComputeBackend(backends = [], options = {}) {
+  const capability = options.capability ?? 'aabb-overlap-pairs';
+  const authoritative = options.authoritative !== false;
+  const preference = options.preference ?? ['wasm', 'scalar', 'custom', 'webgpu'];
+  const rank = new Map(preference.map((kind, index) => [kind, index]));
+  return [...backends]
+    .filter(validateArcadeComputeBackend)
+    .filter((backend) => backend.capabilities.includes(capability))
+    .filter((backend) => !authoritative || backend.authoritative === true)
+    .sort((a, b) => (rank.get(a.kind) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.kind) ?? Number.MAX_SAFE_INTEGER)
+      || a.id.localeCompare(b.id))[0] ?? null;
+}
+
+// END DATA-ORIENTED ACCELERATION
+
 export function createArcadeCameraTransform(initial = {}) {
   const state = {
     x: finiteNumber(initial.x, 0),
@@ -5248,6 +5403,15 @@ export async function createArcadePixiRuntime(options) {
       emit('asset-loaded', { alias, src, texture });
       emitTelemetry();
       return texture;
+    },
+    async unloadTexture(alias) {
+      invariant(typeof alias === 'string' && alias.length > 0, 'asset alias is required');
+      const texture = PIXI.Assets.get(alias);
+      if (!texture) return false;
+      await PIXI.Assets.unload(alias);
+      emit('asset-unloaded', { alias, texture });
+      emitTelemetry();
+      return true;
     },
     async loadTextures(manifest) {
       invariant(manifest && typeof manifest === 'object', 'texture manifest is required');
@@ -6193,14 +6357,14 @@ export function querySpatialIndex(index, rect, options = {}) {
   return [...seen.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export function spatialCollisionPairs(index) {
+function arcadeSpatialCollisionCandidates(index) {
   const pairs = new Map();
   for (const cell of index.cells.values()) {
     for (let left = 0; left < cell.length; left += 1) {
       for (let right = left + 1; right < cell.length; right += 1) {
         const a = cell[left];
         const b = cell[right];
-        if (!collisionLayersMatch(a, b) || !aabbOverlap(a, b)) continue;
+        if (!collisionLayersMatch(a, b)) continue;
         const first = a.id < b.id ? a : b;
         const second = a.id < b.id ? b : a;
         pairs.set(arcadePairKey(first, second), Object.freeze({ a: first, b: second }));
@@ -6208,6 +6372,29 @@ export function spatialCollisionPairs(index) {
     }
   }
   return [...pairs.values()].sort((a, b) => arcadePairKey(a.a, a.b).localeCompare(arcadePairKey(b.a, b.b)));
+}
+
+export function spatialCollisionPairs(index, options = {}) {
+  const candidates = arcadeSpatialCollisionCandidates(index);
+  const computeBackend = options.computeBackend;
+  if (!computeBackend) return candidates.filter((pair) => aabbOverlap(pair.a, pair.b));
+
+  coreInvariant(validateArcadeComputeBackend(computeBackend), 'invalid arcade compute backend');
+  coreInvariant(computeBackend.capabilities.includes('aabb-overlap-pairs'), 'compute backend lacks AABB pair support');
+  const numericFormat = computeBackend.numericFormat === 'f32' ? 'f32' : 'f64';
+  const batch = createArcadeSpatialBatch(index.bodies, { numericFormat });
+  const candidatePairs = createArcadeAabbPairBuffer(batch, candidates);
+  const overlapPairs = computeBackend.filterAabbPairs(batch, candidatePairs);
+  arcadeAssertAabbPairBuffer(batch, overlapPairs);
+  const pairs = [];
+  for (let offset = 0; offset < overlapPairs.length; offset += 2) {
+    const a = batch.bodies[overlapPairs[offset]];
+    const b = batch.bodies[overlapPairs[offset + 1]];
+    const first = a.id < b.id ? a : b;
+    const second = a.id < b.id ? b : a;
+    pairs.push(Object.freeze({ a: first, b: second }));
+  }
+  return pairs.sort((a, b) => arcadePairKey(a.a, a.b).localeCompare(arcadePairKey(b.a, b.b)));
 }
 
 export function computeCollisionManifold(aBody, bBody) {
@@ -6326,7 +6513,7 @@ export function createCollisionWorld(options = {}) {
     },
     step() {
       lastIndex = buildSpatialIndex([...bodies.values()], cellSize);
-      const pairs = spatialCollisionPairs(lastIndex);
+      const pairs = spatialCollisionPairs(lastIndex, { computeBackend: options.computeBackend });
       const current = new Map();
       for (const pair of pairs) {
         const key = arcadePairKey(pair.a, pair.b);
@@ -7412,6 +7599,33 @@ export function createVersionedStore(options = {}) {
   const defaults = () => arcadeClone(typeof options.defaults === 'function' ? options.defaults() : options.defaults ?? {});
   const validate = (data) => options.validate ? options.validate(data) !== false : true;
 
+  const parseStoreRecord = (raw, source) => {
+    const parsed = JSON.parse(raw);
+    if (parsed?.format === 1) {
+      return Object.freeze({ envelope: parseStoreEnvelope(raw), preEnvelopeMigrated: false });
+    }
+    coreInvariant(typeof options.preEnvelopeMigration === 'function', 'unsupported store envelope');
+    const promoted = options.preEnvelopeMigration(
+      arcadeClone(parsed),
+      Object.freeze({ source, key, targetVersion: version }),
+    );
+    coreInvariant(
+      promoted && typeof promoted === 'object' && Object.prototype.hasOwnProperty.call(promoted, 'data'),
+      'pre-envelope migration must return an object with data',
+    );
+    const promotedVersion = Math.floor(finiteNumber(promoted.version, version));
+    coreInvariant(promotedVersion >= 0 && promotedVersion <= version, 'invalid pre-envelope migration version');
+    const envelope = {
+      format: 1,
+      version: promotedVersion,
+      savedAt: finiteNumber(promoted.savedAt, options.now?.() ?? Date.now()),
+      revision: Math.max(0, Math.floor(finiteNumber(promoted.revision, 0))),
+      data: arcadeClone(promoted.data),
+    };
+    envelope.checksum = deterministicHash(envelope.data);
+    return Object.freeze({ envelope, preEnvelopeMigrated: true });
+  };
+
   const migrate = (envelope) => {
     let currentVersion = envelope.version;
     let data = arcadeClone(envelope.data);
@@ -7431,7 +7645,7 @@ export function createVersionedStore(options = {}) {
     const raw = adapter.getItem(key);
     if (raw === null) return -1;
     try {
-      return Math.max(-1, Math.floor(finiteNumber(parseStoreEnvelope(raw).revision, -1)));
+      return Math.max(-1, Math.floor(finiteNumber(parseStoreRecord(raw, 'primary').envelope.revision, -1)));
     } catch {
       return -1;
     }
@@ -7472,16 +7686,18 @@ export function createVersionedStore(options = {}) {
       for (const [source, raw] of candidates) {
         if (raw === null) continue;
         try {
-          const envelope = parseStoreEnvelope(raw);
+          const parsed = parseStoreRecord(raw, source);
+          const envelope = parsed.envelope;
           const result = migrate(envelope);
-          if (result.migrated || source !== 'primary') {
+          const migrated = parsed.preEnvelopeMigrated || result.migrated;
+          if (migrated || source !== 'primary') {
             commit(
               result.data,
               { savedAt: envelope.savedAt, revision: envelope.revision + 1 },
               { backupPrevious: source === 'primary' },
             );
           }
-          return Object.freeze({ data: arcadeClone(result.data), source, migrated: result.migrated, recovered: source !== 'primary', version });
+          return Object.freeze({ data: arcadeClone(result.data), source, migrated, recovered: source !== 'primary', version });
         } catch (error) {
           options.onCorruption?.(Object.freeze({ source, error }));
         }
@@ -8882,14 +9098,1027 @@ export function createLocalTransportPair(options = {}) {
   return Object.freeze([first, second]);
 }
 
-export function createRuntimeInspector(options = {}) {
+function inspectorSerializable(value, seen = new WeakSet(), depth = 0) {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (value === undefined || typeof value === 'function' || typeof value === 'symbol') return null;
+  if (depth > 24) return '[max-depth]';
+  if (typeof value !== 'object') return String(value);
+  if (seen.has(value)) return '[circular]';
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) return value.map((entry) => inspectorSerializable(entry, seen, depth + 1));
+    if (value instanceof Map) {
+      return Object.fromEntries([...value.entries()]
+        .map(([key, entry]) => [String(key), inspectorSerializable(entry, seen, depth + 1)])
+        .sort(([a], [b]) => a.localeCompare(b)));
+    }
+    if (value instanceof Set) return [...value].map((entry) => inspectorSerializable(entry, seen, depth + 1));
+    if (ArrayBuffer.isView(value)) return Array.from(value);
+    if (value instanceof Date) return value.toISOString();
+    const output = {};
+    for (const key of Object.keys(value).sort()) {
+      let entry;
+      try { entry = value[key]; } catch { entry = '[unavailable]'; }
+      if (entry === undefined || typeof entry === 'function' || typeof entry === 'symbol') continue;
+      output[key] = inspectorSerializable(entry, seen, depth + 1);
+    }
+    return output;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+function inspectorRead(source) {
+  if (typeof source === 'function') return source();
+  if (source?.snapshot && typeof source.snapshot === 'function') return source.snapshot();
+  return source;
+}
+
+function inspectorHostSnapshot(host) {
+  const base = inspectorSerializable(host?.snapshot?.() ?? {});
+  const serviceState = {};
+  if (host?.service && Array.isArray(base?.services)) {
+    for (const name of base.services) {
+      try { serviceState[name] = inspectorSerializable(inspectorRead(host.service(name))); }
+      catch (error) { serviceState[name] = { inspectorError: String(error?.message ?? error) }; }
+    }
+  }
+  return { ...base, serviceState };
+}
+
+function inspectorDiffValues(before, after, path = '$', changes = []) {
+  if (Object.is(before, after)) return changes;
+  const beforeObject = before !== null && typeof before === 'object';
+  const afterObject = after !== null && typeof after === 'object';
+  const beforeArray = Array.isArray(before);
+  const afterArray = Array.isArray(after);
+  if (!beforeObject || !afterObject || beforeArray !== afterArray) {
+    changes.push(Object.freeze({ kind: 'changed', path, before, after }));
+    return changes;
+  }
+  const beforeKeys = beforeArray ? before.map((_, index) => String(index)) : Object.keys(before);
+  const afterKeys = afterArray ? after.map((_, index) => String(index)) : Object.keys(after);
+  const keys = [...new Set([...beforeKeys, ...afterKeys])].sort((a, b) => {
+    if (beforeArray && /^\d+$/.test(a) && /^\d+$/.test(b)) return Number(a) - Number(b);
+    return a.localeCompare(b);
+  });
+  for (const key of keys) {
+    const nextPath = beforeArray ? `${path}[${key}]` : path === '$' ? key : `${path}.${key}`;
+    if (!(key in before)) changes.push(Object.freeze({ kind: 'added', path: nextPath, after: after[key] }));
+    else if (!(key in after)) changes.push(Object.freeze({ kind: 'removed', path: nextPath, before: before[key] }));
+    else inspectorDiffValues(before[key], after[key], nextPath, changes);
+  }
+  return changes;
+}
+
+function inspectorManifestAnimationMap(manifest) {
+  const animations = new Map();
+  for (const sheet of manifest?.sheets ?? []) {
+    for (const [name, animation] of Object.entries(sheet.animations ?? {})) {
+      animations.set(`${sheet.id}:${name}`, animation);
+    }
+  }
+  return animations;
+}
+
+function inspectorManifestDiff(before, after) {
+  const previous = inspectorManifestAnimationMap(before);
+  const next = inspectorManifestAnimationMap(after);
+  const addedAnimations = [...next.keys()].filter((key) => !previous.has(key)).sort();
+  const removedAnimations = [...previous.keys()].filter((key) => !next.has(key)).sort();
+  const frameCountChanges = [];
+  const hitboxChanges = [];
+  const hurtboxChanges = [];
+  for (const key of [...next.keys()].filter((entry) => previous.has(entry)).sort()) {
+    const left = previous.get(key);
+    const right = next.get(key);
+    if (left.frames !== right.frames) frameCountChanges.push(Object.freeze({ animation: key, before: left.frames, after: right.frames }));
+    if (JSON.stringify(left.hitboxes ?? []) !== JSON.stringify(right.hitboxes ?? [])) {
+      hitboxChanges.push(Object.freeze({ animation: key, before: left.hitboxes ?? [], after: right.hitboxes ?? [] }));
+    }
+    if (JSON.stringify(left.hurtboxes ?? []) !== JSON.stringify(right.hurtboxes ?? [])) {
+      hurtboxChanges.push(Object.freeze({ animation: key, before: left.hurtboxes ?? [], after: right.hurtboxes ?? [] }));
+    }
+  }
+  const beforeSheets = new Map((before?.sheets ?? []).map((sheet) => [sheet.id, sheet]));
+  const textureChanges = [];
+  for (const sheet of after?.sheets ?? []) {
+    const oldSheet = beforeSheets.get(sheet.id);
+    if (oldSheet && oldSheet.file !== sheet.file) {
+      textureChanges.push(Object.freeze({ sheetId: sheet.id, before: oldSheet.file, after: sheet.file }));
+    }
+  }
+  return Object.freeze({
+    addedAnimations: Object.freeze(addedAnimations),
+    removedAnimations: Object.freeze(removedAnimations),
+    frameCountChanges: Object.freeze(frameCountChanges),
+    hitboxChanges: Object.freeze(hitboxChanges),
+    hurtboxChanges: Object.freeze(hurtboxChanges),
+    textureChanges: Object.freeze(textureChanges),
+    changed: addedAnimations.length + removedAnimations.length + frameCountChanges.length
+      + hitboxChanges.length + hurtboxChanges.length + textureChanges.length > 0,
+  });
+}
+
+function inspectorResolveArguments(hostOrOptions, maybeOptions) {
+  if (maybeOptions !== undefined) return { host: hostOrOptions ?? null, options: maybeOptions ?? {} };
+  const candidate = hostOrOptions ?? {};
+  const isHost = candidate && typeof candidate === 'object'
+    && typeof candidate.snapshot === 'function'
+    && (typeof candidate.step === 'function' || typeof candidate.service === 'function');
+  return isHost ? { host: candidate, options: {} } : { host: candidate.host ?? null, options: candidate };
+}
+
+function createInspectorTelemetry(options = {}) {
+  const historyFrames = Math.max(1, Math.floor(finiteNumber(options.historyFrames, 120)));
+  const now = options.now ?? (() => globalThis.performance?.now?.() ?? Date.now());
+  const histories = new Map();
+  const pools = new Map();
+  const pendingInputs = new Map();
+  let previousHeap = null;
+  let latest = Object.freeze({
+    simulationMs: 0, renderMs: 0, idleMs: 0, frameMs: 0,
+    allocationBytes: 0, gcBytes: 0, textureBytes: 0, audioBytes: 0,
+    inputLatencyMs: 0, inspectorMs: 0,
+  });
+  const push = (name, value) => {
+    const history = histories.get(name) ?? [];
+    history.push(Math.max(0, finiteNumber(value, 0)));
+    if (history.length > historyFrames) history.splice(0, history.length - historyFrames);
+    histories.set(name, history);
+  };
+  const telemetry = {
+    historyFrames,
+    recordFrame(sample = {}) {
+      const heap = finiteNumber(sample.heapBytes ?? globalThis.performance?.memory?.usedJSHeapSize, previousHeap ?? 0);
+      const allocationBytes = sample.allocationBytes === undefined && previousHeap !== null
+        ? Math.max(0, heap - previousHeap)
+        : Math.max(0, finiteNumber(sample.allocationBytes, 0));
+      const gcBytes = previousHeap === null ? 0 : Math.max(0, previousHeap - heap);
+      previousHeap = heap;
+      const simulationMs = Math.max(0, finiteNumber(sample.simulationMs, 0));
+      const renderMs = Math.max(0, finiteNumber(sample.renderMs, 0));
+      const frameMs = Math.max(simulationMs + renderMs, finiteNumber(sample.frameMs, simulationMs + renderMs));
+      latest = Object.freeze({
+        simulationMs,
+        renderMs,
+        idleMs: Math.max(0, frameMs - simulationMs - renderMs),
+        frameMs,
+        allocationBytes,
+        gcBytes,
+        textureBytes: Math.max(0, finiteNumber(sample.textureBytes, latest.textureBytes)),
+        audioBytes: Math.max(0, finiteNumber(sample.audioBytes, latest.audioBytes)),
+        inputLatencyMs: Math.max(0, finiteNumber(sample.inputLatencyMs, latest.inputLatencyMs)),
+        inspectorMs: Math.max(0, finiteNumber(sample.inspectorMs, 0)),
+      });
+      for (const [name, value] of Object.entries(latest)) push(name, value);
+      return latest;
+    },
+    noteInput(id, time = now()) { pendingInputs.set(id, time); return time; },
+    consumeInput(id, time = now()) {
+      const started = pendingInputs.get(id);
+      if (started === undefined) return null;
+      pendingInputs.delete(id);
+      const inputLatencyMs = Math.max(0, time - started);
+      latest = Object.freeze({ ...latest, inputLatencyMs });
+      return inputLatencyMs;
+    },
+    setPool(name, snapshot) { pools.set(name, inspectorSerializable(snapshot)); },
+    history(name) { return Object.freeze([...(histories.get(name) ?? [])]); },
+    latest() { return latest; },
+    snapshot() {
+      return Object.freeze({
+        latest,
+        pools: Object.freeze(Object.fromEntries([...pools.entries()].sort(([a], [b]) => a.localeCompare(b)))),
+        historyFrames,
+      });
+    },
+    clear() { histories.clear(); pools.clear(); pendingInputs.clear(); previousHeap = null; return true; },
+  };
+  return telemetry;
+}
+
+function inspectorCameraSnapshot(camera) {
+  const value = inspectorRead(camera) ?? {};
+  return {
+    x: finiteNumber(value.x, 0),
+    y: finiteNumber(value.y, 0),
+    zoom: Math.max(0.000001, finiteNumber(value.zoom, 1)),
+    viewportWidth: Math.max(1, finiteNumber(value.viewportWidth, 1)),
+    viewportHeight: Math.max(1, finiteNumber(value.viewportHeight, 1)),
+    anchorX: finiteNumber(value.anchorX, 0),
+    anchorY: finiteNumber(value.anchorY, 0),
+  };
+}
+
+function inspectorWorldToScreen(point, camera) {
+  const state = inspectorCameraSnapshot(camera);
+  return Object.freeze({
+    x: (finiteNumber(point?.x, 0) - state.x) * state.zoom + state.viewportWidth * state.anchorX,
+    y: (finiteNumber(point?.y, 0) - state.y) * state.zoom + state.viewportHeight * state.anchorY,
+  });
+}
+
+function inspectorRectCommand(rect, camera, style = {}) {
+  const start = inspectorWorldToScreen({ x: rect.x, y: rect.y }, camera);
+  const end = inspectorWorldToScreen({
+    x: finiteNumber(rect.x, 0) + finiteNumber(rect.w ?? rect.width, 0),
+    y: finiteNumber(rect.y, 0) + finiteNumber(rect.h ?? rect.height, 0),
+  }, camera);
+  return Object.freeze({
+    kind: 'rect',
+    x: Math.min(start.x, end.x),
+    y: Math.min(start.y, end.y),
+    w: Math.abs(end.x - start.x),
+    h: Math.abs(end.y - start.y),
+    color: style.color ?? 0xffffff,
+    alpha: finiteNumber(style.alpha, 0.08),
+    label: style.label,
+    dashed: style.dashed === true,
+  });
+}
+
+function inspectorDashedLine(draw, x1, y1, x2, y2, dash = 6, gap = 4) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const length = Math.hypot(dx, dy) || 1;
+  for (let offset = 0; offset < length; offset += dash + gap) {
+    const end = Math.min(length, offset + dash);
+    draw(
+      x1 + dx * offset / length,
+      y1 + dy * offset / length,
+      x1 + dx * end / length,
+      y1 + dy * end / length,
+    );
+  }
+}
+
+function inspectorCanvasOverlayRenderer(canvas) {
+  return {
+    render(commands) {
+      const context = canvas?.getContext?.('2d');
+      if (!context) return false;
+      const bounds = canvas.getBoundingClientRect?.() ?? { width: canvas.width, height: canvas.height };
+      const width = Math.max(1, Math.floor(bounds.width));
+      const height = Math.max(1, Math.floor(bounds.height));
+      const dpr = Math.max(1, finiteNumber(globalThis.devicePixelRatio, 1));
+      if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+      }
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.clearRect(0, 0, width, height);
+      context.font = '10px ui-monospace, monospace';
+      for (const command of commands) {
+        const color = `#${Number(command.color ?? 0xffffff).toString(16).padStart(6, '0')}`;
+        context.save();
+        context.strokeStyle = color;
+        context.fillStyle = color;
+        context.globalAlpha = 0.95;
+        context.lineWidth = 1;
+        if (command.kind === 'rect') {
+          context.globalAlpha = command.alpha ?? 0.08;
+          context.fillRect(command.x, command.y, command.w, command.h);
+          context.globalAlpha = 0.95;
+          if (command.dashed) context.setLineDash([6, 4]);
+          context.strokeRect(command.x + 0.5, command.y + 0.5, command.w, command.h);
+          if (command.label) context.fillText(String(command.label), command.x + 3, command.y + 11);
+        } else if (command.kind === 'line') {
+          context.beginPath();
+          context.moveTo(command.x1, command.y1);
+          context.lineTo(command.x2, command.y2);
+          context.stroke();
+        }
+        context.restore();
+      }
+      return true;
+    },
+    destroy() { canvas?.remove?.(); },
+  };
+}
+
+function inspectorPixiOverlayRenderer(PIXI, stage) {
+  if (!PIXI?.Graphics || !stage?.addChild) return null;
+  const graphics = new PIXI.Graphics();
+  graphics.label = 'arcade-runtime-inspector-overlay';
+  graphics.zIndex = 2147483000;
+  stage.sortableChildren = true;
+  stage.addChild(graphics);
+  const labels = [];
+  let labelLayer = null;
+  if (PIXI.Container && PIXI.Text) {
+    labelLayer = new PIXI.Container();
+    labelLayer.label = 'arcade-runtime-inspector-labels';
+    labelLayer.zIndex = 2147483001;
+    stage.addChild(labelLayer);
+  }
+  const drawLine = (x1, y1, x2, y2, color) => {
+    graphics.moveTo(x1, y1);
+    graphics.lineTo(x2, y2);
+    graphics.stroke({ color, width: 1, alpha: 0.95 });
+  };
+  return {
+    graphics,
+    render(commands) {
+      graphics.clear();
+      let usedLabels = 0;
+      for (const command of commands) {
+        if (command.kind === 'rect') {
+          if (command.dashed) {
+            const edge = (x1, y1, x2, y2) => inspectorDashedLine(
+              (ax, ay, bx, by) => drawLine(ax, ay, bx, by, command.color),
+              x1, y1, x2, y2,
+            );
+            edge(command.x, command.y, command.x + command.w, command.y);
+            edge(command.x + command.w, command.y, command.x + command.w, command.y + command.h);
+            edge(command.x + command.w, command.y + command.h, command.x, command.y + command.h);
+            edge(command.x, command.y + command.h, command.x, command.y);
+          } else {
+            graphics.rect(command.x, command.y, command.w, command.h);
+            graphics.fill({ color: command.color, alpha: command.alpha ?? 0.08 });
+            graphics.stroke({ color: command.color, width: 1, alpha: 0.95 });
+          }
+        } else if (command.kind === 'line') {
+          drawLine(command.x1, command.y1, command.x2, command.y2, command.color);
+        }
+        if (command.label && labelLayer) {
+          let label = labels[usedLabels];
+          if (!label) {
+            label = new PIXI.Text({ text: '', style: { fontFamily: 'monospace', fontSize: 10, fill: 0xffffff } });
+            labels.push(label);
+            labelLayer.addChild(label);
+          }
+          label.text = String(command.label);
+          label.x = finiteNumber(command.x ?? command.x1, 0) + 3;
+          label.y = finiteNumber(command.y ?? command.y1, 0) + 2;
+          label.visible = true;
+          usedLabels += 1;
+        }
+      }
+      for (let index = usedLabels; index < labels.length; index += 1) labels[index].visible = false;
+      return true;
+    },
+    destroy() {
+      graphics.removeFromParent?.();
+      graphics.destroy?.();
+      labelLayer?.removeFromParent?.();
+      labelLayer?.destroy?.({ children: true });
+    },
+  };
+}
+
+export function createRuntimeInspector(hostOrOptions = {}, maybeOptions) {
+  const resolved = inspectorResolveArguments(hostOrOptions, maybeOptions);
+  const host = resolved.host;
+  const options = resolved.options;
   const sources = new Map();
   const captures = [];
-  const capacity = Math.max(1, Math.floor(finiteNumber(options.capacity, 120)));
+  const manifests = new Map();
+  const spriteInstances = new Set();
+  const overlaySources = new Map();
+  const pools = new Map();
+  const listeners = new Map();
+  const disposers = [];
+  const capacity = Math.max(1, Math.floor(finiteNumber(options.capacity ?? options.snapshotCapacity, 120)));
   const now = options.now ?? (() => Date.now());
+  const performanceNow = options.performanceNow ?? (() => globalThis.performance?.now?.() ?? Date.now());
+  const telemetryOptions = typeof options.telemetry === 'object' ? options.telemetry : {};
+  const telemetry = createInspectorTelemetry({ historyFrames: telemetryOptions.historyFrames ?? 120, now: performanceNow });
+  const overlayOptions = typeof options.overlay === 'object' ? options.overlay : {};
+  const overlayEnabled = new Map([
+    ['grid', Boolean(overlayOptions.grid ?? overlayOptions.collision)],
+    ['collision', Boolean(overlayOptions.collision)],
+    ['hitboxes', Boolean(overlayOptions.hitboxes)],
+    ['hurtboxes', Boolean(overlayOptions.hurtboxes ?? overlayOptions.hitboxes)],
+    ['contacts', Boolean(overlayOptions.contacts ?? overlayOptions.collision)],
+    ['camera', Boolean(overlayOptions.camera)],
+    ['selection', true],
+  ]);
+  const overlayKeys = Object.freeze({
+    grid: 'g', collision: 'c', hitboxes: 'h', hurtboxes: 'j', contacts: 'p', camera: 'b',
+    ...(overlayOptions.keys ?? {}),
+  });
+  const sceneNodeIds = new WeakMap();
+  const sceneNodes = new Map();
+  const hotReloadLog = [];
   let nextCaptureIndex = 0;
+  let nextSceneNodeId = 1;
+  let selectedCapture = -1;
+  let selectedSceneObject = null;
+  let selectedEntity = null;
+  let selectedEntityPool = null;
+  let selectedEntityIndex = -1;
+  let overlayRenderer = null;
+  let panel = null;
+  let panelBody = null;
+  let activeTab = 'state';
+  let socket = null;
+  let reconnectTimer = null;
+  let destroyed = false;
+  let lastInspectorMs = 0;
+  let lastPanelRefresh = Number.NEGATIVE_INFINITY;
+  let pendingSimulationMs = 0;
+
+  const emit = (name, payload) => {
+    for (const listener of [...(listeners.get(name) ?? [])]) listener(payload);
+    options.onEvent?.(name, payload);
+  };
+  const logHotReload = (entry) => {
+    const value = Object.freeze({ time: now(), ...entry });
+    hotReloadLog.push(value);
+    if (hotReloadLog.length > 50) hotReloadLog.splice(0, hotReloadLog.length - 50);
+    emit('hot-reload', value);
+    return value;
+  };
+  const hostService = (...names) => {
+    if (!host?.has || !host?.service) return null;
+    for (const name of names) {
+      try { if (host.has(name)) return host.service(name); } catch { /* optional dev service */ }
+    }
+    return null;
+  };
+  const pixiRuntime = () => options.pixiRuntime ?? hostService('pixi', 'pixiRuntime', 'renderer');
+  const cameraSource = () => overlaySources.get('camera') ?? options.camera ?? hostService('camera', 'cameraTransform', 'cameraRig') ?? {};
+
+  const collectManifestBoxes = (key) => {
+    const boxes = [];
+    for (const record of spriteInstances) {
+      const state = manifests.get(record.manifestId);
+      if (!state) continue;
+      const instance = record.instance;
+      const sheetId = record.sheetId ?? instance?.sheetId ?? state.manifest.sheets[0]?.id;
+      const sheet = state.manifest.sheets.find((entry) => entry.id === sheetId);
+      const animationName = record.animation?.(instance)
+        ?? instance?.animationName ?? instance?.currentAnimation ?? instance?.animation;
+      const animation = sheet?.animations?.[animationName];
+      if (!animation) continue;
+      const scaleX = finiteNumber(instance?.scale?.x ?? instance?.scaleX, 1);
+      const scaleY = finiteNumber(instance?.scale?.y ?? instance?.scaleY, 1);
+      const x = finiteNumber(instance?.x ?? instance?.position?.x, 0);
+      const y = finiteNumber(instance?.y ?? instance?.position?.y, 0);
+      const anchor = animation.anchor ?? [sheet.frameSize[0] / 2, sheet.frameSize[1]];
+      const frameIndex = Math.max(0, Math.floor(finiteNumber(record.frame?.(instance) ?? instance?.frameIndex ?? instance?.currentFrame, 0)));
+      for (const box of animation[key] ?? []) {
+        if (box.frame !== undefined && box.frame !== frameIndex) continue;
+        boxes.push(Object.freeze({
+          x: x + (finiteNumber(box.x, 0) - anchor[0]) * scaleX,
+          y: y + (finiteNumber(box.y, 0) - anchor[1]) * scaleY,
+          w: finiteNumber(box.w, 0) * Math.abs(scaleX),
+          h: finiteNumber(box.h, 0) * Math.abs(scaleY),
+          label: box.label ?? `${sheetId}:${animationName}:${frameIndex}`,
+        }));
+      }
+    }
+    return boxes;
+  };
+
+  const overlayCommands = () => {
+    const commands = [];
+    const camera = cameraSource();
+    const collision = inspectorRead(overlaySources.get('collision') ?? overlayOptions.source ?? null);
+    const index = collision?.index ?? collision?.spatialIndex;
+    const bodies = index?.bodies ?? collision?.bodies ?? [];
+    if (overlayEnabled.get('grid') && index?.cells instanceof Map) {
+      const cellSize = finiteNumber(index.cellSize, 64);
+      for (const [key, occupants] of index.cells) {
+        const [cellX, cellY] = String(key).split(':').map(Number);
+        commands.push(inspectorRectCommand(
+          { x: cellX * cellSize, y: cellY * cellSize, w: cellSize, h: cellSize },
+          camera,
+          { color: 0x748ffc, alpha: 0.035, label: String(occupants.length) },
+        ));
+      }
+    }
+    if (overlayEnabled.get('collision')) {
+      for (const body of bodies) {
+        const classification = overlayOptions.classifyBody?.(body)
+          ?? (body.isTrigger === true || body.type === 'trigger'
+            ? 'trigger'
+            : body.static === true || body.dynamic === false || body.type === 'static'
+              ? 'static'
+              : 'dynamic');
+        const trigger = classification === 'trigger';
+        const isStatic = classification === 'static';
+        const color = trigger ? 0xffd43b : isStatic ? 0x339af0 : 0x51cf66;
+        commands.push(inspectorRectCommand(body, camera, { color, alpha: 0.08, label: body.id }));
+      }
+    }
+    if (overlayEnabled.get('hitboxes')) {
+      const hitboxes = inspectorRead(overlaySources.get('hitboxes')) ?? collectManifestBoxes('hitboxes');
+      for (const box of hitboxes ?? []) commands.push(inspectorRectCommand(box, camera, { color: 0xff4d4f, alpha: 0.13, label: box.label ?? box.id ?? 'hit' }));
+    }
+    if (overlayEnabled.get('hurtboxes')) {
+      const hurtboxes = inspectorRead(overlaySources.get('hurtboxes')) ?? collectManifestBoxes('hurtboxes');
+      for (const box of hurtboxes ?? []) commands.push(inspectorRectCommand(box, camera, { color: 0x40c057, alpha: 0.11, label: box.label ?? box.id ?? 'hurt' }));
+    }
+    if (overlayEnabled.get('contacts')) {
+      for (const contact of collision?.contacts ?? []) {
+        if (!contact.a || !contact.b) continue;
+        const center = (body) => inspectorWorldToScreen({
+          x: finiteNumber(body.x, 0) + finiteNumber(body.w ?? body.width, 0) / 2,
+          y: finiteNumber(body.y, 0) + finiteNumber(body.h ?? body.height, 0) / 2,
+        }, camera);
+        const a = center(contact.a);
+        const b = center(contact.b);
+        commands.push(Object.freeze({ kind: 'line', x1: a.x, y1: a.y, x2: b.x, y2: b.y, color: 0xf783ac }));
+        if (contact.manifold) {
+          const midX = (a.x + b.x) / 2;
+          const midY = (a.y + b.y) / 2;
+          commands.push(Object.freeze({
+            kind: 'line', x1: midX, y1: midY,
+            x2: midX + finiteNumber(contact.manifold.normalX, 0) * 20,
+            y2: midY + finiteNumber(contact.manifold.normalY, 0) * 20,
+            color: 0xf783ac,
+          }));
+        }
+      }
+    }
+    if (overlayEnabled.get('camera')) {
+      const state = inspectorCameraSnapshot(camera);
+      commands.push(Object.freeze({
+        kind: 'rect', x: 0, y: 0, w: state.viewportWidth, h: state.viewportHeight,
+        color: 0xe599f7, alpha: 0.015, label: 'camera frustum', dashed: true,
+      }));
+    }
+    const selected = selectedEntity ?? selectedSceneObject;
+    if (overlayEnabled.get('selection') && selected) {
+      let bounds;
+      try { bounds = selected.getBounds?.(); } catch { bounds = null; }
+      bounds ??= selected.bounds;
+      if (!bounds && Number.isFinite(selected.x) && Number.isFinite(selected.y)) bounds = selected;
+      if (bounds) {
+        if (selected === selectedSceneObject && selected.getBounds) {
+          commands.push(Object.freeze({
+            kind: 'rect', x: finiteNumber(bounds.x, 0), y: finiteNumber(bounds.y, 0),
+            w: finiteNumber(bounds.width ?? bounds.w, 0), h: finiteNumber(bounds.height ?? bounds.h, 0),
+            color: 0xffffff, alpha: 0.035, label: 'selected', dashed: true,
+          }));
+        } else commands.push(inspectorRectCommand(bounds, camera, { color: 0xffffff, alpha: 0.035, label: 'selected', dashed: true }));
+      }
+    }
+    return Object.freeze(commands);
+  };
+
+  const ensureOverlayRenderer = () => {
+    if (overlayRenderer || !options.overlay) return overlayRenderer;
+    if (typeof overlayOptions.render === 'function') {
+      overlayRenderer = { render: overlayOptions.render, destroy: overlayOptions.destroy ?? (() => {}) };
+      return overlayRenderer;
+    }
+    const runtime = pixiRuntime();
+    overlayRenderer = inspectorPixiOverlayRenderer(overlayOptions.PIXI ?? options.PIXI, overlayOptions.stage ?? runtime?.stage);
+    if (overlayRenderer) return overlayRenderer;
+    const documentRef = options.document ?? globalThis.document;
+    const gameCanvas = overlayOptions.canvas ?? runtime?.canvas ?? options.canvas;
+    if (!documentRef?.createElement || !gameCanvas?.getBoundingClientRect) return null;
+    const overlayCanvas = documentRef.createElement('canvas');
+    overlayCanvas.dataset.arcadeInspectorOverlay = 'true';
+    Object.assign(overlayCanvas.style, { position: 'fixed', pointerEvents: 'none', zIndex: '2147482999' });
+    const syncBounds = () => {
+      const rect = gameCanvas.getBoundingClientRect();
+      Object.assign(overlayCanvas.style, {
+        left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
+      });
+    };
+    syncBounds();
+    (documentRef.body ?? gameCanvas.parentElement)?.append?.(overlayCanvas);
+    overlayRenderer = inspectorCanvasOverlayRenderer(overlayCanvas);
+    globalThis.addEventListener?.('resize', syncBounds);
+    globalThis.addEventListener?.('scroll', syncBounds, true);
+    disposers.push(() => globalThis.removeEventListener?.('resize', syncBounds));
+    disposers.push(() => globalThis.removeEventListener?.('scroll', syncBounds, true));
+    return overlayRenderer;
+  };
+
+  const sceneGraph = {
+    root() {
+      const configured = typeof options.sceneGraph === 'object' ? options.sceneGraph.root : null;
+      return (typeof configured === 'function' ? configured() : configured)
+        ?? pixiRuntime()?.stage ?? hostService('sceneGraph')?.root ?? null;
+    },
+    tree(filter = null) {
+      sceneNodes.clear();
+      let visited = 0;
+      const visit = (node, depth = 0) => {
+        if (!node || visited >= 2000 || depth > 32) return null;
+        visited += 1;
+        let id = sceneNodeIds.get(node);
+        if (!id) { id = `display-${nextSceneNodeId++}`; sceneNodeIds.set(node, id); }
+        sceneNodes.set(id, node);
+        const type = node.constructor?.name ?? 'Object';
+        const children = [...(node.children ?? [])].map((child) => visit(child, depth + 1)).filter(Boolean);
+        const accepted = !filter || String(type).toLowerCase().includes(String(filter).toLowerCase());
+        if (!accepted && children.length === 0) return null;
+        const transform = node.worldTransform ?? {};
+        return Object.freeze({
+          id, type, label: node.label ?? node.name ?? type,
+          x: finiteNumber(node.x ?? node.position?.x, 0), y: finiteNumber(node.y ?? node.position?.y, 0),
+          scaleX: finiteNumber(node.scale?.x, 1), scaleY: finiteNumber(node.scale?.y, 1),
+          rotation: finiteNumber(node.rotation, 0), alpha: finiteNumber(node.alpha, 1), visible: node.visible !== false,
+          worldTransform: Object.freeze({
+            a: finiteNumber(transform.a, 1), b: finiteNumber(transform.b, 0), c: finiteNumber(transform.c, 0),
+            d: finiteNumber(transform.d, 1), tx: finiteNumber(transform.tx, 0), ty: finiteNumber(transform.ty, 0),
+          }),
+          children: Object.freeze(children),
+        });
+      };
+      return visit(sceneGraph.root());
+    },
+    select(idOrObject) {
+      selectedSceneObject = typeof idOrObject === 'string' ? sceneNodes.get(idOrObject) ?? null : idOrObject ?? null;
+      selectedEntity = null;
+      emit('scene-select', selectedSceneObject);
+      return selectedSceneObject;
+    },
+    selected: () => selectedSceneObject,
+    reorder(idOrObject, index) {
+      const object = typeof idOrObject === 'string' ? sceneNodes.get(idOrObject) : idOrObject;
+      const parent = object?.parent;
+      if (!object || !parent?.setChildIndex) return false;
+      const targetIndex = Math.max(0, Math.min((parent.children?.length ?? 1) - 1, Math.floor(finiteNumber(index, 0))));
+      parent.setChildIndex(object, targetIndex);
+      emit('scene-reorder', Object.freeze({ id: sceneNodeIds.get(object), index: targetIndex }));
+      return true;
+    },
+    snapshot() { return inspectorSerializable(sceneGraph.tree()); },
+  };
+
+  const entities = {
+    registerPool(name, pool, adapter = {}) {
+      coreInvariant(typeof name === 'string' && name.length > 0, 'inspector pool name is required');
+      pools.set(name, { pool, adapter });
+      return () => pools.delete(name);
+    },
+    list() {
+      return Object.freeze([...pools.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, record]) => {
+        const snapshot = inspectorSerializable(record.pool?.snapshot?.() ?? {});
+        const active = finiteNumber(snapshot.active, record.pool?.activeValues?.().length ?? 0);
+        const poolCapacity = finiteNumber(snapshot.capacity ?? record.pool?.capacity, active);
+        return Object.freeze({ name, capacity: poolCapacity, active, free: Math.max(0, poolCapacity - active), snapshot });
+      }));
+    },
+    values(name) {
+      const record = pools.get(name);
+      coreInvariant(record, `unknown inspector pool: ${name}`);
+      return record.adapter.values?.(record.pool) ?? record.pool?.activeValues?.() ?? record.pool?.values?.() ?? [];
+    },
+    select(name, idOrIndex) {
+      const values = entities.values(name);
+      selectedEntity = typeof idOrIndex === 'number'
+        ? values[idOrIndex]
+        : values.find((entry) => entry === idOrIndex || entry?.id === idOrIndex) ?? null;
+      selectedEntityPool = selectedEntity ? name : null;
+      selectedEntityIndex = selectedEntity ? values.indexOf(selectedEntity) : -1;
+      selectedSceneObject = null;
+      emit('entity-select', selectedEntity);
+      return selectedEntity;
+    },
+    edit(name, idOrIndex, patch) {
+      const record = pools.get(name);
+      coreInvariant(record, `unknown inspector pool: ${name}`);
+      const entity = entities.select(name, idOrIndex);
+      coreInvariant(entity, 'inspector entity not found');
+      if (record.adapter.patch) record.adapter.patch(entity, patch, record.pool);
+      else Object.assign(entity, patch);
+      emit('entity-edit', Object.freeze({ name, patch: inspectorSerializable(patch) }));
+      return entity;
+    },
+    kill(name, idOrIndex) {
+      const record = pools.get(name);
+      coreInvariant(record, `unknown inspector pool: ${name}`);
+      const entity = entities.select(name, idOrIndex);
+      if (!entity) return false;
+      const result = record.adapter.kill?.(entity, record.pool)
+        ?? record.pool?.release?.(entity) ?? record.pool?.despawn?.(entity) ?? false;
+      if (selectedEntity === entity) {
+        selectedEntity = null;
+        selectedEntityPool = null;
+        selectedEntityIndex = -1;
+      }
+      emit('entity-kill', Object.freeze({ name }));
+      return Boolean(result);
+    },
+    spawn(name, initial = {}) {
+      const record = pools.get(name);
+      coreInvariant(record, `unknown inspector pool: ${name}`);
+      let entity;
+      if (record.adapter.spawn) entity = record.adapter.spawn(initial, record.pool);
+      else if (record.pool?.acquire) entity = record.pool.acquire((value) => Object.assign(value, initial));
+      else if (record.pool?.spawn) {
+        entity = record.pool.spawn((value) => Object.assign(value, initial));
+        if (entity && typeof entity === 'object') Object.assign(entity, initial);
+      }
+      if (entity === undefined || entity === null) throw new Error(`inspector pool cannot spawn: ${name}`);
+      emit('entity-spawn', Object.freeze({ name }));
+      return entity;
+    },
+    selected: () => selectedEntity,
+    snapshot() {
+      return Object.freeze(entities.list().map((pool) => Object.freeze({
+        ...pool, entities: inspectorSerializable(entities.values(pool.name)),
+      })));
+    },
+  };
+
+  const reloadTexture = async (manifestId, sheet, reason) => {
+    const hotReload = options.hotReload ?? {};
+    if (typeof hotReload.reloadTexture === 'function') {
+      return hotReload.reloadTexture(sheet, Object.freeze({ manifestId, reason }));
+    }
+    const runtime = pixiRuntime();
+    const assets = hotReload.PIXI?.Assets ?? options.PIXI?.Assets;
+    const alias = hotReload.textureAlias?.(manifestId, sheet) ?? sheet.id;
+    const separator = String(sheet.file).includes('?') ? '&' : '?';
+    const src = `${sheet.file}${separator}arcade_hmr=${encodeURIComponent(String(now()))}`;
+    try {
+      if (runtime?.unloadTexture) await runtime.unloadTexture(alias);
+      else await assets?.unload?.(alias);
+    } catch { /* alias may not be cached */ }
+    if (runtime?.loadTexture) return runtime.loadTexture(alias, src);
+    if (assets?.load) return assets.load({ alias, src, data: { scaleMode: 'nearest' } });
+    return null;
+  };
+
+  const applyManifestReload = async (message) => {
+    if (!message || typeof message !== 'object') return null;
+    if (message.type === 'arcade:manifest-error') {
+      logHotReload({ type: 'error', id: message.id ?? message.path, error: message.error });
+      options.hotReload?.onError?.(message);
+      return null;
+    }
+    if (message.type === 'arcade:atlas-reload') {
+      const path = String(message.path ?? '');
+      let textures = 0;
+      const reloadedManifests = new Map();
+      for (const [manifestId, state] of manifests) {
+        const manifestTextures = {};
+        for (const sheet of state.manifest.sheets) {
+          const file = String(sheet.file ?? '');
+          if (file === path || file.endsWith(`/${path}`) || path.endsWith(`/${file}`)
+            || file.split('/').at(-1) === path.split('/').at(-1)) {
+            manifestTextures[sheet.id] = await reloadTexture(manifestId, sheet, 'atlas');
+            textures += 1;
+          }
+        }
+        if (Object.keys(manifestTextures).length) reloadedManifests.set(manifestId, Object.freeze(manifestTextures));
+      }
+      let refreshedSprites = 0;
+      for (const record of spriteInstances) {
+        const manifestTextures = reloadedManifests.get(record.manifestId);
+        if (!manifestTextures) continue;
+        const state = manifests.get(record.manifestId);
+        const context = Object.freeze({
+          id: record.manifestId, manifest: state.manifest, textures: manifestTextures, reason: 'atlas',
+          animationName: record.animation?.(record.instance) ?? record.instance?.animationName ?? record.instance?.currentAnimation,
+          frame: record.frame?.(record.instance) ?? record.instance?.frameIndex ?? record.instance?.currentFrame ?? 0,
+        });
+        if (record.apply) await record.apply(record.instance, context);
+        else record.instance?.refreshTexture?.(context);
+        refreshedSprites += 1;
+      }
+      const result = Object.freeze({ type: 'atlas', path, textures, refreshedSprites });
+      logHotReload(result);
+      return result;
+    }
+    if (message.type !== undefined && message.type !== 'arcade:manifest-reload') return null;
+    const id = String(message.id ?? message.path ?? 'manifest.json');
+    let manifestSource = message.manifest;
+    if (manifestSource === undefined && message.url) {
+      const fetchRef = options.hotReload?.fetch ?? globalThis.fetch;
+      coreInvariant(typeof fetchRef === 'function', 'manifest hot reload requires fetch support');
+      const separator = String(message.url).includes('?') ? '&' : '?';
+      const response = await fetchRef(`${message.url}${separator}arcade_hmr=${encodeURIComponent(String(now()))}`, { cache: 'no-store' });
+      coreInvariant(response?.ok !== false, `manifest hot reload request failed: ${response?.status ?? 'unknown'}`);
+      manifestSource = await response.json();
+    }
+    const normalized = normalizeArcadeSpriteManifest(manifestSource);
+    const previous = manifests.get(id)?.manifest ?? Object.freeze({ sheets: Object.freeze([]) });
+    const diff = inspectorManifestDiff(previous, normalized);
+    manifests.set(id, { manifest: normalized, options: manifests.get(id)?.options ?? {} });
+    const changedTextures = new Set(message.atlasChanged ?? []);
+    for (const change of diff.textureChanges) changedTextures.add(change.sheetId);
+    const textures = {};
+    for (const sheet of normalized.sheets) {
+      if (changedTextures.has(sheet.id) || changedTextures.has(sheet.file)) {
+        textures[sheet.id] = await reloadTexture(id, sheet, 'manifest');
+      }
+    }
+    let swapped = 0;
+    for (const record of spriteInstances) {
+      if (record.manifestId !== id) continue;
+      const instance = record.instance;
+      const animationName = record.animation?.(instance)
+        ?? instance?.animationName ?? instance?.currentAnimation ?? instance?.animation;
+      const frame = record.frame?.(instance) ?? instance?.frameIndex ?? instance?.currentFrame ?? 0;
+      const context = Object.freeze({ id, manifest: normalized, diff, textures: Object.freeze(textures), animationName, frame });
+      if (record.apply) await record.apply(instance, context);
+      else if (typeof instance?.reloadManifest === 'function') await instance.reloadManifest(normalized, context);
+      else if (typeof instance?.setManifest === 'function') await instance.setManifest(normalized, context);
+      else if (instance && 'manifest' in instance) instance.manifest = normalized;
+      instance?.refreshTexture?.(context);
+      if (animationName && typeof instance?.play === 'function') instance.play(animationName, { preserveFrame: true, frame });
+      else if (typeof instance?.setFrame === 'function') instance.setFrame(frame);
+      swapped += 1;
+    }
+    const result = Object.freeze({ id, manifest: normalized, diff, swapped, textures: Object.freeze(textures) });
+    logHotReload({ type: 'manifest', id, diff, swapped, textures: Object.keys(textures).length });
+    options.hotReload?.onManifestReload?.(result);
+    emit('manifest-reload', result);
+    return result;
+  };
+
+  const renderJsonTree = (documentRef, parent, value, label, depth = 0) => {
+    if (depth > 12 || value === null || typeof value !== 'object') {
+      const row = documentRef.createElement('div');
+      row.textContent = `${label}: ${typeof value === 'string' ? JSON.stringify(value) : String(value)}`;
+      parent.append(row);
+      return;
+    }
+    const details = documentRef.createElement('details');
+    details.open = depth < 2;
+    const summary = documentRef.createElement('summary');
+    summary.textContent = `${label} ${Array.isArray(value) ? `[${value.length}]` : `{${Object.keys(value).length}}`}`;
+    details.append(summary);
+    for (const [key, entry] of Object.entries(value)) renderJsonTree(documentRef, details, entry, key, depth + 1);
+    parent.append(details);
+  };
+
+  const renderSparkline = (canvas, values) => {
+    const context = canvas?.getContext?.('2d');
+    if (!context) return;
+    const width = Math.max(100, Math.floor(canvas.clientWidth || 180));
+    const height = 28;
+    const dpr = Math.max(1, finiteNumber(globalThis.devicePixelRatio, 1));
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    context.clearRect(0, 0, width, height);
+    if (!values.length) return;
+    const maximum = Math.max(0.000001, ...values.map((value) => Math.max(0, finiteNumber(value, 0))));
+    context.beginPath();
+    for (let index = 0; index < values.length; index += 1) {
+      const x = values.length === 1 ? 0 : index / (values.length - 1) * width;
+      const y = height - 1 - Math.max(0, finiteNumber(values[index], 0)) / maximum * (height - 2);
+      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    }
+    context.strokeStyle = '#adb5bd';
+    context.lineWidth = 1;
+    context.stroke();
+  };
+
+  const renderPanel = () => {
+    if (!panel || panel.hidden || !panelBody) return false;
+    panelBody.replaceChildren();
+    const documentRef = panel.ownerDocument;
+    const toolbar = documentRef.createElement('div'); toolbar.className = 'ari-row';
+    for (const tab of ['state', 'telemetry', 'scene', 'entities', 'hot-reload']) {
+      const button = documentRef.createElement('button');
+      button.textContent = tab;
+      button.dataset.active = String(tab === activeTab);
+      button.onclick = () => { activeTab = tab; renderPanel(); };
+      toolbar.append(button);
+    }
+    panelBody.append(toolbar);
+    if (activeTab === 'state') {
+      const actions = documentRef.createElement('div'); actions.className = 'ari-row';
+      const capture = documentRef.createElement('button'); capture.textContent = 'capture'; capture.onclick = () => { inspector.capture('manual'); renderPanel(); };
+      const exportButton = documentRef.createElement('button'); exportButton.textContent = 'export'; exportButton.onclick = () => {
+        const json = inspector.export();
+        if (options.onExport) { options.onExport(json); return; }
+        if (!globalThis.Blob || !globalThis.URL?.createObjectURL) return;
+        const url = globalThis.URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+        const link = documentRef.createElement('a'); link.href = url; link.download = 'arcade-runtime-snapshots.json'; link.click();
+        globalThis.URL.revokeObjectURL(url);
+      };
+      const importInput = documentRef.createElement('input'); importInput.type = 'file'; importInput.accept = 'application/json,.json'; importInput.title = 'import snapshots';
+      importInput.onchange = async () => {
+        const file = importInput.files?.[0]; if (!file) return;
+        inspector.import(await file.text()); renderPanel();
+      };
+      const range = documentRef.createElement('input'); range.type = 'range'; range.min = '0'; range.max = String(Math.max(0, captures.length - 1)); range.value = String(Math.max(0, selectedCapture));
+      range.oninput = () => { inspector.seek(Number(range.value)); renderPanel(); };
+      actions.append(capture, exportButton, importInput, range); panelBody.append(actions);
+      const current = captures[selectedCapture] ?? captures.at(-1);
+      if (current) renderJsonTree(documentRef, panelBody, current, `${current.index}: ${current.label}`);
+      if (captures.length >= 2) {
+        const changes = inspector.diff(captures.at(-2), captures.at(-1));
+        for (const entry of changes.slice(0, 100)) {
+          const row = documentRef.createElement('div'); row.className = `ari-${entry.kind}`; row.textContent = `${entry.kind} ${entry.path}`; panelBody.append(row);
+        }
+      }
+    } else if (activeTab === 'telemetry') {
+      const latest = telemetry.latest();
+      const frame = documentRef.createElement('div');
+      frame.textContent = `frame ${latest.frameMs.toFixed(2)}ms · sim ${latest.simulationMs.toFixed(2)} · render ${latest.renderMs.toFixed(2)} · idle ${latest.idleMs.toFixed(2)}`;
+      panelBody.append(frame);
+      const budget = documentRef.createElement('div'); budget.className = 'ari-budget';
+      const total = Math.max(0.001, latest.frameMs || 1000 / 60);
+      for (const [kind, value] of [['sim', latest.simulationMs], ['render', latest.renderMs], ['idle', latest.idleMs]]) {
+        const part = documentRef.createElement('i'); part.className = `ari-${kind}`; part.style.width = `${Math.min(100, value / total * 100)}%`; budget.append(part);
+      }
+      panelBody.append(budget);
+      for (const name of ['simulationMs', 'renderMs', 'frameMs', 'allocationBytes', 'gcBytes', 'textureBytes', 'audioBytes', 'inputLatencyMs', 'inspectorMs']) {
+        const row = documentRef.createElement('div'); row.className = 'ari-metric';
+        const label = documentRef.createElement('span'); label.textContent = name;
+        const spark = documentRef.createElement('canvas'); spark.className = 'ari-spark';
+        const value = documentRef.createElement('span'); value.textContent = name.endsWith('Bytes') ? String(Math.round(latest[name])) : latest[name].toFixed(2);
+        row.append(label, spark, value); panelBody.append(row); renderSparkline(spark, telemetry.history(name));
+      }
+      for (const pool of entities.list()) { const row = documentRef.createElement('div'); row.textContent = `${pool.name}: ${pool.active}/${pool.capacity} (${pool.free} free)`; panelBody.append(row); }
+    } else if (activeTab === 'scene') {
+      const filter = documentRef.createElement('input'); filter.placeholder = 'type filter'; filter.value = sceneGraph.filter ?? '';
+      filter.oninput = () => { sceneGraph.filter = filter.value; renderPanel(); }; panelBody.append(filter);
+      const appendNode = (node, depth = 0) => {
+        if (!node) return;
+        const row = documentRef.createElement('div'); row.className = 'ari-node'; row.style.marginLeft = `${depth * 10}px`;
+        row.textContent = `${node.type} ${node.label} (${node.x.toFixed(1)}, ${node.y.toFixed(1)})`;
+        row.draggable = true;
+        row.ondragstart = (event) => event.dataTransfer?.setData('text/plain', node.id);
+        row.ondragover = (event) => event.preventDefault();
+        row.ondrop = (event) => {
+          event.preventDefault();
+          const dragged = sceneNodes.get(event.dataTransfer?.getData('text/plain'));
+          const target = sceneNodes.get(node.id);
+          if (dragged?.parent && dragged.parent === target?.parent) {
+            sceneGraph.reorder(dragged, target.parent.children.indexOf(target));
+            renderPanel();
+          }
+        };
+        row.onclick = () => { sceneGraph.select(node.id); inspector.renderOverlay(); renderPanel(); };
+        panelBody.append(row);
+        for (const child of node.children) appendNode(child, depth + 1);
+      };
+      const tree = sceneGraph.tree(sceneGraph.filter || null); appendNode(tree);
+      if (selectedSceneObject) {
+        const transform = selectedSceneObject.worldTransform ?? {};
+        renderJsonTree(documentRef, panelBody, {
+          type: selectedSceneObject.constructor?.name ?? 'Object', label: selectedSceneObject.label ?? selectedSceneObject.name,
+          position: { x: selectedSceneObject.x ?? selectedSceneObject.position?.x, y: selectedSceneObject.y ?? selectedSceneObject.position?.y },
+          scale: { x: selectedSceneObject.scale?.x, y: selectedSceneObject.scale?.y }, rotation: selectedSceneObject.rotation,
+          alpha: selectedSceneObject.alpha, visible: selectedSceneObject.visible,
+          worldTransform: { a: transform.a, b: transform.b, c: transform.c, d: transform.d, tx: transform.tx, ty: transform.ty },
+        }, 'selection');
+      }
+    } else if (activeTab === 'entities') {
+      for (const pool of entities.list()) {
+        const details = documentRef.createElement('details'); const summary = documentRef.createElement('summary');
+        summary.textContent = `${pool.name} ${pool.active}/${pool.capacity}`; details.append(summary);
+        for (const [index, entity] of entities.values(pool.name).entries()) {
+          const row = documentRef.createElement('div'); row.className = 'ari-row';
+          const select = documentRef.createElement('button'); select.textContent = entity?.id ?? `#${index}`; select.className = 'ari-grow';
+          select.onclick = () => { entities.select(pool.name, index); inspector.renderOverlay(); renderPanel(); };
+          const kill = documentRef.createElement('button'); kill.textContent = 'kill'; kill.onclick = () => { entities.kill(pool.name, index); inspector.renderOverlay(); renderPanel(); };
+          row.append(select, kill); details.append(row);
+        }
+        const spawn = documentRef.createElement('button'); spawn.textContent = 'spawn'; spawn.onclick = () => { entities.spawn(pool.name, {}); renderPanel(); }; details.append(spawn);
+        panelBody.append(details);
+      }
+      if (selectedEntity) {
+        renderJsonTree(documentRef, panelBody, inspectorSerializable(selectedEntity), 'selected entity');
+        const patch = documentRef.createElement('textarea'); patch.rows = 5; patch.placeholder = '{"x": 10, "velocity": {"x": 2}}'; patch.value = '{}'; panelBody.append(patch);
+        const edit = documentRef.createElement('button'); edit.textContent = 'apply patch'; edit.onclick = () => {
+          try { entities.edit(selectedEntityPool, selectedEntityIndex, JSON.parse(patch.value)); inspector.renderOverlay(); renderPanel(); }
+          catch (error) { patch.value = JSON.stringify({ error: String(error?.message ?? error) }, null, 2); }
+        }; panelBody.append(edit);
+      }
+    } else {
+      for (const entry of [...hotReloadLog].reverse()) {
+        const pre = documentRef.createElement('pre'); pre.textContent = JSON.stringify(entry, null, 2); panelBody.append(pre);
+      }
+    }
+    return true;
+  };
+
+  const ensurePanel = () => {
+    if (panel || options.ui === false) return panel;
+    if (!options.panel && !options.sceneGraph && !options.entityInspector && !options.telemetry && !options.hotReload) return null;
+    const documentRef = options.document ?? globalThis.document;
+    if (!documentRef?.createElement) return null;
+    panel = documentRef.createElement('aside');
+    panel.className = 'arcade-runtime-inspector';
+    panel.hidden = options.open === false;
+    const style = documentRef.createElement('style');
+    style.textContent = '.arcade-runtime-inspector{position:fixed;right:0;top:0;bottom:0;width:min(430px,48vw);z-index:2147483000;background:rgba(12,14,18,.96);color:#e8edf5;border-left:1px solid #3b4350;font:12px/1.35 ui-monospace,monospace;display:flex;flex-direction:column}.arcade-runtime-inspector[hidden]{display:none}.arcade-runtime-inspector header{padding:8px;border-bottom:1px solid #333b47;display:flex;gap:8px}.arcade-runtime-inspector header strong{flex:1}.arcade-runtime-inspector main{overflow:auto;padding:8px}.arcade-runtime-inspector button,.arcade-runtime-inspector input,.arcade-runtime-inspector textarea{font:inherit;color:inherit;background:#1d222b;border:1px solid #46505e;border-radius:4px;padding:3px 6px}.arcade-runtime-inspector textarea{display:block;width:100%;box-sizing:border-box;margin:6px 0}.arcade-runtime-inspector button[data-active=true]{background:#384456}.ari-row{display:flex;gap:4px;margin-bottom:6px}.ari-row input{min-width:0;flex:1}.ari-grow{flex:1;text-align:left}.ari-node{padding:2px 3px;cursor:pointer}.ari-node:hover{background:#242c37}.arcade-runtime-inspector details{margin-left:8px}.arcade-runtime-inspector pre{white-space:pre-wrap;overflow-wrap:anywhere}.ari-added{color:#8ce99a}.ari-removed{color:#ff8787}.ari-changed{color:#ffd43b}.ari-budget{display:flex;height:12px;border:1px solid #46505e;border-radius:3px;overflow:hidden;margin:5px 0}.ari-budget i{display:block;height:100%}.ari-budget .ari-sim{background:#4dabf7}.ari-budget .ari-render{background:#51cf66}.ari-budget .ari-idle{background:#495057}.ari-metric{display:grid;grid-template-columns:110px 1fr 64px;gap:5px;align-items:center;margin:3px 0}.ari-spark{width:100%;height:28px;background:#11151b}';
+    panel.append(style);
+    const header = documentRef.createElement('header'); const title = documentRef.createElement('strong'); title.textContent = '@arcade/runtime inspector';
+    const close = documentRef.createElement('button'); close.textContent = '×'; close.onclick = () => inspector.close(); header.append(title, close); panel.append(header);
+    panelBody = documentRef.createElement('main'); panel.append(panelBody);
+    (options.mount ?? documentRef.body)?.append?.(panel);
+    renderPanel();
+    return panel;
+  };
 
   const inspector = {
+    host,
+    telemetry,
+    sceneGraph,
+    entities,
+    on(name, listener) {
+      coreInvariant(typeof listener === 'function', 'inspector listener must be a function');
+      const set = listeners.get(name) ?? new Set(); set.add(listener); listeners.set(name, set);
+      return () => set.delete(listener);
+    },
     register(name, source) {
       coreInvariant(typeof name === 'string' && name.length > 0, 'inspector source name is required');
       coreInvariant(!sources.has(name), `inspector source already exists: ${name}`);
@@ -8899,45 +10128,275 @@ export function createRuntimeInspector(options = {}) {
     inspect(name) {
       const source = sources.get(name);
       coreInvariant(source !== undefined, `unknown inspector source: ${name}`);
-      const value = typeof source === 'function' ? source() : source?.snapshot ? source.snapshot() : source;
-      return stableSnapshot(value);
+      return stableSnapshot(inspectorSerializable(inspectorRead(source)));
     },
     capture(label = 'capture', metadata = {}) {
       const values = {};
       for (const name of [...sources.keys()].sort()) values[name] = inspector.inspect(name);
+      if (options.sceneGraph && !sources.has('sceneGraph')) {
+        values.sceneGraph = stableSnapshot(inspectorSerializable(sceneGraph.snapshot()));
+      }
+      if (pools.size > 0 && !sources.has('pools')) {
+        values.pools = stableSnapshot(inspectorSerializable(entities.snapshot()));
+      }
+      const normalizedMetadata = stableSnapshot(inspectorSerializable(metadata));
       const capture = Object.freeze({
-        index: nextCaptureIndex,
-        label,
-        time: now(),
-        metadata: stableSnapshot(metadata),
-        values: Object.freeze(values),
-        hash: deterministicHash({ label, metadata, values }),
+        index: nextCaptureIndex, label, time: now(), metadata: normalizedMetadata,
+        values: Object.freeze(values), hash: deterministicHash({ label, metadata: normalizedMetadata, values }),
       });
-      captures.push(capture);
-      nextCaptureIndex += 1;
+      captures.push(capture); nextCaptureIndex += 1;
       if (captures.length > capacity) captures.shift();
-      options.onCapture?.(capture);
+      selectedCapture = captures.length - 1;
+      options.onCapture?.(capture); emit('capture', capture);
       return capture;
     },
-    history() {
-      return Object.freeze([...captures]);
+    history() { return Object.freeze([...captures]); },
+    diff(before, after) {
+      const resolve = (value) => typeof value === 'number'
+        ? captures.find((capture) => capture.index === value) ?? captures[value]
+        : value;
+      const left = resolve(before); const right = resolve(after);
+      coreInvariant(left && right, 'inspector diff requires two snapshots');
+      return Object.freeze(inspectorDiffValues(left.values ?? left, right.values ?? right));
     },
-    export() {
-      return JSON.stringify({ version: 1, captures }, null, 2);
+    seek(position) {
+      if (!captures.length) { selectedCapture = -1; return null; }
+      selectedCapture = Math.max(0, Math.min(captures.length - 1, Math.floor(finiteNumber(position, captures.length - 1))));
+      const capture = captures[selectedCapture];
+      options.restoreSnapshot?.(capture, host);
+      emit('seek', capture);
+      return capture;
     },
-    clear() {
-      const count = captures.length;
-      captures.length = 0;
-      return count;
+    current: () => captures[selectedCapture] ?? null,
+    export() { return JSON.stringify({ version: 2, captures }, null, 2); },
+    import(serialized, importOptions = {}) {
+      const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
+      coreInvariant(Array.isArray(parsed?.captures), 'invalid runtime inspector snapshot export');
+      if (importOptions.append !== true) captures.length = 0;
+      for (const capture of parsed.captures) captures.push(Object.freeze(stableSnapshot(inspectorSerializable(capture))));
+      if (captures.length > capacity) captures.splice(0, captures.length - capacity);
+      nextCaptureIndex = Math.max(nextCaptureIndex, ...captures.map((capture) => finiteNumber(capture.index, -1) + 1), 0);
+      selectedCapture = captures.length - 1;
+      emit('import', Object.freeze({ count: captures.length }));
+      return captures.length;
+    },
+    clear() { const count = captures.length; captures.length = 0; selectedCapture = -1; return count; },
+    registerManifest(id, manifest, manifestOptions = {}) {
+      const normalized = normalizeArcadeSpriteManifest(manifest);
+      const key = String(id); manifests.set(key, { manifest: normalized, options: manifestOptions });
+      return Object.freeze({ id: key, manifest: normalized, unregister: () => manifests.delete(key) });
+    },
+    manifest(id) { return manifests.get(String(id))?.manifest ?? null; },
+    manifestDiff(before, after) {
+      return inspectorManifestDiff(normalizeArcadeSpriteManifest(before), normalizeArcadeSpriteManifest(after));
+    },
+    registerSpriteInstance(manifestId, instance, adapter = {}) {
+      const record = { manifestId: String(manifestId), instance, ...adapter };
+      spriteInstances.add(record);
+      return () => spriteInstances.delete(record);
+    },
+    applyManifestReload,
+    registerOverlaySource(name, source) { overlaySources.set(name, source); return () => overlaySources.delete(name); },
+    toggleOverlay(name, force) {
+      coreInvariant(overlayEnabled.has(name), `unknown inspector overlay: ${name}`);
+      const enabled = force === undefined ? !overlayEnabled.get(name) : Boolean(force);
+      overlayEnabled.set(name, enabled); inspector.renderOverlay(); return enabled;
+    },
+    overlaySnapshot() { return Object.freeze({ enabled: Object.freeze(Object.fromEntries(overlayEnabled)), commands: overlayCommands() }); },
+    renderOverlay() { ensureOverlayRenderer(); return overlayRenderer?.render(overlayCommands()) ?? false; },
+    open() { ensurePanel(); if (panel) panel.hidden = false; renderPanel(); return Boolean(panel); },
+    close() { if (panel) panel.hidden = true; return Boolean(panel); },
+    toggle() { ensurePanel(); if (!panel) return false; panel.hidden = !panel.hidden; if (!panel.hidden) renderPanel(); return !panel.hidden; },
+    refresh(refreshOptions = {}) {
+      if (destroyed) return 0;
+      const started = performanceNow();
+      for (const pool of entities.list()) telemetry.setPool(pool.name, pool);
+      const textureBytes = typeof telemetryOptions.textureBytes === 'function' ? telemetryOptions.textureBytes() : telemetry.latest().textureBytes;
+      const audioBytes = typeof telemetryOptions.audioBytes === 'function' ? telemetryOptions.audioBytes() : telemetry.latest().audioBytes;
+      const runtimePerformance = pixiRuntime()?.performanceSnapshot?.() ?? {};
+      const simulationMs = runtimePerformance.update?.lastMs
+        ?? (pendingSimulationMs > 0 ? pendingSimulationMs : telemetry.latest().simulationMs);
+      const renderMs = runtimePerformance.render?.lastMs ?? telemetry.latest().renderMs;
+      const frameMs = runtimePerformance.frame?.lastMs ?? Math.max(telemetry.latest().frameMs, simulationMs + renderMs);
+      telemetry.recordFrame({ ...telemetry.latest(), simulationMs, renderMs, frameMs, textureBytes, audioBytes, inspectorMs: lastInspectorMs });
+      pendingSimulationMs = 0;
+      inspector.renderOverlay();
+      const timestamp = performanceNow();
+      if (refreshOptions.panel === true || timestamp - lastPanelRefresh >= Math.max(16, finiteNumber(options.panelRefreshMs, 100))) {
+        renderPanel(); lastPanelRefresh = timestamp;
+      }
+      lastInspectorMs = Math.max(0, performanceNow() - started);
+      return lastInspectorMs;
+    },
+    profileOverhead(iterations = 1000) {
+      const count = Math.max(1, Math.floor(finiteNumber(iterations, 1000)));
+      const previousPanelRefresh = lastPanelRefresh;
+      lastPanelRefresh = Number.POSITIVE_INFINITY;
+      const started = performanceNow();
+      let totalMs = 0;
+      try {
+        for (let index = 0; index < count; index += 1) inspector.refresh();
+        totalMs = Math.max(0, performanceNow() - started);
+      } finally {
+        lastPanelRefresh = previousPanelRefresh;
+      }
+      const meanMs = totalMs / count;
+      return Object.freeze({ iterations: count, totalMs, meanMs, budgetMs: 1, pass: meanMs < 1 });
     },
     snapshot() {
-      return Object.freeze({ sources: Object.freeze([...sources.keys()].sort()), captures: captures.length, capacity, nextCaptureIndex });
+      return Object.freeze({
+        sources: Object.freeze([...sources.keys()].sort()), captures: captures.length, capacity, nextCaptureIndex,
+        manifests: manifests.size, spriteInstances: spriteInstances.size, pools: pools.size,
+        overlays: Object.freeze(Object.fromEntries(overlayEnabled)), panelOpen: Boolean(panel && !panel.hidden),
+        lastInspectorMs, telemetry: telemetry.snapshot(), destroyed,
+      });
+    },
+    destroy() {
+      if (destroyed) return false;
+      destroyed = true;
+      clearTimeout(reconnectTimer); reconnectTimer = null; socket?.close?.(); socket = null;
+      for (const dispose of disposers.splice(0).reverse()) dispose?.();
+      overlayRenderer?.destroy?.(); overlayRenderer = null;
+      panel?.remove?.(); panel = null; panelBody = null;
+      sources.clear(); manifests.clear(); spriteInstances.clear(); overlaySources.clear(); pools.clear(); listeners.clear();
+      return true;
     },
   };
+
   for (const [name, source] of Object.entries(options.sources ?? {})) inspector.register(name, source);
-  if (options.host) inspector.register('host', options.host);
+  if (host) inspector.register('host', () => inspectorHostSnapshot(host));
+  for (const [name, pool] of Object.entries(options.pools ?? {})) entities.registerPool(name, pool);
+  for (const [name, source] of Object.entries(overlayOptions.sources ?? {})) overlaySources.set(name, source);
+
+  const keyHandler = (event) => {
+    if (event.defaultPrevented || event.repeat) return;
+    if (event.target?.isContentEditable || /^(?:INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName ?? '')) return;
+    if (event.ctrlKey && event.shiftKey && String(event.key).toLowerCase() === 's') {
+      event.preventDefault(); inspector.capture('keyboard'); inspector.refresh({ panel: true }); return;
+    }
+    if (options.keyToggle !== false && event.key === (options.keyToggle ?? '`')) { event.preventDefault(); inspector.toggle(); return; }
+    for (const [name, key] of Object.entries(overlayKeys)) {
+      if (String(event.key).toLowerCase() === String(key).toLowerCase()) { inspector.toggleOverlay(name); break; }
+    }
+  };
+  const documentRef = options.document ?? globalThis.document;
+  if (options.keyToggle !== false || options.overlay) {
+    documentRef?.addEventListener?.('keydown', keyHandler);
+    disposers.push(() => documentRef?.removeEventListener?.('keydown', keyHandler));
+  }
+
+  if (host?.events?.on) {
+    let stepStarted = null;
+    const beforeStep = host.events.on('host:before-step', () => { stepStarted = performanceNow(); });
+    const afterStep = host.events.on('host:after-step', () => {
+      if (stepStarted === null) return;
+      pendingSimulationMs += Math.max(0, performanceNow() - stepStarted);
+      stepStarted = null;
+    });
+    const afterRender = host.events.on('host:render', () => inspector.refresh());
+    disposers.push(beforeStep, afterStep, afterRender);
+  }
+
+  if (options.hotReload) {
+    const hotReload = options.hotReload;
+    const eventTarget = hotReload.eventTarget ?? globalThis;
+    const eventName = hotReload.eventName ?? 'arcade-runtime:hot-reload';
+    const applyIncomingReload = (message) => applyManifestReload(message).catch((error) => {
+      logHotReload({ type: 'error', error: String(error?.message ?? error) });
+      hotReload.onError?.(error);
+      return null;
+    });
+    const eventListener = (event) => applyIncomingReload(event.detail ?? event.data ?? event);
+    eventTarget?.addEventListener?.(eventName, eventListener);
+    disposers.push(() => eventTarget?.removeEventListener?.(eventName, eventListener));
+    const connectSocket = () => {
+      if (destroyed || hotReload.enabled === false) return;
+      const WebSocketRef = hotReload.WebSocket ?? globalThis.WebSocket;
+      if (!WebSocketRef && !hotReload.socketFactory) return;
+      if (!hotReload.url && !hotReload.wsPort) return;
+      const protocol = globalThis.location?.protocol === 'https:' ? 'wss' : 'ws';
+      const hostname = hotReload.host ?? globalThis.location?.hostname ?? '127.0.0.1';
+      const url = hotReload.url ?? `${protocol}://${hostname}:${Math.floor(finiteNumber(hotReload.wsPort, 9876))}/__arcade_inspector__`;
+      socket = hotReload.socketFactory?.(url) ?? new WebSocketRef(url);
+      socket.addEventListener?.('message', (event) => {
+        try { applyIncomingReload(JSON.parse(String(event.data))); }
+        catch (error) { logHotReload({ type: 'error', error: String(error?.message ?? error) }); hotReload.onError?.(error); }
+      });
+      socket.addEventListener?.('open', () => logHotReload({ type: 'socket', state: 'open', url }));
+      socket.addEventListener?.('close', () => {
+        socket = null; logHotReload({ type: 'socket', state: 'closed', url });
+        if (!destroyed && hotReload.reconnect !== false) {
+          reconnectTimer = setTimeout(connectSocket, Math.max(100, finiteNumber(hotReload.reconnectMs, 500)));
+        }
+      });
+    };
+    connectSocket();
+  }
+
+  ensurePanel();
   return inspector;
 }
+
+function createRuntimeInspectorVitePlugin(options = {}) {
+  const eventName = options.eventName ?? 'arcade-runtime:hot-reload';
+  let disposeWatcher = null;
+  return {
+    name: 'arcade-runtime-inspector-hot-reload',
+    enforce: 'pre',
+    configureServer(server) {
+      const normalize = (value) => String(value ?? '').replaceAll('\\', '/').replace(/\/+$/, '');
+      const projectRoot = normalize(server.config.root);
+      const configuredDir = normalize(options.manifestDir ?? './assets/sprites').replace(/^\.\//, '').replace(/^\/+/, '');
+      const root = `${projectRoot}/${configuredDir}`.replace(/\/{2,}/g, '/');
+      server.watcher.add(root);
+      const publish = (filename) => {
+        const absolute = normalize(filename);
+        if (absolute !== root && !absolute.startsWith(`${root}/`)) return;
+        const normalizedPath = absolute === root ? '' : absolute.slice(root.length + 1);
+        if (/\.json$/i.test(normalizedPath)) {
+          const url = absolute.startsWith(`${projectRoot}/`)
+            ? `/${absolute.slice(projectRoot.length + 1)}`
+            : `/@fs/${absolute}`;
+          server.ws.send({
+            type: 'custom',
+            event: 'arcade:manifest-reload',
+            data: Object.freeze({ type: 'arcade:manifest-reload', id: normalizedPath, path: normalizedPath, url }),
+          });
+        } else if (/\.png$/i.test(normalizedPath)) {
+          server.ws.send({
+            type: 'custom',
+            event: 'arcade:atlas-reload',
+            data: Object.freeze({ type: 'arcade:atlas-reload', path: normalizedPath }),
+          });
+        }
+      };
+      const listener = (filename) => { publish(filename); };
+      server.watcher.on('change', listener);
+      server.watcher.on('add', listener);
+      disposeWatcher = () => {
+        server.watcher.off('change', listener);
+        server.watcher.off('add', listener);
+      };
+      server.httpServer?.once?.('close', disposeWatcher);
+    },
+    transformIndexHtml() {
+      const bridge = [
+        'arcade:manifest-reload',
+        'arcade:atlas-reload',
+        'arcade:manifest-error',
+      ].map((name) => `import.meta.hot.on(${JSON.stringify(name)},(detail)=>globalThis.dispatchEvent(new CustomEvent(${JSON.stringify(eventName)},{detail})));`).join('');
+      return [{
+        tag: 'script',
+        attrs: { type: 'module' },
+        children: `if(import.meta.hot){${bridge}}`,
+        injectTo: 'body',
+      }];
+    },
+    closeBundle() { disposeWatcher?.(); disposeWatcher = null; },
+  };
+}
+
+createRuntimeInspector.vitePlugin = createRuntimeInspectorVitePlugin;
 
 export function createReplayTimeline(options = {}) {
   const stream = typeof options.stream === 'string' ? parseCommandStream(options.stream) : options.stream;

@@ -143,10 +143,20 @@ test.describe('Combat System via StageRunScene', () => {
 
 	test('melee attack should trigger meleeTimer', async ({ page }) => {
 		const before = await page.evaluate(() => (window as any).__badger.getPlayer());
-		await page.keyboard.press('J');
-		await page.waitForTimeout(50);
-		const after = await page.evaluate(() => (window as any).__badger.getPlayer());
-		expect(after.meleeTimer).toBeGreaterThan(before.meleeTimer);
+		await page.keyboard.down('J');
+		try {
+			const observedTimer = await page.waitForFunction(
+				(baseline) => {
+					const timer = (window as any).__badger?.getPlayer()?.meleeTimer ?? 0;
+					return timer > baseline ? timer : false;
+				},
+				before.meleeTimer,
+				{ polling: 'raf', timeout: 1000 },
+			);
+			expect(await observedTimer.jsonValue()).toBeGreaterThan(before.meleeTimer);
+		} finally {
+			await page.keyboard.up('J');
+		}
 	});
 });
 

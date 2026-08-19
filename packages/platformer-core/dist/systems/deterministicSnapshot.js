@@ -1,2 +1,3 @@
-export { deterministicHash, fnv1a32, stableSnapshot, stableSnapshotString, } from '../../../../vendor/arcade-runtime.mjs';
+export { deterministicHash, stableSnapshot, stableSnapshotString, } from '@arcade/runtime/testing';
+export { fnv1a32 } from '@arcade/runtime/testing';
 //# sourceMappingURL=deterministicSnapshot.js.map

@@ -1,0 +1,74 @@
+{
+  "name": "@arcade/runtime",
+  "version": "1.12.0",
+  "type": "module",
+  "description": "Workspace-local facade for vendored @arcade/runtime 1.12.0 — identical official subpath exports backed by checksum-verified vendor/arcade-runtime.mjs.",
+  "exports": {
+    ".": {
+      "types": "./index.d.mts",
+      "import": "./index.mjs"
+    },
+    "./core": {
+      "types": "./core.d.mts",
+      "import": "./core.mjs"
+    },
+    "./animation": {
+      "types": "./animation.d.mts",
+      "import": "./animation.mjs"
+    },
+    "./pixi": {
+      "types": "./pixi.d.mts",
+      "import": "./pixi.mjs"
+    },
+    "./sprites": {
+      "types": "./sprites.d.mts",
+      "import": "./sprites.mjs"
+    },
+    "./assets": {
+      "types": "./assets.d.mts",
+      "import": "./assets.mjs"
+    },
+    "./audio": {
+      "types": "./audio.d.mts",
+      "import": "./audio.mjs"
+    },
+    "./gameplay": {
+      "types": "./gameplay.d.mts",
+      "import": "./gameplay.mjs"
+    },
+    "./stages": {
+      "types": "./stages.d.mts",
+      "import": "./stages.mjs"
+    },
+    "./storage": {
+      "types": "./storage.d.mts",
+      "import": "./storage.mjs"
+    },
+    "./netcode": {
+      "types": "./netcode.d.mts",
+      "import": "./netcode.mjs"
+    },
+    "./ui": {
+      "types": "./ui.d.mts",
+      "import": "./ui.mjs"
+    },
+    "./tooling": {
+      "types": "./tooling.d.mts",
+      "import": "./tooling.mjs"
+    },
+    "./testing": {
+      "types": "./testing.d.mts",
+      "import": "./testing.mjs"
+    },
+    "./compat": {
+      "types": "./compat.d.mts",
+      "import": "./compat.mjs"
+    }
+  },
+  "types": "./index.d.mts",
+  "files": [
+    "*.mjs",
+    "*.d.mts",
+    "package.json"
+  ]
+}

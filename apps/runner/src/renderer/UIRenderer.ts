@@ -7,7 +7,7 @@ import type { Camera } from '../systems/CameraSystem';
 import { BADGER_UI, drawArcadePanel } from '../ui/ArcadeUi';
 import { buildGameplayHudLayout } from './GameplayHudLayout';
 import type { SpriteRenderer } from './SpriteRenderer';
-import { resolveHudGauge } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveHudGauge } from '@arcade/runtime/ui';
 
 interface HudIconSlot {
 	animation: string;

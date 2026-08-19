@@ -1,7 +1,7 @@
 import {
 	drawArcadeSpriteCanvasFrame,
 	resolveArcadeSpriteFrame,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/sprites';
 import { type SpriteSheetDimensionAudit, auditSpriteAtlasDimensions } from './production';
 import type { LoadedSheet, SpriteSheet } from './types';
 

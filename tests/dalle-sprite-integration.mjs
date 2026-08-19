@@ -11,7 +11,7 @@ const publicManifest = JSON.parse(
 );
 assert.deepEqual(publicManifest, manifest, 'source/public sprite manifests diverged');
 
-const imported = manifest.spriteSheets.filter((sheet) => sheet.source?.revision === revision);
+const imported = manifest.sheets.filter((sheet) => sheet.source?.revision === revision);
 assert.equal(imported.length, 55, 'expected the complete mapped DALLE runtime-import batch');
 const requireSourceArchive = process.env.REQUIRE_DALLE_SOURCE_ARCHIVE === '1';
 let archivedSourceBoardsPresent = 0;

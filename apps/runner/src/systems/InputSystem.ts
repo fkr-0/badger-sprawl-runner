@@ -1,10 +1,7 @@
 /** Shared arcade-runtime semantic keyboard/gamepad input adapter. */
 
-import {
-	type ActionBinding,
-	type ActionState,
-	createActionInput,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createActionInput } from '@arcade/runtime/core';
+import type { ActionBinding, ActionState } from '@arcade/runtime/core';
 
 export interface ActionMap {
 	moveLeft: boolean;

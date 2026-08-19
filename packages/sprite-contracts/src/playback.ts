@@ -1,15 +1,17 @@
 import {
 	advanceArcadeAnimationClock,
-	collectArcadeSpriteAnimationEvents,
 	createArcadeAnimationClock,
 	playArcadeAnimationClock,
+} from '@arcade/runtime/animation';
+import {
+	collectArcadeSpriteAnimationEvents,
 	resolveArcadeSpriteFrame,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/sprites';
+import type { ArcadeSpriteFrameAddress } from '@arcade/runtime/sprites';
 import type {
 	ArcadeAnimationClock,
 	ArcadeAnimationMode,
-	ArcadeSpriteFrameAddress,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/animation';
 import { sampleSpriteAnimation } from './sampling';
 import type { AnimationDef, SpriteAnimationEvent, SpriteSheet } from './types';
 

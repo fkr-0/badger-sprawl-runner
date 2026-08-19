@@ -1,6 +1,10 @@
 # @badger/sprite-contracts
 
-Shared sprite-manifest, frame-addressing, production-geometry, and browser-loading helpers for Badger Sprawl Runner. Runtime-neutral contract logic delegates to the vendored Arcade Runtime; DOM image loading remains in the Badger adapter.
+Badger-specific sprite adapters and production tooling layered over `@arcade/runtime/sprites`.
+
+The shared manifest schema, source-shape compatibility, normalization, validation, frame addressing, event semantics, and Canvas inspection primitives now belong to Arcade Runtime v1.12.0. New code should import `ArcadeSpriteManifest`, `ArcadeSpriteSheet`, `ArcadeSpriteAnimation`, `normalizeArcadeSpriteManifest`, and `validateArcadeSpriteManifest` directly from `@arcade/runtime/sprites`.
+
+This package remains intentionally custom for browser image loading and cancellation, immutable playback/sampling conveniences, semantic manifest diff/reload planning, sprite inspection, and atlas assembly/dimension auditing. The old `SpriteManifest`/`SpriteSheet`/`AnimationDef` aliases plus `normalizeSpriteManifest`/`validateSpriteManifest` are deprecated compatibility exports and should not be used by new consumers.
 
 ## Playback APIs
 

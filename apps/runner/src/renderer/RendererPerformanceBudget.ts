@@ -1,8 +1,5 @@
-import {
-	createPerformanceBudgetMonitor,
-	type ArcadePerformanceSummary,
-	type PerformanceBudget,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createPerformanceBudgetMonitor } from '@arcade/runtime/tooling';
+import type { ArcadePerformanceSummary, PerformanceBudget } from '@arcade/runtime/tooling';
 
 export type BadgerRendererMode = 'canvas' | 'bridge';
 

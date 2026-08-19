@@ -1,16 +1,18 @@
 import {
-	type ActionCancelRule,
-	type ActionOutcome,
-	type ActionPhase,
-	type ActionPhaseDefinition,
-	type ActionPhaseEvent,
-	type ActionPhaseState,
 	canCancelActionInto,
 	createActionPhaseState,
 	getActionCancelRoutes,
 	markActionOutcome,
 	stepActionPhase,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/core';
+import type {
+	ActionCancelRule,
+	ActionOutcome,
+	ActionPhase,
+	ActionPhaseDefinition,
+	ActionPhaseEvent,
+	ActionPhaseState,
+} from '@arcade/runtime/core';
 import type { AttackSpec } from './CombatSystem';
 
 export type CancelOutcome = ActionOutcome;

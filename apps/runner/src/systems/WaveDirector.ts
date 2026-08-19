@@ -5,11 +5,11 @@
 import {
 	advanceEncounter,
 	type ArcadeEncounterState,
-	type EntityRegistry,
 	createEncounterState,
-	createEntityRegistry,
 	inspectEncounterState,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/stages';
+import { createEntityRegistry } from '@arcade/runtime/core';
+import type { EntityRegistry } from '@arcade/runtime/core';
 import {
 	createEnemy,
 	getEnemyCost,

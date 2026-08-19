@@ -1128,7 +1128,7 @@ function encodePng(width, height, pixels) {
 	]);
 }
 
-const missingSheets = manifest.spriteSheets.filter((sheet) => overwrite || !existsSync(sheet.file));
+const missingSheets = manifest.sheets.filter((sheet) => overwrite || !existsSync(sheet.file));
 if (missingSheets.length === 0) {
 	console.log('No missing sprite sheets found. Use --overwrite to regenerate fallback sheets.');
 	process.exit(0);

@@ -1,11 +1,9 @@
 import {
 	collectArcadeSpriteAnimationEvents,
 	resolveArcadeSpriteFrame,
-} from '../../../vendor/arcade-runtime.mjs';
-import type {
-	ArcadeAnimationMode,
-	ArcadeSpriteFrameAddress,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/sprites';
+import type { ArcadeSpriteFrameAddress } from '@arcade/runtime/sprites';
+import type { ArcadeAnimationMode } from '@arcade/runtime/animation';
 import {
 	type SpriteAtlasDimensions,
 	type SpriteSheetDimensionAudit,

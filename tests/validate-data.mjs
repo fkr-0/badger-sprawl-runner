@@ -24,7 +24,7 @@ assert(
 	'expected progression currencies'
 );
 assert(
-	Array.isArray(sprites.spriteSheets) && sprites.spriteSheets.length >= 4,
+	Array.isArray(sprites.sheets) && sprites.sheets.length >= 4,
 	'expected sprite sheets'
 );
 assert(Array.isArray(enemyFamilies.families) && enemyFamilies.families.length >= 5, 'expected procgen enemy families');
@@ -37,7 +37,7 @@ for (const id of manifest.coreItems) {
 	assert(itemIds.has(id), `manifest core item missing from items.json: ${id}`);
 }
 
-const spriteSheetIds = new Set(sprites.spriteSheets.map((sheet) => sheet.id));
+const spriteSheetIds = new Set(sprites.sheets.map((sheet) => sheet.id));
 for (const item of items.items) {
 	assert(item.iconAnimation, `item is missing iconAnimation: ${item.id}`);
 	assert(spriteSheetIds.has(item.iconSheetId ?? 'item_icons'), `item references missing icon sheet: ${item.id}`);
@@ -58,7 +58,7 @@ for (const affix of affixes.affixes) {
 	assert(Array.isArray(affix.forbiddenWith), `bad forbiddenWith for affix ${affix.id}`);
 }
 
-for (const sheet of sprites.spriteSheets) {
+for (const sheet of sprites.sheets) {
 	assert(sheet.id && sheet.file, `sprite sheet missing id/file: ${JSON.stringify(sheet)}`);
 	assert(
 		Array.isArray(sheet.frameSize) && sheet.frameSize.length === 2,

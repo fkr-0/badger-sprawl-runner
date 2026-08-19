@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(join(root, 'data/sprites.json'), 'utf8'));
 const acceptedRevisions = new Set(['2026-07-17-production', '2026-07-19-dalle-import']);
-const production = manifest.spriteSheets.filter((sheet) =>
+const production = manifest.sheets.filter((sheet) =>
 	acceptedRevisions.has(sheet.source?.revision)
 );
 

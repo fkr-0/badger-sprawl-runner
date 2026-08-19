@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
+import { normalizeArcadeSpriteManifest } from '@arcade/runtime/sprites';
 
 const root = resolve(import.meta.dirname, '..');
-const manifest = JSON.parse(readFileSync(join(root, 'data/sprites.json'), 'utf8'));
+const manifest = normalizeArcadeSpriteManifest(
+	JSON.parse(readFileSync(join(root, 'data/sprites.json'), 'utf8'))
+);
 const scanRoots = ['apps/runner/src', 'packages', 'data'];
 const textExtensions = new Set(['.ts', '.tsx', '.js', '.mjs', '.json', '.md']);
 const excluded = new Set([
@@ -12,7 +15,7 @@ const excluded = new Set([
 	'data/sprite-prompts.json',
 ]);
 const archivalSheets = new Set(
-	manifest.spriteSheets
+	manifest.sheets
 		.filter((sheet) => sheet.source?.classification === 'archival')
 		.map((sheet) => sheet.id)
 );
@@ -42,7 +45,7 @@ function isProductionReference(path) {
 	);
 }
 
-const usage = manifest.spriteSheets.map((sheet) => {
+const usage = manifest.sheets.map((sheet) => {
 	const references = corpus
 		.filter(({ content }) => content.includes(sheet.id) || content.includes(sheet.file))
 		.map(({ path }) => path);

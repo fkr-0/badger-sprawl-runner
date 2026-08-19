@@ -1,4 +1,9 @@
 import { readFile } from 'node:fs/promises';
+import {
+	advanceArcadeAnimationClock,
+	createArcadeAnimationClock,
+	playArcadeAnimationClock,
+} from '@arcade/runtime/animation';
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -24,6 +29,24 @@ const typedLayout = await text('apps/runner/src/world/lowerSprawlLayout.ts');
 
 const spriteRenderer = await text('apps/runner/src/renderer/SpriteRenderer.ts');
 const spriteContractsIndex = await text('packages/sprite-contracts/src/index.ts');
+
+let runtimeClock = createArcadeAnimationClock({
+	frameCount: 4,
+	frameDuration: 0.1,
+	mode: 'loop',
+});
+runtimeClock = playArcadeAnimationClock(runtimeClock);
+runtimeClock = advanceArcadeAnimationClock(runtimeClock, 0.11, {
+	frameCount: 4,
+	frameDuration: 0.1,
+	mode: 'loop',
+});
+assert(runtimeClock.frame === 1, 'Arcade Runtime animation clock must advance to frame 1');
+assert(runtimeClock.frameAdvances === 1, 'Arcade Runtime animation clock must report one frame edge');
+assert(
+	Array.isArray(runtimeClock.advancedFrames) && runtimeClock.advancedFrames[0] === 1,
+	'Arcade Runtime animation clock must report the crossed frame'
+);
 
 for (const required of [
 	'frames_grid_vs_individual_pngs:',
@@ -51,27 +74,28 @@ for (const implementedTask of [
 }
 
 assert(
-	spriteRenderer.includes('manifest = normalizeSpriteManifest(await this.fetchManifest(manifestUrl))') &&
+	spriteRenderer.includes('manifest = normalizeArcadeSpriteManifest(await this.fetchManifest(manifestUrl))') &&
 		spriteRenderer.includes('const runtimeSheets = manifest.sheets.filter(isRuntimeSpriteSheet)') &&
 		spriteRenderer.includes('this.manifest = manifest'),
 	'SpriteRenderer must normalize data/sprites.json before reading sheets'
 );
 assert(
-	spriteContractsIndex.includes('normalizeSpriteManifest'),
-	'sprite-contracts package must export normalizeSpriteManifest'
+	spriteContractsIndex.includes('normalizeArcadeSpriteManifest') &&
+		spriteContractsIndex.includes('normalizeSpriteManifest'),
+	'sprite-contracts must re-export the runtime normalizer and retain the deprecated compatibility facade'
 );
 assert(
-	Array.isArray(sprites.spriteSheets),
-	'data/sprites.json must keep spriteSheets project manifest shape'
+	Array.isArray(sprites.sheets),
+	'data/sprites.json must keep the canonical runtime sheets manifest shape'
 );
 assert(
-	sprites.spriteSheets.some(
+	sprites.sheets.some(
 		(sheet) => sheet.id === 'comfy_badger_run_grid' && sheet.grid?.columns === 4
 	),
 	'data/sprites.json must retain explicit generated run grid metadata'
 );
 
-const sheetById = new Map(sprites.spriteSheets.map((sheet) => [sheet.id, sheet]));
+const sheetById = new Map(sprites.sheets.map((sheet) => [sheet.id, sheet]));
 const mossAnimations = sheetById.get('moss_badger')?.animations ?? {};
 const productionMoss = sheetById.get('moss_badger_production');
 const productionMossAnimations = productionMoss?.animations ?? {};
@@ -423,7 +447,7 @@ for (const sheetId of requiredDialoguePortraitSheets) {
 }
 
 const characterRequiredAnimations = ['idle', 'talk', 'assist', 'react', 'exit'];
-const characterSheets = sprites.spriteSheets.filter((sheet) =>
+const characterSheets = sprites.sheets.filter((sheet) =>
 	['companion', 'npc', 'merchant', 'npc_boss_context'].includes(sheet.role)
 );
 assert(
@@ -472,8 +496,8 @@ const bossRequiredAnimations = [
 	'signature_attack',
 	'defeat',
 ];
-const enemySheets = sprites.spriteSheets.filter((sheet) => sheet.role === 'enemy');
-const bossSheets = sprites.spriteSheets.filter((sheet) => sheet.role === 'boss');
+const enemySheets = sprites.sheets.filter((sheet) => sheet.role === 'enemy');
+const bossSheets = sprites.sheets.filter((sheet) => sheet.role === 'boss');
 assert(
 	enemySheets.length >= 16,
 	`expected at least 16 story enemy sheets, got ${enemySheets.length}`

@@ -1,8 +1,5 @@
-import { diffSnapshots } from '../../../../vendor/arcade-runtime.mjs';
-import type {
-	SnapshotDiffEntry,
-	SnapshotValue,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { diffSnapshots } from '@arcade/runtime/testing';
+import type { SnapshotDiffEntry, SnapshotValue } from '@arcade/runtime/testing';
 
 export interface ReplayDiffInput {
 	left: SnapshotValue;

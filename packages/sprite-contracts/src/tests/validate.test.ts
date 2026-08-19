@@ -22,7 +22,7 @@ describe('validateSpriteManifest', () => {
 		expect(validateSpriteManifest(validManifest)).toBe(true);
 	});
 
-	it('validates project data/sprites.json shape with spriteSheets', () => {
+	it('retains legacy schemaVersion/spriteSheets normalization at migration boundaries', () => {
 		const projectManifest = {
 			schemaVersion: 1,
 			baseGrid: 16,

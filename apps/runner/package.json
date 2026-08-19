@@ -1,6 +1,6 @@
 {
 	"name": "@badger/runner",
-	"version": "1.4.0",
+	"version": "1.5.1",
 	"type": "module",
 	"description": "Badger Sprawl Runner — main game application.",
 	"scripts": {
@@ -11,6 +11,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@arcade/runtime": "workspace:*",
 		"@badger/codegate": "workspace:*",
 		"@badger/platformer-core": "workspace:*",
 		"@badger/progression": "workspace:*",

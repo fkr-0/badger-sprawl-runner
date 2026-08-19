@@ -1,8 +1,6 @@
 import { type Container, Graphics } from 'pixi.js';
-import {
-	createPixiFramePool,
-	type ArcadePixiFramePoolSnapshot,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createPixiFramePool } from '@arcade/runtime/pixi';
+import type { ArcadePixiFramePoolSnapshot } from '@arcade/runtime/pixi';
 import type { Particle, VFXRenderSource } from './VFXPool';
 
 export interface BadgerPixiVfxParticleModel {

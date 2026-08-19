@@ -1,8 +1,6 @@
-import { resolveArcadeSpriteFrame } from '../../../vendor/arcade-runtime.mjs';
-import type {
-	ArcadeAnimationMode,
-	ArcadeSpriteFrameAddress,
-} from '../../../vendor/arcade-runtime.mjs';
+import { resolveArcadeSpriteFrame } from '@arcade/runtime/sprites';
+import type { ArcadeSpriteFrameAddress } from '@arcade/runtime/sprites';
+import type { ArcadeAnimationMode } from '@arcade/runtime/animation';
 import type { AnimationDef, SpriteSheet } from './types';
 
 export interface SpriteAnimationSampleOptions {

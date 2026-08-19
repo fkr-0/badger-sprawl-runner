@@ -377,13 +377,13 @@ def sheet_definitions() -> list[dict]:
 def update_sprite_manifest() -> None:
     path = DATA_DIR / "sprites.json"
     data = json.loads(path.read_text())
-    sheets = data["spriteSheets"]
+    sheets = data["sheets"]
     replacements = {sheet["id"]: sheet for sheet in sheet_definitions()}
     retained = [sheet for sheet in sheets if sheet["id"] not in replacements]
     insert_at = next((index + 1 for index, sheet in enumerate(retained) if sheet["id"] == "item_icons"), len(retained))
     for sheet in reversed(list(replacements.values())):
         retained.insert(insert_at, sheet)
-    data["spriteSheets"] = retained
+    data["sheets"] = retained
     path.write_text(json.dumps(data, indent="\t") + "\n")
     PUBLIC_DATA_DIR.mkdir(parents=True, exist_ok=True)
     shutil.copy2(path, PUBLIC_DATA_DIR / "sprites.json")

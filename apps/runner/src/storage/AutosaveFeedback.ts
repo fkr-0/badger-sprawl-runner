@@ -1,7 +1,7 @@
 import {
 	type ArcadePersistenceFeedback,
 	createPersistenceFeedback,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/storage';
 import type { GameFlow } from '../game/GameFlow';
 import type { AdventureSaveV2 } from '../game/adventure/AdventureState';
 import { type SaveDriver, saveGameFlow } from './SaveStore';

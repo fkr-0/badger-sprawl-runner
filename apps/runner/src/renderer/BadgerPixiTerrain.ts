@@ -1,6 +1,6 @@
 import { type LoadedSheet, sampleSpriteAnimationFrame } from '@badger/sprite-contracts';
 import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
-import { resolveArcadeSpriteFrame } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveArcadeSpriteFrame } from '@arcade/runtime/sprites';
 import type { StagePlatformArt } from '../game/StageArtRegistry';
 import type { SpriteRenderer } from './SpriteRenderer';
 

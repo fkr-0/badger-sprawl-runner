@@ -8,7 +8,7 @@ import {
 	type ArcadeEncounterPlan,
 	type ArcadeStageGraph,
 	type ArcadeStageGraphState,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/stages';
 import { CAMPAIGN } from './Campaign';
 import type { CampaignStage } from './campaign/schema';
 import type { StoryProgress } from './GameFlow';

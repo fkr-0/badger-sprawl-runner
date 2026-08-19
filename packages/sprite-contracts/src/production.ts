@@ -1,7 +1,7 @@
 import {
 	normalizeArcadeSpriteManifest,
 	resolveArcadeSpriteFrame,
-} from '../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/sprites';
 import type { SpriteManifest, SpriteSheet } from './types';
 
 export type SpriteAtlasLayoutMode = 'explicit-grid' | 'animation-rows';

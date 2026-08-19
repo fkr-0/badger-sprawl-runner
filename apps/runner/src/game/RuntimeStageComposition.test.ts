@@ -4,7 +4,7 @@ import {
 	advanceStageGraph,
 	createEncounterState,
 	createStageGraphState,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/stages';
 import { CAMPAIGN } from './Campaign';
 import {
 	advanceBadgerCampaignStage,

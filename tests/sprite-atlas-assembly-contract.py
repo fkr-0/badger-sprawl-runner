@@ -36,7 +36,7 @@ def png_size(path: Path) -> tuple[int, int] | None:
 def validate_current_index() -> dict[str, int]:
     index = yaml.safe_load(INDEX_PATH.read_text(encoding="utf-8"))
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    sheets = {sheet["id"]: sheet for sheet in manifest["spriteSheets"]}
+    sheets = {sheet["id"]: sheet for sheet in manifest["sheets"]}
     entries = index["current"]
     placement_total = 0
     job_total = 0

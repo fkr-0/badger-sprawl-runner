@@ -1,1 +1,1 @@
-{"version":3,"file":"sweptAabb.js","sourceRoot":"","sources":["../../src/systems/sweptAabb.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,IAAI,eAAe,EAAE,MAAM,uCAAuC,CAAC;AAgCrF,+EAA+E;AAC/E,MAAM,UAAU,SAAS,CAAC,KAAiB;IAC1C,OAAO,eAAe,CAAC,KAAK,CAAgB,CAAC;AAC9C,CAAC"}
+{"version":3,"file":"sweptAabb.js","sourceRoot":"","sources":["../../src/systems/sweptAabb.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,IAAI,eAAe,EAAE,MAAM,sBAAsB,CAAC;AAgCpE,+EAA+E;AAC/E,MAAM,UAAU,SAAS,CAAC,KAAiB;IAC1C,OAAO,eAAe,CAAC,KAAK,CAAgB,CAAC;AAC9C,CAAC"}

@@ -20,7 +20,7 @@ import {
 	drawArcadeScreenTitleCanvas,
 	drawArcadeTextBlockCanvas,
 	fitArcadeTextCanvas,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/ui';
 import type {
 	ArcadeChipOptions,
 	ArcadeCommandAction,
@@ -30,7 +30,7 @@ import type {
 	ArcadePanelOptions,
 	ArcadeScreenTitleOptions,
 	ArcadeUiTheme,
-} from '../../../../vendor/arcade-runtime.mjs';
+} from '@arcade/runtime/ui';
 
 export { ARCADE_UI_FONT, ARCADE_UI_UNIT, createArcadeNoticeQueue };
 export type {

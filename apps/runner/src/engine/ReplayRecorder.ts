@@ -2,7 +2,7 @@
  * Compatibility wrapper over the shared ticked command recorder.
  */
 
-import { createCommandRecorder } from '../../../../vendor/arcade-runtime.mjs';
+import { createCommandRecorder } from '@arcade/runtime/testing';
 
 export interface InputFrame {
 	frame: number;

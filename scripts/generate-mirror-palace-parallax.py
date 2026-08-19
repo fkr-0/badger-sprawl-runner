@@ -76,7 +76,7 @@ def front_plate() -> Image.Image:
 
 def update_manifest() -> None:
     data = json.loads(DATA.read_text())
-    sheets = data["spriteSheets"]
+    sheets = data["sheets"]
     sheet = {
         "id": "mirror_palace_parallax",
         "file": "assets/sprites/worlds/mirror_palace_parallax.png",

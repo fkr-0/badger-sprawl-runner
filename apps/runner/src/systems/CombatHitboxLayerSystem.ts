@@ -1,5 +1,5 @@
 import type { Rect } from '@badger/platformer-core';
-import { resolveHitboxContacts } from '../../../../vendor/arcade-runtime.mjs';
+import { resolveHitboxContacts } from '@arcade/runtime/core';
 
 export type CombatHitboxLayer = 'high' | 'mid' | 'low' | 'air' | 'projectile' | 'unblockable';
 

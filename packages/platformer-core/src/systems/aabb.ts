@@ -1,6 +1,6 @@
 /** Shared arcade-runtime AABB collision test. */
 
-import { aabbOverlap } from '../../../../vendor/arcade-runtime.mjs';
+import { aabbOverlap } from '@arcade/runtime/core';
 
 export interface Rect {
 	x: number;

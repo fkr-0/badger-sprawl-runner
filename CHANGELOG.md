@@ -2,13 +2,53 @@
 
 All notable changes to Badger Sprawl Runner are documented here.
 
-## [1.5.0] - Planned
+## [1.6.0] - Planned
 
 - Add attested physical-device evidence, resumable multi-hour retained-renderer certification, and cross-release evidence trend comparison.
 
-## [1.4.1] - Unreleased
+## [1.5.2] - Unreleased
 
-- No changes yet.
+## [1.5.1] - 2026-08-19
+
+### Added
+
+- Added an experimental hardened Electron desktop shell with `desktop:dev`, unpacked Linux packaging, and AppImage export commands.
+- Added a restrictive desktop content-security policy plus custom `arcade://` bundle serving, renderer permission denial, sandbox/context-isolation defaults, and navigation/window guards.
+- Added PixiJS's bundled strict-CSP fallback module to the optional Pixi bridge, avoiding any need to permit `'unsafe-eval'`.
+- Pinned electron-builder's static AppImage toolset `1.0.3` so the Linux package does not depend on the legacy FUSE2 runtime.
+
+### Changed
+
+- Promoted `data/sprites.json` and its runner-public copy from the legacy `{ schemaVersion, spriteSheets }` alias to the canonical Arcade Runtime `{ version, sheets }` manifest shape.
+- Updated sprite generation, audit, release, smoke, and E2E tooling to consume the canonical `sheets` property directly while retaining explicit legacy-alias coverage in the deprecated sprite-contract compatibility facade.
+- Completed narrow `@arcade/runtime` subpath imports across the runner and shared packages, synchronized the workspace-local and vendored Runtime surfaces, and added an E2E contract preventing root-import regressions.
+- Bumped the workspace and runner package versions to 1.5.1.
+
+### Fixed
+
+- Updated the Chromium sprite visual-review E2E path to use the real same-origin review application instead of dynamically importing a `blob:` runtime module, preserving the hardened production CSP without weakening test coverage.
+- Removed the ineffective `frame-ancestors` directive from the meta-delivered CSP, eliminating the production-artifact browser warning while retaining the directives browsers can enforce from a meta policy.
+
+## [1.5.0] - 2026-08-19
+
+### Changed
+
+- Aligned runtime consumption with the official Arcade Runtime 1.12.0 subpath surface across runner, platformer-core, sprite-contracts, progression, tests, and tooling.
+- Added a portable workspace-local `@arcade/runtime` package facade over the checksum-verified vendored 1.12.0 bundle because the package is not available from the npm registry; clean installs now resolve official `core`, `pixi`, `sprites`, `gameplay`, `stages`, `storage`, `ui`, `testing`, `tooling`, `assets`, `audio`, and `netcode` subpaths without machine-specific links.
+- Moved shared sprite manifest schema ownership, normalization, and validation to `@arcade/runtime/sprites`; runner loading, sprite review, and sprite-usage auditing now normalize through the runtime directly.
+- Retained Badger-specific sprite browser loading/cancellation, immutable playback and sampling conveniences, semantic manifest diff/reload planning, inspection, and atlas production/dimension auditing in `@badger/sprite-contracts`.
+- Kept combat resource/action adapters and platformer coyote/grace behavior on Arcade Runtime gameplay primitives while moving their imports to the narrow runtime subpaths available in 1.12.0.
+- Migrated game-flow and meta-progression persistence to Arcade Runtime versioned stores with runtime checksums/envelopes while automatically promoting existing plain v2 runner saves and legacy v1/meta records without discarding progress.
+
+### Deprecated
+
+- Deprecated the duplicate `SpriteManifest`, `SpriteSheet`, `AnimationDef`, related sprite type aliases, and `normalizeSpriteManifest`/`validateSpriteManifest` compatibility facades in `@badger/sprite-contracts`; new code should use `@arcade/runtime/sprites` directly.
+
+### Testing
+
+- Added direct runtime validation of the complete `data/sprites.json` manifest and frame addressing against all 73 normalized sheets.
+- Updated animation contracts to execute the Arcade Runtime animation clock API and verify real frame advancement rather than relying only on source-shape assertions.
+- Added persistence migration coverage for versioned runner saves and legacy meta-progression skill/rank recovery.
 
 ## [1.4.0] - Release candidate
 

@@ -1685,6 +1685,58 @@ export type CameraRig = CameraRigState & {
 };
 export declare function createCameraRig(initial?: Partial<CameraRigState> & { shakeOffsetX?: number; shakeOffsetY?: number }): CameraRig;
 
+export type ArcadeComputeCapability = 'aabb-overlap-pairs' | string;
+export type ArcadeComputeBackendKind = 'scalar' | 'wasm' | 'webgpu' | 'custom';
+export type ArcadeComputeNumericFormat = 'f64' | 'f32' | 'fixed';
+
+export type ArcadeSpatialBatch = Readonly<{
+  numericFormat: 'f64' | 'f32';
+  length: number;
+  ids: readonly string[];
+  x: Float64Array | Float32Array;
+  y: Float64Array | Float32Array;
+  width: Float64Array | Float32Array;
+  height: Float64Array | Float32Array;
+  bodies: readonly SpatialBody[];
+}>;
+
+export interface ArcadeComputeBackend {
+  readonly id: string;
+  readonly kind: ArcadeComputeBackendKind;
+  readonly authoritative: boolean;
+  readonly numericFormat: ArcadeComputeNumericFormat;
+  readonly capabilities: readonly ArcadeComputeCapability[];
+  filterAabbPairs(batch: ArcadeSpatialBatch, candidatePairs: Uint32Array): Uint32Array;
+}
+
+export declare const ARCADE_COMPUTE_CAPABILITIES: readonly ArcadeComputeCapability[];
+export declare function createArcadeSpatialBatch(
+  bodies?: readonly SpatialBody[],
+  options?: { numericFormat?: 'f64' | 'f32' },
+): ArcadeSpatialBatch;
+export declare function createArcadeAabbPairBuffer(
+  batch: ArcadeSpatialBatch,
+  pairs?: readonly (SpatialPair | readonly [SpatialBody | string, SpatialBody | string])[],
+): Uint32Array;
+export declare function filterArcadeAabbPairs(
+  batch: ArcadeSpatialBatch,
+  candidatePairs: Uint32Array,
+): Uint32Array;
+export declare function createArcadeScalarComputeBackend(options?: {
+  id?: string;
+  numericFormat?: 'f64' | 'f32';
+  authoritative?: boolean;
+}): ArcadeComputeBackend;
+export declare function validateArcadeComputeBackend(backend: unknown): backend is ArcadeComputeBackend;
+export declare function selectArcadeComputeBackend(
+  backends?: readonly ArcadeComputeBackend[],
+  options?: {
+    capability?: ArcadeComputeCapability;
+    authoritative?: boolean;
+    preference?: readonly ArcadeComputeBackendKind[];
+  },
+): ArcadeComputeBackend | null;
+
 export type ArcadeCameraState = {
   x: number;
   y: number;
@@ -1878,6 +1930,7 @@ export type ArcadePixiRuntime = {
   emit(eventName: string, payload?: unknown): void;
   track(disposer: () => void): () => boolean;
   loadTexture(alias: string, src: string): Promise<Texture>;
+  unloadTexture(alias: string): Promise<boolean>;
   loadTextures(manifest: Record<string, string> | Array<{ alias: string; src: string }>): Promise<Record<string, Texture>>;
   texture(alias: string): Texture | undefined;
   resize(width: number, height: number): void;
@@ -2140,13 +2193,13 @@ export type SpatialPair = Readonly<{ a: SpatialBody; b: SpatialBody }>;
 export declare function collisionLayersMatch(a: SpatialBody, b: SpatialBody): boolean;
 export declare function buildSpatialIndex(bodies: readonly SpatialBody[], cellSize?: number): SpatialIndex;
 export declare function querySpatialIndex(index: SpatialIndex, rect: ArcadeRect, options?: { layers?: readonly string[]; predicate?: (body: SpatialBody) => boolean }): SpatialBody[];
-export declare function spatialCollisionPairs(index: SpatialIndex): SpatialPair[];
+export declare function spatialCollisionPairs(index: SpatialIndex, options?: { computeBackend?: ArcadeComputeBackend }): SpatialPair[];
 export type CollisionManifold = Readonly<{ a: string; b: string; normalX: number; normalY: number; penetration: number; overlapX: number; overlapY: number }>;
 export declare function computeCollisionManifold(a: SpatialBody, b: SpatialBody): CollisionManifold | null;
 export declare function manifoldsFromSpatialPairs(pairs: readonly SpatialPair[]): CollisionManifold[];
 export type SweptObstacle = ArcadeRect & { id: string; oneWay?: boolean };
 export declare function sweepAabb(input: { body: ArcadeRect; vx: number; vy: number; dt: number; epsilon?: number; obstacles: readonly SweptObstacle[] }): Readonly<{ x: number; y: number; vx: number; vy: number; hit: null | Readonly<{ obstacle: SweptObstacle; time: number; normalX: number; normalY: number; remainingTime: number }> }>;
-export declare function createCollisionWorld(options?: { cellSize?: number; events?: ArcadeEventBus<any> }): {
+export declare function createCollisionWorld(options?: { cellSize?: number; events?: ArcadeEventBus<any>; computeBackend?: ArcadeComputeBackend }): {
   events: ArcadeEventBus<any>;
   upsert<T extends SpatialBody>(body: T): Readonly<T>;
   remove(id: string): boolean;
@@ -2312,13 +2365,15 @@ export declare function createTextMeasureCache<T>(options: { measure(text: strin
 export type ArcadeStorageAdapter = { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem?(key: string): unknown; keys?(): string[] };
 export declare function createMemoryStorageAdapter(seed?: Record<string, string>): ArcadeStorageAdapter & { snapshot(): Readonly<Record<string, string>> };
 export declare function createStorageAdapter(storage: Storage): ArcadeStorageAdapter;
-export declare function createVersionedStore<T>(options: { adapter?: ArcadeStorageAdapter; key: string; version: number; defaults?: T | (() => T); migrations?: Record<number, (data: unknown, context: Readonly<{ from: number; to: number }>) => unknown>; validate?: (data: unknown) => boolean; backupKey?: string; now?: () => number; onCorruption?: (context: unknown) => void }): {
+export type ArcadePreEnvelopeMigrationResult<T = unknown> = Readonly<{ data: T; version?: number; savedAt?: number; revision?: number }>;
+export type ArcadePreEnvelopeMigration<T = unknown> = (record: unknown, context: Readonly<{ source: 'primary' | 'temporary' | 'backup'; key: string; targetVersion: number }>) => ArcadePreEnvelopeMigrationResult<T>;
+export declare function createVersionedStore<T>(options: { adapter?: ArcadeStorageAdapter; key: string; version: number; defaults?: T | (() => T); migrations?: Record<number, (data: unknown, context: Readonly<{ from: number; to: number }>) => unknown>; preEnvelopeMigration?: ArcadePreEnvelopeMigration; validate?: (data: unknown) => boolean; backupKey?: string; now?: () => number; onCorruption?: (context: unknown) => void }): {
   save(data: T, metadata?: { savedAt?: number; revision?: number }): Readonly<{ format: 1; version: number; savedAt: number; revision: number; data: T; checksum: string }>;
   load(): Readonly<{ data: T; source: string; migrated: boolean; recovered: boolean; version: number }>;
   clear(): void;
   inspect(): Readonly<Record<string, unknown>>;
 };
-export declare function createProfileStore<T>(options: { adapter?: ArcadeStorageAdapter; key: string; version: number; maxSlots?: number; defaults?: T | (() => T); migrations?: Record<number, Function>; validate?: (data: unknown) => boolean }): {
+export declare function createProfileStore<T>(options: { adapter?: ArcadeStorageAdapter; key: string; version: number; maxSlots?: number; defaults?: T | (() => T); migrations?: Record<number, Function>; preEnvelopeMigration?: ArcadePreEnvelopeMigration; validate?: (data: unknown) => boolean }): {
   list(): readonly string[];
   load(id: string): Readonly<{ data: T; source: string; migrated: boolean; recovered: boolean; version: number }>;
   save(id: string, data: T, metadata?: { savedAt?: number; revision?: number }): unknown;
@@ -2721,15 +2776,179 @@ export type ArcadeLocalTransport = {
 };
 export declare function createLocalTransportPair(options?: { firstName?: string; secondName?: string; latencyMs?: number; clone?: (message: unknown) => unknown; schedule?: (deliver: () => void, latencyMs: number) => void; drop?: (message: unknown, context: Readonly<{ from: string; sent: number }>) => boolean }): readonly [ArcadeLocalTransport, ArcadeLocalTransport];
 
-export declare function createRuntimeInspector(options?: { capacity?: number; now?: () => number; sources?: Record<string, unknown>; host?: ArcadeRuntimeHost; onCapture?: (capture: unknown) => void }): {
+export type RuntimeInspectorCapture = Readonly<{
+  index: number;
+  label: string;
+  time: number;
+  metadata: SnapshotValue;
+  values: Readonly<Record<string, SnapshotValue>>;
+  hash: string;
+}>;
+export type RuntimeInspectorChange = Readonly<{
+  kind: 'added' | 'removed' | 'changed';
+  path: string;
+  before?: SnapshotValue;
+  after?: SnapshotValue;
+}>;
+export type RuntimeInspectorManifestDiff = Readonly<{
+  addedAnimations: readonly string[];
+  removedAnimations: readonly string[];
+  frameCountChanges: readonly Readonly<{ animation: string; before: number; after: number }>[];
+  hitboxChanges: readonly Readonly<{ animation: string; before: readonly unknown[]; after: readonly unknown[] }>[];
+  hurtboxChanges: readonly Readonly<{ animation: string; before: readonly unknown[]; after: readonly unknown[] }>[];
+  textureChanges: readonly Readonly<{ sheetId: string; before: string; after: string }>[];
+  changed: boolean;
+}>;
+export type RuntimeInspectorTelemetrySample = Readonly<{
+  simulationMs: number;
+  renderMs: number;
+  idleMs: number;
+  frameMs: number;
+  allocationBytes: number;
+  gcBytes: number;
+  textureBytes: number;
+  audioBytes: number;
+  inputLatencyMs: number;
+  inspectorMs: number;
+}>;
+export type RuntimeInspectorTelemetry = {
+  readonly historyFrames: number;
+  recordFrame(sample?: Partial<RuntimeInspectorTelemetrySample> & { heapBytes?: number }): RuntimeInspectorTelemetrySample;
+  noteInput(id: PropertyKey, time?: number): number;
+  consumeInput(id: PropertyKey, time?: number): number | null;
+  setPool(name: string, snapshot: unknown): void;
+  history(name: keyof RuntimeInspectorTelemetrySample | string): readonly number[];
+  latest(): RuntimeInspectorTelemetrySample;
+  snapshot(): Readonly<{ latest: RuntimeInspectorTelemetrySample; pools: Readonly<Record<string, unknown>>; historyFrames: number }>;
+  clear(): boolean;
+};
+export type RuntimeInspectorPoolAdapter<Entity = any, Pool = any> = {
+  values?(pool: Pool): Entity[];
+  patch?(entity: Entity, patch: Record<string, unknown>, pool: Pool): void;
+  kill?(entity: Entity, pool: Pool): boolean;
+  spawn?(initial: Record<string, unknown>, pool: Pool): Entity;
+};
+export type RuntimeInspectorHotReloadOptions = {
+  enabled?: boolean;
+  manifestDir?: string;
+  wsPort?: number;
+  url?: string;
+  host?: string;
+  reconnect?: boolean;
+  reconnectMs?: number;
+  WebSocket?: typeof globalThis.WebSocket;
+  fetch?: typeof globalThis.fetch;
+  socketFactory?: (url: string) => WebSocket;
+  eventTarget?: EventTarget;
+  eventName?: string;
+  PIXI?: ArcadePixiNamespace;
+  textureAlias?: (manifestId: string, sheet: ArcadeSpriteSheet) => string;
+  reloadTexture?: (sheet: ArcadeSpriteSheet, context: Readonly<{ manifestId: string; reason: string }>) => unknown | Promise<unknown>;
+  onManifestReload?: (result: unknown) => void;
+  onError?: (error: unknown) => void;
+};
+export type RuntimeInspectorOverlayOptions = {
+  grid?: boolean;
+  collision?: boolean;
+  hitboxes?: boolean;
+  hurtboxes?: boolean;
+  contacts?: boolean;
+  camera?: boolean;
+  classifyBody?: (body: any) => 'static' | 'dynamic' | 'trigger';
+  keys?: Partial<Record<'grid' | 'collision' | 'hitboxes' | 'hurtboxes' | 'contacts' | 'camera', string>>;
+  source?: unknown;
+  sources?: Record<string, unknown>;
+  PIXI?: ArcadePixiNamespace;
+  stage?: Container;
+  canvas?: HTMLCanvasElement;
+  render?: (commands: readonly Readonly<Record<string, unknown>>[]) => unknown;
+  destroy?: () => void;
+};
+export type RuntimeInspectorOptions = {
+  capacity?: number;
+  snapshotCapacity?: number;
+  now?: () => number;
+  performanceNow?: () => number;
+  sources?: Record<string, unknown>;
+  host?: ArcadeRuntimeHost;
+  onCapture?: (capture: RuntimeInspectorCapture) => void;
+  onExport?: (json: string) => void;
+  onEvent?: (name: string, payload: unknown) => void;
+  restoreSnapshot?: (capture: RuntimeInspectorCapture, host: ArcadeRuntimeHost | null) => void;
+  hotReload?: RuntimeInspectorHotReloadOptions;
+  overlay?: RuntimeInspectorOverlayOptions;
+  telemetry?: boolean | { historyFrames?: number; textureBytes?: () => number; audioBytes?: () => number };
+  sceneGraph?: boolean | { root?: unknown | (() => unknown) };
+  entityInspector?: boolean;
+  pools?: Record<string, unknown>;
+  pixiRuntime?: ArcadePixiRuntime;
+  PIXI?: ArcadePixiNamespace;
+  camera?: ArcadeCameraTransform | Readonly<ArcadeCameraState> | (() => ArcadeCameraTransform | Readonly<ArcadeCameraState>);
+  canvas?: HTMLCanvasElement;
+  document?: Document;
+  mount?: HTMLElement;
+  panel?: boolean;
+  panelRefreshMs?: number;
+  ui?: boolean;
+  open?: boolean;
+  keyToggle?: string | false;
+};
+export type RuntimeInspector = {
+  readonly host: ArcadeRuntimeHost | null;
+  readonly telemetry: RuntimeInspectorTelemetry;
+  readonly sceneGraph: {
+    root(): unknown;
+    tree(filter?: string | null): unknown;
+    select(idOrObject: string | unknown): unknown;
+    selected(): unknown;
+    reorder(idOrObject: string | unknown, index: number): boolean;
+    snapshot(): SnapshotValue;
+    filter?: string;
+  };
+  readonly entities: {
+    registerPool<Entity = any, Pool = any>(name: string, pool: Pool, adapter?: RuntimeInspectorPoolAdapter<Entity, Pool>): () => boolean;
+    list(): readonly Readonly<{ name: string; capacity: number; active: number; free: number; snapshot: SnapshotValue }>[];
+    values<Entity = any>(name: string): Entity[];
+    select<Entity = any>(name: string, idOrIndex: string | number | Entity): Entity | null;
+    edit<Entity = any>(name: string, idOrIndex: string | number | Entity, patch: Record<string, unknown>): Entity;
+    kill(name: string, idOrIndex: string | number | unknown): boolean;
+    spawn<Entity = any>(name: string, initial?: Record<string, unknown>): Entity;
+    selected(): unknown;
+    snapshot(): readonly unknown[];
+  };
+  on(name: string, listener: (payload: unknown) => void): () => boolean;
   register(name: string, source: unknown): () => boolean;
   inspect(name: string): SnapshotValue;
-  capture(label?: string, metadata?: SnapshotValue): Readonly<Record<string, unknown>>;
-  history(): readonly unknown[];
+  capture(label?: string, metadata?: SnapshotValue): RuntimeInspectorCapture;
+  history(): readonly RuntimeInspectorCapture[];
+  diff(before: RuntimeInspectorCapture | number | SnapshotValue, after: RuntimeInspectorCapture | number | SnapshotValue): readonly RuntimeInspectorChange[];
+  seek(position: number): RuntimeInspectorCapture | null;
+  current(): RuntimeInspectorCapture | null;
   export(): string;
+  import(serialized: string | { captures: readonly RuntimeInspectorCapture[] }, options?: { append?: boolean }): number;
   clear(): number;
-  snapshot(): Readonly<{ sources: readonly string[]; captures: number; capacity: number; nextCaptureIndex: number }>;
+  registerManifest(id: string, manifest: ArcadeSpriteManifest | ArcadeSpriteManifestSource, options?: Record<string, unknown>): Readonly<{ id: string; manifest: ArcadeSpriteManifest; unregister(): boolean }>;
+  manifest(id: string): ArcadeSpriteManifest | null;
+  manifestDiff(before: ArcadeSpriteManifest | ArcadeSpriteManifestSource, after: ArcadeSpriteManifest | ArcadeSpriteManifestSource): RuntimeInspectorManifestDiff;
+  registerSpriteInstance(manifestId: string, instance: any, adapter?: { sheetId?: string; animation?: (instance: any) => string; frame?: (instance: any) => number; apply?: (instance: any, context: unknown) => void | Promise<void> }): () => boolean;
+  applyManifestReload(message: Record<string, unknown>): Promise<unknown>;
+  registerOverlaySource(name: string, source: unknown): () => boolean;
+  toggleOverlay(name: 'grid' | 'collision' | 'hitboxes' | 'hurtboxes' | 'contacts' | 'camera' | 'selection', force?: boolean): boolean;
+  overlaySnapshot(): Readonly<{ enabled: Readonly<Record<string, boolean>>; commands: readonly unknown[] }>;
+  renderOverlay(): boolean;
+  open(): boolean;
+  close(): boolean;
+  toggle(): boolean;
+  refresh(options?: { panel?: boolean }): number;
+  profileOverhead(iterations?: number): Readonly<{ iterations: number; totalMs: number; meanMs: number; budgetMs: number; pass: boolean }>;
+  snapshot(): Readonly<Record<string, unknown>>;
+  destroy(): boolean;
 };
+export declare function createRuntimeInspector(options?: RuntimeInspectorOptions): RuntimeInspector;
+export declare function createRuntimeInspector(host: ArcadeRuntimeHost, options?: RuntimeInspectorOptions): RuntimeInspector;
+export declare namespace createRuntimeInspector {
+  function vitePlugin(options?: { manifestDir?: string; eventName?: string }): Readonly<Record<string, unknown>>;
+}
 export declare function createReplayTimeline(options: { stream: ArcadeCommandStream | string; frames?: readonly ArcadeReplayFrame[] }): {
   stream: ArcadeCommandStream;
   entries: readonly ArcadeCommandEntry[];

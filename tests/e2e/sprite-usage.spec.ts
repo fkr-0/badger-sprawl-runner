@@ -77,12 +77,12 @@ test.describe('Sprite Manifest Integrity', () => {
 	const manifest = loadManifest();
 
 	test('manifest should have correct structure', () => {
-		expect(manifest.schemaVersion).toBe(1);
-		expect(Array.isArray((manifest as any).spriteSheets)).toBe(true);
+		expect(manifest.version).toBe('1');
+		expect(Array.isArray((manifest as any).sheets)).toBe(true);
 	});
 
 	test('all sprite sheet files should exist in public directory', async () => {
-		const sheets = (manifest as any).spriteSheets as Array<{
+		const sheets = (manifest as any).sheets as Array<{
 			id: string;
 			file: string;
 			frameSize: [number, number];
@@ -104,7 +104,7 @@ test.describe('Sprite Manifest Integrity', () => {
 	});
 
 	test('DALL-E sprites should have sourceImageNo metadata', async () => {
-		const sheets = (manifest as any).spriteSheets as Array<{
+		const sheets = (manifest as any).sheets as Array<{
 			id: string;
 			sourceImageNo?: number | number[];
 		}>;
@@ -121,7 +121,7 @@ test.describe('Sprite Manifest Integrity', () => {
 	});
 
 	test('all required sprite categories should be present', async () => {
-		const sheets = (manifest as any).spriteSheets as Array<{ id: string }>;
+		const sheets = (manifest as any).sheets as Array<{ id: string }>;
 		const ids = sheets.map((s) => s.id);
 
 		// Core sprites

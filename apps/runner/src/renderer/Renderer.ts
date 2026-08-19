@@ -3,7 +3,7 @@
  */
 
 import { type LoadedSheet, sampleSpriteAnimationFrame } from '@badger/sprite-contracts';
-import { createArcadeCameraTransform } from '../../../../vendor/arcade-runtime.mjs';
+import { createArcadeCameraTransform } from '@arcade/runtime/pixi';
 import type { Player } from '../actors/MossBadger';
 import type { StagePlatformArt } from '../game/StageArtRegistry';
 import type { Camera } from '../systems/CameraSystem';

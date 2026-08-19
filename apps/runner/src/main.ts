@@ -1,4 +1,4 @@
-import type { ArcadePerformanceSummary } from '../../../vendor/arcade-runtime.mjs';
+import type { ArcadePerformanceSummary } from '@arcade/runtime/tooling';
 import { type RunnerApp, createRunnerApp } from './RunnerApp';
 import type { MenuOptionId } from './game/GameFlow';
 import type { DistrictStoryPhase } from './game/adventure/AdventureState';

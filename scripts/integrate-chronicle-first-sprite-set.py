@@ -185,13 +185,13 @@ def sheet_definition() -> dict[str, Any]:
 
 def load_manifest(path: Path) -> dict[str, Any]:
     manifest = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(manifest.get("spriteSheets"), list):
+    if not isinstance(manifest.get("sheets"), list):
         raise ValueError(f"invalid sprite manifest: {path}")
     return manifest
 
 
 def upsert_sheet(manifest: dict[str, Any]) -> dict[str, Any]:
-    sheets = manifest["spriteSheets"]
+    sheets = manifest["sheets"]
     definition = sheet_definition()
     existing_index = next(
         (index for index, sheet in enumerate(sheets) if sheet.get("id") == SHEET_ID),

@@ -1,9 +1,7 @@
 /** Typed compatibility facade over the shared arcade-runtime event engine. */
 
-import {
-	createEventBus,
-	type ArcadeEventBus,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { createEventBus } from '@arcade/runtime/core';
+import type { ArcadeEventBus } from '@arcade/runtime/core';
 
 type EventMap = Record<string, unknown>;
 type EventKey<T extends EventMap> = string & keyof T;

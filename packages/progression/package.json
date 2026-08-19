@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"type": "module",
 	"description": "Meta-progression, run aggregation, shop engine, and skill tree.",
+	"dependencies": {
+		"@arcade/runtime": "workspace:*"
+	},
 	"exports": {
 		".": {
 			"import": "./src/index.ts",

@@ -5,7 +5,7 @@
 
 import { resolveSkillEffects } from '@badger/progression';
 import type { SpriteAnimationEvent } from '@badger/sprite-contracts';
-import { createSystemPipeline } from '../../../../vendor/arcade-runtime.mjs';
+import { createSystemPipeline } from '@arcade/runtime/core';
 import { type Player, createPlayer, processMossInput } from '../actors/MossBadger';
 import {
 	type TrainingDummy,

@@ -3,10 +3,8 @@
  *
  * Simulation and sprite contracts remain unchanged while rendering passes migrate.
  */
-import {
-	ARCADE_RUNTIME_VERSION,
-	defineArcadeRenderPlan,
-} from '../../../../vendor/arcade-runtime.mjs';
+import { ARCADE_RUNTIME_VERSION } from '@arcade/runtime/core';
+import { defineArcadeRenderPlan } from '@arcade/runtime/pixi';
 
 export const BADGER_ARCADE_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 

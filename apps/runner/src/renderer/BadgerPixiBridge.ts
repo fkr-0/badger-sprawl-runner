@@ -1,3 +1,6 @@
+// PixiJS's CSP-safe sync-function fallbacks are required when the bridge runs
+// under the strict browser/Electron content-security policy.
+import 'pixi.js/unsafe-eval';
 import {
 	Application,
 	Assets,
@@ -8,14 +11,11 @@ import {
 	Texture,
 	TextureStyle,
 } from 'pixi.js';
+import { createArcadePixiRuntime, type ArcadePixiRuntime } from '@arcade/runtime/pixi';
 import {
-	createArcadePixiRuntime,
 	createBrowserPerformanceSampler,
-} from '../../../../vendor/arcade-runtime.mjs';
-import type {
-	ArcadePerformanceSummary,
-	ArcadePixiRuntime,
-} from '../../../../vendor/arcade-runtime.mjs';
+	type ArcadePerformanceSummary,
+} from '@arcade/runtime/tooling';
 import { installBadgerCanvasBridgePasses } from './ArcadeRuntimeAdapter';
 import { BADGER_PIXI_LAYERS } from './ArcadeRuntimeContract';
 import { createBadgerPixiActors } from './BadgerPixiActors';
