@@ -14,6 +14,10 @@ All notable changes to Badger Sprawl Runner are documented here.
 - Added a manual release-tag dispatch path so an already-created immutable tag such as `v1.5.2` can be packaged by the current release workflow without moving or recreating the tag; future `vMAJOR.MINOR.PATCH` pushes trigger the same workflow automatically.
 - Added a release-workflow contract test covering exact-tag checkout, packet validation, AppImage construction, artifact retention, checksum creation, and GitHub Release upload behavior.
 
+### Fixed
+
+- Disabled electron-builder's implicit CI publishing during AppImage construction with `--publish never`; GitHub Release publication remains an explicit, separately authenticated workflow step, preventing CI packaging from failing before artifact upload when electron-builder sees a CI environment.
+
 ### Documentation
 
 - Added the machine-readable `v1.5.2` release packet with exact annotated-tag metadata, full release-gate outcomes, AppImage and static-bundle hashes, known packaging warnings, and explicit local-only publication state.

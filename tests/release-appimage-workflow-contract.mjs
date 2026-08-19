@@ -16,6 +16,8 @@ assert.match(workflow, /git checkout --detach "refs\/tags\/\$RELEASE_TAG"/);
 assert.match(workflow, /release-evidence\/releases\/\$\{RELEASE_TAG\}\.json/);
 assert.match(workflow, /verify-release-packet\.mjs/);
 assert.match(workflow, /pnpm run desktop:appimage/);
+const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
+assert.match(packageJson.scripts['desktop:appimage'], /--publish never$/);
 assert.match(workflow, /--appimage-version/);
 assert.match(workflow, /sha256sum/);
 assert.match(workflow, /actions\/upload-artifact@v4/);

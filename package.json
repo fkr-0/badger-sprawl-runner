@@ -17,7 +17,7 @@
 		"dev": "pnpm -F @badger/runner dev",
 		"desktop:dev": "node desktop/dev.mjs",
 		"desktop:dir": "pnpm build && electron-builder --dir --linux",
-		"desktop:appimage": "pnpm build && electron-builder --linux AppImage",
+		"desktop:appimage": "pnpm build && electron-builder --linux AppImage --publish never",
 		"build": "pnpm -r build && node scripts/publish-artifact.mjs",
 		"test": "node tests/validate-data.mjs && node tests/runtime-sprite-manifest.mjs && node tests/runtime-contracts.mjs && node tests/release-packet-contract.mjs && node tests/release-appimage-workflow-contract.mjs && node tests/sprite-prompt-grid-contracts.mjs && node tests/sprite-prompt-corpus-contracts.mjs && python3 scripts/generate-sprite-render-prompts.py --check && python3 tests/sprite-atlas-assembly-contract.py && node tests/story-content-loader.mjs && node tests/animation-contracts.mjs && node tests/public-sprite-assets.mjs && python3 scripts/integrate-chronicle-first-sprite-set.py --check && node tests/production-sprite-coverage.mjs && node tests/dalle-sprite-integration.mjs && node scripts/audit-sprite-usage.mjs && pnpm -r test",
 		"test:e2e": "playwright test",
