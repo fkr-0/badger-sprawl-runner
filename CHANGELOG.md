@@ -16,7 +16,7 @@ All notable changes to Badger Sprawl Runner are documented here.
 
 ### Fixed
 
-- Disabled electron-builder's implicit CI publishing during AppImage construction with `--publish never`; GitHub Release publication remains an explicit, separately authenticated workflow step, preventing CI packaging from failing before artifact upload when electron-builder sees a CI environment.
+- Disabled electron-builder's implicit CI publishing with `--publish never` both in the local AppImage script and directly in the release workflow. The workflow-owned builder command remains correct after checking out an older immutable release tag whose package script predates this fix, while GitHub Release publication stays an explicit authenticated step.
 
 ### Documentation
 

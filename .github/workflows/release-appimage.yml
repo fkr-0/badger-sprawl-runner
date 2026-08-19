@@ -86,7 +86,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build AppImage
-        run: pnpm run desktop:appimage
+        run: |
+          pnpm build
+          pnpm exec electron-builder --linux AppImage --publish never
 
       - name: Smoke-test and hash AppImage
         id: artifact
