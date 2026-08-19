@@ -6,12 +6,21 @@ All notable changes to Badger Sprawl Runner are documented here.
 
 - Add attested physical-device evidence, resumable multi-hour retained-renderer certification, and cross-release evidence trend comparison.
 
-## [1.5.2] - Unreleased
+## [1.5.3] - Unreleased
 
-### Documentation
+## [1.5.2] - 2026-08-19
 
+### Added
+
+- Added a reusable `release:packet:check` validator that verifies compact release packets against the exact recorded Git commit, release-member versions, release train, vendored Runtime compatibility, tagged tree metadata, and dated changelog section.
+- Added release-packet contract tests covering the valid `v1.5.1` packet plus fail-closed target, member-version, and semver-train mutations.
+- Added tag-triggered release CI for `vMAJOR.MINOR.PATCH` refs, including full-history checkout and strict annotated-tag packet verification against the packet published on `origin/main`.
 - Added a compact machine-readable `v1.5.1` release packet recording the exact tag/commit boundary, release-member versions, verification outcomes, artifact hashes, known caveats, and explicit local-only publication state.
-- Documented the distinction between lightweight tagged-release packets and the heavyweight dated campaign-certification evidence trees.
+
+### Changed
+
+- Documented detached-target and strict-tag release-packet validation workflows, including the required publication order of the evidence commit before its corresponding tag.
+- Advanced the release train to `1.5.2`, with `1.5.3` as the next maintenance patch and `1.6.0` remaining the planned minor.
 
 ## [1.5.1] - 2026-08-19
 

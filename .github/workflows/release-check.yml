@@ -3,6 +3,7 @@ name: Badger Sprawl Runner Release Check
 on:
   push:
     branches: [main]
+    tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:
 
@@ -22,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -33,6 +36,14 @@ jobs:
         with:
           node-version: '24'
           cache: pnpm
+
+      - name: Validate tagged release packet
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git show "refs/remotes/origin/main:release-evidence/releases/${GITHUB_REF_NAME}.json" > "$RUNNER_TEMP/release-packet.json"
+          node scripts/verify-release-packet.mjs --packet "$RUNNER_TEMP/release-packet.json" --tag "$GITHUB_REF_NAME"
 
       - name: Setup Python
         uses: actions/setup-python@v6
