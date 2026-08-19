@@ -8,6 +8,10 @@ All notable changes to Badger Sprawl Runner are documented here.
 
 ## [1.5.3] - Unreleased
 
+### Documentation
+
+- Added the machine-readable `v1.5.2` release packet with exact annotated-tag metadata, full release-gate outcomes, AppImage and static-bundle hashes, known packaging warnings, and explicit local-only publication state.
+
 ## [1.5.2] - 2026-08-19
 
 ### Added

@@ -1,0 +1,150 @@
+{
+  "contractVersion": 1,
+  "release": {
+    "name": "Badger Sprawl Runner",
+    "version": "1.5.2",
+    "date": "2026-08-19",
+    "tag": "v1.5.2",
+    "tagObject": "eb0b6d179c7d8e2c8de07c3912f74cb8c0fc81c4",
+    "tagTarget": "ccd1c439e706c1397f48ed544a44712ff1d087df",
+    "baseCommit": "a5c06b92965b10312153cfc06c0ea10b030b2fd1",
+    "tree": "3d8e32b017976651b757ac877885ea892cd930cb",
+    "subject": "release: badger sprawl runner 1.5.2"
+  },
+  "releaseMembers": [
+    {
+      "path": "package.json",
+      "name": "badger-sprawl-runner-workspace",
+      "version": "1.5.2"
+    },
+    {
+      "path": "apps/runner/package.json",
+      "name": "@badger/runner",
+      "version": "1.5.2"
+    }
+  ],
+  "releaseTrain": {
+    "current": "1.5.2",
+    "nextPatch": "1.5.3",
+    "nextMinor": "1.6.0",
+    "runtimeCompatibility": "1.12.0"
+  },
+  "toolchain": {
+    "node": "v24.18.0",
+    "pnpm": "9.0.0",
+    "python": "3.14.6",
+    "git": "2.55.0"
+  },
+  "verification": [
+    {
+      "command": "pnpm exec biome check scripts/verify-release-packet.mjs tests/release-packet-contract.mjs",
+      "status": "passed",
+      "result": "Biome checked the new validator and contract test with no fixes required"
+    },
+    {
+      "command": "node tests/release-packet-contract.mjs",
+      "status": "passed",
+      "result": "validated the historical v1.5.1 packet plus CLI separator handling and fail-closed target, member-version, and semver-train mutations"
+    },
+    {
+      "command": "pnpm run release:packet:check -- --packet release-evidence/releases/v1.5.1.json --tag v1.5.1",
+      "status": "passed",
+      "result": "strict annotated-tag verification passed for v1.5.1 against 02fb9d465bf3293763e4f38cc24a409cfd70cf5c"
+    },
+    {
+      "command": "pnpm run release:plan:check",
+      "status": "passed",
+      "result": "release train verified: 1.5.3 patch, 1.6.0 minor"
+    },
+    {
+      "command": "pnpm run test",
+      "status": "passed",
+      "result": "data/runtime/sprite/release-packet contracts passed; codegate 9/9, platformer-core 70/70, progression 23/23, sprite-contracts 40/40, runner 675/675"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "status": "passed",
+      "result": "all workspace packages and runner typechecked"
+    },
+    {
+      "command": "pnpm run build",
+      "status": "passed",
+      "result": "workspace packages, Vite production runner, and Artifact Lab bundle built successfully; 962 Vite modules transformed"
+    },
+    {
+      "command": "pnpm run smoke:runner",
+      "status": "passed",
+      "result": "runner smoke passed with 70 runtime sheets and 3 archival sheets"
+    },
+    {
+      "command": "pnpm run smoke:artifact",
+      "status": "passed",
+      "result": "production Artifact Lab browser smoke passed"
+    },
+    {
+      "command": "pnpm run lint",
+      "status": "passed",
+      "result": "Biome checked 409 files with no fixes required"
+    },
+    {
+      "command": "pnpm run test:e2e:release",
+      "status": "passed",
+      "result": "247 passed, 1 skipped, 0 failed across Chromium and Firefox in 5.9 minutes",
+      "skip": "tests/e2e/sprite-visual-review.spec.ts intentionally skips Firefox because visual-review PNGs are produced once with Chromium"
+    },
+    {
+      "command": "pnpm run desktop:dir",
+      "status": "passed",
+      "result": "unpacked Linux Electron application built successfully"
+    },
+    {
+      "command": "pnpm run desktop:appimage",
+      "status": "passed",
+      "result": "x86_64 AppImage built successfully"
+    },
+    {
+      "command": "release/Badger Sprawl Runner-1.5.2-x86_64.AppImage --appimage-version",
+      "status": "passed",
+      "result": "AppImage Type 2 runtime responded successfully"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed",
+      "result": "release source and metadata whitespace check passed"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "release/Badger Sprawl Runner-1.5.2-x86_64.AppImage",
+      "bytes": 133758485,
+      "sha256": "2763b83e68d0f2b19d5c29f339402bebd278b71fa98c8f2396000c227e72a0a2"
+    },
+    {
+      "path": "apps/runner/dist",
+      "files": 111,
+      "bytes": 20439977,
+      "digestAlgorithm": "sha256(sorted sha256sum lines including paths)",
+      "sha256": "46d39e56bc1e0d2bc2b87a087afc5acde290984582d25ac123a300ef3afe0c76"
+    },
+    {
+      "path": "apps/runner/dist/index.html",
+      "bytes": 794,
+      "sha256": "50be38d8bb080804d094aa759405073027776eb8cbc2908c20ff7caada6d7ebf"
+    }
+  ],
+  "notes": [
+    "The canonical pnpm run verify:release aggregate completed successfully on the frozen v1.5.2 candidate and included release-train, unit/contract, typecheck, build, runner/artifact smoke, lint, and full Chromium+Firefox release E2E gates.",
+    "Tag-triggered CI reads this post-release packet from origin/main while executing the validator from the tagged commit. Therefore the evidence commit containing this packet must be pushed to main before the v1.5.2 tag is pushed.",
+    "electron-builder reports that package.json has no author metadata and uses the default Electron icon because no application icon is configured; neither warning affects the verified AppImage build/runtime smoke.",
+    "The v1.5.2 tag remains attached to the exact tested release-content commit; this evidence packet is intentionally a post-release record and must not move the tag."
+  ],
+  "publication": {
+    "pushRequested": false,
+    "commitPushed": false,
+    "tagPushed": false,
+    "remoteMainAtVerification": "f19ce1b67e44c157d2f8f81e5a0a63da686e7a7d",
+    "remoteTagPresentAtVerification": false,
+    "releasePublished": false,
+    "deploymentPerformed": false
+  }
+}
