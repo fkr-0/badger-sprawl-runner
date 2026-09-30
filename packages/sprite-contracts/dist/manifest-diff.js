@@ -1,4 +1,4 @@
-import { normalizeArcadeSpriteManifest } from '../../../vendor/arcade-runtime.mjs';
+import { normalizeArcadeSpriteManifest } from '@arcade/runtime/sprites';
 function canonicalJson(value, seen = new Set()) {
     if (value === null)
         return 'null';

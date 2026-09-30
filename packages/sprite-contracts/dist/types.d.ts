@@ -1,4 +1,4 @@
-import type { ArcadeSpriteAnimation, ArcadeSpriteAnimationEvent, ArcadeSpriteBox, ArcadeSpriteGrid, ArcadeSpriteManifest, ArcadeSpriteManifestSource, ArcadeSpriteSheet } from '../../../vendor/arcade-runtime.mjs';
+import type { ArcadeSpriteAnimation, ArcadeSpriteAnimationEvent, ArcadeSpriteBox, ArcadeSpriteGrid, ArcadeSpriteManifest, ArcadeSpriteManifestSource, ArcadeSpriteSheet } from '@arcade/runtime/sprites';
 /** @deprecated Import ArcadeSpriteBox from the shared runtime for new code. */
 export type SpriteBox = ArcadeSpriteBox;
 /** @deprecated Import ArcadeSpriteAnimationEvent from the shared runtime for new code. */

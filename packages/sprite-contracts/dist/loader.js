@@ -1,4 +1,4 @@
-import { drawArcadeSpriteCanvasFrame, resolveArcadeSpriteFrame, } from '../../../vendor/arcade-runtime.mjs';
+import { drawArcadeSpriteCanvasFrame, resolveArcadeSpriteFrame, } from '@arcade/runtime/sprites';
 import { auditSpriteAtlasDimensions } from './production';
 export class SpriteSheetDimensionLoadError extends Error {
     audit;

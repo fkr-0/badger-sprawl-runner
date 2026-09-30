@@ -1,4 +1,4 @@
-import { normalizeArcadeSpriteManifest, resolveArcadeSpriteFrame, } from '../../../vendor/arcade-runtime.mjs';
+import { normalizeArcadeSpriteManifest, resolveArcadeSpriteFrame, } from '@arcade/runtime/sprites';
 function normalizeSheet(sheet) {
     return normalizeArcadeSpriteManifest({ version: '1.0.0', sheets: [sheet] })
         .sheets[0];
