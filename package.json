@@ -1,6 +1,6 @@
 {
 	"name": "badger-sprawl-runner-workspace",
-	"version": "1.5.2",
+	"version": "1.6.0",
 	"private": true,
 	"type": "module",
 	"main": "desktop/main.mjs",
@@ -73,11 +73,25 @@
 		"appId": "dev.arcade.badger-sprawl-runner",
 		"productName": "Badger Sprawl Runner",
 		"asar": true,
-		"directories": { "output": "release" },
-		"files": ["apps/runner/dist/**/*", "desktop/main.mjs", "package.json"],
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"apps/runner/dist/**/*",
+			"desktop/main.mjs",
+			"package.json"
+		],
 		"artifactName": "${productName}-${version}-${arch}.${ext}",
-		"toolsets": { "appimage": "1.0.3" },
-		"linux": { "target": ["AppImage"], "category": "Game", "syncDesktopName": true }
+		"toolsets": {
+			"appimage": "1.0.3"
+		},
+		"linux": {
+			"target": [
+				"AppImage"
+			],
+			"category": "Game",
+			"syncDesktopName": true
+		}
 	},
 	"devDependencies": {
 		"@arcade/runtime": "workspace:*",
