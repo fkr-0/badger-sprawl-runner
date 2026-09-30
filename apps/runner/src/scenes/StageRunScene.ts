@@ -3944,7 +3944,7 @@ export class StageRunScene implements Scene {
 	onEnter(ctx: SceneContext): void {
 		console.log('StageRunScene entered');
 		this.input?.destroy();
-		this.input = new InputSystem();
+		this.input = new InputSystem(window, { surface: ctx.canvas });
 		if (this.options.tutorialBeats?.length) {
 			window.dispatchEvent(
 				new CustomEvent('badger:tutorial-overlay', { detail: this.getTutorialOverlayBeats() })
