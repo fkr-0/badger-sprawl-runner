@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT DIRECTLY.
 // Edit source/runtime/*.js.inc and run `npm run source:build`.
 
-export const ARCADE_RUNTIME_VERSION = '1.12.0';
+export const ARCADE_RUNTIME_VERSION = '1.13.0';
 export const ARCADE_PIXI_RUNTIME_VERSION = ARCADE_RUNTIME_VERSION;
 
 export const DEFAULT_ARCADE_LAYERS = Object.freeze([
@@ -381,6 +381,31 @@ function isArcadeSpriteRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function freezeArcadeSpriteFrameCollision(collision) {
+  return Object.freeze({
+    frame: collision.frame,
+    ...(collision.hitboxes === undefined
+      ? {}
+      : { hitboxes: Object.freeze(collision.hitboxes.map(freezeArcadeSpriteBox)) }),
+    ...(collision.hurtboxes === undefined
+      ? {}
+      : { hurtboxes: Object.freeze(collision.hurtboxes.map(freezeArcadeSpriteBox)) }),
+  });
+}
+
+function validateArcadeSpriteFrameCollision(value, frameCount) {
+  if (!isArcadeSpriteRecord(value)
+    || !isArcadeSpriteNonNegativeInteger(value.frame)
+    || value.frame >= frameCount) return false;
+  let hasOverride = false;
+  for (const key of ['hitboxes', 'hurtboxes']) {
+    if (value[key] === undefined) continue;
+    hasOverride = true;
+    if (!Array.isArray(value[key]) || !value[key].every(validateArcadeSpriteBox)) return false;
+  }
+  return hasOverride;
+}
+
 function isArcadeSpritePositiveInteger(value) {
   return Number.isInteger(value) && Number(value) > 0;
 }
@@ -435,6 +460,14 @@ function validateArcadeSpriteAnimation(value, totalFrames) {
   for (const key of ['hitboxes', 'hurtboxes']) {
     if (value[key] !== undefined
       && (!Array.isArray(value[key]) || !value[key].every(validateArcadeSpriteBox))) return false;
+  }
+  if (value.frameCollisions !== undefined) {
+    if (!Array.isArray(value.frameCollisions)) return false;
+    const seenFrames = new Set();
+    for (const collision of value.frameCollisions) {
+      if (!validateArcadeSpriteFrameCollision(collision, frameCount) || seenFrames.has(collision.frame)) return false;
+      seenFrames.add(collision.frame);
+    }
   }
   if (value.events !== undefined
     && (!Array.isArray(value.events)
@@ -524,6 +557,9 @@ function normalizeArcadeSpriteAnimation(animation) {
     ...(animation.hurtboxes === undefined
       ? {}
       : { hurtboxes: Object.freeze(animation.hurtboxes.map(freezeArcadeSpriteBox)) }),
+    ...(animation.frameCollisions === undefined
+      ? {}
+      : { frameCollisions: Object.freeze(animation.frameCollisions.map(freezeArcadeSpriteFrameCollision)) }),
     ...(animation.events === undefined
       ? {}
       : { events: Object.freeze(animation.events.map(freezeArcadeSpriteEvent)) }),
@@ -597,11 +633,19 @@ export function compileArcadeSpriteClip(sheet, animationName) {
   const animation = sheet?.animations?.[animationName];
   if (!animation) return null;
   const frameDuration = 1 / animation.fps;
+  const frameCollisions = new Map((animation.frameCollisions ?? []).map((collision) => [collision.frame, collision]));
   const frames = [];
   for (let index = 0; index < animation.frames; index += 1) {
     const address = resolveArcadeSpriteFrame(sheet, animationName, index);
     if (!address) return null;
-    frames.push(Object.freeze({ frameIndex: index, duration: frameDuration, address }));
+    const collision = frameCollisions.get(index);
+    frames.push(Object.freeze({
+      frameIndex: index,
+      duration: frameDuration,
+      address,
+      hitboxes: Object.freeze([...(collision?.hitboxes ?? animation.hitboxes ?? [])]),
+      hurtboxes: Object.freeze([...(collision?.hurtboxes ?? animation.hurtboxes ?? [])]),
+    }));
   }
   return Object.freeze({
     id: `${sheet.id}:${animationName}`,
@@ -4275,6 +4319,106 @@ export function inspectEncounterState(plan, state) {
   });
 }
 
+function arcadeStageAbortError() {
+  const error = new Error('stage asset readiness aborted');
+  error.name = 'AbortError';
+  return error;
+}
+
+export async function prepareStageAssets(graph, stateOrNodeId, assetLoader, manifest, options = {}) {
+  const node = typeof stateOrNodeId === 'string'
+    ? getStageNode(graph, stateOrNodeId)
+    : getCurrentStageNode(graph, stateOrNodeId);
+  if (!node) throw new Error('stage node is required for asset readiness');
+  if (typeof assetLoader?.loadManifest !== 'function') throw new Error('stage asset readiness requires an asset loader');
+  if (!manifest || typeof manifest !== 'object') throw new Error('stage asset readiness requires an asset manifest');
+  if (options.scope !== undefined && typeof options.scope?.child !== 'function') {
+    throw new Error('stage asset readiness parent scope must support child scopes');
+  }
+
+  const scopeName = options.scopeName ?? `stage:${graph.id}:${node.id}:assets`;
+  const scope = options.scope?.child(scopeName) ?? createResourceScope({ name: scopeName });
+  const progress = (value) => options.onProgress?.(Object.freeze({
+    graphId: graph.id,
+    nodeId: node.id,
+    ...value,
+  }));
+
+  try {
+    if (options.signal?.aborted) throw arcadeStageAbortError();
+    const loaded = node.assetIds.length === 0
+      ? Object.freeze({
+        assets: new Map(),
+        scope,
+        get: () => undefined,
+        loadedBytes: 0,
+        declaredBytes: 0,
+      })
+      : await assetLoader.loadManifest(manifest, {
+        ids: node.assetIds,
+        budgetBytes: options.budgetBytes,
+        signal: options.signal,
+        scope,
+        loaders: options.loaders,
+        onProgress: progress,
+      });
+    if (node.assetIds.length === 0) {
+      progress(Object.freeze({
+        id: null,
+        loadedCount: 0,
+        totalCount: 0,
+        loadedBytes: 0,
+        declaredBytes: 0,
+        progress: 1,
+      }));
+    }
+    if (options.signal?.aborted) throw arcadeStageAbortError();
+
+    let prewarmed = null;
+    if (typeof options.prewarm === 'function') {
+      const prepared = await options.prewarm(Object.freeze({
+        graph,
+        node,
+        scope,
+        assets: loaded.assets,
+        get: loaded.get,
+        signal: options.signal,
+      }));
+      if (options.signal?.aborted) throw arcadeStageAbortError();
+      if (prepared !== undefined) {
+        const wrapped = prepared && typeof prepared === 'object' && Object.prototype.hasOwnProperty.call(prepared, 'resource')
+          ? prepared
+          : { resource: prepared };
+        prewarmed = scope.track(wrapped.resource, wrapped.dispose);
+      }
+    }
+
+    return Object.freeze({
+      graphId: graph.id,
+      nodeId: node.id,
+      assetIds: node.assetIds,
+      scope,
+      assets: loaded.assets,
+      loadedBytes: loaded.loadedBytes,
+      declaredBytes: loaded.declaredBytes,
+      prewarmed,
+      get(assetId) {
+        return loaded.get(String(assetId));
+      },
+      release() {
+        return scope.release();
+      },
+    });
+  } catch (error) {
+    try {
+      await scope.release();
+    } catch (releaseError) {
+      throw new AggregateError([error, releaseError], `stage asset readiness failed for "${node.id}"`);
+    }
+    throw error;
+  }
+}
+
 export async function installStageServices(graph, stateOrNodeId, installers, options = {}) {
   const node = typeof stateOrNodeId === 'string'
     ? getStageNode(graph, stateOrNodeId)
@@ -4707,7 +4851,6 @@ export function selectArcadeComputeBackend(backends = [], options = {}) {
 }
 
 // END DATA-ORIENTED ACCELERATION
-
 export function createArcadeCameraTransform(initial = {}) {
   const state = {
     x: finiteNumber(initial.x, 0),
@@ -4807,26 +4950,40 @@ export function createArcadeFrameProfiler(options = {}) {
   invariant(typeof clock === 'function', 'profile clock must be a function');
   const samples = new Map();
 
+  const createBucket = () => ({
+    values: new Array(sampleSize),
+    count: 0,
+    cursor: 0,
+    last: 0,
+  });
+
   const record = (name, durationMs) => {
     invariant(typeof name === 'string' && name.length > 0, 'profile sample name is required');
     const duration = Math.max(0, finiteNumber(durationMs, 0));
-    const bucket = samples.get(name) ?? [];
-    bucket.push(duration);
-    if (bucket.length > sampleSize) bucket.splice(0, bucket.length - sampleSize);
+    const bucket = samples.get(name) ?? createBucket();
+    if (bucket.count < sampleSize) {
+      bucket.values[bucket.cursor] = duration;
+      bucket.count += 1;
+    } else {
+      bucket.values[bucket.cursor] = duration;
+    }
+    bucket.cursor = (bucket.cursor + 1) % sampleSize;
+    bucket.last = duration;
     samples.set(name, bucket);
     return duration;
   };
 
-  const summarize = (bucket = []) => {
-    if (!bucket.length) {
+  const summarize = (bucket) => {
+    if (!bucket?.count) {
       return Object.freeze({ count: 0, lastMs: 0, meanMs: 0, p50Ms: 0, p95Ms: 0, maxMs: 0 });
     }
-    const sorted = [...bucket].sort((a, b) => a - b);
-    const total = bucket.reduce((sum, value) => sum + value, 0);
+    const values = bucket.values.slice(0, bucket.count);
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const sorted = values.sort((a, b) => a - b);
     return Object.freeze({
-      count: bucket.length,
-      lastMs: bucket[bucket.length - 1],
-      meanMs: total / bucket.length,
+      count: bucket.count,
+      lastMs: bucket.last,
+      meanMs: total / bucket.count,
       p50Ms: percentile(sorted, 0.5),
       p95Ms: percentile(sorted, 0.95),
       maxMs: sorted[sorted.length - 1],
@@ -4960,6 +5117,378 @@ function createScheduler(options = {}) {
   return { requestFrame, cancelFrame };
 }
 
+export function createArcadePixiFixedStepHost(options = {}) {
+  const runtime = options.runtime;
+  invariant(runtime?.step && runtime?.on, 'a Pixi runtime instance is required');
+  invariant(typeof options.update === 'function', 'fixed-step Pixi host requires update');
+  invariant(runtime.running !== true, 'fixed-step Pixi host requires the Pixi-managed frame loop to be stopped');
+
+  const timeUnit = options.timeUnit ?? 'seconds';
+  invariant(timeUnit === 'seconds' || timeUnit === 'milliseconds', 'fixed-step Pixi host timeUnit must be seconds or milliseconds');
+  const unitToMs = timeUnit === 'milliseconds' ? 1 : 1000;
+  const now = options.now
+    ?? globalThis.performance?.now?.bind(globalThis.performance)
+    ?? Date.now;
+  const scheduler = createScheduler(options);
+  const renderEnabled = options.render !== false;
+  const pauseWhenHidden = options.pauseWhenHidden !== false;
+  const documentTarget = options.documentTarget ?? globalThis.document;
+  let destroyed = false;
+  let suspended = false;
+  let resumeAfterSuspend = false;
+  let lastPresentationTimeMs = null;
+  let presentationTimeMs = now();
+  let presentationDeltaMs = 0;
+
+  const capturePresentationTime = (timestamp) => {
+    const nextTime = finiteNumber(timestamp, presentationTimeMs);
+    presentationDeltaMs = lastPresentationTimeMs === null
+      ? 0
+      : Math.max(0, nextTime - lastPresentationTimeMs);
+    presentationTimeMs = nextTime;
+    lastPresentationTimeMs = nextTime;
+  };
+
+  const requestFrame = (callback) => scheduler.requestFrame((timestamp) => {
+    capturePresentationTime(timestamp);
+    callback(timestamp);
+  });
+
+  const loop = createFixedStepLoop({
+    fixedStep: options.fixedStep,
+    maxFrame: options.maxFrame,
+    timeUnit,
+    now,
+    requestFrame,
+    cancelFrame: scheduler.cancelFrame,
+    update(delta) {
+      options.update(delta);
+    },
+    render(alpha) {
+      const presentation = Object.freeze({
+        alpha,
+        deltaMs: presentationDeltaMs,
+        timeMs: presentationTimeMs,
+        runtime,
+      });
+      options.beforePresent?.(presentation);
+      if (renderEnabled) runtime.step(presentationDeltaMs, presentationTimeMs, true, alpha);
+      options.afterPresent?.(presentation);
+    },
+  });
+
+  const suspend = (reason) => {
+    if (destroyed || suspended) return false;
+    resumeAfterSuspend = loop.isRunning() && !loop.isPaused();
+    suspended = true;
+    if (resumeAfterSuspend) loop.pause();
+    options.onSuspend?.(reason);
+    return resumeAfterSuspend;
+  };
+
+  const resumeSuspended = (reason) => {
+    if (destroyed || !suspended) return false;
+    suspended = false;
+    lastPresentationTimeMs = null;
+    if (resumeAfterSuspend) {
+      resumeAfterSuspend = false;
+      loop.resume();
+      options.onResume?.(reason);
+      return true;
+    }
+    resumeAfterSuspend = false;
+    return false;
+  };
+
+  const offContextLost = runtime.on('context-lost', () => suspend('context-lost'));
+  const offContextRestored = runtime.on('context-restored', () => resumeSuspended('context-restored'));
+  const onVisibilityChange = () => {
+    if (!pauseWhenHidden) return;
+    if (documentTarget?.hidden) suspend('document-hidden');
+    else resumeSuspended('document-visible');
+  };
+  if (pauseWhenHidden) documentTarget?.addEventListener?.('visibilitychange', onVisibilityChange);
+
+  const host = {
+    runtime,
+    loop,
+    get renderEnabled() { return renderEnabled; },
+    start() {
+      invariant(!destroyed, 'fixed-step Pixi host is destroyed');
+      lastPresentationTimeMs = null;
+      presentationTimeMs = now();
+      loop.start();
+    },
+    stop() {
+      loop.stop();
+      suspended = false;
+      resumeAfterSuspend = false;
+      lastPresentationTimeMs = null;
+    },
+    pause() {
+      suspended = false;
+      resumeAfterSuspend = false;
+      loop.pause();
+    },
+    resume() {
+      invariant(!destroyed, 'fixed-step Pixi host is destroyed');
+      suspended = false;
+      resumeAfterSuspend = false;
+      lastPresentationTimeMs = null;
+      loop.resume();
+    },
+    advance(elapsed, timeMs) {
+      invariant(!destroyed, 'fixed-step Pixi host is destroyed');
+      const elapsedValue = Math.max(0, finiteNumber(elapsed, 0));
+      const elapsedMs = elapsedValue * unitToMs;
+      const nextTime = Number.isFinite(timeMs)
+        ? Number(timeMs)
+        : (lastPresentationTimeMs ?? presentationTimeMs) + elapsedMs;
+      presentationDeltaMs = elapsedMs;
+      presentationTimeMs = nextTime;
+      lastPresentationTimeMs = nextTime;
+      return loop.advance(elapsedValue);
+    },
+    resetClock() {
+      lastPresentationTimeMs = null;
+      presentationTimeMs = now();
+      presentationDeltaMs = 0;
+      loop.resetClock();
+    },
+    snapshot() {
+      return Object.freeze({
+        destroyed,
+        suspended,
+        renderEnabled,
+        presentationTimeMs,
+        presentationDeltaMs,
+        loop: loop.snapshot(),
+      });
+    },
+    destroy() {
+      if (destroyed) return false;
+      host.stop();
+      destroyed = true;
+      offContextLost?.();
+      offContextRestored?.();
+      documentTarget?.removeEventListener?.('visibilitychange', onVisibilityChange);
+      if (options.destroyRuntime) runtime.destroy?.();
+      return true;
+    },
+  };
+  return host;
+}
+
+function arcadePixiSpriteFrameKey(address) {
+  return `${address.sheetId}:${address.absoluteFrame}`;
+}
+
+function arcadePixiApplySpriteAnchor(sprite, address) {
+  if (sprite.anchor?.set) sprite.anchor.set(address.pivotX, address.pivotY);
+  else {
+    sprite.anchor = sprite.anchor ?? {};
+    sprite.anchor.x = address.pivotX;
+    sprite.anchor.y = address.pivotY;
+  }
+}
+
+/**
+ * Build a renderer-owned atlas cache from the renderer-neutral sprite manifest.
+ * Sheet/animation meaning remains entirely consumer-owned; this layer only loads,
+ * slices, anchors and disposes Pixi textures deterministically.
+ */
+export function createArcadePixiSpriteBank(options = {}) {
+  const { PIXI, runtime } = options;
+  invariant(runtime?.loadTexture && runtime?.texture, 'Pixi sprite bank requires an Arcade Pixi runtime');
+  invariant(PIXI?.Texture && PIXI?.Sprite, 'Pixi sprite bank requires Texture and Sprite constructors');
+  const index = createArcadeSpriteManifestIndex(options.manifest);
+  const aliasPrefix = typeof options.aliasPrefix === 'string' && options.aliasPrefix.length > 0
+    ? options.aliasPrefix
+    : 'arcade-sprite';
+  const aliases = new Map(index.ids.map((sheetId) => [sheetId, `${aliasPrefix}:${sheetId}`]));
+  const frameTextures = new Map();
+  let loaded = false;
+  let destroyed = false;
+
+  const assertUsable = () => invariant(!destroyed, 'Pixi sprite bank is destroyed');
+  const sheet = (sheetId) => {
+    const resolved = index.get(sheetId);
+    invariant(resolved, `unknown sprite sheet "${sheetId}"`);
+    return resolved;
+  };
+  const clip = (sheetId, animationName) => {
+    const compiled = compileArcadeSpriteClip(sheet(sheetId), animationName);
+    invariant(compiled, `unknown sprite animation "${sheetId}:${animationName}"`);
+    return compiled;
+  };
+  const binding = (sheetId, animationName, frameIndex = 0) => {
+    assertUsable();
+    invariant(loaded, 'Pixi sprite bank must be loaded before resolving frames');
+    const address = resolveArcadeSpriteFrame(sheet(sheetId), animationName, frameIndex);
+    invariant(address, `unknown sprite animation "${sheetId}:${animationName}"`);
+    const key = arcadePixiSpriteFrameKey(address);
+    let texture = frameTextures.get(key);
+    if (!texture) {
+      const baseTexture = runtime.texture(aliases.get(sheetId));
+      invariant(baseTexture?.source, `sprite sheet texture is unavailable: ${sheetId}`);
+      texture = new PIXI.Texture({
+        source: baseTexture.source,
+        frame: {
+          x: address.sourceX,
+          y: address.sourceY,
+          width: address.frameWidth,
+          height: address.frameHeight,
+        },
+        label: `${aliasPrefix}:${sheetId}:${address.absoluteFrame}`,
+      });
+      frameTextures.set(key, texture);
+    }
+    return Object.freeze({ texture, address });
+  };
+
+  const bank = {
+    manifest: index.manifest,
+    ids: index.ids,
+    get loaded() { return loaded; },
+    get destroyed() { return destroyed; },
+    sheet,
+    clip,
+    async load() {
+      assertUsable();
+      if (loaded) return bank;
+      await Promise.all(index.ids.map(async (sheetId) => {
+        const spriteSheet = sheet(sheetId);
+        await runtime.loadTexture(aliases.get(sheetId), spriteSheet.file);
+      }));
+      loaded = true;
+      return bank;
+    },
+    frame(sheetId, animationName, frameIndex = 0) {
+      return binding(sheetId, animationName, frameIndex);
+    },
+    applyFrame(sprite, sheetId, animationName, frameIndex = 0) {
+      invariant(sprite, 'sprite target is required');
+      const resolved = binding(sheetId, animationName, frameIndex);
+      sprite.texture = resolved.texture;
+      arcadePixiApplySpriteAnchor(sprite, resolved.address);
+      return resolved;
+    },
+    createSprite(sheetId, animationName, frameIndex = 0) {
+      const resolved = binding(sheetId, animationName, frameIndex);
+      const sprite = new PIXI.Sprite(resolved.texture);
+      arcadePixiApplySpriteAnchor(sprite, resolved.address);
+      return sprite;
+    },
+    async destroy(destroyOptions = {}) {
+      if (destroyed) return false;
+      destroyed = true;
+      loaded = false;
+      for (const texture of frameTextures.values()) texture.destroy?.(false);
+      frameTextures.clear();
+      if (destroyOptions.unload !== false) {
+        await Promise.all(index.ids.map((sheetId) => runtime.unloadTexture?.(aliases.get(sheetId))));
+      }
+      return true;
+    },
+  };
+  return bank;
+}
+
+function arcadePixiApplySpriteFacing(sprite, facing) {
+  const direction = facing < 0 ? -1 : 1;
+  const scaleX = Math.abs(finiteNumber(sprite.scale?.x, 1)) || 1;
+  const scaleY = finiteNumber(sprite.scale?.y, 1) || 1;
+  if (sprite.scale?.set) sprite.scale.set(scaleX * direction, scaleY);
+  else {
+    sprite.scale = sprite.scale ?? {};
+    sprite.scale.x = scaleX * direction;
+    sprite.scale.y = scaleY;
+  }
+  return direction;
+}
+
+/**
+ * Direct clip player for a loaded Pixi sprite bank. Transition priority and
+ * semantic cue policy deliberately remain with consumers; play() only switches
+ * named manifest clips and advance() delegates timing to the shared clock.
+ */
+export function createArcadePixiSpritePlayer(options = {}) {
+  const bank = options.bank;
+  invariant(bank?.clip && bank?.applyFrame, 'Pixi sprite player requires a sprite bank');
+  invariant(typeof options.sheetId === 'string' && options.sheetId.length > 0, 'sprite player sheetId is required');
+  invariant(typeof options.animationName === 'string' && options.animationName.length > 0, 'sprite player animationName is required');
+  let sheetId = options.sheetId;
+  let animationName = options.animationName;
+  let clip = bank.clip(sheetId, animationName);
+  let clock = playArcadeAnimationClock(createArcadeAnimationClock());
+  const sprite = options.sprite ?? bank.createSprite(sheetId, animationName, 0);
+  let facing = arcadePixiApplySpriteFacing(sprite, options.facing ?? 1);
+  let destroyed = false;
+
+  const assertUsable = () => invariant(!destroyed, 'Pixi sprite player is destroyed');
+  const applyCurrentFrame = () => bank.applyFrame(sprite, sheetId, animationName, clock.frame);
+  applyCurrentFrame();
+
+  const player = {
+    sprite,
+    get sheetId() { return sheetId; },
+    get animationName() { return animationName; },
+    get clip() { return clip; },
+    get clock() { return clock; },
+    get facing() { return facing; },
+    get destroyed() { return destroyed; },
+    play(nextAnimationName, playOptions = {}) {
+      assertUsable();
+      const nextSheetId = playOptions.sheetId ?? sheetId;
+      const changed = nextSheetId !== sheetId || nextAnimationName !== animationName;
+      if (!changed && playOptions.restart !== true) return player;
+      sheetId = nextSheetId;
+      animationName = nextAnimationName;
+      clip = bank.clip(sheetId, animationName);
+      clock = playArcadeAnimationClock(createArcadeAnimationClock(), { restart: true });
+      applyCurrentFrame();
+      return player;
+    },
+    advance(deltaSeconds) {
+      assertUsable();
+      clock = advanceArcadeAnimationClock(clock, Math.max(0, finiteNumber(deltaSeconds, 0)), {
+        frameCount: clip.frameCount,
+        frameDuration: clip.frameDuration,
+        mode: clip.mode,
+      });
+      const resolved = applyCurrentFrame();
+      const animation = bank.sheet(sheetId).animations[animationName];
+      const events = collectArcadeSpriteAnimationEvents(animation, clock.advancedFrames);
+      for (const event of events) options.onEvent?.(event, player);
+      return Object.freeze({ clock, events, texture: resolved.texture, address: resolved.address });
+    },
+    setFacing(nextFacing) {
+      assertUsable();
+      invariant(nextFacing === 1 || nextFacing === -1, 'sprite facing must be 1 or -1');
+      facing = arcadePixiApplySpriteFacing(sprite, nextFacing);
+      return facing;
+    },
+    snapshot() {
+      return Object.freeze({
+        sheetId,
+        animationName,
+        frame: clock.frame,
+        playing: clock.playing,
+        completed: clock.completed,
+        facing,
+        destroyed,
+      });
+    },
+    destroy(destroyOptions = {}) {
+      if (destroyed) return false;
+      destroyed = true;
+      if (destroyOptions.destroySprite !== false) sprite.destroy?.({ texture: false, textureSource: false });
+      return true;
+    },
+  };
+  return player;
+}
+
 export async function createArcadePixiRuntime(options) {
   const {
     PIXI,
@@ -4980,6 +5509,7 @@ export async function createArcadePixiRuntime(options) {
     onTelemetry,
     onResize,
     performanceSampleSize = 240,
+    performanceSummaryEvery = 60,
   } = options ?? {};
 
   invariant(PIXI?.Application && PIXI?.Container, 'a PixiJS 8 namespace is required');
@@ -5027,17 +5557,19 @@ export async function createArcadePixiRuntime(options) {
     layerMap.set(name, container);
     app.stage.addChild(container);
   }
-  app.stage.sortableChildren = true;
-
   const systems = new Map();
   const passes = new Map();
   const listeners = new Map();
   const disposers = new Set();
   const scheduler = createScheduler(options);
+  const performanceClock = options.performanceNow
+    ?? globalThis.performance?.now?.bind(globalThis.performance)
+    ?? Date.now;
   const profiler = createArcadeFrameProfiler({
     sampleSize: performanceSampleSize,
-    now: options.performanceNow,
+    now: performanceClock,
   });
+  const summaryEvery = Math.max(0, Math.floor(finiteNumber(performanceSummaryEvery, 60)));
   let resizeObserver = null;
   let frameHandle = null;
   let lastFrameTime = null;
@@ -5045,7 +5577,12 @@ export async function createArcadePixiRuntime(options) {
   let running = false;
   let contextLost = false;
   let resumeAfterContextRestore = false;
+  let resumeAfterVisibility = false;
   let registrationSequence = 0;
+  let orderedSystemsCache = [];
+  let orderedPassesCache = [];
+  let systemsDirty = true;
+  let passesDirty = true;
 
   const telemetry = {
     version: ARCADE_PIXI_RUNTIME_VERSION,
@@ -5118,12 +5655,24 @@ export async function createArcadePixiRuntime(options) {
   canvas.addEventListener('webglcontextlost', handleContextLost);
   canvas.addEventListener('webglcontextrestored', handleContextRestored);
 
-  const sortedSystems = () => [...systems.values()].sort(
-    (a, b) => b.priority - a.priority || a.sequence - b.sequence,
-  );
-  const sortedPasses = () => [...passes.values()].sort(
-    (a, b) => a.order - b.order || b.priority - a.priority || a.sequence - b.sequence,
-  );
+  const sortedSystems = () => {
+    if (systemsDirty) {
+      orderedSystemsCache = [...systems.values()].sort(
+        (a, b) => b.priority - a.priority || a.sequence - b.sequence,
+      );
+      systemsDirty = false;
+    }
+    return orderedSystemsCache;
+  };
+  const sortedPasses = () => {
+    if (passesDirty) {
+      orderedPassesCache = [...passes.values()].sort(
+        (a, b) => a.order - b.order || b.priority - a.priority || a.sequence - b.sequence,
+      );
+      passesDirty = false;
+    }
+    return orderedPassesCache;
+  };
 
   const updatePassTelemetry = () => {
     telemetry.passNames = sortedPasses().map((pass) => pass.name);
@@ -5135,16 +5684,7 @@ export async function createArcadePixiRuntime(options) {
     emitTelemetry();
   };
 
-  const passContext = (pass) => ({
-    runtime,
-    name: pass.name,
-    layerName: pass.layerName,
-    layer: pass.layer,
-    container: pass.container,
-    get state() { return pass.state; },
-  });
-
-  const tick = (deltaMs, timeMs = Date.now(), render = autoRender) => {
+  const tick = (deltaMs, timeMs = Date.now(), render = autoRender, alpha = 0) => {
     if (destroyed || contextLost) return;
     const boundedDelta = Math.max(0, Math.min(250, Number.isFinite(deltaMs) ? deltaMs : 0));
     telemetry.ticks += 1;
@@ -5157,26 +5697,48 @@ export async function createArcadePixiRuntime(options) {
       deltaSeconds: boundedDelta / 1000,
       timeMs,
       tick: telemetry.ticks,
+      alpha: Math.max(0, Math.min(1, finiteNumber(alpha, 0))),
     };
-    profiler.measure('frame', () => {
-      profiler.measure('update', () => {
+    const frameStartedAt = performanceClock();
+    const updateStartedAt = performanceClock();
+    try {
+      try {
         for (const system of sortedSystems()) {
-          if (system.enabled) profiler.measure(`system:${system.name}`, () => system.update(frame));
+          if (!system.enabled) continue;
+          const startedAt = performanceClock();
+          try {
+            system.update(frame);
+          } finally {
+            profiler.record(system.profileName, performanceClock() - startedAt);
+          }
         }
         for (const pass of sortedPasses()) {
-          if (pass.enabled && pass.update) {
-            profiler.measure(`pass:${pass.name}`, () => pass.update(frame, passContext(pass)));
+          if (!pass.enabled || !pass.update) continue;
+          const startedAt = performanceClock();
+          try {
+            pass.update(frame, pass.context);
+          } finally {
+            profiler.record(pass.profileName, performanceClock() - startedAt);
           }
         }
         emit('tick', frame);
-      });
+      } finally {
+        profiler.record('update', performanceClock() - updateStartedAt);
+      }
 
       if (render) {
-        profiler.measure('render', () => app.renderer.render(app.stage));
+        const renderStartedAt = performanceClock();
+        try {
+          app.renderer.render(app.stage);
+        } finally {
+          profiler.record('render', performanceClock() - renderStartedAt);
+        }
         telemetry.framesRendered += 1;
       }
-    });
-    updatePerformanceTelemetry();
+    } finally {
+      profiler.record('frame', performanceClock() - frameStartedAt);
+    }
+    if (summaryEvery > 0 && telemetry.ticks % summaryEvery === 0) updatePerformanceTelemetry();
   };
 
   const loop = (timeMs) => {
@@ -5198,7 +5760,7 @@ export async function createArcadePixiRuntime(options) {
     canvas.dataset.arcadeLogicalSize = `${width}x${height}`;
     const payload = { width, height, runtime };
     for (const pass of sortedPasses()) {
-      pass.resize?.(payload, passContext(pass));
+      pass.resize?.(payload, pass.context);
     }
     onResize?.(payload);
     emit('resize', payload);
@@ -5216,8 +5778,13 @@ export async function createArcadePixiRuntime(options) {
 
   const handleVisibilityChange = () => {
     if (!pauseWhenHidden || destroyed) return;
-    if (globalThis.document?.hidden) runtime.pause('document-hidden');
-    else runtime.resume('document-visible');
+    if (globalThis.document?.hidden) {
+      resumeAfterVisibility = running;
+      if (running) runtime.pause('document-hidden');
+    } else if (resumeAfterVisibility) {
+      resumeAfterVisibility = false;
+      runtime.resume('document-visible');
+    }
   };
 
   const runtime = {
@@ -5256,11 +5823,17 @@ export async function createArcadePixiRuntime(options) {
       invariant(Number.isFinite(priority), `pass "${name}" priority must be finite`);
 
       const layer = runtime.layer(passOptions.layer);
-      layer.sortableChildren = true;
       const container = new PIXI.Container();
       container.label = `pass:${name}`;
       container.zIndex = order;
       container.visible = passOptions.enabled !== false;
+      if ('cullable' in passOptions) container.cullable = Boolean(passOptions.cullable);
+      if ('cullableChildren' in passOptions) container.cullableChildren = Boolean(passOptions.cullableChildren);
+      if ('cullArea' in passOptions) container.cullArea = passOptions.cullArea;
+      if (passOptions.renderGroup === true) {
+        if (typeof container.enableRenderGroup === 'function') container.enableRenderGroup();
+        else container.isRenderGroup = true;
+      }
       layer.addChild(container);
 
       const pass = {
@@ -5278,7 +5851,18 @@ export async function createArcadePixiRuntime(options) {
         destroyChildren: passOptions.destroyChildren !== false,
         state: undefined,
         handle: null,
+        context: null,
+        profileName: `pass:${name}`,
       };
+
+      pass.context = Object.freeze({
+        runtime,
+        name: pass.name,
+        layerName: pass.layerName,
+        layer: pass.layer,
+        container: pass.container,
+        get state() { return pass.state; },
+      });
 
       pass.handle = Object.freeze({
         name,
@@ -5291,11 +5875,14 @@ export async function createArcadePixiRuntime(options) {
         remove() { return runtime.removePass(name); },
       });
       passes.set(name, pass);
+      passesDirty = true;
 
       try {
-        pass.state = passOptions.create?.(passContext(pass));
+        pass.state = passOptions.create?.(pass.context);
+        layer.sortChildren?.();
       } catch (error) {
         passes.delete(name);
+        passesDirty = true;
         container.removeFromParent?.();
         container.destroy?.({ children: true });
         throw error;
@@ -5327,8 +5914,9 @@ export async function createArcadePixiRuntime(options) {
       const pass = passes.get(name);
       if (!pass) return false;
       passes.delete(name);
+      passesDirty = true;
       try {
-        pass.destroy?.(passContext(pass));
+        pass.destroy?.(pass.context);
       } finally {
         pass.container.removeFromParent?.();
         pass.container.destroy?.({ children: pass.destroyChildren });
@@ -5355,13 +5943,16 @@ export async function createArcadePixiRuntime(options) {
         priority,
         sequence: registrationSequence++,
         enabled: systemOptions.enabled !== false,
+        profileName: `system:${name}`,
       });
+      systemsDirty = true;
       telemetry.systemNames = [...systems.keys()];
       emitTelemetry();
       return () => runtime.removeSystem(name);
     },
     removeSystem(name) {
       const removed = systems.delete(name);
+      if (removed) systemsDirty = true;
       telemetry.systemNames = [...systems.keys()];
       if (removed) emitTelemetry();
       return removed;
@@ -5428,12 +6019,17 @@ export async function createArcadePixiRuntime(options) {
     resizeFromTarget,
     render() {
       if (destroyed || contextLost) return;
-      profiler.measure('render', () => app.renderer.render(app.stage));
+      const startedAt = performanceClock();
+      try {
+        app.renderer.render(app.stage);
+      } finally {
+        profiler.record('render', performanceClock() - startedAt);
+      }
       telemetry.framesRendered += 1;
       updatePerformanceTelemetry();
     },
-    step(deltaMs = 1000 / 60, timeMs = Date.now(), render = autoRender) {
-      tick(deltaMs, timeMs, render);
+    step(deltaMs = 1000 / 60, timeMs = Date.now(), render = autoRender, alpha = 0) {
+      tick(deltaMs, timeMs, render, alpha);
     },
     start(reason = 'manual') {
       if (destroyed || running) return;
@@ -5485,6 +6081,7 @@ export async function createArcadePixiRuntime(options) {
       destroyed = true;
       contextLost = false;
       resumeAfterContextRestore = false;
+      resumeAfterVisibility = false;
       telemetry.destroyed = true;
       telemetry.running = false;
       telemetry.paused = true;
@@ -5502,6 +6099,9 @@ export async function createArcadePixiRuntime(options) {
         try { runtime.removePass(name); } catch { /* best-effort pass cleanup */ }
       }
       systems.clear();
+      systemsDirty = true;
+      orderedSystemsCache = [];
+      orderedPassesCache = [];
       telemetry.systemNames = [];
       listeners.clear();
       layerMap.clear();
@@ -5766,6 +6366,11 @@ export function createFixedStepLoop(options) {
   const maxFrame = finite(options.maxFrame, options.timeUnit === 'milliseconds' ? 100 : 0.1);
   coreInvariant(fixedStep > 0, 'fixedStep must be positive');
   coreInvariant(maxFrame >= fixedStep, 'maxFrame must be at least fixedStep');
+  // Repeated binary floating-point subtraction can leave an accumulator that is
+  // microscopically below an exact authored step boundary (for example 0.3 at
+  // a 0.1 step). Tolerate only machine-scale drift so exact logical multiples
+  // cannot lose a simulation update without accepting meaningfully early steps.
+  const stepTolerance = Math.abs(fixedStep) * Number.EPSILON * 8;
 
   const now = options.now ?? defaultNow;
   const requestFrame = options.requestFrame ?? globalThis.requestAnimationFrame?.bind(globalThis);
@@ -5790,9 +6395,10 @@ export function createFixedStepLoop(options) {
     if (state.paused) return { updates: 0, alpha: state.accumulator / fixedStep };
     state.accumulator += clamped;
     let updates = 0;
-    while (state.accumulator >= fixedStep) {
+    while (state.accumulator + stepTolerance >= fixedStep) {
       options.update(fixedStep);
       state.accumulator -= fixedStep;
+      if (Math.abs(state.accumulator) <= stepTolerance) state.accumulator = 0;
       state.frameCount += 1;
       updates += 1;
     }
@@ -5944,22 +6550,374 @@ export function createKeyboardDevice(options = {}) {
   return device;
 }
 
-function normalizeBindingEntry(entry) {
-  if (typeof entry === 'string') return { type: 'key', code: entry };
-  return entry;
+function createInactivePointerDevice() {
+  const emptySnapshot = Object.freeze({ pointers: Object.freeze([]) });
+  const emptyButton = Object.freeze({
+    held: false,
+    pressed: false,
+    released: false,
+    pointerType: null,
+    pointerId: null,
+    x: 0,
+    y: 0,
+    pressure: 0,
+  });
+  return Object.freeze({
+    advance: () => emptySnapshot,
+    snapshot: () => emptySnapshot,
+    clearEdges() {},
+    getButton: () => emptyButton,
+    isHeld: () => false,
+    isPressed: () => false,
+    isReleased: () => false,
+    reset() {},
+    destroy() {},
+  });
 }
 
-function gamepadValue(gamepad, binding) {
-  if (!gamepad || !binding) return 0;
+function normalizeGamepadAxis(value, deadzone) {
+  const numeric = Math.max(-1, Math.min(1, finite(value, 0)));
+  const magnitude = Math.abs(numeric);
+  if (magnitude <= deadzone) return 0;
+  const normalized = (magnitude - deadzone) / Math.max(Number.EPSILON, 1 - deadzone);
+  return Math.sign(numeric) * Math.min(1, normalized);
+}
+
+export function createGamepadDevice(options = {}) {
+  const getGamepads = options.getGamepads ?? (() => globalThis.navigator?.getGamepads?.() ?? []);
+  const index = Math.max(0, Math.floor(finite(options.index, 0)));
+  const deadzone = Math.max(0, Math.min(0.95, finite(options.deadzone, 0.15)));
+  const buttonThreshold = Math.max(0, Math.min(1, finite(options.buttonThreshold, 0.5)));
+  let previousHeld = [];
+  let current = null;
+  let destroyed = false;
+
+  const readRaw = () => {
+    if (destroyed) return null;
+    try {
+      return getGamepads()?.[index] ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const makeSnapshot = (raw, withEdges) => {
+    const connected = Boolean(raw?.connected ?? raw);
+    const rawButtons = connected ? [...(raw?.buttons ?? [])] : [];
+    const buttons = rawButtons.map((button, buttonIndex) => {
+      const value = Math.max(0, Math.min(1, finite(button?.value, button?.pressed ? 1 : 0)));
+      const held = Boolean(button?.pressed) || value >= buttonThreshold;
+      const wasHeld = Boolean(previousHeld[buttonIndex]);
+      return Object.freeze({
+        value,
+        held,
+        pressed: withEdges ? held && !wasHeld : Boolean(current?.buttons?.[buttonIndex]?.pressed),
+        released: withEdges ? !held && wasHeld : Boolean(current?.buttons?.[buttonIndex]?.released),
+      });
+    });
+    if (!connected && withEdges) {
+      for (let buttonIndex = 0; buttonIndex < previousHeld.length; buttonIndex += 1) {
+        if (!previousHeld[buttonIndex]) continue;
+        buttons[buttonIndex] = Object.freeze({ value: 0, held: false, pressed: false, released: true });
+      }
+    }
+    const axes = connected
+      ? [...(raw?.axes ?? [])].map((value) => normalizeGamepadAxis(value, deadzone))
+      : [];
+    return Object.freeze({
+      connected,
+      index,
+      id: connected ? String(raw?.id ?? '') : '',
+      mapping: connected ? String(raw?.mapping ?? '') : '',
+      timestamp: connected ? finite(raw?.timestamp, 0) : 0,
+      buttons: Object.freeze(buttons),
+      axes: Object.freeze(axes),
+    });
+  };
+
+  const device = {
+    advance() {
+      const next = makeSnapshot(readRaw(), true);
+      previousHeld = next.buttons.map((button) => button.held);
+      current = next;
+      return current;
+    },
+    refresh() {
+      current = makeSnapshot(readRaw(), false);
+      return current;
+    },
+    snapshot() {
+      return current ?? device.refresh();
+    },
+    clearEdges() {
+      if (!current) return;
+      current = Object.freeze({
+        ...current,
+        buttons: Object.freeze(current.buttons.map((button) => Object.freeze({
+          ...button,
+          pressed: false,
+          released: false,
+        }))),
+      });
+    },
+    isConnected: () => Boolean((current ?? device.refresh()).connected),
+    getButton(buttonIndex) {
+      return (current ?? device.refresh()).buttons?.[buttonIndex]
+        ?? Object.freeze({ value: 0, held: false, pressed: false, released: false });
+    },
+    getAxis(axisIndex) {
+      return finite((current ?? device.refresh()).axes?.[axisIndex], 0);
+    },
+    reset() {
+      previousHeld = [];
+      current = null;
+    },
+    destroy() {
+      destroyed = true;
+      device.reset();
+    },
+  };
+  return device;
+}
+
+function normalizePointerType(pointerType) {
+  const normalized = String(pointerType ?? 'mouse').toLowerCase();
+  return normalized === 'touch' || normalized === 'pen' || normalized === 'mouse'
+    ? normalized
+    : 'mouse';
+}
+
+function pointerButtonKey(pointerType, button) {
+  return `${pointerType}\u0000${button}`;
+}
+
+export function createPointerDevice(options = {}) {
+  const target = options.target ?? globalThis.window;
+  coreInvariant(target?.addEventListener, 'pointer target must support addEventListener');
+  const preventDefault = options.preventDefault === true;
+  const contacts = new Map();
+  const buttonStates = new Map();
+  const pendingPressed = new Set();
+  const pendingReleased = new Set();
+  const pressed = new Set();
+  const released = new Set();
+  let activitySequence = 0;
+  let destroyed = false;
+
+  const updateContact = (event) => {
+    const pointerId = Math.floor(finite(event.pointerId, 0));
+    const pointerType = normalizePointerType(event.pointerType);
+    const contact = Object.freeze({
+      pointerId,
+      pointerType,
+      x: finite(event.clientX, 0),
+      y: finite(event.clientY, 0),
+      pressure: clampNumber(event.pressure, 0, 1),
+      buttons: Math.max(0, Math.floor(finite(event.buttons, 0))),
+      isPrimary: event.isPrimary !== false,
+      sequence: ++activitySequence,
+    });
+    contacts.set(pointerId, contact);
+    return contact;
+  };
+
+  const stateFor = (pointerType, button) => {
+    const key = pointerButtonKey(pointerType, button);
+    let state = buttonStates.get(key);
+    if (!state) {
+      state = { key, pointerType, button, pointerIds: new Set(), latest: null, sequence: 0 };
+      buttonStates.set(key, state);
+    }
+    return state;
+  };
+
+  const releasePointer = (pointerId, contact, button = null) => {
+    for (const state of buttonStates.values()) {
+      if (!state.pointerIds.has(pointerId)) continue;
+      if (button !== null && state.button !== button) continue;
+      state.pointerIds.delete(pointerId);
+      state.latest = contact ?? state.latest;
+      state.sequence = ++activitySequence;
+      if (state.pointerIds.size === 0) pendingReleased.add(state.key);
+    }
+  };
+
+  const onPointerDown = (event) => {
+    if (destroyed) return;
+    const contact = updateContact(event);
+    const button = Math.max(0, Math.floor(finite(event.button, 0)));
+    const state = stateFor(contact.pointerType, button);
+    if (state.pointerIds.size === 0) pendingPressed.add(state.key);
+    state.pointerIds.add(contact.pointerId);
+    state.latest = contact;
+    state.sequence = contact.sequence;
+    if (preventDefault) event.preventDefault?.();
+  };
+  const onPointerMove = (event) => {
+    if (destroyed) return;
+    const contact = updateContact(event);
+    for (const state of buttonStates.values()) {
+      if (!state.pointerIds.has(contact.pointerId)) continue;
+      state.latest = contact;
+      state.sequence = contact.sequence;
+    }
+  };
+  const onPointerUp = (event) => {
+    if (destroyed) return;
+    const contact = updateContact(event);
+    const button = Math.max(0, Math.floor(finite(event.button, 0)));
+    releasePointer(contact.pointerId, contact, button);
+    if (contact.buttons === 0) contacts.delete(contact.pointerId);
+    if (preventDefault) event.preventDefault?.();
+  };
+  const onPointerCancel = (event) => {
+    if (destroyed) return;
+    const contact = updateContact(event);
+    releasePointer(contact.pointerId, contact);
+    contacts.delete(contact.pointerId);
+    if (preventDefault) event.preventDefault?.();
+  };
+
+  target.addEventListener('pointerdown', onPointerDown);
+  target.addEventListener('pointermove', onPointerMove);
+  target.addEventListener('pointerup', onPointerUp);
+  target.addEventListener('pointercancel', onPointerCancel);
+
+  const matchingState = (button = 0, pointerType) => {
+    const normalizedButton = Math.max(0, Math.floor(finite(button, 0)));
+    if (pointerType) return buttonStates.get(pointerButtonKey(normalizePointerType(pointerType), normalizedButton)) ?? null;
+    let best = null;
+    for (const state of buttonStates.values()) {
+      if (state.button !== normalizedButton) continue;
+      const active = state.pointerIds.size > 0 || pressed.has(state.key) || released.has(state.key);
+      if (!active) continue;
+      if (!best || state.sequence > best.sequence) best = state;
+    }
+    return best;
+  };
+
+  const buttonSnapshot = (button = 0, pointerType) => {
+    const state = matchingState(button, pointerType);
+    return Object.freeze({
+      held: Boolean(state?.pointerIds.size),
+      pressed: Boolean(state && pressed.has(state.key)),
+      released: Boolean(state && released.has(state.key)),
+      pointerType: state?.pointerType ?? (pointerType ? normalizePointerType(pointerType) : null),
+      pointerId: state?.latest?.pointerId ?? null,
+      x: state?.latest?.x ?? 0,
+      y: state?.latest?.y ?? 0,
+      pressure: state?.latest?.pressure ?? 0,
+    });
+  };
+
+  const device = {
+    advance() {
+      pressed.clear();
+      released.clear();
+      for (const key of pendingPressed) pressed.add(key);
+      for (const key of pendingReleased) released.add(key);
+      pendingPressed.clear();
+      pendingReleased.clear();
+      return device.snapshot();
+    },
+    snapshot() {
+      return Object.freeze({
+        pointers: Object.freeze([...contacts.values()]
+          .sort((left, right) => left.pointerId - right.pointerId)
+          .map((contact) => Object.freeze({ ...contact }))),
+      });
+    },
+    clearEdges() {
+      pressed.clear();
+      released.clear();
+    },
+    getButton: buttonSnapshot,
+    isHeld(button = 0, pointerType) {
+      return buttonSnapshot(button, pointerType).held;
+    },
+    isPressed(button = 0, pointerType) {
+      return buttonSnapshot(button, pointerType).pressed;
+    },
+    isReleased(button = 0, pointerType) {
+      return buttonSnapshot(button, pointerType).released;
+    },
+    reset() {
+      contacts.clear();
+      buttonStates.clear();
+      pendingPressed.clear();
+      pendingReleased.clear();
+      pressed.clear();
+      released.clear();
+    },
+    destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      target.removeEventListener('pointerdown', onPointerDown);
+      target.removeEventListener('pointermove', onPointerMove);
+      target.removeEventListener('pointerup', onPointerUp);
+      target.removeEventListener('pointercancel', onPointerCancel);
+      device.reset();
+    },
+  };
+  return device;
+}
+
+function normalizeBindingEntry(entry) {
+  if (typeof entry === 'string') return { type: 'key', code: entry };
+  coreInvariant(entry && typeof entry === 'object', 'action binding must be a string or object');
+  if (entry.type === 'key' || entry.type === 'button' || entry.type === 'axis') return entry;
+  if (entry.type === 'pointer') {
+    coreInvariant(
+      entry.button === undefined || (Number.isInteger(entry.button) && entry.button >= 0),
+      'pointer binding button must be a non-negative integer',
+    );
+    coreInvariant(
+      entry.pointerType === undefined || ['mouse', 'pen', 'touch'].includes(entry.pointerType),
+      `unknown pointer binding type: ${entry.pointerType}`,
+    );
+    return entry;
+  }
+  throw new Error(`unknown action binding type: ${entry.type}`);
+}
+
+function gamepadValue(gamepadDevice, binding) {
+  if (!gamepadDevice || !binding) return 0;
   if (binding.type === 'button') {
-    const button = gamepad.buttons?.[binding.index];
-    return button?.pressed ? Math.max(1, finite(button.value, 1)) : finite(button?.value, 0);
+    const button = gamepadDevice.getButton(binding.index);
+    return button.held ? Math.max(1, finite(button.value, 1)) : 0;
   }
   if (binding.type === 'axis') {
-    const value = finite(gamepad.axes?.[binding.index], 0) * finite(binding.direction, 1);
+    const value = gamepadDevice.getAxis(binding.index) * finite(binding.direction, 1);
     return value >= finite(binding.threshold, 0.45) ? value : 0;
   }
   return 0;
+}
+
+function pointerBindingState(pointerDevice, binding) {
+  if (!pointerDevice || binding?.type !== 'pointer') return null;
+  const button = pointerDevice.getButton(binding.button ?? 0, binding.pointerType);
+  if (!button.held && !button.pressed && !button.released) return null;
+  const device = button.pointerType === 'touch' ? 'touch' : 'pointer';
+  return Object.freeze({
+    ...button,
+    value: button.held ? 1 : 0,
+    source: `${device}:button:${binding.button ?? 0}`,
+  });
+}
+
+function bindingsConflict(left, right) {
+  if (left.type !== right.type) return false;
+  if (left.type === 'key') return left.code === right.code;
+  if (left.type === 'button') return left.index === right.index;
+  if (left.type === 'axis') {
+    return left.index === right.index
+      && Math.sign(finite(left.direction, 1)) === Math.sign(finite(right.direction, 1));
+  }
+  if (left.type === 'pointer') {
+    return (left.button ?? 0) === (right.button ?? 0)
+      && (!left.pointerType || !right.pointerType || left.pointerType === right.pointerType);
+  }
+  return false;
 }
 
 export function cloneActionBindings(actions, bindings = {}) {
@@ -5970,9 +6928,9 @@ export function updateActionBinding(actions, bindings, action, binding, options 
   coreInvariant(actions.includes(action), `unknown action "${action}"`);
   const next = cloneActionBindings(actions, bindings);
   const normalized = normalizeBindingEntry(binding);
-  if (options.removeConflicts !== false && normalized.type === 'key') {
+  if (options.removeConflicts !== false) {
     for (const candidate of actions) {
-      next[candidate] = next[candidate].filter((entry) => !(entry.type === 'key' && entry.code === normalized.code));
+      next[candidate] = next[candidate].filter((entry) => !bindingsConflict(entry, normalized));
     }
   }
   next[action] = options.replace === false ? [...next[action], normalized] : [normalized];
@@ -5982,17 +6940,27 @@ export function updateActionBinding(actions, bindings, action, binding, options 
 export function createActionInput(options) {
   const actions = [...options.actions];
   const keyboard = options.keyboard ?? createKeyboardDevice(options.keyboardOptions);
-  const getGamepads = options.getGamepads ?? (() => globalThis.navigator?.getGamepads?.() ?? []);
+  const gamepad = options.gamepad ?? createGamepadDevice({
+    ...options.gamepadOptions,
+    index: options.gamepadIndex ?? options.gamepadOptions?.index,
+    getGamepads: options.getGamepads ?? options.gamepadOptions?.getGamepads,
+  });
+  const pointerTargetAvailable = Boolean(options.pointerOptions?.target?.addEventListener ?? globalThis.window?.addEventListener);
+  const pointer = options.pointer
+    ?? (pointerTargetAvailable ? createPointerDevice(options.pointerOptions) : createInactivePointerDevice());
   let bindings = cloneActionBindings(actions, options.bindings);
   let previousHeld = Object.fromEntries(actions.map((action) => [action, false]));
   let current = null;
 
-  const read = () => {
-    const gamepad = getGamepads()?.[options.gamepadIndex ?? 0] ?? null;
+  const read = (refreshGamepad = true) => {
+    if (refreshGamepad) gamepad.refresh();
     const snapshot = {};
     for (const action of actions) {
       let value = 0;
       let source = null;
+      let edgeSource = null;
+      let pointerPressed = false;
+      let pointerReleased = false;
       for (const entry of bindings[action] ?? []) {
         if (entry.type === 'key') {
           if (keyboard.isHeld(entry.code)) {
@@ -6000,11 +6968,27 @@ export function createActionInput(options) {
             source = `key:${entry.code}`;
             break;
           }
+          if (keyboard.isPressed(entry.code) || keyboard.isReleased(entry.code)) edgeSource ??= `key:${entry.code}`;
+        } else if (entry.type === 'pointer') {
+          const candidate = pointerBindingState(pointer, entry);
+          if (candidate) {
+            pointerPressed ||= candidate.pressed;
+            pointerReleased ||= candidate.released;
+            edgeSource ??= candidate.source;
+            if (candidate.value > value) {
+              value = candidate.value;
+              source = candidate.source;
+            }
+          }
         } else {
           const candidate = gamepadValue(gamepad, entry);
           if (candidate > value) {
             value = candidate;
             source = `gamepad:${entry.type}:${entry.index}`;
+          }
+          if (entry.type === 'button') {
+            const button = gamepad.getButton(entry.index);
+            if (button.pressed || button.released) edgeSource ??= `gamepad:button:${entry.index}`;
           }
         }
       }
@@ -6013,10 +6997,10 @@ export function createActionInput(options) {
       const keyboardReleased = (bindings[action] ?? []).some((entry) => entry.type === 'key' && keyboard.isReleased(entry.code));
       snapshot[action] = Object.freeze({
         held,
-        pressed: keyboardPressed || (held && !previousHeld[action]),
-        released: keyboardReleased || (!held && previousHeld[action]),
+        pressed: keyboardPressed || pointerPressed || (held && !previousHeld[action]),
+        released: keyboardReleased || pointerReleased || (!held && previousHeld[action]),
         value,
-        source,
+        source: source ?? edgeSource,
       });
     }
     previousHeld = Object.fromEntries(actions.map((action) => [action, snapshot[action].held]));
@@ -6027,7 +7011,9 @@ export function createActionInput(options) {
   return {
     advance() {
       keyboard.advance();
-      return read();
+      gamepad.advance();
+      pointer.advance();
+      return read(false);
     },
     refresh() {
       return read();
@@ -6037,6 +7023,8 @@ export function createActionInput(options) {
     },
     clearEdges() {
       keyboard.clearEdges();
+      gamepad.clearEdges();
+      pointer.clearEdges();
       current = null;
     },
     setBindings(next) {
@@ -6046,13 +7034,19 @@ export function createActionInput(options) {
     getBindings: () => cloneActionBindings(actions, bindings),
     reset() {
       keyboard.reset();
+      gamepad.reset();
+      pointer.reset();
       previousHeld = Object.fromEntries(actions.map((action) => [action, false]));
       current = null;
     },
     destroy() {
       if (!options.keyboard) keyboard.destroy();
+      if (!options.gamepad) gamepad.destroy();
+      if (!options.pointer) pointer.destroy();
     },
     keyboard,
+    gamepad,
+    pointer,
   };
 }
 
@@ -6755,6 +7749,13 @@ export function validateAssetManifest(manifest) {
   return Object.freeze({ version: normalized.version, assets: normalized.assets });
 }
 
+function disposeScopedResource(resource) {
+  if (typeof resource?.destroy === 'function') return resource.destroy();
+  if (typeof resource?.close === 'function') return resource.close();
+  if (typeof resource?.stop === 'function') return resource.stop();
+  return undefined;
+}
+
 export function createResourceScope(options = {}) {
   const entries = [];
   const children = [];
@@ -6763,12 +7764,7 @@ export function createResourceScope(options = {}) {
     name: options.name ?? 'scope',
     track(resource, disposer) {
       coreInvariant(!released, 'resource scope is released');
-      const resolvedDisposer = disposer ?? ((value) => {
-        if (typeof value?.destroy === 'function') return value.destroy();
-        if (typeof value?.close === 'function') return value.close();
-        if (typeof value?.stop === 'function') return value.stop();
-        return undefined;
-      });
+      const resolvedDisposer = disposer ?? disposeScopedResource;
       entries.push({ resource, disposer: resolvedDisposer });
       return resource;
     },
@@ -6846,7 +7842,56 @@ function abortAssetLoadError() {
 export function createAssetLoader(options = {}) {
   const loaders = { ...(options.loaders ?? {}) };
   const cache = new Map();
+  const cacheRecords = new Map();
+  const pending = new Map();
   const defaultRetries = Math.max(0, Math.floor(finiteNumber(options.retries, 1)));
+
+  const createCacheRecord = (id, value, dispose = null) => {
+    const record = {
+      value,
+      dispose,
+      refs: 0,
+      ids: new Set([id]),
+    };
+    cache.set(id, value);
+    cacheRecords.set(id, record);
+    return record;
+  };
+
+  const linkCacheAlias = (id, record) => {
+    cache.set(id, record.value);
+    cacheRecords.set(id, record);
+    record.ids.add(id);
+  };
+
+  const cacheRecord = (id) => {
+    const value = cache.get(id);
+    if (value === undefined && !cache.has(id)) return null;
+    const existing = cacheRecords.get(id);
+    if (existing?.value === value) return existing;
+    existing?.ids.delete(id);
+    return createCacheRecord(id, value, null);
+  };
+
+  const releaseCacheRecord = async (record) => {
+    record.refs = Math.max(0, record.refs - 1);
+    if (record.refs > 0) return;
+    for (const id of [...record.ids]) {
+      if (cacheRecords.get(id) !== record) continue;
+      cacheRecords.delete(id);
+      if (cache.get(id) === record.value) cache.delete(id);
+    }
+    record.ids.clear();
+    if (typeof record.dispose === 'function') await record.dispose(record.value);
+  };
+
+  const retainCacheRecord = (id, scope) => {
+    const record = cacheRecord(id);
+    coreInvariant(record, `asset cache record is missing: ${id}`);
+    record.refs += 1;
+    scope.track(record, releaseCacheRecord);
+    return record.value;
+  };
 
   const loader = {
     cache,
@@ -6859,9 +7904,14 @@ export function createAssetLoader(options = {}) {
     clear(id) {
       if (id === undefined) {
         const count = cache.size;
+        for (const [cacheId, record] of cacheRecords) record.ids.delete(cacheId);
+        cacheRecords.clear();
         cache.clear();
         return count;
       }
+      const record = cacheRecords.get(id);
+      record?.ids.delete(id);
+      cacheRecords.delete(id);
       return cache.delete(id);
     },
     async loadManifest(manifest, loadOptions = {}) {
@@ -6870,6 +7920,7 @@ export function createAssetLoader(options = {}) {
       const budget = loadOptions.budgetBytes ?? Number.POSITIVE_INFINITY;
       const declaredBytes = plan.reduce((total, asset) => total + Math.max(0, finiteNumber(asset.bytes, 0)), 0);
       coreInvariant(declaredBytes <= budget, `asset preload budget exceeded: ${declaredBytes} > ${budget}`);
+      const ownsScope = loadOptions.scope === undefined;
       const scope = loadOptions.scope ?? createResourceScope({ name: loadOptions.scopeName ?? 'assets' });
       const result = new Map();
       let loadedBytes = 0;
@@ -6878,42 +7929,75 @@ export function createAssetLoader(options = {}) {
       const loadOne = async (asset) => {
         if (loadOptions.signal?.aborted) throw abortAssetLoadError();
         if (cache.has(asset.id)) return cache.get(asset.id);
-        const typeLoader = loadOptions.loaders?.[asset.type] ?? loaders[asset.type] ?? options.load;
-        coreInvariant(typeof typeLoader === 'function', `no loader registered for asset type: ${asset.type}`);
-        let lastError;
-        const retries = Math.max(0, Math.floor(finiteNumber(asset.retries, defaultRetries)));
-        for (let attempt = 0; attempt <= retries; attempt += 1) {
-          if (loadOptions.signal?.aborted) throw abortAssetLoadError();
+        const pendingEntry = pending.get(asset.id);
+        if (pendingEntry) {
+          if (pendingEntry.signal === loadOptions.signal) return pendingEntry.promise;
           try {
-            const value = await typeLoader(asset, Object.freeze({ attempt, signal: loadOptions.signal, loader }));
-            cache.set(asset.id, value);
-            scope.track(value, asset.dispose);
-            return value;
-          } catch (error) {
-            lastError = error;
+            await pendingEntry.promise;
+          } catch {
+            // A differently-owned load may fail or abort without poisoning this caller.
           }
+          if (loadOptions.signal?.aborted) throw abortAssetLoadError();
+          if (cache.has(asset.id)) return cache.get(asset.id);
         }
-        if (asset.fallbackId) {
-          const fallback = await loadOne(normalized.byId.get(asset.fallbackId));
-          cache.set(asset.id, fallback);
-          return fallback;
+        const operation = (async () => {
+          const typeLoader = loadOptions.loaders?.[asset.type] ?? loaders[asset.type] ?? options.load;
+          coreInvariant(typeof typeLoader === 'function', `no loader registered for asset type: ${asset.type}`);
+          let lastError;
+          const retries = Math.max(0, Math.floor(finiteNumber(asset.retries, defaultRetries)));
+          for (let attempt = 0; attempt <= retries; attempt += 1) {
+            if (loadOptions.signal?.aborted) throw abortAssetLoadError();
+            try {
+              const value = await typeLoader(asset, Object.freeze({ attempt, signal: loadOptions.signal, loader }));
+              createCacheRecord(asset.id, value, asset.dispose ?? disposeScopedResource);
+              return value;
+            } catch (error) {
+              lastError = error;
+            }
+          }
+          if (asset.fallbackId) {
+            const fallback = await loadOne(normalized.byId.get(asset.fallbackId));
+            const fallbackRecord = cacheRecord(asset.fallbackId);
+            coreInvariant(fallbackRecord, `fallback cache record is missing: ${asset.fallbackId}`);
+            linkCacheAlias(asset.id, fallbackRecord);
+            return fallback;
+          }
+          throw lastError;
+        })();
+        const entry = { promise: operation, signal: loadOptions.signal };
+        pending.set(asset.id, entry);
+        try {
+          return await operation;
+        } finally {
+          if (pending.get(asset.id) === entry) pending.delete(asset.id);
         }
-        throw lastError;
       };
 
-      for (const asset of plan) {
-        const value = await loadOne(asset);
-        result.set(asset.id, value);
-        loadedCount += 1;
-        loadedBytes += Math.max(0, finiteNumber(asset.bytes, 0));
-        loadOptions.onProgress?.(Object.freeze({
-          id: asset.id,
-          loadedCount,
-          totalCount: plan.length,
-          loadedBytes,
-          declaredBytes,
-          progress: plan.length ? loadedCount / plan.length : 1,
-        }));
+      try {
+        for (const asset of plan) {
+          await loadOne(asset);
+          const value = retainCacheRecord(asset.id, scope);
+          result.set(asset.id, value);
+          loadedCount += 1;
+          loadedBytes += Math.max(0, finiteNumber(asset.bytes, 0));
+          loadOptions.onProgress?.(Object.freeze({
+            id: asset.id,
+            loadedCount,
+            totalCount: plan.length,
+            loadedBytes,
+            declaredBytes,
+            progress: plan.length ? loadedCount / plan.length : 1,
+          }));
+        }
+      } catch (error) {
+        if (ownsScope) {
+          try {
+            await scope.release();
+          } catch (releaseError) {
+            throw new AggregateError([error, releaseError], 'asset loading and cleanup failed');
+          }
+        }
+        throw error;
       }
       return Object.freeze({
         assets: result,
@@ -7461,6 +8545,8 @@ export function createInputHintTracker(options = {}) {
     },
     noteActionState(state, timestamp) {
       const sources = Object.values(state ?? {}).map((entry) => entry?.source).filter(Boolean);
+      if (sources.some((source) => source.startsWith('touch:'))) return this.note('touch', timestamp);
+      if (sources.some((source) => source.startsWith('pointer:'))) return this.note('pointer', timestamp);
       if (sources.some((source) => source.startsWith('gamepad:'))) return this.note('gamepad', timestamp);
       if (sources.some((source) => source.startsWith('key:'))) return this.note('keyboard', timestamp);
       return false;
@@ -7578,6 +8664,212 @@ export function createStorageAdapter(storage) {
       return keys.sort();
     },
   };
+}
+
+export function createBrowserStorageAdapter(options = {}) {
+  let storage = options.storage;
+  if (!storage) {
+    try {
+      storage = globalThis.localStorage;
+    } catch {
+      storage = null;
+    }
+  }
+  coreInvariant(storage?.getItem && storage?.setItem, 'browser storage requires localStorage or an explicit Storage object');
+  const base = createStorageAdapter(storage);
+  const prefix = String(options.prefix ?? '').trim();
+  const separator = options.separator ?? ':';
+  const qualifiedPrefix = prefix ? `${prefix}${separator}` : '';
+  const qualify = (key) => `${qualifiedPrefix}${key}`;
+  return {
+    getItem: (key) => base.getItem(qualify(key)),
+    setItem: (key, value) => base.setItem(qualify(key), value),
+    removeItem: (key) => base.removeItem?.(qualify(key)),
+    keys() {
+      return (base.keys?.() ?? [])
+        .filter((key) => !qualifiedPrefix || key.startsWith(qualifiedPrefix))
+        .map((key) => qualifiedPrefix ? key.slice(qualifiedPrefix.length) : key)
+        .sort();
+    },
+  };
+}
+
+export const ARCADE_STATE_BUNDLE_FORMAT = 'arcade-state-bundle';
+export const ARCADE_STATE_BUNDLE_VERSION = 1;
+
+function validateStateBundle(bundle) {
+  coreInvariant(bundle && typeof bundle === 'object', 'state bundle must be an object');
+  coreInvariant(bundle.format === ARCADE_STATE_BUNDLE_FORMAT, 'unsupported state bundle format');
+  coreInvariant(bundle.formatVersion === ARCADE_STATE_BUNDLE_VERSION, 'unsupported state bundle version');
+  coreInvariant(typeof bundle.namespace === 'string' && bundle.namespace.length > 0, 'state bundle namespace is required');
+  coreInvariant(bundle.entries && typeof bundle.entries === 'object' && !Array.isArray(bundle.entries), 'state bundle entries are required');
+  const { checksum, ...payload } = bundle;
+  coreInvariant(typeof checksum === 'string' && checksum === deterministicHash(payload), 'state bundle checksum mismatch');
+  return payload;
+}
+
+export function createStateBundleStore(options = {}) {
+  const namespace = String(options.namespace ?? '').trim();
+  coreInvariant(namespace.length > 0, 'state bundle namespace is required');
+  const definitions = Object.fromEntries(Object.entries(options.stores ?? {}).sort(([left], [right]) => left.localeCompare(right)));
+  coreInvariant(Object.keys(definitions).length > 0, 'state bundle requires at least one store definition');
+  const adapter = options.adapter ?? createBrowserStorageAdapter({
+    storage: options.storage,
+    prefix: options.storagePrefix ?? '',
+  });
+  coreInvariant(typeof adapter.removeItem === 'function', 'state bundle adapter requires removeItem for atomic imports');
+  const now = options.now ?? (() => Date.now());
+  const storeKey = (name) => `${namespace}.${name}`;
+  const definitionFor = (name) => {
+    const definition = definitions[name];
+    coreInvariant(definition, `unknown state store: ${name}`);
+    const version = Math.floor(finiteNumber(definition.version, 1));
+    coreInvariant(version >= 1, `state store ${name} version must be positive`);
+    return Object.freeze({ ...definition, version });
+  };
+  const versionedStore = (name) => {
+    const definition = definitionFor(name);
+    return createVersionedStore({
+      ...definition,
+      adapter,
+      key: storeKey(name),
+      now,
+    });
+  };
+  const migrateEntry = (name, entry) => {
+    const definition = definitionFor(name);
+    coreInvariant(entry && typeof entry === 'object', `state bundle entry ${name} must be an object`);
+    let version = Math.floor(finiteNumber(entry.version, 0));
+    coreInvariant(version >= 1, `state bundle entry ${name} has an invalid version`);
+    coreInvariant(version <= definition.version, `state bundle entry ${name} version ${version} is newer than ${definition.version}`);
+    let data = arcadeClone(entry.data);
+    while (version < definition.version) {
+      const nextVersion = version + 1;
+      const migration = definition.migrations?.[nextVersion];
+      coreInvariant(typeof migration === 'function', `missing migration for state bundle entry ${name} to version ${nextVersion}`);
+      data = migration(data, Object.freeze({ from: version, to: nextVersion }));
+      version = nextVersion;
+    }
+    coreInvariant(definition.validate ? definition.validate(data) !== false : true, `state bundle entry ${name} failed validation`);
+    return Object.freeze({ version, data: arcadeClone(data) });
+  };
+  const relatedKeys = () => Object.keys(definitions).flatMap((name) => {
+    const key = storeKey(name);
+    const definition = definitionFor(name);
+    return [key, definition.backupKey ?? `${key}.backup`, `${key}.tmp`];
+  });
+  const snapshotKeys = () => new Map(relatedKeys().map((key) => [key, adapter.getItem(key)]));
+  const restoreKeys = (snapshot) => {
+    for (const [key, value] of snapshot) {
+      if (value === null) adapter.removeItem?.(key);
+      else adapter.setItem(key, value);
+    }
+  };
+  const exportBundle = (metadata = {}) => {
+    const entries = {};
+    for (const name of Object.keys(definitions)) {
+      const definition = definitionFor(name);
+      entries[name] = Object.freeze({
+        version: definition.version,
+        data: arcadeClone(versionedStore(name).load().data),
+      });
+    }
+    const payload = {
+      format: ARCADE_STATE_BUNDLE_FORMAT,
+      formatVersion: ARCADE_STATE_BUNDLE_VERSION,
+      namespace,
+      runtimeVersion: ARCADE_RUNTIME_VERSION,
+      exportedAt: finiteNumber(now(), Date.now()),
+      entries: Object.freeze(entries),
+      metadata: stableSnapshot(metadata ?? {}),
+    };
+    return Object.freeze({ ...payload, checksum: deterministicHash(payload) });
+  };
+
+  const service = {
+    adapter,
+    list: () => Object.freeze(Object.keys(definitions)),
+    load(name) {
+      return versionedStore(name).load();
+    },
+    save(name, data, metadata) {
+      return versionedStore(name).save(data, metadata);
+    },
+    clear(name) {
+      if (name !== undefined) {
+        versionedStore(name).clear();
+        return 1;
+      }
+      for (const storeName of Object.keys(definitions)) versionedStore(storeName).clear();
+      return Object.keys(definitions).length;
+    },
+    exportBundle,
+    serialize(metadata = {}, space = 2) {
+      return JSON.stringify(exportBundle(metadata), null, space);
+    },
+    importBundle(input, importOptions = {}) {
+      const bundle = typeof input === 'string' ? JSON.parse(input) : arcadeClone(input);
+      const payload = validateStateBundle(bundle);
+      if (payload.namespace !== namespace && importOptions.allowNamespaceMismatch !== true) {
+        throw new Error(`state bundle namespace ${payload.namespace} does not match ${namespace}`);
+      }
+      const entryNames = Object.keys(payload.entries).sort();
+      const knownNames = Object.keys(definitions);
+      for (const name of entryNames) coreInvariant(definitions[name], `state bundle contains unknown store: ${name}`);
+      if (importOptions.allowPartial !== true) {
+        for (const name of knownNames) coreInvariant(Object.prototype.hasOwnProperty.call(payload.entries, name), `state bundle is missing store: ${name}`);
+      }
+      const migrated = new Map(entryNames.map((name) => [name, migrateEntry(name, payload.entries[name])]));
+      const snapshot = snapshotKeys();
+      try {
+        for (const [name, entry] of migrated) {
+          versionedStore(name).save(entry.data, { savedAt: payload.exportedAt });
+        }
+      } catch (error) {
+        restoreKeys(snapshot);
+        throw error;
+      }
+      return Object.freeze({
+        namespace,
+        imported: Object.freeze([...migrated.keys()]),
+        sourceRuntimeVersion: payload.runtimeVersion ?? null,
+        exportedAt: finiteNumber(payload.exportedAt, 0),
+        metadata: arcadeClone(payload.metadata ?? {}),
+      });
+    },
+    download(downloadOptions = {}) {
+      const serialized = service.serialize(downloadOptions.metadata ?? {}, downloadOptions.space ?? 2);
+      const BlobCtor = downloadOptions.Blob ?? globalThis.Blob;
+      const urlApi = downloadOptions.URL ?? globalThis.URL;
+      const documentTarget = downloadOptions.document ?? globalThis.document;
+      coreInvariant(typeof BlobCtor === 'function', 'state bundle download requires Blob');
+      coreInvariant(urlApi?.createObjectURL && urlApi?.revokeObjectURL, 'state bundle download requires URL object URLs');
+      coreInvariant(documentTarget?.createElement, 'state bundle download requires a document');
+      const blob = new BlobCtor([serialized], { type: 'application/json' });
+      const url = urlApi.createObjectURL(blob);
+      const filename = downloadOptions.filename ?? `${namespace}.arcade-state.json`;
+      try {
+        const anchor = documentTarget.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.style && (anchor.style.display = 'none');
+        documentTarget.body?.appendChild?.(anchor);
+        anchor.click?.();
+        anchor.remove?.();
+      } finally {
+        urlApi.revokeObjectURL(url);
+      }
+      const bytes = typeof globalThis.TextEncoder === 'function'
+        ? new globalThis.TextEncoder().encode(serialized).byteLength
+        : serialized.length;
+      return Object.freeze({ filename, bytes, serialized });
+    },
+    async upload(file, importOptions = {}) {
+      coreInvariant(file && typeof file.text === 'function', 'state bundle upload requires a File or Blob with text()');
+      return service.importBundle(await file.text(), importOptions);
+    },
+  };
+  return service;
 }
 
 function parseStoreEnvelope(raw) {
@@ -8236,7 +9528,6 @@ export function drawArcadeNoticeCanvas(context, notice, options = {}, theme = DE
   context.restore();
   return Object.freeze({ x, y, width, height, accent, ratio, textLayout });
 }
-
 function arcadePixiFrameCapacity(value, fallback) {
   const resolved = Math.floor(finiteNumber(value, fallback));
   coreInvariant(resolved > 0, 'Pixi frame-pool capacity must be a positive integer');
@@ -9466,6 +10757,328 @@ function inspectorPixiOverlayRenderer(PIXI, stage) {
       labelLayer?.destroy?.({ children: true });
     },
   };
+}
+
+export const ARCADE_AUTHORING_IR_VERSION = 1;
+
+const ARCADE_AUTHORING_KINDS = Object.freeze(new Set([
+  'asset-manifest',
+  'encounter-plan',
+  'sprite-manifest',
+  'stage-graph',
+]));
+
+function arcadeAuthoringCatalogIds(catalog) {
+  if (catalog === undefined || catalog === null) return [];
+  if (catalog instanceof Set) return [...catalog].map((value) => String(value));
+  if (catalog instanceof Map) return [...catalog.keys()].map((value) => String(value));
+  if (Array.isArray(catalog)) return catalog.map((value) => String(value?.id ?? value)).filter(Boolean);
+  if (typeof catalog === 'object') return Object.keys(catalog);
+  return [String(catalog)];
+}
+
+function arcadeAuthoringMergedCatalog(catalog, ids) {
+  return Object.freeze([...new Set([...arcadeAuthoringCatalogIds(catalog), ...ids].filter(Boolean))].sort());
+}
+
+function arcadeAuthoringLocation(document) {
+  const line = Math.max(1, Math.floor(finiteNumber(document?.location?.line, 1)));
+  const column = Math.max(1, Math.floor(finiteNumber(document?.location?.column, 1)));
+  return Object.freeze({ line, column });
+}
+
+function arcadeAuthoringDiagnostic(document, severity, code, path, message, extra = {}) {
+  return Object.freeze({
+    severity,
+    code,
+    source: String(document?.source || '<authoring-bundle>'),
+    path: String(path ?? ''),
+    message: String(message),
+    documentId: document?.id === undefined ? null : String(document.id),
+    kind: document?.kind === undefined ? null : String(document.kind),
+    location: arcadeAuthoringLocation(document),
+    ...extra,
+  });
+}
+
+function arcadeAuthoringDocumentOrder(left, right) {
+  return left.kind.localeCompare(right.kind)
+    || left.id.localeCompare(right.id)
+    || left.source.localeCompare(right.source);
+}
+
+function arcadeAuthoringDiagnosticOrder(left, right) {
+  return left.source.localeCompare(right.source)
+    || left.location.line - right.location.line
+    || left.location.column - right.location.column
+    || left.path.localeCompare(right.path)
+    || left.severity.localeCompare(right.severity)
+    || left.code.localeCompare(right.code)
+    || left.message.localeCompare(right.message);
+}
+
+function arcadeAuthoringCompiledDocument(document, value, reloadBoundary) {
+  return Object.freeze({
+    kind: document.kind,
+    id: document.id,
+    source: document.source,
+    location: arcadeAuthoringLocation(document),
+    reloadBoundary,
+    value,
+  });
+}
+
+function arcadeAuthoringCompilerInput(bundle) {
+  if (!bundle || typeof bundle !== 'object') return null;
+  return bundle;
+}
+
+export function compileArcadeAuthoringBundle(bundle, options = {}) {
+  const input = arcadeAuthoringCompilerInput(bundle);
+  const diagnostics = [];
+  const accepted = [];
+  const compiled = [];
+  const bundleDocument = Object.freeze({
+    id: 'bundle',
+    kind: 'authoring-bundle',
+    source: String(options.source ?? bundle?.source ?? '<authoring-bundle>'),
+    location: bundle?.location,
+  });
+
+  if (!input) {
+    diagnostics.push(arcadeAuthoringDiagnostic(bundleDocument, 'error', 'invalid-bundle', '', 'authoring bundle must be an object'));
+  } else if (input.version !== ARCADE_AUTHORING_IR_VERSION) {
+    diagnostics.push(arcadeAuthoringDiagnostic(
+      bundleDocument,
+      'error',
+      'unsupported-version',
+      'version',
+      `authoring bundle version must be ${ARCADE_AUTHORING_IR_VERSION}`,
+      { expectedVersion: ARCADE_AUTHORING_IR_VERSION, actualVersion: input.version ?? null },
+    ));
+  }
+
+  const documents = input && Array.isArray(input.documents) ? input.documents : [];
+  if (input && !Array.isArray(input.documents)) {
+    diagnostics.push(arcadeAuthoringDiagnostic(bundleDocument, 'error', 'invalid-documents', 'documents', 'authoring bundle documents must be an array'));
+  }
+
+  const identities = new Set();
+  for (let index = 0; index < documents.length; index += 1) {
+    const raw = documents[index];
+    const document = raw && typeof raw === 'object'
+      ? Object.freeze({
+        ...raw,
+        id: String(raw.id ?? '').trim(),
+        kind: String(raw.kind ?? '').trim(),
+        source: String(raw.source ?? '').trim(),
+      })
+      : Object.freeze({ id: '', kind: '', source: '', value: raw });
+    const basePath = `documents[${index}]`;
+    let valid = true;
+    if (!document.id) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'missing-document-id', `${basePath}.id`, 'authoring document id is required'));
+      valid = false;
+    }
+    if (!document.source) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'missing-document-source', `${basePath}.source`, 'authoring document source is required'));
+      valid = false;
+    }
+    if (!ARCADE_AUTHORING_KINDS.has(document.kind)) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'unknown-document-kind', `${basePath}.kind`, `unknown authoring document kind "${document.kind || '<empty>'}"`));
+      valid = false;
+    }
+    if (document.value === undefined) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'missing-document-value', `${basePath}.value`, 'authoring document value is required'));
+      valid = false;
+    }
+    if (valid) {
+      const identity = `${document.kind}\u0000${document.id}`;
+      if (identities.has(identity)) {
+        diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'duplicate-document-id', `${basePath}.id`, `duplicate ${document.kind} document id "${document.id}"`));
+        valid = false;
+      } else identities.add(identity);
+    }
+    if (valid) accepted.push(document);
+  }
+
+  const assetIds = new Set();
+  const assetOwners = new Map();
+  for (const document of accepted.filter((entry) => entry.kind === 'asset-manifest')) {
+    try {
+      const normalized = validateAssetManifest(document.value);
+      for (const asset of normalized.assets) {
+        const owner = assetOwners.get(asset.id);
+        if (owner) {
+          diagnostics.push(arcadeAuthoringDiagnostic(
+            document,
+            'error',
+            'duplicate-asset-id',
+            `assets.${asset.id}`,
+            `asset id "${asset.id}" is already declared by ${owner.source}`,
+            { referenceId: asset.id, previousSource: owner.source },
+          ));
+        } else {
+          assetOwners.set(asset.id, document);
+          assetIds.add(asset.id);
+        }
+      }
+      compiled.push(arcadeAuthoringCompiledDocument(document, normalized, 'validation-only'));
+    } catch (error) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'invalid-asset-manifest', '', String(error?.message ?? error)));
+    }
+  }
+
+  for (const document of accepted.filter((entry) => entry.kind === 'sprite-manifest')) {
+    if (!validateArcadeSpriteManifest(document.value)) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'invalid-sprite-manifest', '', 'invalid arcade sprite manifest'));
+      continue;
+    }
+    try {
+      compiled.push(arcadeAuthoringCompiledDocument(
+        document,
+        normalizeArcadeSpriteManifest(document.value),
+        'state-preserving',
+      ));
+    } catch (error) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'invalid-sprite-manifest', '', String(error?.message ?? error)));
+    }
+  }
+
+  const declaredEncounterPlanIds = accepted
+    .filter((entry) => entry.kind === 'encounter-plan')
+    .map((entry) => entry.id);
+  const baseCatalogs = { ...(options.catalogs ?? {}) };
+  const encounterCatalogs = {
+    ...baseCatalogs,
+    assets: arcadeAuthoringMergedCatalog(baseCatalogs.assets, [...assetIds]),
+    encounterPlans: arcadeAuthoringMergedCatalog(baseCatalogs.encounterPlans, declaredEncounterPlanIds),
+  };
+  const validEncounterPlanIds = new Set();
+  for (const document of accepted.filter((entry) => entry.kind === 'encounter-plan')) {
+    try {
+      const result = validateEncounterPlan(document.value, encounterCatalogs);
+      if (result.plan?.id && result.plan.id !== document.id) {
+        diagnostics.push(arcadeAuthoringDiagnostic(
+          document,
+          'error',
+          'document-id-mismatch',
+          'id',
+          `encounter plan id "${result.plan.id}" does not match document id "${document.id}"`,
+        ));
+      }
+      for (const issue of result.errors) {
+        diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', issue.code, issue.path, issue.message, {
+          referenceType: issue.referenceType,
+          referenceId: issue.referenceId,
+        }));
+      }
+      if (result.ok && result.plan?.id === document.id) {
+        validEncounterPlanIds.add(document.id);
+        compiled.push(arcadeAuthoringCompiledDocument(document, result.plan, 'validation-only'));
+      }
+    } catch (error) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'invalid-encounter-plan', '', String(error?.message ?? error)));
+    }
+  }
+
+  const stageCatalogs = {
+    ...baseCatalogs,
+    assets: arcadeAuthoringMergedCatalog(baseCatalogs.assets, [...assetIds]),
+    encounterPlans: arcadeAuthoringMergedCatalog(baseCatalogs.encounterPlans, [...validEncounterPlanIds]),
+  };
+  for (const document of accepted.filter((entry) => entry.kind === 'stage-graph')) {
+    try {
+      const result = validateStageGraph(document.value, stageCatalogs);
+      if (result.graph?.id && result.graph.id !== document.id) {
+        diagnostics.push(arcadeAuthoringDiagnostic(
+          document,
+          'error',
+          'document-id-mismatch',
+          'id',
+          `stage graph id "${result.graph.id}" does not match document id "${document.id}"`,
+        ));
+      }
+      for (const issue of result.errors) {
+        diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', issue.code, issue.path, issue.message, {
+          referenceType: issue.referenceType,
+          referenceId: issue.referenceId,
+        }));
+      }
+      for (const issue of result.warnings) {
+        diagnostics.push(arcadeAuthoringDiagnostic(document, 'warning', issue.code, issue.path, issue.message));
+      }
+      if (result.ok && result.graph?.id === document.id) {
+        compiled.push(arcadeAuthoringCompiledDocument(document, result.graph, 'validation-only'));
+      }
+    } catch (error) {
+      diagnostics.push(arcadeAuthoringDiagnostic(document, 'error', 'invalid-stage-graph', '', String(error?.message ?? error)));
+    }
+  }
+
+  compiled.sort(arcadeAuthoringDocumentOrder);
+  diagnostics.sort(arcadeAuthoringDiagnosticOrder);
+  const ir = Object.freeze({
+    version: ARCADE_AUTHORING_IR_VERSION,
+    documents: Object.freeze(compiled),
+  });
+  const frozenDiagnostics = Object.freeze(diagnostics);
+  return Object.freeze({
+    ok: frozenDiagnostics.every((diagnostic) => diagnostic.severity !== 'error'),
+    version: ARCADE_AUTHORING_IR_VERSION,
+    hash: deterministicHash(ir),
+    documents: ir.documents,
+    diagnostics: frozenDiagnostics,
+  });
+}
+
+export function registerArcadeAuthoringBundle(inspector, bundleOrCompilation, options = {}) {
+  coreInvariant(typeof inspector?.registerManifest === 'function', 'authoring registration requires a runtime inspector');
+  const compilation = bundleOrCompilation
+    && bundleOrCompilation.version === ARCADE_AUTHORING_IR_VERSION
+    && typeof bundleOrCompilation.ok === 'boolean'
+    && Array.isArray(bundleOrCompilation.documents)
+    && Array.isArray(bundleOrCompilation.diagnostics)
+    ? bundleOrCompilation
+    : compileArcadeAuthoringBundle(bundleOrCompilation, options);
+  const registrations = [];
+  const registeredManifestIds = [];
+  const validationOnlyIds = [];
+  if (!compilation.ok) {
+    return Object.freeze({
+      compilation,
+      registeredManifestIds: Object.freeze([]),
+      validationOnlyIds: Object.freeze([]),
+      unregister: () => false,
+    });
+  }
+  try {
+    for (const document of compilation.documents) {
+      if (document.kind === 'sprite-manifest' && document.reloadBoundary === 'state-preserving') {
+        const registration = inspector.registerManifest(document.id, document.value, {
+          source: document.source,
+          authoringHash: compilation.hash,
+        });
+        registrations.push(registration.unregister);
+        registeredManifestIds.push(document.id);
+      } else validationOnlyIds.push(`${document.kind}:${document.id}`);
+    }
+  } catch (error) {
+    for (const unregister of registrations.reverse()) unregister?.();
+    throw error;
+  }
+  let active = true;
+  return Object.freeze({
+    compilation,
+    registeredManifestIds: Object.freeze(registeredManifestIds),
+    validationOnlyIds: Object.freeze(validationOnlyIds),
+    unregister() {
+      if (!active) return false;
+      active = false;
+      for (const unregister of registrations.reverse()) unregister?.();
+      return true;
+    },
+  });
 }
 
 export function createRuntimeInspector(hostOrOptions = {}, maybeOptions) {
