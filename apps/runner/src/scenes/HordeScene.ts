@@ -44,7 +44,7 @@ export class HordeScene implements Scene {
 		console.log('HordeScene entered');
 		this.renderer = ctx.renderer;
 		this.input?.destroy();
-		this.input = new InputSystem();
+		this.input = new InputSystem(window, { surface: ctx.canvas });
 
 		// Start first wave after brief delay
 		this.waveStartTimer = setTimeout(() => {
