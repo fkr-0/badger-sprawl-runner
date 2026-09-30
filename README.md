@@ -222,6 +222,18 @@ BADGER_E2E_BASE_URL=http://127.0.0.1:5182 \
 | Training reset / random-stage reroll | R / N |
 | Return to title | Escape |
 
+### Mobile touch
+
+The runner keeps the same deterministic ActionMap on touch devices:
+
+- **Tap** or **swipe up** — jump.
+- **Drag left/right** — move.
+- **Swipe left/right** — directional dodge; on the ground this uses the existing skid/slide presentation.
+- **Swipe down** — fast-fall while airborne; on the ground it uses the existing skid/dodge mechanic.
+- Desktop keyboard and standard-gamepad bindings remain active alongside touch.
+
+The gameplay canvas disables browser panning/zoom gestures and keeps the 16:9 logical surface contained in portrait and short-landscape viewports. The on-screen touch hint is informational and does not intercept input.
+
 Late-stage consoles preserve verified work after a failed submission and grade results as `clean`, `recovered`, or `assisted`. After three failures, public assist pauses the timer and exposes incremental clues so the campaign cannot be blocked by a terminal challenge.
 
 ## Sprite animation inspector
