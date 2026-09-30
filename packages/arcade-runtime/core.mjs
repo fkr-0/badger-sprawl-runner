@@ -27,6 +27,8 @@ export {
   createEntityWorld,
   createEventBus,
   createFixedStepLoop,
+  createGamepadDevice,
+  createPointerDevice,
   createHitContactLedger,
   createTimelineQueue,
   enqueueTimelineEntry,
@@ -76,4 +78,4 @@ export {
   stepTimelineQueue,
   sweepAabb,
   tryStartGameplayAction,
-} from '../../vendor/arcade-runtime.mjs';
+} from './index.mjs';
