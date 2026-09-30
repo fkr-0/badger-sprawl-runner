@@ -1,7 +1,8 @@
 /** Shared arcade-runtime semantic keyboard/gamepad input adapter. */
 
-import { createActionInput } from '@arcade/runtime/core';
-import type { ActionBinding, ActionState } from '@arcade/runtime/core';
+import { createActionInput, createPointerDevice } from '@arcade/runtime/core';
+import type { ActionBinding, ActionState, PointerDevice } from '@arcade/runtime/core';
+import { createRunnerTouchController, type RunnerTouchController, type TouchInputSurface } from './RunnerTouchInput';
 
 export interface ActionMap {
 	moveLeft: boolean;
@@ -107,9 +108,20 @@ function pressed(
 
 export class InputSystem {
 	private readonly input;
+	private readonly pointer: PointerDevice | null;
+	private readonly touch: RunnerTouchController | null;
 	private destroyed = false;
 
-	constructor(target: KeyboardInputTarget = window) {
+	constructor(
+		target: KeyboardInputTarget = window,
+		touchOptions?: { surface: TouchInputSurface; pointer?: PointerDevice }
+	) {
+		this.pointer = touchOptions
+			? (touchOptions.pointer ?? createPointerDevice({ target: window, preventDefault: true }))
+			: null;
+		this.touch = this.pointer && touchOptions
+			? createRunnerTouchController({ pointer: this.pointer, surface: touchOptions.surface })
+			: null;
 		this.input = createActionInput({
 			actions: ACTIONS,
 			bindings: BINDINGS,
@@ -118,24 +130,28 @@ export class InputSystem {
 				preventDefaultCodes: ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'],
 			},
 			gamepadIndex: 0,
+			...(this.pointer ? { pointer: this.pointer } : {}),
 		});
 	}
 
 	destroy(): void {
 		if (this.destroyed) return;
 		this.destroyed = true;
+		this.touch?.reset();
 		this.input.destroy();
+		this.pointer?.destroy();
 		this.input.reset();
 	}
 
 	snapshot(): ActionMap {
 		const state = this.input.advance();
+		const touch = this.touch?.read();
 		return {
-			moveLeft: held(state, 'moveLeft'),
-			moveRight: held(state, 'moveRight'),
-			jump: held(state, 'jump'),
-			jumpPressed: pressed(state, 'jump'),
-			fastFall: held(state, 'fastFall'),
+			moveLeft: held(state, 'moveLeft') || (touch?.moveLeft ?? false),
+			moveRight: held(state, 'moveRight') || (touch?.moveRight ?? false),
+			jump: held(state, 'jump') || (touch?.jump ?? false),
+			jumpPressed: pressed(state, 'jump') || (touch?.jumpPressed ?? false),
+			fastFall: held(state, 'fastFall') || (touch?.fastFall ?? false),
 			melee: held(state, 'melee'),
 			meleePressed: pressed(state, 'melee'),
 			shoot: held(state, 'shoot'),
@@ -144,8 +160,8 @@ export class InputSystem {
 			itemPressed: pressed(state, 'item'),
 			parry: held(state, 'parry'),
 			parryPressed: pressed(state, 'parry'),
-			dodge: held(state, 'dodge'),
-			dodgePressed: pressed(state, 'dodge'),
+			dodge: held(state, 'dodge') || (touch?.dodge ?? false),
+			dodgePressed: pressed(state, 'dodge') || (touch?.dodgePressed ?? false),
 			hack: held(state, 'hack'),
 			hackPressed: pressed(state, 'hack'),
 			hackHeld: held(state, 'hack'),
