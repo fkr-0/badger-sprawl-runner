@@ -27,6 +27,8 @@ export {
   createEntityWorld,
   createEventBus,
   createFixedStepLoop,
+  createGamepadDevice,
+  createPointerDevice,
   createHitContactLedger,
   createTimelineQueue,
   enqueueTimelineEntry,
@@ -76,7 +78,7 @@ export {
   stepTimelineQueue,
   sweepAabb,
   tryStartGameplayAction,
-} from '../../vendor/arcade-runtime.d.mts';
+} from './index.mjs';
 
 export type {
   ActionBinding,
@@ -107,10 +109,19 @@ export type {
   EntityRegistry,
   EntityWorldEntry,
   EntityWorldState,
+  GamepadButtonState,
+  GamepadDevice,
+  GamepadDeviceSnapshot,
   HitContactLedger,
   HitContactPolicy,
   HitContactRecord,
   KeyboardDevice,
+  PointerBinding,
+  PointerButtonState,
+  PointerContactState,
+  PointerDevice,
+  PointerDeviceSnapshot,
+  PointerType,
   RecyclingPool,
   RecyclingPoolAcquireContext,
   RecyclingPoolResetContext,
@@ -126,4 +137,4 @@ export type {
   TimedEffectState,
   TimelineQueueEntry,
   TimelineQueueState,
-} from '../../vendor/arcade-runtime.d.mts';
+} from './index.mjs';
