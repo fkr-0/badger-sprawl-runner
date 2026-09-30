@@ -2,9 +2,28 @@
 
 All notable changes to Badger Sprawl Runner are documented here.
 
-## [1.6.0] - Planned
+## [1.7.0] - Planned
 
 - Add attested physical-device evidence, resumable multi-hour retained-renderer certification, and cross-release evidence trend comparison.
+
+## [1.6.1] - Unreleased
+
+### Planned
+
+- Reserve the maintenance line for post-1.6.0 correctness, mobile-input qualification follow-ups, and release automation fixes.
+
+## [1.6.0] - 2026-09-30
+
+### Added
+
+- Added Arcade Runtime 1.13.0 pointer-device input to story and Horde gameplay without changing the deterministic ActionMap consumed by simulation.
+- Added responsive runner gestures: tap or upward swipe jumps, horizontal swipe performs directional dodge/skid, downward swipe fast-falls in air and uses the existing grounded skid/dodge mechanic.
+- Added deterministic gesture tests plus portrait and short-landscape browser coverage for the 16:9 play surface.
+
+### Changed
+
+- Upgraded the checksum-attested vendored Arcade Runtime and workspace facade from 1.12.0 to 1.13.0.
+- Advanced the workspace and runner package versions to 1.6.0 and documented mobile/desktop controls.
 
 ## [1.5.3] - Unreleased
 
