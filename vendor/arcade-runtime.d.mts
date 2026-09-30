@@ -174,6 +174,12 @@ export interface ArcadeSpriteBox {
   label?: string;
 }
 
+export interface ArcadeSpriteFrameCollision {
+  frame: number;
+  hitboxes?: readonly ArcadeSpriteBox[];
+  hurtboxes?: readonly ArcadeSpriteBox[];
+}
+
 export interface ArcadeSpriteAnimationEvent {
   frame: number;
   kind: string;
@@ -194,6 +200,7 @@ export interface ArcadeSpriteAnimation {
   anchor?: readonly [number, number];
   hitboxes?: readonly ArcadeSpriteBox[];
   hurtboxes?: readonly ArcadeSpriteBox[];
+  frameCollisions?: readonly ArcadeSpriteFrameCollision[];
   events?: readonly ArcadeSpriteAnimationEvent[];
   tags?: readonly string[];
 }
@@ -240,6 +247,8 @@ export interface ArcadeSpriteCompiledFrame {
   frameIndex: number;
   duration: number;
   address: ArcadeSpriteFrameAddress;
+  hitboxes: readonly ArcadeSpriteBox[];
+  hurtboxes: readonly ArcadeSpriteBox[];
 }
 
 export interface ArcadeSpriteClip {
@@ -1568,6 +1577,53 @@ export declare function inspectEncounterState(plan: ArcadeEncounterPlan, state: 
   revision: number;
 }>;
 
+export interface ArcadeStageAssetProgress {
+  readonly graphId: string;
+  readonly nodeId: string;
+  readonly id: string | null;
+  readonly loadedCount: number;
+  readonly totalCount: number;
+  readonly loadedBytes: number;
+  readonly declaredBytes: number;
+  readonly progress: number;
+}
+
+export interface ArcadeStageAssetReadiness {
+  readonly graphId: string;
+  readonly nodeId: string;
+  readonly assetIds: readonly string[];
+  readonly scope: ReturnType<typeof createResourceScope>;
+  readonly assets: Map<string, unknown>;
+  readonly loadedBytes: number;
+  readonly declaredBytes: number;
+  readonly prewarmed: unknown | null;
+  get(assetId: string): unknown;
+  release(): Promise<boolean>;
+}
+
+export declare function prepareStageAssets(
+  graph: ArcadeStageGraph,
+  stateOrNodeId: ArcadeStageGraphState | string,
+  assetLoader: ReturnType<typeof createAssetLoader>,
+  manifest: ArcadeAssetManifest,
+  options?: {
+    scope?: ReturnType<typeof createResourceScope>;
+    scopeName?: string;
+    budgetBytes?: number;
+    signal?: AbortSignal;
+    loaders?: Record<string, Function>;
+    onProgress?: (progress: ArcadeStageAssetProgress) => void;
+    prewarm?: (context: Readonly<{
+      graph: ArcadeStageGraph;
+      node: ArcadeStageNode;
+      scope: ReturnType<typeof createResourceScope>;
+      assets: Map<string, unknown>;
+      get(assetId: string): unknown;
+      signal?: AbortSignal;
+    }>) => unknown | ArcadeStageServiceInstallation | Promise<unknown | ArcadeStageServiceInstallation>;
+  },
+): Promise<ArcadeStageAssetReadiness>;
+
 export interface ArcadeStageServiceScope {
   name: string;
   track<T>(resource: T, disposer?: (resource: T) => unknown | Promise<unknown>): T;
@@ -1736,7 +1792,6 @@ export declare function selectArcadeComputeBackend(
     preference?: readonly ArcadeComputeBackendKind[];
   },
 ): ArcadeComputeBackend | null;
-
 export type ArcadeCameraState = {
   x: number;
   y: number;
@@ -1823,7 +1878,127 @@ export type ArcadePixiFrame = {
   deltaSeconds: number;
   timeMs: number;
   tick: number;
+  alpha: number;
 };
+
+export type ArcadePixiPresentation = Readonly<{
+  alpha: number;
+  deltaMs: number;
+  timeMs: number;
+  runtime: ArcadePixiRuntime;
+}>;
+
+export type ArcadePixiFixedStepHost = {
+  readonly runtime: ArcadePixiRuntime;
+  readonly loop: FixedStepLoop;
+  readonly renderEnabled: boolean;
+  start(): void;
+  stop(): void;
+  pause(): void;
+  resume(): void;
+  advance(elapsed: number, timeMs?: number): { updates: number; alpha: number };
+  resetClock(): void;
+  snapshot(): Readonly<{
+    destroyed: boolean;
+    suspended: boolean;
+    renderEnabled: boolean;
+    presentationTimeMs: number;
+    presentationDeltaMs: number;
+    loop: ReturnType<FixedStepLoop['snapshot']>;
+  }>;
+  destroy(): boolean;
+};
+
+export declare function createArcadePixiFixedStepHost(options: {
+  runtime: ArcadePixiRuntime;
+  update(delta: number): void;
+  fixedStep?: number;
+  maxFrame?: number;
+  timeUnit?: TimeUnit;
+  render?: boolean;
+  pauseWhenHidden?: boolean;
+  documentTarget?: Pick<Document, 'hidden' | 'addEventListener' | 'removeEventListener'>;
+  now?: () => number;
+  requestFrame?: (callback: FrameRequestCallback) => number;
+  cancelFrame?: (handle: number) => void;
+  beforePresent?(presentation: ArcadePixiPresentation): void;
+  afterPresent?(presentation: ArcadePixiPresentation): void;
+  onSuspend?(reason: 'context-lost' | 'document-hidden'): void;
+  onResume?(reason: 'context-restored' | 'document-visible'): void;
+  destroyRuntime?: boolean;
+}): ArcadePixiFixedStepHost;
+
+export type ArcadePixiSpriteFrameBinding = Readonly<{
+  texture: Texture;
+  address: ArcadeSpriteFrameAddress;
+}>;
+
+export type ArcadePixiSpriteBank = {
+  readonly manifest: ArcadeSpriteManifest;
+  readonly ids: readonly string[];
+  readonly loaded: boolean;
+  readonly destroyed: boolean;
+  sheet(sheetId: string): ArcadeSpriteSheet;
+  clip(sheetId: string, animationName: string): ArcadeSpriteClip;
+  load(): Promise<ArcadePixiSpriteBank>;
+  frame(sheetId: string, animationName: string, frameIndex?: number): ArcadePixiSpriteFrameBinding;
+  applyFrame(
+    sprite: import('pixi.js').Sprite,
+    sheetId: string,
+    animationName: string,
+    frameIndex?: number,
+  ): ArcadePixiSpriteFrameBinding;
+  createSprite(sheetId: string, animationName: string, frameIndex?: number): import('pixi.js').Sprite;
+  destroy(options?: { unload?: boolean }): Promise<boolean>;
+};
+
+export declare function createArcadePixiSpriteBank(options: {
+  PIXI: ArcadePixiNamespace;
+  runtime: ArcadePixiRuntime;
+  manifest: ArcadeSpriteManifestSource;
+  aliasPrefix?: string;
+}): ArcadePixiSpriteBank;
+
+export type ArcadePixiSpritePlayerSnapshot = Readonly<{
+  sheetId: string;
+  animationName: string;
+  frame: number;
+  playing: boolean;
+  completed: boolean;
+  facing: 1 | -1;
+  destroyed: boolean;
+}>;
+
+export type ArcadePixiSpritePlayerAdvance = Readonly<{
+  clock: ArcadeAnimationClock;
+  events: readonly ArcadeSpriteAnimationEvent[];
+  texture: Texture;
+  address: ArcadeSpriteFrameAddress;
+}>;
+
+export type ArcadePixiSpritePlayer = {
+  readonly sprite: import('pixi.js').Sprite;
+  readonly sheetId: string;
+  readonly animationName: string;
+  readonly clip: ArcadeSpriteClip;
+  readonly clock: ArcadeAnimationClock;
+  readonly facing: 1 | -1;
+  readonly destroyed: boolean;
+  play(animationName: string, options?: { sheetId?: string; restart?: boolean }): ArcadePixiSpritePlayer;
+  advance(deltaSeconds: number): ArcadePixiSpritePlayerAdvance;
+  setFacing(facing: 1 | -1): 1 | -1;
+  snapshot(): ArcadePixiSpritePlayerSnapshot;
+  destroy(options?: { destroySprite?: boolean }): boolean;
+};
+
+export declare function createArcadePixiSpritePlayer(options: {
+  bank: ArcadePixiSpriteBank;
+  sheetId: string;
+  animationName: string;
+  sprite?: import('pixi.js').Sprite;
+  facing?: 1 | -1;
+  onEvent?: (event: ArcadeSpriteAnimationEvent, player: ArcadePixiSpritePlayer) => void;
+}): ArcadePixiSpritePlayer;
 
 export type ArcadePixiTelemetry = {
   version: string;
@@ -1864,6 +2039,10 @@ export type ArcadePixiPassOptions<State = unknown> = {
   order?: number;
   enabled?: boolean;
   destroyChildren?: boolean;
+  cullable?: boolean;
+  cullableChildren?: boolean;
+  cullArea?: unknown;
+  renderGroup?: boolean;
   create?: (pass: ArcadePixiPassContext<State>) => State;
   update?: (frame: ArcadePixiFrame, pass: ArcadePixiPassContext<State>) => void;
   resize?: (
@@ -1906,6 +2085,7 @@ export type ArcadePixiRuntimeOptions = {
   cancelFrame?: (handle: number) => void;
   performanceNow?: () => number;
   performanceSampleSize?: number;
+  performanceSummaryEvery?: number;
 };
 
 export type ArcadePixiRuntime = {
@@ -1936,7 +2116,7 @@ export type ArcadePixiRuntime = {
   resize(width: number, height: number): void;
   resizeFromTarget(): void;
   render(): void;
-  step(deltaMs?: number, timeMs?: number, render?: boolean): void;
+  step(deltaMs?: number, timeMs?: number, render?: boolean, alpha?: number): void;
   start(reason?: string): void;
   pause(reason?: string): void;
   resume(reason?: string): void;
@@ -2063,10 +2243,82 @@ export declare function createKeyboardDevice(options?: {
   preventDefaultCodes?: string[];
 }): KeyboardDevice;
 
+export type GamepadButtonState = Readonly<{
+  value: number;
+  held: boolean;
+  pressed: boolean;
+  released: boolean;
+}>;
+export type GamepadDeviceSnapshot = Readonly<{
+  connected: boolean;
+  index: number;
+  id: string;
+  mapping: string;
+  timestamp: number;
+  buttons: readonly GamepadButtonState[];
+  axes: readonly number[];
+}>;
+export type GamepadDevice = {
+  advance(): GamepadDeviceSnapshot;
+  refresh(): GamepadDeviceSnapshot;
+  snapshot(): GamepadDeviceSnapshot;
+  clearEdges(): void;
+  isConnected(): boolean;
+  getButton(index: number): GamepadButtonState;
+  getAxis(index: number): number;
+  reset(): void;
+  destroy(): void;
+};
+export declare function createGamepadDevice(options?: {
+  index?: number;
+  deadzone?: number;
+  buttonThreshold?: number;
+  getGamepads?: () => ArrayLike<Gamepad | null>;
+}): GamepadDevice;
+
+export type PointerType = 'mouse' | 'pen' | 'touch';
+export type PointerContactState = Readonly<{
+  pointerId: number;
+  pointerType: PointerType;
+  x: number;
+  y: number;
+  pressure: number;
+  buttons: number;
+  isPrimary: boolean;
+  sequence: number;
+}>;
+export type PointerButtonState = Readonly<{
+  held: boolean;
+  pressed: boolean;
+  released: boolean;
+  pointerType: PointerType | null;
+  pointerId: number | null;
+  x: number;
+  y: number;
+  pressure: number;
+}>;
+export type PointerDeviceSnapshot = Readonly<{ pointers: readonly PointerContactState[] }>;
+export type PointerDevice = {
+  advance(): PointerDeviceSnapshot;
+  snapshot(): PointerDeviceSnapshot;
+  clearEdges(): void;
+  getButton(button?: number, pointerType?: PointerType): PointerButtonState;
+  isHeld(button?: number, pointerType?: PointerType): boolean;
+  isPressed(button?: number, pointerType?: PointerType): boolean;
+  isReleased(button?: number, pointerType?: PointerType): boolean;
+  reset(): void;
+  destroy(): void;
+};
+export declare function createPointerDevice(options?: {
+  target?: Pick<Window, 'addEventListener' | 'removeEventListener'>;
+  preventDefault?: boolean;
+}): PointerDevice;
+
 export type KeyBinding = { type: 'key'; code: string };
 export type ButtonBinding = { type: 'button'; index: number };
 export type AxisBinding = { type: 'axis'; index: number; direction?: number; threshold?: number };
-export type ActionBinding = string | KeyBinding | ButtonBinding | AxisBinding;
+export type PointerBinding = { type: 'pointer'; button?: number; pointerType?: PointerType };
+export type ActionBinding = string | KeyBinding | ButtonBinding | AxisBinding | PointerBinding;
 export type ActionBindings<Action extends string> = Record<Action, ActionBinding[]>;
 export type ActionState = Readonly<{
   held: boolean;
@@ -2087,6 +2339,10 @@ export declare function createActionInput<Action extends string>(options: {
   bindings: Partial<ActionBindings<Action>>;
   keyboard?: KeyboardDevice;
   keyboardOptions?: Parameters<typeof createKeyboardDevice>[0];
+  gamepad?: GamepadDevice;
+  gamepadOptions?: Parameters<typeof createGamepadDevice>[0];
+  pointer?: PointerDevice;
+  pointerOptions?: Parameters<typeof createPointerDevice>[0];
   gamepadIndex?: number;
   getGamepads?: () => ArrayLike<Gamepad | null>;
 }): {
@@ -2099,6 +2355,8 @@ export declare function createActionInput<Action extends string>(options: {
   reset(): void;
   destroy(): void;
   keyboard: KeyboardDevice;
+  gamepad: GamepadDevice;
+  pointer: PointerDevice;
 };
 
 export declare function createSceneStack<Context, Scene extends {
@@ -2365,6 +2623,48 @@ export declare function createTextMeasureCache<T>(options: { measure(text: strin
 export type ArcadeStorageAdapter = { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem?(key: string): unknown; keys?(): string[] };
 export declare function createMemoryStorageAdapter(seed?: Record<string, string>): ArcadeStorageAdapter & { snapshot(): Readonly<Record<string, string>> };
 export declare function createStorageAdapter(storage: Storage): ArcadeStorageAdapter;
+export declare function createBrowserStorageAdapter(options?: { storage?: Storage; prefix?: string; separator?: string }): ArcadeStorageAdapter;
+export declare const ARCADE_STATE_BUNDLE_FORMAT: 'arcade-state-bundle';
+export declare const ARCADE_STATE_BUNDLE_VERSION: 1;
+export type ArcadeStateStoreDefinition<T = unknown> = Readonly<{
+  version: number;
+  defaults?: T | (() => T);
+  migrations?: Record<number, (data: unknown, context: Readonly<{ from: number; to: number }>) => unknown>;
+  preEnvelopeMigration?: ArcadePreEnvelopeMigration;
+  validate?: (data: unknown) => boolean;
+  backupKey?: string;
+}>;
+export type ArcadeStateStoreData<Definition> = Definition extends ArcadeStateStoreDefinition<infer T> ? T : unknown;
+export type ArcadeStateBundleEntry<T = unknown> = Readonly<{ version: number; data: T }>;
+export type ArcadeStateBundle = Readonly<{
+  format: typeof ARCADE_STATE_BUNDLE_FORMAT;
+  formatVersion: typeof ARCADE_STATE_BUNDLE_VERSION;
+  namespace: string;
+  runtimeVersion: string;
+  exportedAt: number;
+  entries: Readonly<Record<string, ArcadeStateBundleEntry>>;
+  metadata: SnapshotValue;
+  checksum: string;
+}>;
+export declare function createStateBundleStore<Stores extends Record<string, ArcadeStateStoreDefinition>>(options: {
+  namespace: string;
+  stores: Stores;
+  adapter?: ArcadeStorageAdapter;
+  storage?: Storage;
+  storagePrefix?: string;
+  now?: () => number;
+}): {
+  adapter: ArcadeStorageAdapter;
+  list(): readonly (keyof Stores & string)[];
+  load<Name extends keyof Stores & string>(name: Name): Readonly<{ data: ArcadeStateStoreData<Stores[Name]>; source: string; migrated: boolean; recovered: boolean; version: number }>;
+  save<Name extends keyof Stores & string>(name: Name, data: ArcadeStateStoreData<Stores[Name]>, metadata?: { savedAt?: number; revision?: number }): unknown;
+  clear(name?: keyof Stores & string): number;
+  exportBundle(metadata?: SnapshotValue): ArcadeStateBundle;
+  serialize(metadata?: SnapshotValue, space?: number): string;
+  importBundle(input: ArcadeStateBundle | string, options?: { allowNamespaceMismatch?: boolean; allowPartial?: boolean }): Readonly<{ namespace: string; imported: readonly string[]; sourceRuntimeVersion: string | null; exportedAt: number; metadata: unknown }>;
+  download(options?: { filename?: string; metadata?: SnapshotValue; space?: number; Blob?: typeof Blob; URL?: Pick<typeof URL, 'createObjectURL' | 'revokeObjectURL'>; document?: Pick<Document, 'createElement' | 'body'> }): Readonly<{ filename: string; bytes: number; serialized: string }>;
+  upload(file: Pick<Blob, 'text'>, options?: { allowNamespaceMismatch?: boolean; allowPartial?: boolean }): Promise<Readonly<{ namespace: string; imported: readonly string[]; sourceRuntimeVersion: string | null; exportedAt: number; metadata: unknown }>>;
+};
 export type ArcadePreEnvelopeMigrationResult<T = unknown> = Readonly<{ data: T; version?: number; savedAt?: number; revision?: number }>;
 export type ArcadePreEnvelopeMigration<T = unknown> = (record: unknown, context: Readonly<{ source: 'primary' | 'temporary' | 'backup'; key: string; targetVersion: number }>) => ArcadePreEnvelopeMigrationResult<T>;
 export declare function createVersionedStore<T>(options: { adapter?: ArcadeStorageAdapter; key: string; version: number; defaults?: T | (() => T); migrations?: Record<number, (data: unknown, context: Readonly<{ from: number; to: number }>) => unknown>; preEnvelopeMigration?: ArcadePreEnvelopeMigration; validate?: (data: unknown) => boolean; backupKey?: string; now?: () => number; onCorruption?: (context: unknown) => void }): {
@@ -2557,7 +2857,6 @@ export declare function drawArcadeNoticeCanvas(
   ratio: number;
   textLayout: ArcadeTextLayout;
 }> | null;
-
 export interface ArcadePixiFramePoolSnapshot {
   readonly frame: number;
   readonly frameOpen: boolean;
@@ -2828,6 +3127,61 @@ export type RuntimeInspectorPoolAdapter<Entity = any, Pool = any> = {
   kill?(entity: Entity, pool: Pool): boolean;
   spawn?(initial: Record<string, unknown>, pool: Pool): Entity;
 };
+export declare const ARCADE_AUTHORING_IR_VERSION: 1;
+export type ArcadeAuthoringDocumentKind = 'asset-manifest' | 'encounter-plan' | 'sprite-manifest' | 'stage-graph';
+export type ArcadeAuthoringSourceLocation = Readonly<{ line: number; column: number }>;
+export type ArcadeAuthoringSourceDocument = Readonly<{
+  kind: ArcadeAuthoringDocumentKind;
+  id: string;
+  source: string;
+  location?: Partial<ArcadeAuthoringSourceLocation>;
+  value: unknown;
+}>;
+export type ArcadeAuthoringBundle = Readonly<{
+  version: 1;
+  source?: string;
+  location?: Partial<ArcadeAuthoringSourceLocation>;
+  documents: readonly ArcadeAuthoringSourceDocument[];
+}>;
+export type ArcadeAuthoringReloadBoundary = 'state-preserving' | 'validation-only';
+export type ArcadeAuthoringCompiledDocument = Readonly<{
+  kind: ArcadeAuthoringDocumentKind;
+  id: string;
+  source: string;
+  location: ArcadeAuthoringSourceLocation;
+  reloadBoundary: ArcadeAuthoringReloadBoundary;
+  value: unknown;
+}>;
+export type ArcadeAuthoringDiagnostic = Readonly<{
+  severity: 'error' | 'warning';
+  code: string;
+  source: string;
+  path: string;
+  message: string;
+  documentId: string | null;
+  kind: string | null;
+  location: ArcadeAuthoringSourceLocation;
+  referenceType?: string;
+  referenceId?: string;
+  previousSource?: string;
+  expectedVersion?: number;
+  actualVersion?: unknown;
+}>;
+export type ArcadeAuthoringCompilation = Readonly<{
+  ok: boolean;
+  version: 1;
+  hash: string;
+  documents: readonly ArcadeAuthoringCompiledDocument[];
+  diagnostics: readonly ArcadeAuthoringDiagnostic[];
+}>;
+export type ArcadeAuthoringCompileOptions = Readonly<{
+  source?: string;
+  catalogs?: ArcadeStageReferenceCatalogs;
+}>;
+export declare function compileArcadeAuthoringBundle(
+  bundle: ArcadeAuthoringBundle | unknown,
+  options?: ArcadeAuthoringCompileOptions,
+): ArcadeAuthoringCompilation;
 export type RuntimeInspectorHotReloadOptions = {
   enabled?: boolean;
   manifestDir?: string;
@@ -2944,6 +3298,16 @@ export type RuntimeInspector = {
   snapshot(): Readonly<Record<string, unknown>>;
   destroy(): boolean;
 };
+export declare function registerArcadeAuthoringBundle(
+  inspector: RuntimeInspector,
+  bundleOrCompilation: ArcadeAuthoringBundle | ArcadeAuthoringCompilation | unknown,
+  options?: ArcadeAuthoringCompileOptions,
+): Readonly<{
+  compilation: ArcadeAuthoringCompilation;
+  registeredManifestIds: readonly string[];
+  validationOnlyIds: readonly string[];
+  unregister(): boolean;
+}>;
 export declare function createRuntimeInspector(options?: RuntimeInspectorOptions): RuntimeInspector;
 export declare function createRuntimeInspector(host: ArcadeRuntimeHost, options?: RuntimeInspectorOptions): RuntimeInspector;
 export declare namespace createRuntimeInspector {
